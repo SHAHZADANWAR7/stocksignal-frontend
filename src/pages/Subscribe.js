@@ -29,12 +29,13 @@ export default function Subscribe() {
     setUpgradingPlan(planType);
     
     try {
-      const response = await awsApi.createCheckoutSession(priceId, 'subscription');
+      const response = await awsApi.createCheckoutSession({
+        priceId,
+        mode: 'subscription'
+      });
       
       if (response?.url) {
         window.top.location.href = response.url;
-      } else if (response?.data?.url) {
-        window.top.location.href = response.data.url;
       } else {
         alert(`Error: No checkout URL received.`);
         setUpgradingPlan(null);
@@ -48,11 +49,19 @@ export default function Subscribe() {
   useEffect(() => {
     loadData();
     
+    // Check for Stripe success/cancel
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success') === 'true') {
       setTimeout(() => {
         window.location.href = window.location.pathname;
       }, 3000);
+    }
+    
+    // Check if returning from login to complete checkout
+    const checkoutPriceId = urlParams.get('checkout');
+    if (checkoutPriceId) {
+      const planType = checkoutPriceId.includes('yearly') ? 'yearly' : 'monthly';
+      handleUpgrade(checkoutPriceId, planType);
     }
   }, []);
 
@@ -158,6 +167,7 @@ export default function Subscribe() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {/* Free Plan */}
             <Card className="border-2 border-slate-300 shadow-xl flex flex-col">
               <CardHeader className="bg-gradient-to-br from-slate-100 to-slate-200 border-b border-slate-300">
                 <div className="flex items-center justify-between mb-2">
@@ -189,6 +199,7 @@ export default function Subscribe() {
               </CardContent>
             </Card>
 
+            {/* Monthly Plan */}
             <Card className="border-2 border-blue-300 shadow-xl flex flex-col transform scale-105 z-10">
               <CardHeader className="bg-gradient-to-br from-blue-50 to-indigo-50 border-b border-blue-200">
                 <div className="flex items-center justify-between mb-2">
@@ -239,6 +250,7 @@ export default function Subscribe() {
               </CardContent>
             </Card>
 
+            {/* Yearly Plan */}
             <Card className="border-2 border-purple-300 shadow-xl flex flex-col">
               <CardHeader className="bg-gradient-to-br from-purple-50 to-pink-50 border-b border-purple-200">
                 <div className="flex items-center justify-between mb-2">
