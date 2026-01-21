@@ -1,0 +1,12 @@
+:root {
+  --primary: 220 90% 56%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 160 84% 39%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --chart-1: 220 90% 56%;
+  --chart-2: 160 84% 39%;
+  --chart-3: 280 65% 60%;
+  --chart-4: 340 82% 52%;
+  --chart-5: 45 93% 47%;
+}
