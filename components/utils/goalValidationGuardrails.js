@@ -3,17 +3,9 @@
  * Prevents silent calculation bugs and financial inaccuracies
  */
 
-/**
- * Validate goal analysis before rendering to UI
- * Returns: { isValid, errors, warnings }
- */
 export const validateGoalAnalysis = (goal, metrics, recommendation) => {
   const errors = [];
   const warnings = [];
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // CAPITAL INTEGRITY: Highest priority validation
-  // ═══════════════════════════════════════════════════════════════════════════
 
   if (!goal) {
     errors.push({
@@ -42,10 +34,6 @@ export const validateGoalAnalysis = (goal, metrics, recommendation) => {
     });
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // METRIC CONSISTENCY: Ensure calculations are coherent
-  // ═══════════════════════════════════════════════════════════════════════════
-
   if (metrics) {
     if (typeof metrics.portfolioValue !== 'number') {
       errors.push({
@@ -63,7 +51,6 @@ export const validateGoalAnalysis = (goal, metrics, recommendation) => {
       });
     }
 
-    // If initial capital exists, progress must reflect it
     if (goal.current_allocation > 0 && metrics.progressPercent === 0) {
       warnings.push({
         code: 'PROGRESS_MISMATCH',
@@ -72,7 +59,6 @@ export const validateGoalAnalysis = (goal, metrics, recommendation) => {
       });
     }
 
-    // Progress should never exceed 100% for display
     if (metrics.progressPercent > 100) {
       warnings.push({
         code: 'OVER_TARGET',
@@ -81,10 +67,6 @@ export const validateGoalAnalysis = (goal, metrics, recommendation) => {
       });
     }
   }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // RECOMMENDATION VALIDATION: Ensure recommendations are sensible
-  // ═══════════════════════════════════════════════════════════════════════════
 
   if (recommendation) {
     if (!recommendation.initial_investment || typeof recommendation.initial_investment !== 'object') {
@@ -103,7 +85,6 @@ export const validateGoalAnalysis = (goal, metrics, recommendation) => {
       });
     }
 
-    // Validate sample allocation if present
     if (recommendation.sample_allocation?.companies) {
       const totalAllocation = recommendation.sample_allocation.companies.reduce(
         (sum, company) => sum + (company.allocation_percentage || 0),
@@ -128,10 +109,6 @@ export const validateGoalAnalysis = (goal, metrics, recommendation) => {
   };
 };
 
-/**
- * Generate fallback allocation when AI is unavailable
- * Safe, conservative, diversified default
- */
 export const generateFallbackAllocation = (initialAmount, monthlyAmount) => {
   return {
     disclaimer: "This is a generic fallback allocation. Not personalized. For educational purposes only.",
@@ -172,9 +149,6 @@ export const generateFallbackAllocation = (initialAmount, monthlyAmount) => {
   };
 };
 
-/**
- * Format validation results for display
- */
 export const formatValidationError = (validation) => {
   if (validation.isValid) {
     return {
@@ -197,16 +171,9 @@ export const formatValidationError = (validation) => {
   };
 };
 
-/**
- * Pre-render safety check
- * Prevents rendering with incomplete/invalid data
- */
 export const canRenderGoalAnalysis = (goal, metrics, recommendation) => {
   const validation = validateGoalAnalysis(goal, metrics, recommendation);
-  
-  // Only block render on critical errors
   const hasCriticalErrors = validation.errors.some(e => e.severity === 'critical');
-  
   return {
     canRender: !hasCriticalErrors,
     validation

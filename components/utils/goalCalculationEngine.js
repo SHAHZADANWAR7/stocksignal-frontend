@@ -5,56 +5,36 @@ import { differenceInMonths } from "date-fns";
  * Ensures deterministic, consistent metrics across the app
  */
 
-/**
- * Calculate comprehensive goal metrics
- * Returns: portfolioValue, progressPercent, initialCapital, holdingsValue, remainingGap
- */
 export const calculateGoalMetrics = (goal, holdings = []) => {
   try {
-    // Validate inputs
     if (!goal || typeof goal.target_amount !== 'number' || goal.target_amount <= 0) {
       throw new Error('Invalid goal: target_amount must be a positive number');
     }
 
-    // Calculate holdings value
     const holdingsValue = holdings.reduce((sum, h) => {
       const price = h.current_price || h.average_cost || 0;
       const value = (h.quantity || 0) * price;
       return sum + value;
     }, 0);
 
-    // Initial capital is what user committed to the goal
     const initialCapital = goal.current_allocation || 0;
-
-    // Total portfolio value for this goal = initial capital + holdings growth
     const portfolioValue = Math.max(0, initialCapital + (holdingsValue - initialCapital));
-
-    // Progress as percentage of target
     const progressPercent = goal.target_amount > 0 
       ? (portfolioValue / goal.target_amount) * 100 
       : 0;
-
-    // Remaining gap to close
     const remainingGap = Math.max(0, goal.target_amount - portfolioValue);
-
-    // Time remaining
     const monthsRemaining = goal.target_date 
       ? differenceInMonths(new Date(goal.target_date), new Date())
       : 0;
 
     return {
-      // Primary metrics (used in UI)
       portfolioValue: Math.round(portfolioValue),
-      progressPercent: Math.round(progressPercent * 10) / 10, // 1 decimal place
+      progressPercent: Math.round(progressPercent * 10) / 10,
       initialCapital: Math.round(initialCapital),
       holdingsValue: Math.round(holdingsValue),
       remainingGap: Math.round(remainingGap),
-      
-      // Secondary metrics (for advanced calculations)
       monthsRemaining: Math.max(0, monthsRemaining),
       targetAmount: goal.target_amount,
-      
-      // Debug info
       _calculation: {
         initialCapital,
         holdingsValue,
@@ -68,18 +48,12 @@ export const calculateGoalMetrics = (goal, holdings = []) => {
   }
 };
 
-/**
- * Calculate stress test metrics
- * Projects portfolio value at a future point with assumed returns
- */
 export const calculateStressTestMetrics = (goal, monthlyContribution = 0, monthsProjected = 18, annualReturnRate = 0.08) => {
   try {
     const initialInvestment = goal.current_allocation || 0;
     const monthlyRate = annualReturnRate / 12;
     
-    // Project portfolio value with compounding and contributions
     let portfolioValue = initialInvestment;
-    
     for (let month = 0; month < monthsProjected; month++) {
       portfolioValue = portfolioValue * (1 + monthlyRate) + monthlyContribution;
     }
@@ -97,9 +71,6 @@ export const calculateStressTestMetrics = (goal, monthlyContribution = 0, months
   }
 };
 
-/**
- * Calculate projection scenarios (pessimistic, expected, optimistic)
- */
 export const calculateProjectionScenarios = (goal, initialCapital, monthlyContribution) => {
   const scenarios = [
     { name: "Pessimistic", rate: 0.03 },
@@ -111,9 +82,8 @@ export const calculateProjectionScenarios = (goal, initialCapital, monthlyContri
     const monthlyRate = scenario.rate / 12;
     let balance = initialCapital;
     let months = 0;
-    const maxMonths = 360; // 30 years safety limit
+    const maxMonths = 360;
 
-    // Calculate months to reach goal
     while (balance < goal.target_amount && months < maxMonths) {
       balance = balance * (1 + monthlyRate) + monthlyContribution;
       months++;
@@ -128,50 +98,35 @@ export const calculateProjectionScenarios = (goal, initialCapital, monthlyContri
   });
 };
 
-/**
- * Regression test suite - ensures calculation accuracy
- * Critical for financial accuracy
- */
 export const runAllGoalProgressTests = () => {
   const tests = [];
 
-  // Test 1: Zero holdings returns initial capital
   const test1 = () => {
     const goal = { target_amount: 100000, current_allocation: 50000 };
     const holdings = [];
     const metrics = calculateGoalMetrics(goal, holdings);
-    
     if (metrics.portfolioValue !== 50000) {
       return { passed: false, reason: `Expected 50000, got ${metrics.portfolioValue}` };
     }
     return { passed: true };
   };
 
-  // Test 2: Holdings value calculated correctly
   const test2 = () => {
     const goal = { target_amount: 100000, current_allocation: 50000 };
     const holdings = [
       { symbol: 'AAPL', quantity: 10, average_cost: 150, current_price: 160 }
     ];
     const metrics = calculateGoalMetrics(goal, holdings);
-    
-    // Portfolio = initial capital + unrealized gains
-    const holdingsValue = 10 * 160; // 1600
-    const expectedPortfolio = 50000 + (1600 - 50000); // Capped at realized portion
-    
     if (metrics.portfolioValue <= 0) {
       return { passed: false, reason: `Portfolio value is ${metrics.portfolioValue}` };
     }
     return { passed: true };
   };
 
-  // Test 3: Progress reflects initial capital
   const test3 = () => {
     const goal = { target_amount: 100000, current_allocation: 25000 };
     const holdings = [];
     const metrics = calculateGoalMetrics(goal, holdings);
-    
-    // Progress should be 25%
     const expectedProgress = 25;
     if (Math.abs(metrics.progressPercent - expectedProgress) > 1) {
       return { passed: false, reason: `Expected ~25%, got ${metrics.progressPercent}%` };
@@ -179,25 +134,21 @@ export const runAllGoalProgressTests = () => {
     return { passed: true };
   };
 
-  // Test 4: Months remaining calculated
   const test4 = () => {
     const futureDate = new Date();
     futureDate.setMonth(futureDate.getMonth() + 6);
     const goal = { target_amount: 100000, current_allocation: 0, target_date: futureDate };
     const metrics = calculateGoalMetrics(goal, []);
-    
     if (metrics.monthsRemaining < 5 || metrics.monthsRemaining > 7) {
       return { passed: false, reason: `Expected ~6 months, got ${metrics.monthsRemaining}` };
     }
     return { passed: true };
   };
 
-  // Test 5: Remaining gap calculation
   const test5 = () => {
     const goal = { target_amount: 100000, current_allocation: 30000 };
     const holdings = [];
     const metrics = calculateGoalMetrics(goal, holdings);
-    
     const expectedGap = 70000;
     if (metrics.remainingGap !== expectedGap) {
       return { passed: false, reason: `Expected gap ${expectedGap}, got ${metrics.remainingGap}` };
@@ -205,8 +156,6 @@ export const runAllGoalProgressTests = () => {
     return { passed: true };
   };
 
-  // MANDATORY SNAPSHOT TEST: Education Fund
-  // This test is a release gate - if it fails, deployment is blocked
   const educationFundTest = () => {
     const educationGoal = {
       goal_name: "Education Fund",
@@ -216,15 +165,12 @@ export const runAllGoalProgressTests = () => {
     };
     const holdings = [];
     const metrics = calculateGoalMetrics(educationGoal, holdings);
-    
-    // Snapshot: must be exactly these values
     const snapshot = {
       portfolioValue: 50000,
       progressPercent: 25,
       initialCapital: 50000,
       remainingGap: 150000
     };
-
     for (const [key, expectedValue] of Object.entries(snapshot)) {
       if (metrics[key] !== expectedValue) {
         return {
@@ -245,7 +191,6 @@ export const runAllGoalProgressTests = () => {
     { name: "Education Fund snapshot (RELEASE GATE)", fn: educationFundTest, critical: true }
   );
 
-  // Run all tests
   const results = tests.map(test => {
     const result = test.fn();
     return {
@@ -256,7 +201,6 @@ export const runAllGoalProgressTests = () => {
     };
   });
 
-  // Check if any critical tests failed
   const criticalFailure = results.find(r => r.critical && !r.passed);
 
   return {
