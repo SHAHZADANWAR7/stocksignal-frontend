@@ -1,0 +1,48 @@
+{
+  "name": "UsageLimit",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "User email address"
+    },
+    "weekly_analyses": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of analyses run this week"
+    },
+    "total_analyses": {
+      "type": "number",
+      "default": 0,
+      "description": "Total analyses run all time"
+    },
+    "weekly_trades": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of trades executed this week"
+    },
+    "total_trades": {
+      "type": "number",
+      "default": 0,
+      "description": "Total trades executed all time"
+    },
+    "sessions": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of sessions"
+    },
+    "week_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Start date of current week for tracking"
+    },
+    "is_premium": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether user has premium subscription"
+    }
+  },
+  "required": [
+    "user_email"
+  ]
+}
