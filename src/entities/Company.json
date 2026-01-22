@@ -1,0 +1,151 @@
+{
+  "name": "Company",
+  "type": "object",
+  "properties": {
+    "symbol": {
+      "type": "string",
+      "description": "Stock ticker symbol"
+    },
+    "name": {
+      "type": "string",
+      "description": "Company name"
+    },
+    "sector": {
+      "type": "string",
+      "description": "Industry sector"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief company description"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "Company logo URL"
+    },
+    "current_price": {
+      "type": "number",
+      "description": "Current stock price"
+    },
+    "market_cap": {
+      "type": "string",
+      "description": "Market capitalization (formatted)"
+    },
+    "market_cap_raw": {
+      "type": "number",
+      "description": "Market capitalization (raw value)"
+    },
+    "pe_ratio": {
+      "type": "number",
+      "description": "Trailing P/E ratio (TTM)"
+    },
+    "eps_ttm": {
+      "type": "number",
+      "description": "Trailing twelve months earnings per share"
+    },
+    "net_income": {
+      "type": "number",
+      "description": "Net income (TTM)"
+    },
+    "profit_margin": {
+      "type": "number",
+      "description": "Profit margin percentage (0-1)"
+    },
+    "operating_margin": {
+      "type": "number",
+      "description": "Operating margin percentage (0-1)"
+    },
+    "revenue_ttm": {
+      "type": "number",
+      "description": "Total revenue (TTM)"
+    },
+    "price_to_book": {
+      "type": "number",
+      "description": "Price-to-book ratio"
+    },
+    "price_to_sales": {
+      "type": "number",
+      "description": "Price-to-sales ratio (TTM)"
+    },
+    "peg_ratio": {
+      "type": "number",
+      "description": "Price/earnings to growth ratio"
+    },
+    "earnings_volatility": {
+      "type": "number",
+      "description": "Standard deviation of quarterly EPS"
+    },
+    "revenue_growth": {
+      "type": "number",
+      "description": "Revenue growth rate"
+    },
+    "earnings_growth": {
+      "type": "number",
+      "description": "Earnings growth rate"
+    },
+    "beta": {
+      "type": "number",
+      "description": "5-year beta vs S&P 500"
+    },
+    "beta_1year": {
+      "type": "number",
+      "description": "1-year beta for short-term context"
+    },
+    "beta_source": {
+      "type": "string",
+      "enum": [
+        "yahoo_finance_5yr",
+        "calculated_5yr_daily",
+        "sector_estimate",
+        "finnhub"
+      ],
+      "description": "Source of beta value"
+    },
+    "beta_confidence": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "description": "Confidence level in beta estimate"
+    },
+    "expected_return": {
+      "type": "number",
+      "description": "Expected annual return percentage (blended model)"
+    },
+    "risk": {
+      "type": "number",
+      "description": "Volatility/risk percentage (standard deviation)"
+    },
+    "valuation": {
+      "type": "string",
+      "enum": [
+        "overvalued",
+        "fairly valued",
+        "undervalued"
+      ],
+      "description": "Valuation assessment"
+    },
+    "valuation_reasoning": {
+      "type": "string",
+      "description": "Explanation for valuation assessment"
+    },
+    "data_sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Data sources used for metrics"
+    },
+    "last_analyzed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time AI analysis was performed"
+    }
+  },
+  "required": [
+    "symbol",
+    "name",
+    "sector"
+  ]
+}
