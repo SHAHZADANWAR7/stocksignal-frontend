@@ -1,0 +1,97 @@
+{
+  "name": "SimulationPortfolio",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Portfolio name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Portfolio description"
+    },
+    "strategy_type": {
+      "type": "string",
+      "enum": [
+        "aggressive_growth",
+        "balanced",
+        "income_focused",
+        "thematic",
+        "custom"
+      ],
+      "description": "Investment strategy"
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "asset_class": {
+            "type": "string",
+            "enum": [
+              "stock",
+              "etf",
+              "crypto",
+              "commodity",
+              "bond"
+            ]
+          },
+          "allocation_percent": {
+            "type": "number"
+          },
+          "quantity": {
+            "type": "number"
+          }
+        }
+      },
+      "description": "Portfolio holdings"
+    },
+    "total_value": {
+      "type": "number",
+      "description": "Total portfolio value"
+    },
+    "expected_return": {
+      "type": "number",
+      "description": "Expected annual return %"
+    },
+    "risk_score": {
+      "type": "number",
+      "description": "Portfolio risk score"
+    },
+    "sharpe_ratio": {
+      "type": "number",
+      "description": "Risk-adjusted return metric"
+    },
+    "simulation_results": {
+      "type": "object",
+      "description": "Scenario simulation results"
+    },
+    "is_challenge_entry": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is for a challenge"
+    },
+    "challenge_score": {
+      "type": "number",
+      "description": "Challenge performance score"
+    },
+    "badges_earned": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Badges earned from challenges"
+    }
+  },
+  "required": [
+    "name",
+    "strategy_type"
+  ]
+}
