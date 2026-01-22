@@ -1,0 +1,38 @@
+{
+  "name": "IndexFund",
+  "type": "object",
+  "properties": {
+    "symbol": {
+      "type": "string",
+      "description": "Index fund ticker symbol (e.g., SPY, QQQ)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Full name of the index fund"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "broad_market",
+        "sector",
+        "international",
+        "bond",
+        "commodity"
+      ],
+      "description": "Type of index fund"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of what the index tracks"
+    },
+    "expense_ratio": {
+      "type": "number",
+      "description": "Annual expense ratio percentage"
+    }
+  },
+  "required": [
+    "symbol",
+    "name",
+    "type"
+  ]
+}
