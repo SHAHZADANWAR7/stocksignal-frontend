@@ -1,0 +1,78 @@
+{
+  "name": "Challenge",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Challenge title (e.g., 'Grow $10k in 3 months')"
+    },
+    "description": {
+      "type": "string",
+      "description": "Challenge description and rules"
+    },
+    "challenge_type": {
+      "type": "string",
+      "enum": [
+        "growth",
+        "returns",
+        "consistency",
+        "risk_adjusted",
+        "sector_specific"
+      ],
+      "description": "Type of challenge"
+    },
+    "starting_capital": {
+      "type": "number",
+      "description": "Virtual starting capital for all participants"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Challenge start date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Challenge end date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "upcoming",
+        "active",
+        "completed"
+      ],
+      "default": "upcoming",
+      "description": "Challenge status"
+    },
+    "rules": {
+      "type": "object",
+      "description": "Challenge-specific rules (max trades, allowed sectors, etc.)"
+    },
+    "prize_description": {
+      "type": "string",
+      "description": "Description of rewards/recognition"
+    },
+    "participant_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of participants"
+    },
+    "is_public": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether anyone can join"
+    },
+    "created_by_user": {
+      "type": "string",
+      "description": "Email of user who created the challenge"
+    }
+  },
+  "required": [
+    "title",
+    "starting_capital",
+    "start_date",
+    "end_date",
+    "challenge_type"
+  ]
+}
