@@ -1,0 +1,29 @@
+{
+  "name": "StockDataCache",
+  "type": "object",
+  "properties": {
+    "symbol": {
+      "type": "string",
+      "description": "Stock ticker symbol"
+    },
+    "data_type": {
+      "type": "string",
+      "description": "Type of cached data (quote, financials, analysis, etc.)"
+    },
+    "cached_data": {
+      "type": "object",
+      "description": "The actual cached data"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the data was cached"
+    }
+  },
+  "required": [
+    "symbol",
+    "data_type",
+    "cached_data",
+    "timestamp"
+  ]
+}
