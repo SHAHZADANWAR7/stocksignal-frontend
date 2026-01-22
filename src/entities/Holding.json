@@ -1,0 +1,49 @@
+{
+  "name": "Holding",
+  "type": "object",
+  "properties": {
+    "symbol": {
+      "type": "string",
+      "description": "Stock/crypto ticker symbol (e.g., AAPL, BTC)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Full name of the asset"
+    },
+    "asset_type": {
+      "type": "string",
+      "enum": [
+        "stock",
+        "crypto",
+        "etf",
+        "bond",
+        "mutual_fund",
+        "other"
+      ],
+      "default": "stock",
+      "description": "Type of investment"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Number of shares/units owned"
+    },
+    "average_cost": {
+      "type": "number",
+      "description": "Average purchase price per unit"
+    },
+    "current_price": {
+      "type": "number",
+      "description": "Current market price per unit"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about this holding"
+    }
+  },
+  "required": [
+    "symbol",
+    "name",
+    "quantity",
+    "average_cost"
+  ]
+}
