@@ -1,0 +1,44 @@
+{
+  "name": "PortfolioAnalysis",
+  "type": "object",
+  "properties": {
+    "selected_companies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of selected company symbols"
+    },
+    "total_investment": {
+      "type": "number",
+      "description": "Total amount to invest"
+    },
+    "analysis_data": {
+      "type": "object",
+      "description": "Complete analysis results from AI",
+      "properties": {
+        "allocations": {
+          "type": "object"
+        },
+        "valuations": {
+          "type": "object"
+        },
+        "risk_metrics": {
+          "type": "object"
+        },
+        "sharpe_ratios": {
+          "type": "object"
+        }
+      }
+    },
+    "analysis_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of analysis"
+    }
+  },
+  "required": [
+    "selected_companies",
+    "total_investment"
+  ]
+}
