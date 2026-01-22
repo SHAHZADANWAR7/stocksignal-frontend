@@ -1,0 +1,58 @@
+{
+  "name": "Portfolio",
+  "type": "object",
+  "properties": {
+    "userId": {
+      "type": "string",
+      "description": "Reference to the user who owns this portfolio"
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "description": "Stock or ETF ticker symbol"
+          },
+          "quantity": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Number of shares owned"
+          },
+          "avgCost": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Average cost per share"
+          },
+          "currentPrice": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Current market price per share"
+          }
+        },
+        "required": [
+          "symbol",
+          "quantity",
+          "avgCost"
+        ]
+      },
+      "default": [],
+      "description": "Array of portfolio assets"
+    },
+    "totalValue": {
+      "type": "number",
+      "default": 0,
+      "minimum": 0,
+      "description": "Total portfolio value calculated from all assets"
+    },
+    "lastUpdated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last portfolio update"
+    }
+  },
+  "required": [
+    "userId"
+  ]
+}
