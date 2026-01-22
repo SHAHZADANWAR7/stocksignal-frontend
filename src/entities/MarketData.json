@@ -1,0 +1,19 @@
+{
+  "name": "MarketData",
+  "type": "object",
+  "properties": {
+    "data": {
+      "type": "object",
+      "description": "Cached market insights data"
+    },
+    "last_fetched": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this data was fetched"
+    }
+  },
+  "required": [
+    "data",
+    "last_fetched"
+  ]
+}
