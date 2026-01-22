@@ -1,0 +1,69 @@
+{
+  "name": "ShadowPortfolio",
+  "type": "object",
+  "properties": {
+    "scenario_name": {
+      "type": "string",
+      "description": "Name of the scenario (e.g., 'If I moved to Canada')"
+    },
+    "scenario_type": {
+      "type": "string",
+      "enum": [
+        "career_change",
+        "relocation",
+        "early_retirement",
+        "lifestyle_change",
+        "custom"
+      ],
+      "description": "Type of scenario"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the scenario"
+    },
+    "hypothetical_holdings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "estimated_price": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "total_value": {
+      "type": "number",
+      "description": "Total estimated portfolio value"
+    },
+    "monthly_income": {
+      "type": "number",
+      "description": "Expected monthly income in this scenario"
+    },
+    "monthly_expenses": {
+      "type": "number",
+      "description": "Expected monthly expenses"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about this scenario"
+    },
+    "simulation_results": {
+      "type": "object",
+      "description": "Stored AI simulation results to maintain consistency"
+    }
+  },
+  "required": [
+    "scenario_name",
+    "scenario_type"
+  ]
+}
