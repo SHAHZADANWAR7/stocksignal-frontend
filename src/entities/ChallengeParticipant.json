@@ -1,0 +1,65 @@
+{
+  "name": "ChallengeParticipant",
+  "type": "object",
+  "properties": {
+    "challenge_id": {
+      "type": "string",
+      "description": "Reference to Challenge"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Participant email"
+    },
+    "starting_value": {
+      "type": "number",
+      "description": "Initial portfolio value"
+    },
+    "current_value": {
+      "type": "number",
+      "description": "Current portfolio value"
+    },
+    "return_percent": {
+      "type": "number",
+      "description": "Portfolio return percentage"
+    },
+    "trades_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of trades made"
+    },
+    "portfolio_snapshot": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Current portfolio holdings"
+    },
+    "rank": {
+      "type": "number",
+      "description": "Current rank in challenge"
+    },
+    "badges_earned": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Badges earned during challenge"
+    },
+    "joined_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When user joined challenge"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last portfolio update"
+    }
+  },
+  "required": [
+    "challenge_id",
+    "user_email",
+    "starting_value"
+  ]
+}
