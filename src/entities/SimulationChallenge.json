@@ -1,0 +1,88 @@
+{
+  "name": "SimulationChallenge",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Challenge name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Challenge description"
+    },
+    "challenge_type": {
+      "type": "string",
+      "enum": [
+        "highest_return",
+        "lowest_drawdown",
+        "best_sharpe",
+        "target_return",
+        "crisis_survival"
+      ],
+      "description": "Type of challenge"
+    },
+    "scenario_conditions": {
+      "type": "object",
+      "description": "Market scenario parameters"
+    },
+    "target_metric": {
+      "type": "number",
+      "description": "Target value to beat"
+    },
+    "duration_months": {
+      "type": "number",
+      "description": "Challenge duration"
+    },
+    "badge_reward": {
+      "type": "string",
+      "description": "Badge earned for completion"
+    },
+    "created_by_email": {
+      "type": "string",
+      "description": "Creator's email"
+    },
+    "invited_users": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Emails of invited users"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "user_email": {
+            "type": "string"
+          },
+          "portfolio_id": {
+            "type": "string"
+          },
+          "score": {
+            "type": "number"
+          },
+          "result": {
+            "type": "object"
+          }
+        }
+      },
+      "default": [],
+      "description": "Challenge entries with results"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "name",
+    "challenge_type",
+    "created_by_email"
+  ]
+}
