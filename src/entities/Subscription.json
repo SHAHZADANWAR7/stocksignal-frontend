@@ -1,0 +1,44 @@
+{
+  "name": "Subscription",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Subscriber email address"
+    },
+    "frequency": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "weekly",
+        "monthly"
+      ],
+      "default": "weekly",
+      "description": "How often to receive updates"
+    },
+    "interests": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "stocks",
+          "crypto",
+          "economy",
+          "analysis",
+          "news"
+        ]
+      },
+      "description": "Topics of interest"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Subscription status"
+    }
+  },
+  "required": [
+    "email",
+    "frequency"
+  ]
+}
