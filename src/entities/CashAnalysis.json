@@ -1,0 +1,62 @@
+{
+  "name": "CashAnalysis",
+  "type": "object",
+  "properties": {
+    "idle_cash_amount": {
+      "type": "number",
+      "description": "Amount of idle cash identified"
+    },
+    "missed_returns": {
+      "type": "number",
+      "description": "Estimated missed returns from idle cash"
+    },
+    "low_yield_assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "current_yield": {
+            "type": "number"
+          },
+          "opportunity_cost": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "deployment_signal": {
+      "type": "string",
+      "enum": [
+        "invest_now",
+        "pause_dca",
+        "hold_cash",
+        "gradual_entry"
+      ],
+      "description": "Current capital deployment recommendation"
+    },
+    "market_uncertainty_score": {
+      "type": "number",
+      "description": "Current market uncertainty level (0-100)"
+    },
+    "deployment_reasoning": {
+      "type": "string",
+      "description": "Explanation for deployment recommendation"
+    },
+    "optimal_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "analysis_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "analysis_date"
+  ]
+}
