@@ -1,0 +1,69 @@
+{
+  "name": "PortfolioHealth",
+  "type": "object",
+  "properties": {
+    "diversification_score": {
+      "type": "number",
+      "description": "Portfolio diversification score (0-100)"
+    },
+    "fragility_index": {
+      "type": "number",
+      "description": "Portfolio fragility index (0-100, lower is better)"
+    },
+    "dependency_score": {
+      "type": "number",
+      "description": "Sector/asset dependency score (0-100, lower is better)"
+    },
+    "risk_level": {
+      "type": "number",
+      "description": "Overall risk level (0-100)"
+    },
+    "correlation_coefficient": {
+      "type": "number",
+      "description": "Average pairwise correlation coefficient between assets (-1 to 1)"
+    },
+    "health_alerts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "correlation_creep",
+              "risk_drift",
+              "fragility_increase",
+              "concentration_risk"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "weekly_summary": {
+      "type": "string",
+      "description": "AI-generated weekly health summary"
+    },
+    "analysis_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of health check"
+    }
+  },
+  "required": [
+    "diversification_score",
+    "fragility_index",
+    "dependency_score",
+    "analysis_date"
+  ]
+}
