@@ -1,0 +1,52 @@
+{
+  "name": "Transaction",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "buy",
+        "sell"
+      ],
+      "description": "Type of transaction"
+    },
+    "symbol": {
+      "type": "string",
+      "description": "Stock/crypto ticker symbol"
+    },
+    "asset_name": {
+      "type": "string",
+      "description": "Name of the asset"
+    },
+    "quantity": {
+      "type": "number",
+      "description": "Number of shares/units"
+    },
+    "price": {
+      "type": "number",
+      "description": "Price per unit at transaction"
+    },
+    "transaction_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of transaction"
+    },
+    "fees": {
+      "type": "number",
+      "default": 0,
+      "description": "Transaction fees"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Transaction notes"
+    }
+  },
+  "required": [
+    "type",
+    "symbol",
+    "asset_name",
+    "quantity",
+    "price",
+    "transaction_date"
+  ]
+}
