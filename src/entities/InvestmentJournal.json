@@ -1,0 +1,60 @@
+{
+  "name": "InvestmentJournal",
+  "type": "object",
+  "properties": {
+    "transaction_id": {
+      "type": "string",
+      "description": "Reference to the transaction"
+    },
+    "symbol": {
+      "type": "string",
+      "description": "Stock symbol"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "buy",
+        "sell"
+      ],
+      "description": "Type of action"
+    },
+    "why_bought_sold": {
+      "type": "string",
+      "description": "User's reasoning for the trade"
+    },
+    "market_context": {
+      "type": "string",
+      "description": "AI-captured market conditions at time of trade"
+    },
+    "emotional_state": {
+      "type": "string",
+      "enum": [
+        "confident",
+        "uncertain",
+        "excited",
+        "fearful",
+        "neutral",
+        "fomo",
+        "panic"
+      ],
+      "description": "Emotional state during trade"
+    },
+    "entry_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of journal entry"
+    },
+    "behavioral_patterns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "AI-detected patterns"
+    }
+  },
+  "required": [
+    "symbol",
+    "action",
+    "entry_date"
+  ]
+}
