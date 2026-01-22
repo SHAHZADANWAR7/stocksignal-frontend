@@ -1,0 +1,66 @@
+{
+  "name": "BlackSwanSimulation",
+  "type": "object",
+  "properties": {
+    "scenario_type": {
+      "type": "string",
+      "enum": [
+        "war",
+        "rate_hikes",
+        "ai_bubble",
+        "housing"
+      ],
+      "description": "Type of black swan scenario"
+    },
+    "scenario_name": {
+      "type": "string",
+      "description": "Full name of the scenario"
+    },
+    "portfolio_snapshot": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Portfolio holdings at time of simulation"
+    },
+    "immediate_drawdown": {
+      "type": "number",
+      "description": "Estimated immediate drawdown percentage"
+    },
+    "drawdown_timeline": {
+      "type": "string",
+      "description": "Timeline for the drawdown"
+    },
+    "recovery_months": {
+      "type": "number",
+      "description": "Estimated recovery time in months"
+    },
+    "assets_fail_order": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Order in which assets are impacted"
+    },
+    "benefiting_assets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Assets that might benefit from scenario"
+    },
+    "narrative_story": {
+      "type": "string",
+      "description": "Detailed narrative of the scenario"
+    },
+    "simulation_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date simulation was run"
+    }
+  },
+  "required": [
+    "scenario_type",
+    "simulation_date"
+  ]
+}
