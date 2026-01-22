@@ -1,0 +1,70 @@
+{
+  "name": "InvestorScore",
+  "type": "object",
+  "properties": {
+    "overall_score": {
+      "type": "number",
+      "description": "Overall investor IQ score (0-100)"
+    },
+    "discipline_score": {
+      "type": "number",
+      "description": "Score measuring trading discipline"
+    },
+    "overtrading_score": {
+      "type": "number",
+      "description": "Score for frequency of trading (higher is better)"
+    },
+    "panic_selling_score": {
+      "type": "number",
+      "description": "Score for emotional selling behavior"
+    },
+    "concentration_score": {
+      "type": "number",
+      "description": "Portfolio diversification score"
+    },
+    "biases_detected": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "bias_type": {
+            "type": "string",
+            "enum": [
+              "loss_aversion",
+              "recency_bias",
+              "confirmation_bias",
+              "home_country_bias",
+              "chasing_returns"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "improvement_suggestions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "analysis_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of analysis"
+    }
+  },
+  "required": [
+    "overall_score",
+    "analysis_date"
+  ]
+}
