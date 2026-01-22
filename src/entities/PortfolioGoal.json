@@ -1,0 +1,57 @@
+{
+  "name": "PortfolioGoal",
+  "type": "object",
+  "properties": {
+    "goal_name": {
+      "type": "string",
+      "description": "Name of the goal (e.g., Retirement, Home Purchase)"
+    },
+    "goal_type": {
+      "type": "string",
+      "enum": [
+        "retirement",
+        "home_purchase",
+        "emergency_fund",
+        "education",
+        "other"
+      ],
+      "description": "Type of financial goal"
+    },
+    "target_amount": {
+      "type": "number",
+      "description": "Target amount needed for this goal"
+    },
+    "target_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When this goal needs to be achieved"
+    },
+    "current_allocation": {
+      "type": "number",
+      "description": "Percentage of portfolio allocated to this goal (0-100)"
+    },
+    "assigned_holdings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of holding symbols assigned to this goal"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "default": "medium",
+      "description": "Priority level of this goal"
+    }
+  },
+  "required": [
+    "goal_name",
+    "goal_type",
+    "target_amount",
+    "target_date"
+  ]
+}
