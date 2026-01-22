@@ -1,0 +1,251 @@
+import React, { useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend
+} from 'recharts';
+import { Activity, Info } from "lucide-react";
+import {
+  Tooltip as UITooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+/**
+ * Portfolio Return Confidence Bands
+ * Visualizes uncertainty in expected returns using geometric Brownian motion
+ * 
+ * Academic Foundation:
+ * - Samuelson (1965): Rational theory of warrant pricing
+ * - Merton (1969): Lifetime portfolio selection under uncertainty
+ * - Geometric Brownian Motion: dS = μS dt + σS dW
+ */
+export default function ConfidenceBandsChart({ 
+  portfolioReturn, 
+  portfolioRisk,
+  investmentAmount = 10000,
+  monthlyContribution = 0
+}) {
+  // Generate confidence bands using geometric Brownian motion
+  const projectionData = useMemo(() => {
+    const months = 121; // 10 years + initial
+    const data = [];
+    
+    const annualReturn = portfolioReturn / 100;
+    const annualVol = portfolioRisk / 100;
+    
+    for (let month = 0; month < months; month++) {
+      const t = month / 12; // Time in years
+      
+      // Expected value with monthly contributions (arithmetic mean path)
+      let expectedValue = investmentAmount;
+      const monthlyRate = portfolioReturn / 100 / 12;
+      for (let m = 0; m < month; m++) {
+        expectedValue = expectedValue * (1 + monthlyRate) + monthlyContribution;
+      }
+      
+      // Geometric Brownian motion for confidence bands
+      // Account for contributions in median calculation
+      const totalContributions = investmentAmount + (monthlyContribution * month);
+      
+      // Drift-adjusted growth factor (accounts for volatility drag)
+      const drift = annualReturn - 0.5 * annualVol * annualVol;
+      const medianGrowthFactor = Math.exp(drift * t);
+      const median = totalContributions * medianGrowthFactor;
+      
+      // Confidence intervals using lognormal distribution
+      // 68% confidence (±1σ)
+      const upper1sigma = median * Math.exp(annualVol * Math.sqrt(t));
+      const lower1sigma = median * Math.exp(-annualVol * Math.sqrt(t));
+      
+      // 95% confidence (±2σ)
+      const upper2sigma = median * Math.exp(2 * annualVol * Math.sqrt(t));
+      const lower2sigma = median * Math.exp(-2 * annualVol * Math.sqrt(t));
+      
+      data.push({
+        month,
+        year: t,
+        expected: Math.max(0, Math.round(expectedValue)),
+        median: Math.max(0, Math.round(median)),
+        upper1sigma: Math.max(0, Math.round(upper1sigma)),
+        lower1sigma: Math.max(0, Math.round(lower1sigma)),
+        upper2sigma: Math.max(0, Math.round(upper2sigma)),
+        lower2sigma: Math.max(0, Math.round(lower2sigma))
+      });
+    }
+    
+    return data;
+  }, [portfolioReturn, portfolioRisk, investmentAmount, monthlyContribution]);
+  
+  return (
+    <Card className="border-2 border-purple-200 shadow-xl bg-white">
+      <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-3 text-2xl">
+              <Activity className="w-7 h-7" />
+              Return Confidence Bands
+            </CardTitle>
+            <p className="text-white/90 text-sm mt-2">
+              Statistical uncertainty in portfolio growth using geometric Brownian motion
+            </p>
+          </div>
+          <TooltipProvider>
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg cursor-help">
+                  <Info className="w-5 h-5 text-white" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-md">
+                <p className="text-xs leading-relaxed">
+                  <strong>Geometric Brownian Motion (GBM):</strong><br/>
+                  dS = μS dt + σS dW<br/><br/>
+                  • μ (drift): {portfolioReturn.toFixed(1)}% annual return<br/>
+                  • σ (volatility): {portfolioRisk.toFixed(1)}% annualized<br/>
+                  • Accounts for volatility drag: drift = μ - 0.5σ²<br/><br/>
+                  68% band: ±1σ, 95% band: ±2σ<br/>
+                  Contributions: ${monthlyContribution}/month
+                </p>
+              </TooltipContent>
+            </UITooltip>
+          </TooltipProvider>
+        </div>
+      </CardHeader>
+      <CardContent className="p-6">
+        <ResponsiveContainer width="100%" height={400}>
+          <AreaChart data={projectionData} margin={{ left: 20, right: 20, top: 10, bottom: 10 }}>
+            <defs>
+              <linearGradient id="confidence95" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#c084fc" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#c084fc" stopOpacity={0.05}/>
+              </linearGradient>
+              <linearGradient id="confidence68" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.5}/>
+                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.1}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              dataKey="year" 
+              label={{ value: 'Years', position: 'insideBottom', offset: -5 }}
+              tickFormatter={(val) => val.toFixed(0)}
+            />
+            <YAxis 
+              label={{ 
+                value: 'Portfolio Value ($)', 
+                angle: -90, 
+                position: 'insideLeft',
+                offset: 10,
+                style: { fontSize: 12, fill: '#475569', fontWeight: 600 }
+              }}
+              tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+              tick={{ fontSize: 11 }}
+            />
+            <Tooltip 
+              formatter={(value) => [`$${value.toLocaleString()}`, '']}
+              labelFormatter={(year) => `Year ${year.toFixed(1)}`}
+            />
+            <Legend />
+            
+            {/* 95% confidence band */}
+            <Area 
+              type="monotone" 
+              dataKey="upper2sigma" 
+              stroke="none"
+              fill="url(#confidence95)"
+              name="95% Upper Bound"
+            />
+            <Area 
+              type="monotone" 
+              dataKey="lower2sigma" 
+              stroke="none"
+              fill="url(#confidence95)"
+              name="95% Lower Bound"
+            />
+            
+            {/* 68% confidence band */}
+            <Area 
+              type="monotone" 
+              dataKey="upper1sigma" 
+              stroke="none"
+              fill="url(#confidence68)"
+              name="68% Upper Bound"
+            />
+            <Area 
+              type="monotone" 
+              dataKey="lower1sigma" 
+              stroke="none"
+              fill="url(#confidence68)"
+              name="68% Lower Bound"
+            />
+            
+            {/* Expected value */}
+            <Area 
+              type="monotone" 
+              dataKey="expected" 
+              stroke="#6366f1"
+              strokeWidth={3}
+              fill="none"
+              name="Expected Value"
+              dot={false}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+        
+        <div className="grid md:grid-cols-2 gap-4 mt-6">
+          <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+            <h4 className="font-semibold text-purple-900 mb-2">68% Confidence Range (1σ)</h4>
+            <p className="text-sm text-purple-800">
+              At 10 years: <strong>${projectionData[120].lower1sigma.toLocaleString()}</strong> to{' '}
+              <strong>${projectionData[120].upper1sigma.toLocaleString()}</strong>
+            </p>
+            <p className="text-xs text-purple-700 mt-1">
+              ~68% chance actual value falls in this range
+            </p>
+          </div>
+          
+          <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+            <h4 className="font-semibold text-indigo-900 mb-2">95% Confidence Range (2σ)</h4>
+            <p className="text-sm text-indigo-800">
+              At 10 years: <strong>${projectionData[120].lower2sigma.toLocaleString()}</strong> to{' '}
+              <strong>${projectionData[120].upper2sigma.toLocaleString()}</strong>
+            </p>
+            <p className="text-xs text-indigo-700 mt-1">
+              ~95% chance actual value falls in this range
+            </p>
+          </div>
+        </div>
+        
+        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-start gap-2">
+            <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-blue-800">
+              <p className="font-semibold mb-2">📊 Statistical Interpretation (100% Data-Driven)</p>
+              <ul className="space-y-1 text-xs">
+                <li>• <strong>Shaded areas:</strong> Statistical uncertainty in portfolio growth based on historical volatility patterns</li>
+                <li>• <strong>Wider bands:</strong> Higher portfolio volatility ({portfolioRisk.toFixed(1)}%) = more uncertain outcomes</li>
+                <li>• <strong>68% band (1σ):</strong> ~68% probability actual outcome falls within this range</li>
+                <li>• <strong>95% band (2σ):</strong> ~95% probability actual outcome falls within this range</li>
+                <li>• <strong>Methodology:</strong> Geometric Brownian motion (GBM) with drift μ={portfolioReturn.toFixed(1)}%, volatility σ={portfolioRisk.toFixed(1)}%, accounts for volatility drag</li>
+                <li>• <strong>Contributions:</strong> ${investmentAmount.toLocaleString()} initial + ${monthlyContribution}/month compounded monthly</li>
+              </ul>
+              <p className="mt-2 pt-2 border-t border-blue-300 text-[10px] text-blue-700 italic">
+                These are statistical projections for educational purposes. Actual returns may differ due to market conditions, 
+                economic changes, and unforeseen events. Past performance does not guarantee future results.
+              </p>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
