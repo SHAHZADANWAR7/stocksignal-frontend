@@ -1,2 +1,5 @@
-export { createPageUrl } from "./index.js";
+export function createPageUrl(pageName) {
+  return `/${pageName}`;
+}
+
 export * from "./awsClient.js";
