@@ -14,3 +14,8 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
+  customHeaders:
+    - pattern: '**/*.css'
+      headers:
+        - key: Content-Type
+          value: 'text/css; charset=utf-8'
