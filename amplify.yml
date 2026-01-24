@@ -3,27 +3,6 @@ frontend:
   phases:
     install:
       commands:
-        - rm -rf node_modules package-lock.json
-        - npm install
-    build:
-      commands:
-        - npm run build
-  artifacts:
-    baseDirectory: dist
-    files:
-      - '**/*'
-  cache:
-    paths:
-      - node_modules/**/*
-  customHeaders:
-    - pattern: '**/*.css'
-      headers:
-        - key: Content-Type
-          value: 'text/css; charset=utf-8'
-frontend:
-  phases:
-    install:
-      commands:
         - npm install
     build:
       commands:
