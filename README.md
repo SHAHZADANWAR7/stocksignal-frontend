@@ -1,1 +1,2 @@
 # StockSignal Frontend
+# Force rebuild
