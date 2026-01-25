@@ -11,16 +11,6 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 
-export default function Transactions() {
-  const [transactions, setTransactions] = useState([]);
-  const [holdings, setHoldings] = useState([]);
-  const [journals, setJournals] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showJournalInsights, setShowJournalInsights] = useState(false);
-  const [journalInsights, setJournalInsights] = useState(null);
-  const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
-  const [formData, setFormData] = useState({
-    type: "buy",
     symbol: "",
     asset_name: "",
     quantity: "",
