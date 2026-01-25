@@ -38,7 +38,7 @@ import {
   getSustainabilityLabel,
   getSustainabilityColor,
   validateBeforeRender
-} from "@/components/utils/shadowPortfolioValidation";
+} from "@/components/utils/validation/shadowPortfolioValidation";
 import {
   Dialog,
   DialogContent,
