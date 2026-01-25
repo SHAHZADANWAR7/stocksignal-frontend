@@ -10,6 +10,7 @@ import { ArrowUpCircle, ArrowDownCircle, Plus, BookOpen, Loader2 } from "lucide-
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+  const [formData, setFormData] = useState({
 
     symbol: "",
     asset_name: "",
