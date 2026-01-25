@@ -1,4 +1,4 @@
-import awsApi from './awsApi';
+import awsApi from './api/awsApi';
 
 /**
  * Get the start of the current week (Monday)

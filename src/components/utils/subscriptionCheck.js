@@ -3,7 +3,7 @@
  */
 
 import { Auth } from 'aws-amplify';
-import awsApi from './awsApi';
+import awsApi from './api/awsApi';
 
 /**
  * Check if user has active premium subscription
