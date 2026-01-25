@@ -11,7 +11,6 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
 import { TrendingUp, TrendingDown, Search, Lightbulb, Loader2, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";

@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowUpCircle, ArrowDownCircle, Plus, BookOpen, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
 export default function Transactions() {
