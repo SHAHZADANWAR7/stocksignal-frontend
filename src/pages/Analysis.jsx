@@ -5,8 +5,8 @@
  * Core responsibility: UI orchestration and workflow control
  * - State management for analysis configuration
  * - Event handling and data flow coordination
- * - Calls to portfolio calcs (TempPortfolioCalcsAWS.js)
- * - Calls to advanced analysis (TempAdvancedAnalysisAWS.js)
+ * - Calls to portfolio calcs (../hooks/usePortfolioCalculations.js)
+ * - Calls to advanced analysis (../hooks/useAdvancedAnalysis.js)
  * - UI rendering and data display
  * 
  * This file does NOT contain:
@@ -29,8 +29,8 @@ import {
   BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from "recharts";
 import AnalysisTabs from "@/components/analysis/AnalysisTabs";
-import * as PortfolioCalcs from "@/pages/TempPortfolioCalcsAWS";
-import * as AdvancedAnalysis from "@/pages/TempAdvancedAnalysisAWS";
+import * as PortfolioCalcs from "@/pages/../hooks/usePortfolioCalculations";
+import * as AdvancedAnalysis from "@/pages/../hooks/useAdvancedAnalysis";
 
 export default function Analysis() {
   // State management
