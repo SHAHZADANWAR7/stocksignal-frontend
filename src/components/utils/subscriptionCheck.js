@@ -1,6 +1,5 @@
 /**
  * Subscription and Usage Management
- * AWS Amplify version - adapted from Base44
  */
 
 import { Auth } from 'aws-amplify';

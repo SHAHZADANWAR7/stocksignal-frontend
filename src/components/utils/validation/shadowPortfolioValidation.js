@@ -42,7 +42,6 @@
  * 3. Validate your results using validateShadowPortfolioResults()
  * 4. Update SHADOW_PORTFOLIO_TESTS.md with new test cases
  * 
- * MAINTAINER CONTACT: Base44 Platform Team
  * LAST MAJOR REVISION: 2026-01-12
  * ═══════════════════════════════════════════════════════════════════════════════
  */
