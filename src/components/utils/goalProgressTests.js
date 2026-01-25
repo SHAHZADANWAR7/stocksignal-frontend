@@ -1,4 +1,4 @@
-import { calculateGoalMetrics } from "./goalCalculationEngine";
+import { calculateGoalMetrics } from "./calculations/goalCalculationEngine";
 import { differenceInMonths } from "date-fns";
 
 /**
