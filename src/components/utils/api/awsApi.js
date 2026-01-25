@@ -1,4 +1,4 @@
-import awsClient from './awsClient';
+import { awsApi } from './awsClient';
 
 /**
  * Call AWS Lambda function
