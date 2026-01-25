@@ -1,3 +1,4 @@
+import { getCurrentUser, signInWithRedirect, signOut } from 'aws-amplify/auth';
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Target, TrendingUp, Shield, Brain, Users, Lightbulb } from "lucide-react";

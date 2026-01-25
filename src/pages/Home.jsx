@@ -1,3 +1,4 @@
+import { getCurrentUser, signInWithRedirect, signOut } from 'aws-amplify/auth';
 import React from "react";
 import { Link } from "react-router-dom";
 import { TrendingUp, Target, Shield, Brain, BarChart3, Zap } from "lucide-react";

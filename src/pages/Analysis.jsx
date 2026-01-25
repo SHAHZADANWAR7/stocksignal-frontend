@@ -1,3 +1,4 @@
+import { getCurrentUser, signInWithRedirect, signOut } from 'aws-amplify/auth';
 /**
  * ORCHESTRATION LAYER - AWS AMPLIFY VERSION
  * 500+ lines of pure orchestration and state management
