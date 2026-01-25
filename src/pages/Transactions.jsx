@@ -10,8 +10,17 @@ import { ArrowUpCircle, ArrowDownCircle, Plus, BookOpen, Loader2 } from "lucide-
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-  const [formData, setFormData] = useState({
 
+export default function Transactions() {
+  const [transactions, setTransactions] = useState([]);
+  const [holdings, setHoldings] = useState([]);
+  const [journals, setJournals] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showJournalInsights, setShowJournalInsights] = useState(false);
+  const [journalInsights, setJournalInsights] = useState(null);
+  const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
+  const [formData, setFormData] = useState({
+    type: "buy",
     symbol: "",
     asset_name: "",
     quantity: "",
@@ -309,37 +318,37 @@ import { Badge } from "@/components/ui/badge";
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-slate-50">
-                        <TableHead className="font-semibold">Type</TableHead>
-                        <TableHead className="font-semibold">Symbol</TableHead>
-                        <TableHead className="font-semibold">Asset</TableHead>
-                        <TableHead className="font-semibold text-right">Quantity</TableHead>
-                        <TableHead className="font-semibold text-right">Price</TableHead>
-                        <TableHead className="font-semibold text-right">Total</TableHead>
-                        <TableHead className="font-semibold">Date</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                  <table className="w-full">
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="text-left p-4 font-semibold">Type</th>
+                        <th className="text-left p-4 font-semibold">Symbol</th>
+                        <th className="text-left p-4 font-semibold">Asset</th>
+                        <th className="text-right p-4 font-semibold">Quantity</th>
+                        <th className="text-right p-4 font-semibold">Price</th>
+                        <th className="text-right p-4 font-semibold">Total</th>
+                        <th className="text-left p-4 font-semibold">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                       {transactions.map((tx) => (
-                        <TableRow key={tx.id} className="border-b border-slate-100">
-                          <TableCell>
+                        <tr key={tx.id} className="border-b border-slate-100">
+                          <td className="p-4">
                             <Badge className={tx.type === 'buy' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}>
                               {tx.type === 'buy' ? <ArrowUpCircle className="w-3 h-3 mr-1" /> : <ArrowDownCircle className="w-3 h-3 mr-1" />}
                               {tx.type.toUpperCase()}
                             </Badge>
-                          </TableCell>
-                          <TableCell className="font-semibold text-slate-900">{tx.symbol}</TableCell>
-                          <TableCell className="text-slate-600">{tx.asset_name}</TableCell>
-                          <TableCell className="text-right text-slate-900">{tx.quantity}</TableCell>
-                          <TableCell className="text-right text-slate-900">${tx.price.toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-semibold text-slate-900">${(tx.quantity * tx.price + (tx.fees || 0)).toFixed(2)}</TableCell>
-                          <TableCell className="text-slate-600">{format(new Date(tx.transaction_date), "MMM d, yyyy")}</TableCell>
-                        </TableRow>
+                          </td>
+                          <td className="p-4 font-semibold text-slate-900">{tx.symbol}</td>
+                          <td className="p-4 text-slate-600">{tx.asset_name}</td>
+                          <td className="p-4 text-right text-slate-900">{tx.quantity}</td>
+                          <td className="p-4 text-right text-slate-900">${tx.price.toFixed(2)}</td>
+                          <td className="p-4 text-right font-semibold text-slate-900">${(tx.quantity * tx.price + (tx.fees || 0)).toFixed(2)}</td>
+                          <td className="p-4 text-slate-600">{format(new Date(tx.transaction_date), "MMM d, yyyy")}</td>
+                        </tr>
                       ))}
-                    </TableBody>
-                  </Table>
+                    </tbody>
+                  </table>
                 </div>
                 {transactions.length === 0 && (
                   <div className="text-center py-12">
