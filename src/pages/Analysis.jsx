@@ -12,7 +12,6 @@
  * This file does NOT contain:
  * - Portfolio mathematical calculations
  * - Behavioral analysis or narrative generation
- * - Card/tab rendering (belongs to TempStrategyCardsAWS / TempAnalysisTabsAWS)
  */
 
 import React, { useState, useEffect } from "react";
@@ -29,7 +28,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from "recharts";
-import TempStrategyCardsAWS from "@/pages/TempStrategyCardsAWS";
 import TempAnalysisTabsAWS from "@/pages/TempAnalysisTabsAWS";
 import * as PortfolioCalcs from "@/pages/TempPortfolioCalcsAWS";
 import * as AdvancedAnalysis from "@/pages/TempAdvancedAnalysisAWS";
@@ -343,7 +341,6 @@ export default function Analysis() {
               </div>
 
               {/* Strategy cards */}
-              <TempStrategyCardsAWS analysisResult={analysisResult} selectedStrategy={selectedStrategy} onStrategySelect={setSelectedStrategy} />
 
               {/* Analysis tabs */}
               <TempAnalysisTabsAWS analysisResult={analysisResult} selectedStrategy={selectedStrategy} activeTab={activeTab} setActiveTab={setActiveTab} />
