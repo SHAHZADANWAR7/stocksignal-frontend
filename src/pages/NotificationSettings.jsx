@@ -6,11 +6,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Bell, Mail, TrendingUp, Calendar, CheckCircle, AlertCircle, Send, Loader2, Sparkles, Star } from "lucide-react";
 import { motion } from "framer-motion";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function NotificationSettings() {
   const [user, setUser] = useState(null);

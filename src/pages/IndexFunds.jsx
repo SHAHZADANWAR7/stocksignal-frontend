@@ -5,7 +5,6 @@ import { callAwsFunction } from "@/components/utils/api/awsApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { CardSkeleton } from "@/components/ui/skeleton";
 import { 
   TrendingUp, 
   TrendingDown, 

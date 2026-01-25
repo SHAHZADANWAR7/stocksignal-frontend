@@ -18,7 +18,6 @@ import {
   TrendingUp
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Subscribe() {
   const [stripeSubscription, setStripeSubscription] = useState(null);
