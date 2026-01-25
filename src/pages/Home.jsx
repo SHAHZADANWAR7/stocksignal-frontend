@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, LineChart, Brain, Target, Shield, Zap, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { awsApi } from "@/api/base44Client";
 import { motion } from "framer-motion";
 
 export default function Home() {
@@ -23,7 +23,7 @@ export default function Home() {
 
   const checkAuth = async () => {
     try {
-      const currentUser = await base44.auth.me();
+      const currentUser = await awsApi.auth.me();
       setUser(currentUser);
     } catch (error) {
       setUser(null);
@@ -34,7 +34,7 @@ export default function Home() {
     if (user) {
       window.location.href = createPageUrl("Dashboard");
     } else {
-      base44.auth.redirectToLogin();
+      awsApi.auth.redirectToLogin();
     }
   };
 
