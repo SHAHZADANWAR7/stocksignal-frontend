@@ -158,9 +158,9 @@ export default function Layout({ children }) {
           <div className="text-center">
             <p className="text-sm text-slate-400">© {new Date().getFullYear()} StockSignal - Investment Learning Platform</p>
             <div className="flex justify-center gap-4 mt-2 text-xs">
-              <Link to="/terms-of-service" className="text-slate-400 hover:text-white">Terms</Link>
-              <Link to="/privacy-policy" className="text-slate-400 hover:text-white">Privacy</Link>
-              <Link to="/disclaimer" className="text-slate-400 hover:text-white">Disclaimer</Link>
+              <Link to={createPageUrl("TermsOfService")} className="text-slate-400 hover:text-white">Terms</Link>
+              <Link to={createPageUrl("PrivacyPolicy")} className="text-slate-400 hover:text-white">Privacy</Link>
+              <Link to={createPageUrl("Disclaimer")} className="text-slate-400 hover:text-white">Disclaimer</Link>
             </div>
           </div>
         </footer>
