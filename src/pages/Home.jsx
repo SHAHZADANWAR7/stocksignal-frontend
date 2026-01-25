@@ -1,17 +1,10 @@
-<<<<<<< HEAD
-import { getCurrentUser, signInWithRedirect, signOut } from 'aws-amplify/auth';
-import React from "react";
-import { Link } from "react-router-dom";
-import { TrendingUp, Target, Shield, Brain, BarChart3, Zap } from "lucide-react";
-=======
 import React, { useState, useEffect } from "react";
->>>>>>> 41db864aec67b716f2e2255f7ee504a4c1e573c4
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, LineChart, Brain, Target, Shield, Zap, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { awsApi } from "@/api/base44Client";
+import { awsApi } from "@/utils/awsClient";
 import { motion } from "framer-motion";
 
 export default function Home() {
