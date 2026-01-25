@@ -144,12 +144,12 @@ export default function NotificationSettings() {
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
+  <div className="container">
+    <div className="header">
       <h1>📊 StockSignal</h1>
       <p>Your ${newsletterData.frequency} Investment Digest</p>
     </div>
-    <div class="content">
+    <div className="content">
       ${typeof content === 'string' ? content.replace(/\n/g, '<br>') : content}
     </div>
   </div>
