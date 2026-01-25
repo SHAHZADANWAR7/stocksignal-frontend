@@ -17,7 +17,7 @@ import {
 import { motion } from "framer-motion";
 import { checkUsageLimit, incrementUsage, getRemainingUsage } from "@/components/utils/usageLimit";
 import { format } from "date-fns";
-import { calculateCashOpportunity, estimateMarketUncertainty } from "@/components/utils/calculations/cashOpportunityMetrics";
+import { calculateCashOpportunityMetrics, estimateMarketUncertainty } from "@/components/utils/calculations/cashOpportunityMetrics";
 
 export default function CashIntelligence() {
   const [analysis, setAnalysis] = useState(null);
