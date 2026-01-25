@@ -118,15 +118,7 @@ class AWSClient {
   }
 
   async updateUsageStats(email, action) {
-
-  async invokeLLM(data) {
-    return this.post('/llm/invoke', data);
-  }
     return this.post('/usage/update', { email, action });
-
-  async invokeLLM(data) {
-    return this.post('/llm/invoke', data);
-  }
   }
 
   async invokeLLM(data) {
