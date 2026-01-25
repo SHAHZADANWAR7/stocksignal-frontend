@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import awsApi from "@/components/utils/api/awsApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -379,7 +379,7 @@ Be specific about formulas when asked. Explain what scores mean in practical ter
       // Detect if user is asking about stocks, markets, or investment recommendations
       const needsMarketData = /stock|ticker|symbol|invest in|buy|sell|recommend|analysis|analyze|market|company|shares|equity|NYSE|NASDAQ/i.test(userMessage);
       
-      const result = await base44.integrations.Core.InvokeLLM({
+      const result = await awsApi.invokeLLM({
         prompt: `${appContext}\n\nUser question: ${userMessage}\n\nProvide a helpful, concise answer. ${needsMarketData ? '\n\nCRITICAL FOR STOCK ANALYSIS:\n- You MUST fetch the current, real-time stock price from live market data sources\n- DO NOT estimate, guess, or use outdated prices\n- Include the most recent news, earnings reports, and significant events from the past 30 days\n- Mention the exact date/time of the price data you\'re using\n- If you cannot access real-time data, clearly state this limitation\n- Provide current market analysis, fundamentals, valuation, risks, and clear reasoning\n- Keep it simple and in layman terms - explain like you would to a friend\n- For stock recommendations, always explain WHY and consider risk factors\n- Base your analysis on TODAY\'s market conditions and recent events' : ''}`,
         add_context_from_internet: needsMarketData
       });

@@ -49,7 +49,22 @@ export const awsApi = {
 
   // User
   getCurrentUser: async () => {
+
+  // LLM
+  invokeLLM: async (data) => {
+    return awsClient.invokeLLM(data);
+  },
     return awsClient.getCurrentUser();
+
+  // LLM
+  invokeLLM: async (data) => {
+    return awsClient.invokeLLM(data);
+  },
+  },
+
+  // LLM
+  invokeLLM: async (data) => {
+    return awsClient.invokeLLM(data);
   },
 };
 
