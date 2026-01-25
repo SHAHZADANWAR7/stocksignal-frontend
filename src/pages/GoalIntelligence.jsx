@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { generateSavingsScenarios, generateInvestmentScenarios } from "@/components/utils/financialCalculations";
+import { generateSavingsScenarios, generateInvestmentScenarios } from "@/components/utils/calculations/financialCalculations";
 import { calculateGoalMetrics, calculateStressTestMetrics } from "@/components/utils/calculations/goalCalculationEngine";
 import { validateGoalAnalysis, generateFallbackAllocation, formatValidationError } from "@/components/utils/validation/goalValidationGuardrails";
 import { runAllGoalProgressTests } from "@/components/utils/goalProgressTests";
