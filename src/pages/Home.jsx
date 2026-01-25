@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, LineChart, Brain, Target, Shield, Zap, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { getCurrentUser, signInWithRedirect } from "aws-amplify/auth";
 import { motion } from "framer-motion";
 
@@ -25,7 +24,7 @@ export default function Home() {
 
   const handleGetStarted = async () => {
     if (user) {
-      window.location.href = createPageUrl("Dashboard");
+      window.location.href = "/dashboard";
     } else {
       await signInWithRedirect();
     }
@@ -273,7 +272,7 @@ export default function Home() {
                 We're here to help with your investment learning journey
               </p>
               <Link 
-                to={createPageUrl("ContactSupport")}
+                to="/contact-support"
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-105"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -292,15 +291,15 @@ export default function Home() {
                 All rights reserved
               </p>
               <div className="flex flex-wrap justify-center md:justify-end gap-4 text-xs">
-                <Link to={createPageUrl("TermsOfService")} className="text-slate-400 hover:text-blue-400 transition-colors">
+                <Link to="/terms-of-service" className="text-slate-400 hover:text-blue-400 transition-colors">
                   Terms of Service
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link to={createPageUrl("PrivacyPolicy")} className="text-slate-400 hover:text-blue-400 transition-colors">
+                <Link to="/privacy-policy" className="text-slate-400 hover:text-blue-400 transition-colors">
                   Privacy Policy
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link to={createPageUrl("Disclaimer")} className="text-slate-400 hover:text-blue-400 transition-colors">
+                <Link to="/disclaimer" className="text-slate-400 hover:text-blue-400 transition-colors">
                   Legal Disclaimer
                 </Link>
               </div>
