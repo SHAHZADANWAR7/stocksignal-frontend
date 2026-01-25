@@ -340,8 +340,6 @@ export default function Analysis() {
                 ))}
               </div>
 
-              {/* Strategy cards */}
-
               {/* Analysis tabs */}
               <AnalysisTabs analysisResult={analysisResult} selectedStrategy={selectedStrategy} activeTab={activeTab} setActiveTab={setActiveTab} />
 
