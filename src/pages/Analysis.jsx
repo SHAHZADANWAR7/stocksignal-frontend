@@ -28,7 +28,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from "recharts";
-import TempAnalysisTabsAWS from "@/pages/TempAnalysisTabsAWS";
+import AnalysisTabs from "@/components/analysis/AnalysisTabs";
 import * as PortfolioCalcs from "@/pages/TempPortfolioCalcsAWS";
 import * as AdvancedAnalysis from "@/pages/TempAdvancedAnalysisAWS";
 
@@ -343,7 +343,7 @@ export default function Analysis() {
               {/* Strategy cards */}
 
               {/* Analysis tabs */}
-              <TempAnalysisTabsAWS analysisResult={analysisResult} selectedStrategy={selectedStrategy} activeTab={activeTab} setActiveTab={setActiveTab} />
+              <AnalysisTabs analysisResult={analysisResult} selectedStrategy={selectedStrategy} activeTab={activeTab} setActiveTab={setActiveTab} />
 
               {/* Stress test results */}
               {stressTestResults && (
