@@ -1,129 +1,179 @@
-import { Auth, API } from 'aws-amplify';
+import { Amplify } from "aws-amplify";
+import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
 
-class AWSClient {
-  constructor() {
-    this.apiName = 'api';
-  }
+// AWS Configuration from environment variables
+const AWS_CONFIG = {
+  API_GATEWAY_URL: import.meta.env.VITE_AWS_API_GATEWAY_URL || "https://4ku664jsl7.execute-api.us-east-1.amazonaws.com/Production1",
+  COGNITO_USER_POOL_ID: import.meta.env.VITE_COGNITO_USER_POOL_ID || "us-east-1_W41gAu1rf",
+  COGNITO_APP_CLIENT_ID: import.meta.env.VITE_COGNITO_APP_CLIENT_ID || "15i5hjimlsg2b339bspclnocq4",
+  COGNITO_REGION: import.meta.env.VITE_COGNITO_REGION || "us-east-1",
+};
 
-  async getCurrentUser() {
-    try {
-      const user = await Auth.currentAuthenticatedUser();
-      return user;
-    } catch (error) {
-      console.error('Error getting current user:', error);
-      return null;
+// Configure AWS Amplify
+Amplify.configure({
+  Auth: {
+    Cognito: {
+      userPoolId: AWS_CONFIG.COGNITO_USER_POOL_ID,
+      userPoolClientId: AWS_CONFIG.COGNITO_APP_CLIENT_ID,
+      region: AWS_CONFIG.COGNITO_REGION,
     }
   }
+});
 
-  async getIdToken() {
-    try {
-      const session = await Auth.currentSession();
-      return session.getIdToken().getJwtToken();
-    } catch (error) {
-      console.error('Error getting ID token:', error);
-      return null;
+// Get JWT token from Cognito
+const getAuthToken = async () => {
+  try {
+    const session = await fetchAuthSession();
+    return session.tokens?.idToken?.toString();
+  } catch (error) {
+    console.error("Error getting auth token:", error);
+    return null;
+  }
+};
+
+// Generic API Gateway call
+const apiCall = async (path, method = "POST", body = null) => {
+  try {
+    const token = await getAuthToken();
+    
+    const options = {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    };
+
+    if (body) {
+      options.body = JSON.stringify(body);
     }
-  }
 
-  async apiCall(path, method = 'GET', body = null) {
-    try {
-      const token = await this.getIdToken();
-      
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      };
+    const url = `${AWS_CONFIG.API_GATEWAY_URL}${path}`;
+    const response = await fetch(url, options);
 
-      if (body) {
-        config.body = body;
-      }
-
-      let response;
-      switch (method.toUpperCase()) {
-        case 'GET':
-          response = await API.get(this.apiName, path, config);
-          break;
-        case 'POST':
-          response = await API.post(this.apiName, path, config);
-          break;
-        case 'PUT':
-          response = await API.put(this.apiName, path, config);
-          break;
-        case 'DELETE':
-          response = await API.del(this.apiName, path, config);
-          break;
-        default:
-          throw new Error(`Unsupported method: ${method}`);
-      }
-
-      return response;
-    } catch (error) {
-      console.error('API call error:', error);
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API Error ${response.status}: ${errorText}`);
     }
-  }
 
-  async get(path) {
-    return this.apiCall(path, 'GET');
+    return response.json();
+  } catch (error) {
+    console.error(`API call failed: ${method} ${path}`, error);
+    throw error;
   }
+};
 
-  async post(path, body) {
-    return this.apiCall(path, 'POST', body);
-  }
+// Export all API methods
+export const awsApi = {
+  // Stock data
+  getStockQuote: (symbol) => apiCall('/getStockQuote', 'POST', { symbol }),
+  getStockBatch: (symbols, forceRefresh = true) => apiCall('/getStockBatch', 'POST', { symbols, forceRefresh }),
+  getStockAnalysis: (symbol) => apiCall('/getStockAnalysis', 'POST', { symbol }),
+  getVIXData: () => apiCall('/getVIXData', 'POST'),
 
-  async put(path, body) {
-    return this.apiCall(path, 'PUT', body);
-  }
+  // Trading
+  executePaperTrade: (tradeData) => apiCall('/executePaperTrade', 'POST', tradeData),
+  syncPortfolio: (portfolioData) => apiCall('/syncPortfolio', 'POST', portfolioData),
 
-  async delete(path) {
-    return this.apiCall(path, 'DELETE');
-  }
+  // Beta
+  calculateRealBeta: (symbol) => apiCall('/calculateRealBeta', 'POST', { symbol }),
 
-  async getStockQuote(symbol) {
-    return this.get(`/stock/quote/${symbol}`);
-  }
+  // Emails
+  sendWeeklySummary: (email) => apiCall('/sendWeeklySummary', 'POST', { email }),
+  sendDailyAlert: (email) => apiCall('/sendDailyAlert', 'POST', { email }),
+  sendMonthlyReport: (email) => apiCall('/sendMonthlyReport', 'POST', { email }),
+  sendNewsletter: (email) => apiCall('/sendNewsletter', 'POST', { email }),
+  sendSupportEmail: (data) => apiCall('/sendSupportEmail', 'POST', data),
 
-  async getStockAnalysis(symbol) {
-    return this.get(`/stock/analysis/${symbol}`);
-  }
+  // LLM
+  invokeLLM: (prompt, addContext = false, responseSchema = null) => 
+    apiCall('/invokeLLM', 'POST', {
+      prompt,
+      add_context_from_internet: addContext,
+      response_json_schema: responseSchema,
+    }),
 
-  async calculateExpectedReturn(data) {
-    return this.post('/portfolio/expected-return', data);
-  }
+  // Companies
+  getCompanies: async () => {
+    const response = await apiCall("/companies", "GET");
+    return response?.Items || response?.items || [];
+  },
 
-  async getVIXData() {
-    return this.get('/market/vix');
-  }
+  // Analyses
+  getPortfolioAnalyses: async (userId) => {
+    const response = await apiCall(`/analyses?userId=${userId}`, "GET");
+    return response?.Items || response?.items || [];
+  },
 
-  async getPortfolioAnalysis(data) {
-    return this.post('/portfolio/analysis', data);
-  }
+  getAnalysis: async (analysisId) => {
+    const response = await apiCall(`/analyses/${analysisId}`, "GET");
+    return response?.Item || response;
+  },
 
-  async saveAnalysis(data) {
-    return this.post('/portfolio/save-analysis', data);
-  }
+  saveAnalysis: async (data) => {
+    const user = await getCurrentUser();
+    return await apiCall("/saveAnalysis", "POST", {
+      userId: user.userId,
+      ...data,
+    });
+  },
 
-  async sendEmail(data) {
-    return this.post('/email/send', data);
-  }
+  // Trades
+  executeTrade: (tradeData) => apiCall("/executeTrade", "POST", tradeData),
 
-  async checkSubscription(email) {
-    return this.get(`/subscription/check/${email}`);
-  }
+  // Portfolio
+  getPortfolio: async (userId) => {
+    const response = await apiCall(`/portfolio?userId=${userId}`, "GET");
+    return response?.Item || response;
+  },
 
-  async getUsageStats(email) {
-    return this.get(`/usage/stats/${email}`);
-  }
+  syncPortfolioData: (userId) => apiCall("/syncPortfolio", "POST", { userId }),
 
-  async updateUsageStats(email, action) {
-    return this.post('/usage/update', { email, action });
-  }
+  // Transactions
+  getTransactions: async (userId) => {
+    const response = await apiCall(`/transactions?userId=${userId}`, "GET");
+    return response?.Items || response?.items || [];
+  },
 
-  async invokeLLM(data) {
-    return this.post('/llm/invoke', data);
-  }
-}
+  createTransaction: async (data) => {
+    const response = await apiCall("/transactions", "POST", data);
+    return response?.Item || response;
+  },
 
-export default new AWSClient();
+  // Holdings
+  getHoldings: async (userId) => {
+    const response = await apiCall(`/holdings?userId=${userId}`, "GET");
+    return response?.Items || response?.items || [];
+  },
+
+  createHolding: async (data) => {
+    const response = await apiCall("/holdings", "POST", data);
+    return response?.Item || response;
+  },
+
+  updateHolding: async (holdingId, data) => {
+    const response = await apiCall(`/holdings/${holdingId}`, "PUT", data);
+    return response?.Item || response;
+  },
+
+  deleteHolding: async (holdingId) => {
+    return await apiCall(`/holdings/${holdingId}`, "DELETE");
+  },
+
+  // Investment Journal
+  getInvestmentJournals: async (userId) => {
+    const response = await apiCall(`/journals?userId=${userId}`, "GET");
+    return response?.Items || response?.items || [];
+  },
+
+  createInvestmentJournal: async (data) => {
+    const response = await apiCall("/journals", "POST", data);
+    return response?.Item || response;
+  },
+
+  // Behavioral Analysis
+  analyzeBehavioralPatterns: async (prompt) => {
+    const response = await apiCall("/analyzeBehavior", "POST", { prompt });
+    return response?.analysis || response;
+  },
+};
