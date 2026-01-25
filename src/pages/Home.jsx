@@ -291,15 +291,15 @@ export default function Home() {
                 All rights reserved
               </p>
               <div className="flex flex-wrap justify-center md:justify-end gap-4 text-xs">
-                <Link to="/terms-of-service" className="text-slate-400 hover:text-blue-400 transition-colors">
+                <Link to={createPageUrl("TermsOfService")} className="text-slate-400 hover:text-blue-400 transition-colors">
                   Terms of Service
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link to="/privacy-policy" className="text-slate-400 hover:text-blue-400 transition-colors">
+                <Link to={createPageUrl("PrivacyPolicy")} className="text-slate-400 hover:text-blue-400 transition-colors">
                   Privacy Policy
                 </Link>
                 <span className="text-slate-700">•</span>
-                <Link to="/disclaimer" className="text-slate-400 hover:text-blue-400 transition-colors">
+                <Link to={createPageUrl("Disclaimer")} className="text-slate-400 hover:text-blue-400 transition-colors">
                   Legal Disclaimer
                 </Link>
               </div>

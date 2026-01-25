@@ -66,11 +66,11 @@ function App() {
           
           <Route path="/goal-intelligence" element={<GoalIntelligence />} />
           
-          <Route path="/terms-of-service" element={<TermsOfService />} />
+          <Route path="/TermsOfService" element={<TermsOfService />} />
           
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
           
-          <Route path="/disclaimer" element={<Disclaimer />} />
+          <Route path="/Disclaimer" element={<Disclaimer />} />
           
           <Route path="/platform-philosophy" element={<PlatformPhilosophy />} />
           
