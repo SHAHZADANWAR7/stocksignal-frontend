@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { LayoutDashboard, Building2, LineChart, Briefcase, TrendingUp, Bell, BarChart3, Target, Brain, Heart, DollarSign, GitBranch, ArrowLeftRight, Trophy, FlaskConical, Newspaper, User, LogOut, LogIn, Mail, BookOpen } from "lucide-react";
-import { getCurrentUser, signOut } from 'aws-amplify/auth';
+import { getCurrentUser, signOut, signInWithRedirect } from 'aws-amplify/auth';
 
 const navigationItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -50,13 +50,18 @@ export default function Layout({ children }) {
   };
 
   const handleLogout = async () => {
-    await signOut();
-    setUser(null);
-    window.location.href = '/home';
+    try {
+      await signOut();
+      setUser(null);
+      window.location.href = '/home';
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/home';
+    }
   };
 
-  const handleLogin = () => {
-    window.location.href = '/login';
+  const handleLogin = async () => {
+    await signInWithRedirect();
   };
 
   if (isHomePage) {
@@ -118,9 +123,9 @@ export default function Layout({ children }) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <User className="w-5 h-5 text-slate-600" />
-                  <span className="text-sm text-slate-700">{user.attributes?.email}</span>
+                  <span className="text-sm text-slate-700">{user.username || user.attributes?.email || 'User'}</span>
                 </div>
-                <button onClick={handleLogout} className="text-rose-600 hover:text-rose-700">
+                <button onClick={handleLogout} className="text-rose-600 hover:text-rose-700 transition-colors">
                   <LogOut className="w-5 h-5" />
                 </button>
               </div>
