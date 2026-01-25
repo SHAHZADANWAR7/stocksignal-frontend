@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 :root {
   --primary: 220 90% 56%;
   --primary-foreground: 0 0% 100%;
