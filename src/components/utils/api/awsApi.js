@@ -1,4 +1,4 @@
-import { awsApi } from './awsClient';
+import { awsApi as awsClient } from './awsClient';
 
 /**
  * Call AWS Lambda function
@@ -21,6 +21,7 @@ export async function callAwsFunction(functionName, params) {
   }
 }
 
+export const awsApi = {
   // Stock data
   getStockQuote: async (symbol) => {
     return awsClient.getStockQuote(symbol);
