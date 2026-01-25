@@ -128,4 +128,52 @@ export const awsApi = {
   },
 
   syncPortfolioData: (userId) => apiCall("/syncPortfolio", "POST", { userId }),
+
+  // Transactions
+  getTransactions: async (userId) => {
+    const response = await apiCall(`/transactions?userId=${userId}`, "GET");
+    return response?.Items || response?.items || [];
+  },
+
+  createTransaction: async (data) => {
+    const response = await apiCall("/transactions", "POST", data);
+    return response?.Item || response;
+  },
+
+  // Holdings
+  getHoldings: async (userId) => {
+    const response = await apiCall(`/holdings?userId=${userId}`, "GET");
+    return response?.Items || response?.items || [];
+  },
+
+  createHolding: async (data) => {
+    const response = await apiCall("/holdings", "POST", data);
+    return response?.Item || response;
+  },
+
+  updateHolding: async (holdingId, data) => {
+    const response = await apiCall(`/holdings/${holdingId}`, "PUT", data);
+    return response?.Item || response;
+  },
+
+  deleteHolding: async (holdingId) => {
+    return await apiCall(`/holdings/${holdingId}`, "DELETE");
+  },
+
+  // Investment Journal
+  getInvestmentJournals: async (userId) => {
+    const response = await apiCall(`/journals?userId=${userId}`, "GET");
+    return response?.Items || response?.items || [];
+  },
+
+  createInvestmentJournal: async (data) => {
+    const response = await apiCall("/journals", "POST", data);
+    return response?.Item || response;
+  },
+
+  // Behavioral Analysis
+  analyzeBehavioralPatterns: async (prompt) => {
+    const response = await apiCall("/analyzeBehavior", "POST", { prompt });
+    return response?.analysis || response;
+  },
 };
