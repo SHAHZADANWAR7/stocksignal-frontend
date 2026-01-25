@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { awsApi } from "@/utils/awsClient";
-import { callAwsFunction } from "@/components/utils/awsApi";
+import { callAwsFunction } from "@/components/utils/api/awsApi";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

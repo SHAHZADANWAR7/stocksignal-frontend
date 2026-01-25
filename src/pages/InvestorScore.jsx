@@ -18,7 +18,7 @@ import {
 import { motion } from "framer-motion";
 import { checkUsageLimit, incrementUsage, getRemainingUsage } from "@/components/utils/usageLimit";
 import { format } from "date-fns";
-import { calculateInvestorMetrics } from "@/components/utils/investorMetrics";
+import { calculateInvestorMetrics } from "@/components/utils/calculations/investorMetrics";
 
 export default function InvestorScore() {
   const [score, setScore] = useState(null);

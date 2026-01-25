@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { generateSavingsScenarios, generateInvestmentScenarios } from "@/components/utils/financialCalculations";
-import { calculateGoalMetrics, calculateStressTestMetrics } from "@/components/utils/goalCalculationEngine";
-import { validateGoalAnalysis, generateFallbackAllocation, formatValidationError } from "@/components/utils/goalValidationGuardrails";
+import { calculateGoalMetrics, calculateStressTestMetrics } from "@/components/utils/calculations/goalCalculationEngine";
+import { validateGoalAnalysis, generateFallbackAllocation, formatValidationError } from "@/components/utils/validation/goalValidationGuardrails";
 import { runAllGoalProgressTests } from "@/components/utils/goalProgressTests";
 import { 
   Target, 

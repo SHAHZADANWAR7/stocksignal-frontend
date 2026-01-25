@@ -20,7 +20,7 @@ import { motion } from "framer-motion";
 import { checkUsageLimit, incrementUsage, getRemainingUsage } from "@/components/utils/usageLimit";
 import { format, differenceInDays } from "date-fns";
 import { Line, LineChart as RechartsLine, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { calculatePortfolioHealth } from "@/components/utils/portfolioHealthMetrics";
+import { calculatePortfolioHealth } from "@/components/utils/calculations/portfolioHealthMetrics";
 
 export default function PortfolioHealth() {
   const [healthRecords, setHealthRecords] = useState([]);
