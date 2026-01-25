@@ -56,7 +56,7 @@ export default function CashIntelligence() {
 
     setIsAnalyzing(true);
 
-    const calculatedCash = calculateCashOpportunity(idleCashAmount, idleCashMonths, holdings);
+    const calculatedCash = calculateCashOpportunityMetrics(idleCashAmount, idleCashMonths, holdings);
     const marketUncertainty = estimateMarketUncertainty();
 
     const totalInvested = holdings.reduce((sum, h) => 

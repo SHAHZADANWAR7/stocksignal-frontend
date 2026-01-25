@@ -212,3 +212,59 @@ export function getMaxLookbackPeriod(symbols) {
       : 'Limited historical data, interpret results cautiously'
   };
 }
+
+/**
+ * Validate if assets existed during the specified period
+ * @param {Array} symbols - Array of stock symbols
+ * @param {string} startDate - Start date (YYYY-MM-DD)
+ * @param {string} endDate - End date (YYYY-MM-DD)
+ * @returns {Object} Validation results
+ */
+export function validateAssetsForPeriod(symbols, startDate, endDate) {
+  const results = {};
+  symbols.forEach(symbol => {
+    const inceptionDate = ASSET_INCEPTION_DATES[symbol];
+    results[symbol] = {
+      existed: inceptionDate ? new Date(inceptionDate) <= new Date(startDate) : false,
+      inceptionDate: inceptionDate || null
+    };
+  });
+  return results;
+}
+
+/**
+ * Get valid date range for scenario based on assets
+ * @param {Array} symbols - Array of stock symbols
+ * @returns {Object} Valid date range {startDate, endDate}
+ */
+export function getScenarioDateRange(symbols) {
+  let latestInception = new Date('1970-01-01');
+  symbols.forEach(symbol => {
+    const inceptionDate = ASSET_INCEPTION_DATES[symbol];
+    if (inceptionDate && new Date(inceptionDate) > latestInception) {
+      latestInception = new Date(inceptionDate);
+    }
+  });
+  
+  const startDate = new Date(latestInception);
+  startDate.setFullYear(startDate.getFullYear() + 1);
+  
+  const endDate = new Date();
+  
+  return {
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: endDate.toISOString().split('T')[0]
+  };
+}
+
+/**
+ * Check if an asset existed at a specific date
+ * @param {string} symbol - Stock symbol
+ * @param {string} date - Date to check (YYYY-MM-DD)
+ * @returns {boolean} True if asset existed at that date
+ */
+export function assetExistedAt(symbol, date) {
+  const inceptionDate = ASSET_INCEPTION_DATES[symbol];
+  if (!inceptionDate) return false;
+  return new Date(inceptionDate) <= new Date(date);
+}

@@ -1,5 +1,26 @@
 import awsClient from './awsClient';
 
+/**
+ * Call AWS Lambda function
+ * @param {string} functionName - Name of Lambda function
+ * @param {Object} params - Parameters to pass
+ * @returns {Promise} API response
+ */
+export async function callAwsFunction(functionName, params) {
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    const response = await fetch(`${apiUrl}/api/${functionName}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+    return response.json();
+  } catch (error) {
+    console.error(`Error calling ${functionName}:`, error);
+    throw error;
+  }
+}
+
 export const awsApi = {
   // Stock data
   getStockQuote: async (symbol) => {
@@ -28,34 +49,15 @@ export const awsApi = {
     return awsClient.getVIXData();
   },
 
-  // Email
-  sendEmail: async (data) => {
-    return awsClient.sendEmail(data);
+  getMarketData: async (params) => {
+    return callAwsFunction('getMarketData', params);
   },
 
-  // Subscription
-  checkSubscription: async (email) => {
-    return awsClient.checkSubscription(email);
+  getCompanies: async (params) => {
+    return callAwsFunction('getCompanies', params);
   },
 
-  // Usage tracking
-  getUsageStats: async (email) => {
-    return awsClient.getUsageStats(email);
-  },
-
-  updateUsageStats: async (email, action) => {
-    return awsClient.updateUsageStats(email, action);
-  },
-
-  // User
-  getCurrentUser: async () => {
-    return awsClient.getCurrentUser();
-  },
-
-  // LLM
-  invokeLLM: async (data) => {
-    return awsClient.invokeLLM(data);
-  },
+  getIndexFunds: async (params) => {
+    return callAwsFunction('getIndexFunds', params);
+  }
 };
-
-export default awsApi;

@@ -64,7 +64,7 @@ export default function PortfolioHealth() {
       return;
     }
 
-    const calculatedHealth = calculatePortfolioHealth(portfolio, previousHealth);
+    const calculatedHealth = calculatePortfolioHealthMetrics(portfolio, previousHealth);
 
     const holdingsList = portfolio.assets.map(h => ({
       symbol: h.symbol,
