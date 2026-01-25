@@ -31,70 +31,48 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/Home" element={<Home />} />
           
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/Dashboard" element={<Dashboard />} />
           
           <Route path="/companies" element={<Companies />} />
-          <Route path="/Companies" element={<Companies />} />
           
           <Route path="/analysis" element={<Analysis />} />
-          <Route path="/Analysis" element={<Analysis />} />
           
           <Route path="/holdings" element={<Holdings />} />
-          <Route path="/Holdings" element={<Holdings />} />
           
           <Route path="/transactions" element={<Transactions />} />
-          <Route path="/Transactions" element={<Transactions />} />
           
-          <Route path="/indexfunds" element={<IndexFunds />} />
-          <Route path="/IndexFunds" element={<IndexFunds />} />
+          <Route path="/index-funds" element={<IndexFunds />} />
           
-          <Route path="/investorscore" element={<InvestorScore />} />
-          <Route path="/InvestorScore" element={<InvestorScore />} />
+          <Route path="/investor-score" element={<InvestorScore />} />
           
-          <Route path="/portfoliohealth" element={<PortfolioHealth />} />
-          <Route path="/PortfolioHealth" element={<PortfolioHealth />} />
+          <Route path="/portfolio-health" element={<PortfolioHealth />} />
           
-          <Route path="/cashintelligence" element={<CashIntelligence />} />
-          <Route path="/CashIntelligence" element={<CashIntelligence />} />
+          <Route path="/cash-intelligence" element={<CashIntelligence />} />
           
-          <Route path="/shadowportfolios" element={<ShadowPortfolios />} />
-          <Route path="/ShadowPortfolios" element={<ShadowPortfolios />} />
+          <Route path="/shadow-portfolios" element={<ShadowPortfolios />} />
           
           <Route path="/challenges" element={<Challenges />} />
-          <Route path="/Challenges" element={<Challenges />} />
           
-          <Route path="/simulationlab" element={<SimulationLab />} />
-          <Route path="/SimulationLab" element={<SimulationLab />} />
+          <Route path="/simulation-lab" element={<SimulationLab />} />
           
-          <Route path="/marketinsights" element={<MarketInsights />} />
-          <Route path="/MarketInsights" element={<MarketInsights />} />
+          <Route path="/market-insights" element={<MarketInsights />} />
           
-          <Route path="/notificationsettings" element={<NotificationSettings />} />
-          <Route path="/NotificationSettings" element={<NotificationSettings />} />
+          <Route path="/notification-settings" element={<NotificationSettings />} />
           
-          <Route path="/contactsupport" element={<ContactSupport />} />
-          <Route path="/ContactSupport" element={<ContactSupport />} />
+          <Route path="/contact-support" element={<ContactSupport />} />
           
-          <Route path="/practicetrading" element={<PracticeTrading />} />
-          <Route path="/PracticeTrading" element={<PracticeTrading />} />
+          <Route path="/practice-trading" element={<PracticeTrading />} />
           
-          <Route path="/goalintelligence" element={<GoalIntelligence />} />
-          <Route path="/GoalIntelligence" element={<GoalIntelligence />} />
+          <Route path="/goal-intelligence" element={<GoalIntelligence />} />
           
-          <Route path="/termsofservice" element={<TermsOfService />} />
-          <Route path="/TermsOfService" element={<TermsOfService />} />
+          <Route path="/terms-of-service" element={<TermsOfService />} />
           
-          <Route path="/privacypolicy" element={<PrivacyPolicy />} />
-          <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           
           <Route path="/disclaimer" element={<Disclaimer />} />
-          <Route path="/Disclaimer" element={<Disclaimer />} />
           
-          <Route path="/platformphilosophy" element={<PlatformPhilosophy />} />
-          <Route path="/PlatformPhilosophy" element={<PlatformPhilosophy />} />
+          <Route path="/platform-philosophy" element={<PlatformPhilosophy />} />
           
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
