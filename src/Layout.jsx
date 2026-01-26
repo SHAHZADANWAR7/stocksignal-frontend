@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "./utils";
-import { LayoutDashboard, Building2, LineChart, Briefcase, TrendingUp, Bell, BarChart3, Target, Brain, Heart, DollarSign, GitBranch, ArrowLeftRight, Trophy, FlaskConical, Newspaper, User, LogOut, LogIn, Mail, BookOpen } from "lucide-react";
-import { getCurrentUser, signOut, signInWithRedirect } from 'aws-amplify/auth';
+import { LayoutDashboard, Building2, LineChart, Briefcase, TrendingUp, Bell, BarChart3, Target, Brain, Heart, DollarSign, GitBranch, ArrowLeftRight, Trophy, FlaskConical, Newspaper, User, LogOut, Mail, BookOpen } from "lucide-react";
 
 const navigationItems = [
   { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
@@ -36,32 +35,15 @@ export default function Layout({ children }) {
     loadUser();
   }, []);
 
-  const loadUser = async () => {
-    try {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
-    } catch (error) {
-      setUser(null);
-      if (!isHomePage) {
-        window.location.href = '/home';
-      }
-    }
+  const loadUser = () => {
+    // Skip auth check for development - will implement proper login later
+    setUser(null);
     setIsLoading(false);
   };
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      setUser(null);
-      window.location.href = '/home';
-    } catch (error) {
-      console.error('Logout error:', error);
-      window.location.href = '/home';
-    }
-  };
-
-  const handleLogin = async () => {
-    await signInWithRedirect();
+  const handleLogout = () => {
+    setUser(null);
+    window.location.href = '/home';
   };
 
   if (isHomePage) {
@@ -78,12 +60,6 @@ export default function Layout({ children }) {
       </div>
     );
   }
-
-  // Skip auth check for development - remove this once login is implemented
-  // if (!user) {
-  //   window.location.href = '/home';
-  //   return null;
-  // }
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
