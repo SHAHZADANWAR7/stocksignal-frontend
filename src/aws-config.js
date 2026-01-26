@@ -2,19 +2,15 @@ import { Amplify } from 'aws-amplify';
 
 const awsConfig = {
   Auth: {
-    Cognito: {
-      userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
-      userPoolClientId: import.meta.env.VITE_COGNITO_APP_CLIENT_ID,
-      region: import.meta.env.VITE_COGNITO_REGION,
-      loginWith: {
-        oauth: {
-          domain: 'us-east-1w41gau1rf.auth.us-east-1.amazoncognito.com',
-          scopes: ['email', 'profile', 'openid'],
-          redirectSignIn: ['https://stocksignal-frontend.vercel.app/'],
-          redirectSignOut: ['https://stocksignal-frontend.vercel.app/'],
-          responseType: 'code'
-        }
-      }
+    region: import.meta.env.VITE_COGNITO_REGION,                     // AWS region for Cognito
+    userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,           // StockSignalUserPool
+    userPoolWebClientId: import.meta.env.VITE_COGNITO_APP_CLIENT_ID, // StockSignalAppClient
+    oauth: {
+      domain: import.meta.env.VITE_COGNITO_OAUTH_DOMAIN,             // your Cognito domain
+      scope: ['email', 'openid', 'aws.cognito.signin.user.admin'],   // OIDC scopes
+      redirectSignIn: import.meta.env.VITE_COGNITO_REDIRECT_SIGN_IN, // e.g., https://stocksignal.io/
+      redirectSignOut: import.meta.env.VITE_COGNITO_REDIRECT_SIGN_OUT,// e.g., https://stocksignal.io/
+      responseType: 'code'
     }
   }
 };
