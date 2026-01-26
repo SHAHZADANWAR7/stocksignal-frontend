@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, LineChart, Brain, Target, Shield, Zap, CheckCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { getCurrentUser, signInWithRedirect } from "aws-amplify/auth";
 import { motion } from "framer-motion";
 
 export default function Home() {
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     checkAuth();
@@ -25,7 +26,7 @@ export default function Home() {
 
   const handleGetStarted = async () => {
     if (user) {
-      window.location.href = "/dashboard";
+      navigate("/dashboard");
     } else {
       await signInWithRedirect();
     }
