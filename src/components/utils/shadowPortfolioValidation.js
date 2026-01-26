@@ -23,3 +23,13 @@ export function getSustainabilityColor(score) {
 export function validateBeforeRender(data) {
   return data && Object.keys(data).length > 0;
 }
+
+export function validateIncomeSource(source, monthlyAmount) {
+  if (!source || source.trim() === '') {
+    return { valid: false, error: 'Income source is required' };
+  }
+  if (!monthlyAmount || monthlyAmount <= 0) {
+    return { valid: false, error: 'Monthly amount must be greater than 0' };
+  }
+  return { valid: true };
+}
