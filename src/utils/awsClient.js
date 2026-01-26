@@ -1,24 +1,5 @@
-import { Amplify } from "aws-amplify";
-import { fetchAuthSession, getCurrentUser } from "aws-amplify/auth";
-
-// AWS Configuration from environment variables
-const AWS_CONFIG = {
-  API_GATEWAY_URL: import.meta.env.VITE_AWS_API_GATEWAY_URL || "https://4ku664jsl7.execute-api.us-east-1.amazonaws.com/Production1",
-  COGNITO_USER_POOL_ID: import.meta.env.VITE_COGNITO_USER_POOL_ID || "us-east-1_W41gAu1rf",
-  COGNITO_APP_CLIENT_ID: import.meta.env.VITE_COGNITO_APP_CLIENT_ID || "15i5hjimlsg2b339bspclnocq4",
-  COGNITO_REGION: import.meta.env.VITE_COGNITO_REGION || "us-east-1",
-};
-
-// Configure AWS Amplify
-Amplify.configure({
-  Auth: {
-    Cognito: {
-      userPoolId: AWS_CONFIG.COGNITO_USER_POOL_ID,
-      userPoolClientId: AWS_CONFIG.COGNITO_APP_CLIENT_ID,
-      region: AWS_CONFIG.COGNITO_REGION,
-    }
-  }
-});
+import awsConfig from '../components/utils/api/awsConfig';
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify';
 
 // Get JWT token from Cognito
 const getAuthToken = async () => {
@@ -48,7 +29,7 @@ const apiCall = async (path, method = "POST", body = null) => {
       options.body = JSON.stringify(body);
     }
 
-    const url = `${AWS_CONFIG.API_GATEWAY_URL}${path}`;
+    const url = `${import.meta.env.VITE_AWS_API_GATEWAY_URL}${path}`;
     const response = await fetch(url, options);
 
     if (!response.ok) {
