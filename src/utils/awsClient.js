@@ -1,11 +1,11 @@
-import awsConfig from '../aws-config.js'; // canonical config
+import awsConfig from '../aws-config.js'; // canonical config (side-effect import)
 import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 
 // Get JWT token from Cognito
 const getAuthToken = async () => {
   try {
     const session = await fetchAuthSession();
-    return session.tokens?.idToken?.toString();
+    return session.tokens?.idToken?.toString() || null;
   } catch (error) {
     console.error("Error getting auth token:", error);
     return null;
@@ -16,11 +16,12 @@ const getAuthToken = async () => {
 const apiCall = async (path, method = "POST", body = null) => {
   try {
     const token = await getAuthToken();
+
     const options = {
       method,
       headers: {
         "Content-Type": "application/json",
-        ...(token && { Authorization:  }),
+        ...(token && { Authorization: `Bearer ${token}` }),
       },
     };
 
@@ -28,7 +29,12 @@ const apiCall = async (path, method = "POST", body = null) => {
       options.body = JSON.stringify(body);
     }
 
-    const url = `${awsConfig.API.endpoints[0].endpoint}${path}`;
+    const baseUrl = awsConfig?.API?.endpoints?.[0]?.endpoint;
+    if (!baseUrl) {
+      throw new Error("AWS API endpoint is not configured");
+    }
+
+    const url = `${baseUrl}${path}`;
     const response = await fetch(url, options);
 
     if (!response.ok) {
@@ -47,7 +53,8 @@ const apiCall = async (path, method = "POST", body = null) => {
 export const awsApi = {
   // Stock data
   getStockQuote: (symbol) => apiCall('/getStockQuote', 'POST', { symbol }),
-  getStockBatch: (symbols, forceRefresh = true) => apiCall('/getStockBatch', 'POST', { symbols, forceRefresh }),
+  getStockBatch: (symbols, forceRefresh = true) =>
+    apiCall('/getStockBatch', 'POST', { symbols, forceRefresh }),
   getStockAnalysis: (symbol) => apiCall('/getStockAnalysis', 'POST', { symbol }),
   getVIXData: () => apiCall('/getVIXData', 'POST'),
 
@@ -56,7 +63,8 @@ export const awsApi = {
   syncPortfolio: (portfolioData) => apiCall('/syncPortfolio', 'POST', portfolioData),
 
   // Beta
-  calculateRealBeta: (symbol) => apiCall('/calculateRealBeta', 'POST', { symbol }),
+  calculateRealBeta: (symbol) =>
+    apiCall('/calculateRealBeta', 'POST', { symbol }),
 
   // Emails
   sendWeeklySummary: (email) => apiCall('/sendWeeklySummary', 'POST', { email }),
@@ -92,7 +100,7 @@ export const awsApi = {
 
   saveAnalysis: async (data) => {
     const user = await getCurrentUser();
-    return await apiCall("/saveAnalysis", "POST", {
+    return apiCall("/saveAnalysis", "POST", {
       userId: user.userId,
       ...data,
     });
@@ -107,7 +115,8 @@ export const awsApi = {
     return response?.Item || response;
   },
 
-  syncPortfolioData: (userId) => apiCall("/syncPortfolio", "POST", { userId }),
+  syncPortfolioData: (userId) =>
+    apiCall("/syncPortfolio", "POST", { userId }),
 
   // Transactions
   getTransactions: async (userId) => {
@@ -131,12 +140,11 @@ export const awsApi = {
     return response?.Item || response;
   },
 
-  updateHolding: async (holdingId, data) => {
-    const response = await apiCall(`/holdings/${holdingId}`, "PUT", data);
-    return response?.Item || response;
-  },
+  updateHolding: async (holdingId, data) =>
+    apiCall(`/holdings/${holdingId}`, "PUT", data),
 
-  deleteHolding: async (holdingId) => apiCall(`/holdings/${holdingId}`, "DELETE"),
+  deleteHolding: async (holdingId) =>
+    apiCall(`/holdings/${holdingId}`, "DELETE"),
 
   // Investment Journal
   getInvestmentJournals: async (userId) => {
