@@ -2,9 +2,10 @@ import { Amplify } from 'aws-amplify';
 
 Amplify.configure({
   Auth: {
-    region: process.env.REACT_APP_COGNITO_REGION,
-    userPoolId: process.env.REACT_APP_COGNITO_USER_POOL_ID,
-    userPoolWebClientId: process.env.REACT_APP_COGNITO_APP_CLIENT_ID,
+    // Change from REACT_APP_ to VITE_
+userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
+userPoolWebClientId: import.meta.env.VITE_COGNITO_APP_CLIENT_ID,
+region: import.meta.env.VITE_COGNITO_REGION,
   },
   API: {
     endpoints: [
