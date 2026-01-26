@@ -8,7 +8,7 @@ const awsConfig = {
       region: import.meta.env.VITE_COGNITO_REGION,
       loginWith: {
         oauth: {
-          domain: 'YOUR_COGNITO_DOMAIN.auth.us-east-1.amazoncognito.com',
+          domain: 'us-east-1w41gau1rf.auth.us-east-1.amazoncognito.com',
           scopes: ['email', 'profile', 'openid'],
           redirectSignIn: ['https://stocksignal-frontend.vercel.app/'],
           redirectSignOut: ['https://stocksignal-frontend.vercel.app/'],
