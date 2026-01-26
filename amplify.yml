@@ -1,11 +1,10 @@
 version: 1
 frontend:
   phases:
-    preBuild:
-      commands:
-        - npm install --legacy-peer-deps
     build:
       commands:
+        - rm -rf node_modules package-lock.json
+        - npm install --legacy-peer-deps
         - npm run build
   artifacts:
     baseDirectory: dist
@@ -14,12 +13,3 @@ frontend:
   cache:
     paths:
       - node_modules/**/*
-  customHeaders:
-    - pattern: '**/*.css'
-      headers:
-        - key: Content-Type
-          value: 'text/css; charset=utf-8'
-    - pattern: '**/*.js'
-      headers:
-        - key: Content-Type
-          value: 'application/javascript; charset=utf-8'
