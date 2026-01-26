@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { LayoutDashboard, Building2, LineChart, Briefcase, TrendingUp, Bell, BarChart3, Target, Brain, Heart, DollarSign, GitBranch, ArrowLeftRight, Trophy, FlaskConical, Newspaper, User, LogOut, Mail, BookOpen } from "lucide-react";
+// import { getCurrentUser, signOut, signInWithRedirect } from 'aws-amplify/auth';
 
 const navigationItems = [
   { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
@@ -36,15 +37,35 @@ export default function Layout({ children }) {
   }, []);
 
   const loadUser = () => {
-    // Skip auth check for development - will implement proper login later
+    // TODO: Uncomment when login is implemented
+    // try {
+    //   const currentUser = await getCurrentUser();
+    //   setUser(currentUser);
+    // } catch (error) {
+    //   setUser(null);
+    //   if (!isHomePage) {
+    //     window.location.href = '/home';
+    //   }
+    // }
     setUser(null);
     setIsLoading(false);
   };
 
   const handleLogout = () => {
+    // TODO: Uncomment when login is implemented
+    // try {
+    //   await signOut();
+    // } catch (error) {
+    //   console.error('Logout error:', error);
+    // }
     setUser(null);
     window.location.href = '/home';
   };
+
+  // TODO: Uncomment when login is implemented
+  // const handleLogin = async () => {
+  //   await signInWithRedirect();
+  // };
 
   if (isHomePage) {
     return <>{children}</>;
