@@ -1,4 +1,4 @@
-import awsConfig from '@/aws-config.js'; // use path alias @ for src
+import awsConfig from '../../../../../aws-config.js'; // canonical config
 import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 
 // Get JWT token from Cognito
@@ -24,13 +24,13 @@ const apiCall = async (path, method = "POST", body = null) => {
       },
     };
 
-    if (body) options.body = JSON.stringify(body);
+    if (body) {
+      options.body = JSON.stringify(body);
+    }
 
-    const baseUrl = awsConfig?.API?.endpoints?.[0]?.endpoint;
-    if (!baseUrl) throw new Error("AWS API endpoint is not configured");
-
-    const url = `${baseUrl}${path}`;
+    const url = `${awsConfig.API.endpoints[0].endpoint}${path}`;
     const response = await fetch(url, options);
+
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`API Error ${response.status}: ${errorText}`);
@@ -45,67 +45,104 @@ const apiCall = async (path, method = "POST", body = null) => {
 
 // Export all API methods
 export const awsApi = {
-  getStockQuote: (symbol) => apiCall('/getStockQuote', 'POST', { symbol }),
-  getStockBatch: (symbols, forceRefresh = true) => apiCall('/getStockBatch', 'POST', { symbols, forceRefresh }),
-  getStockAnalysis: (symbol) => apiCall('/getStockAnalysis', 'POST', { symbol }),
-  getVIXData: () => apiCall('/getVIXData', 'POST'),
-  executePaperTrade: (tradeData) => apiCall('/executePaperTrade', 'POST', tradeData),
-  syncPortfolio: (portfolioData) => apiCall('/syncPortfolio', 'POST', portfolioData),
-  calculateRealBeta: (symbol) => apiCall('/calculateRealBeta', 'POST', { symbol }),
-  sendWeeklySummary: (email) => apiCall('/sendWeeklySummary', 'POST', { email }),
-  sendDailyAlert: (email) => apiCall('/sendDailyAlert', 'POST', { email }),
-  sendMonthlyReport: (email) => apiCall('/sendMonthlyReport', 'POST', { email }),
-  sendNewsletter: (email) => apiCall('/sendNewsletter', 'POST', { email }),
-  sendSupportEmail: (data) => apiCall('/sendSupportEmail', 'POST', data),
-  invokeLLM: (prompt, addContext = false, responseSchema = null) => apiCall('/invokeLLM', 'POST', { prompt, add_context_from_internet: addContext, response_json_schema: responseSchema }),
+  // Stock data
+  getStockQuote: async (symbol) => await apiCall('/getStockQuote', 'POST', { symbol }),
+  getStockBatch: async (symbols, forceRefresh = true) => await apiCall('/getStockBatch', 'POST', { symbols, forceRefresh }),
+  getStockAnalysis: async (symbol) => await apiCall('/getStockAnalysis', 'POST', { symbol }),
+  getVIXData: async () => await apiCall('/getVIXData', 'POST'),
+
+  // Trading
+  executePaperTrade: async (tradeData) => await apiCall('/executePaperTrade', 'POST', tradeData),
+  syncPortfolio: async (portfolioData) => await apiCall('/syncPortfolio', 'POST', portfolioData),
+
+  // Beta
+  calculateRealBeta: async (symbol) => await apiCall('/calculateRealBeta', 'POST', { symbol }),
+
+  // Emails
+  sendWeeklySummary: async (email) => await apiCall('/sendWeeklySummary', 'POST', { email }),
+  sendDailyAlert: async (email) => await apiCall('/sendDailyAlert', 'POST', { email }),
+  sendMonthlyReport: async (email) => await apiCall('/sendMonthlyReport', 'POST', { email }),
+  sendNewsletter: async (email) => await apiCall('/sendNewsletter', 'POST', { email }),
+  sendSupportEmail: async (data) => await apiCall('/sendSupportEmail', 'POST', data),
+
+  // LLM
+  invokeLLM: async (prompt, addContext = false, responseSchema = null) =>
+    await apiCall('/invokeLLM', 'POST', { prompt, add_context_from_internet: addContext, response_json_schema: responseSchema }),
+
+  // Companies
   getCompanies: async () => {
     const response = await apiCall("/companies", "GET");
     return response?.Items || response?.items || [];
   },
+
+  // Analyses
   getPortfolioAnalyses: async (userId) => {
     const response = await apiCall(`/analyses?userId=${userId}`, "GET");
     return response?.Items || response?.items || [];
   },
+
   getAnalysis: async (analysisId) => {
     const response = await apiCall(`/analyses/${analysisId}`, "GET");
     return response?.Item || response;
   },
+
   saveAnalysis: async (data) => {
     const user = await getCurrentUser();
-    return apiCall("/saveAnalysis", "POST", { userId: user.userId, ...data });
+    return await apiCall("/saveAnalysis", "POST", { userId: user.userId, ...data });
   },
-  executeTrade: (tradeData) => apiCall("/executeTrade", "POST", tradeData),
+
+  // Trades
+  executeTrade: async (tradeData) => await apiCall("/executeTrade", "POST", tradeData),
+
+  // Portfolio
   getPortfolio: async (userId) => {
     const response = await apiCall(`/portfolio?userId=${userId}`, "GET");
     return response?.Item || response;
   },
-  syncPortfolioData: (userId) => apiCall("/syncPortfolio", "POST", { userId }),
+
+  syncPortfolioData: async (userId) => await apiCall("/syncPortfolio", "POST", { userId }),
+
+  // Transactions
   getTransactions: async (userId) => {
     const response = await apiCall(`/transactions?userId=${userId}`, "GET");
     return response?.Items || response?.items || [];
   },
+
   createTransaction: async (data) => {
     const response = await apiCall("/transactions", "POST", data);
     return response?.Item || response;
   },
+
+  // Holdings
   getHoldings: async (userId) => {
     const response = await apiCall(`/holdings?userId=${userId}`, "GET");
     return response?.Items || response?.items || [];
   },
+
   createHolding: async (data) => {
     const response = await apiCall("/holdings", "POST", data);
     return response?.Item || response;
   },
-  updateHolding: async (holdingId, data) => apiCall(`/holdings/${holdingId}`, "PUT", data),
-  deleteHolding: async (holdingId) => apiCall(`/holdings/${holdingId}`, "DELETE"),
+
+  updateHolding: async (holdingId, data) => {
+    const response = await apiCall(`/holdings/${holdingId}`, "PUT", data);
+    return response?.Item || response;
+  },
+
+  deleteHolding: async (holdingId) => await apiCall(`/holdings/${holdingId}`, "DELETE"),
+
+  // Investment Journal
   getInvestmentJournals: async (userId) => {
     const response = await apiCall(`/journals?userId=${userId}`, "GET");
     return response?.Items || response?.items || [];
   },
+
   createInvestmentJournal: async (data) => {
     const response = await apiCall("/journals", "POST", data);
     return response?.Item || response;
   },
+
+  // Behavioral Analysis
   analyzeBehavioralPatterns: async (prompt) => {
     const response = await apiCall("/analyzeBehavior", "POST", { prompt });
     return response?.analysis || response;
