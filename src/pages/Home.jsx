@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, LineChart, Brain, Target, Shield, Zap, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { getCurrentUser, signInWithRedirect } from "aws-amplify/auth";
+import { getCurrentUser } from "aws-amplify/auth";
 import { motion } from "framer-motion";
 
 export default function Home() {
@@ -24,12 +24,8 @@ export default function Home() {
     }
   };
 
-  const handleGetStarted = async () => {
-    if (user) {
-      navigate("/dashboard");
-    } else {
-      await signInWithRedirect();
-    }
+  const handleGetStarted = () => {
+    navigate(createPageUrl("Dashboard"));
   };
 
   return (
