@@ -1,5 +1,5 @@
-import awsConfig from './awsConfig';
-import { fetchAuthSession, getCurrentUser } from 'aws-amplify';
+import awsConfig from '../../../../../aws-config.js'; // canonical config
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 
 // Get JWT token from Cognito
 const getAuthToken = async () => {
@@ -16,7 +16,6 @@ const getAuthToken = async () => {
 const apiCall = async (path, method = "POST", body = null) => {
   try {
     const token = await getAuthToken();
-    
     const options = {
       method,
       headers: {
@@ -29,7 +28,7 @@ const apiCall = async (path, method = "POST", body = null) => {
       options.body = JSON.stringify(body);
     }
 
-    const url = `${import.meta.env.VITE_AWS_API_GATEWAY_URL}${path}`;
+    const url = `${awsConfig.API.endpoints[0].endpoint}${path}`;
     const response = await fetch(url, options);
 
     if (!response.ok) {
@@ -67,7 +66,7 @@ export const awsApi = {
   sendSupportEmail: (data) => apiCall('/sendSupportEmail', 'POST', data),
 
   // LLM
-  invokeLLM: (prompt, addContext = false, responseSchema = null) => 
+  invokeLLM: (prompt, addContext = false, responseSchema = null) =>
     apiCall('/invokeLLM', 'POST', {
       prompt,
       add_context_from_internet: addContext,
@@ -137,9 +136,7 @@ export const awsApi = {
     return response?.Item || response;
   },
 
-  deleteHolding: async (holdingId) => {
-    return await apiCall(`/holdings/${holdingId}`, "DELETE");
-  },
+  deleteHolding: async (holdingId) => apiCall(`/holdings/${holdingId}`, "DELETE"),
 
   // Investment Journal
   getInvestmentJournals: async (userId) => {
