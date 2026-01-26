@@ -79,10 +79,11 @@ export default function Layout({ children }) {
     );
   }
 
-  if (!user) {
-    window.location.href = '/home';
-    return null;
-  }
+  // Skip auth check for development - remove this once login is implemented
+  // if (!user) {
+  //   window.location.href = '/home';
+  //   return null;
+  // }
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
