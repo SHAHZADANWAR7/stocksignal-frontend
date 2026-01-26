@@ -1,18 +1,4 @@
-import { Amplify } from 'aws-amplify';
+import awsConfig from '../../../../../aws-config.js'; // canonical config
 
-Amplify.configure({
-  Auth: {
-    // Using VITE_ prefixed environment variables for Vite
-    userPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
-    userPoolWebClientId: import.meta.env.VITE_COGNITO_APP_CLIENT_ID,
-    region: import.meta.env.VITE_AWS_REGION,
-  },
-  API: {
-    endpoints: [
-      {
-        name: 'api',
-        endpoint: import.meta.env.VITE_AWS_API_GATEWAY_URL,
-      },
-    ],
-  },
-});
+// You can still access Auth or API settings via awsConfig.Auth or awsConfig.API
+export default awsConfig;
