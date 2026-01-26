@@ -1,4 +1,4 @@
-import awsConfig from '../../../../../aws-config.js'; // canonical config
+import awsConfig from '../../../aws-config.js'; // canonical config
 import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 
 // Get JWT token from Cognito
