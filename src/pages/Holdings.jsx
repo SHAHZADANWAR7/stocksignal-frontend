@@ -1,4 +1,3 @@
-import { getCurrentUser, signInWithRedirect, signOut } from 'aws-amplify/auth';
 import React, { useState, useEffect } from "react";
 import { awsApi } from "@/utils/awsClient";
 import { Button } from "@/components/ui/button";

@@ -1,4 +1,3 @@
-import { getCurrentUser, signInWithRedirect, signOut } from 'aws-amplify/auth';
 import React, { useState } from "react";
 import { awsApi } from "@/utils/awsClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
