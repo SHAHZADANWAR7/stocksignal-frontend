@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Mail, Lock, AlertCircle, User, Eye, EyeOff } from "lucide-react";
 import { createPageUrl } from "@/utils";
-import { signIn, signUp, confirmSignUp, resetPassword, confirmResetPassword } from 'aws-amplify/auth';
+import { signIn, signUp, confirmSignUp, resetPassword, confirmResetPassword, Hub } from 'aws-amplify/auth';
 
 export default function Login() {
   const [mode, setMode] = useState("signin");
@@ -27,7 +27,6 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Check password match on signup
   useEffect(() => {
     if (mode === "signup" && password && passwordConfirm) {
       setPasswordMismatch(password !== passwordConfirm);
@@ -41,6 +40,10 @@ export default function Login() {
 
     try {
       await signIn({ username: email, password });
+      
+      // Notify Layout about sign-in
+      Hub.dispatch('auth', { event: 'signIn' });
+
       const params = new URLSearchParams(location.search);
       const redirectTo = params.get('redirect') || createPageUrl("Dashboard");
       navigate(redirectTo);
@@ -110,8 +113,10 @@ export default function Login() {
       await confirmSignUp({ username: email, confirmationCode });
       setError("");
       
-      // Now sign in the user
       await signIn({ username: email, password });
+      
+      // Notify Layout about sign-in
+      Hub.dispatch('auth', { event: 'signIn' });
       
       const params = new URLSearchParams(location.search);
       const redirectTo = params.get('redirect') || createPageUrl("Dashboard");
