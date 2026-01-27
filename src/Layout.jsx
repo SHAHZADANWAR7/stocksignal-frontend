@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "./utils";
-import { LayoutDashboard, Building2, LineChart, Briefcase, TrendingUp, Bell, BarChart3, Target, Brain, Heart, DollarSign, GitBranch, ArrowLeftRight, Trophy, FlaskConical, Newspaper, User, LogOut, Mail, BookOpen } from "lucide-react";
-// import { getCurrentUser, signOut, signInWithRedirect } from 'aws-amplify/auth';
+import { LayoutDashboard, Building2, LineChart, Briefcase, TrendingUp, Bell, BarChart3, Target, Brain, Heart, DollarSign, GitBranch, ArrowLeftRight, Trophy, FlaskConical, Newspaper, User, LogOut, LogIn, Mail, BookOpen } from "lucide-react";
+import { getCurrentUser, signOut, signInWithRedirect } from 'aws-amplify/auth';
 
 const navigationItems = [
   { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
@@ -36,36 +36,33 @@ export default function Layout({ children }) {
     loadUser();
   }, []);
 
-  const loadUser = () => {
-    // TODO: Uncomment when login is implemented
-    // try {
-    //   const currentUser = await getCurrentUser();
-    //   setUser(currentUser);
-    // } catch (error) {
-    //   setUser(null);
-    //   if (!isHomePage) {
-    //     window.location.href = '/home';
-    //   }
-    // }
-    setUser(null);
+  const loadUser = async () => {
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    } catch (error) {
+      setUser(null);
+      if (!isHomePage) {
+        window.location.href = '/home';
+      }
+    }
     setIsLoading(false);
   };
 
-  const handleLogout = () => {
-    // TODO: Uncomment when login is implemented
-    // try {
-    //   await signOut();
-    // } catch (error) {
-    //   console.error('Logout error:', error);
-    // }
-    setUser(null);
-    window.location.href = '/home';
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      setUser(null);
+      window.location.href = '/home';
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.href = '/home';
+    }
   };
 
-  // TODO: Uncomment when login is implemented
-  // const handleLogin = async () => {
-  //   await signInWithRedirect();
-  // };
+  const handleLogin = async () => {
+    await signInWithRedirect();
+  };
 
   if (isHomePage) {
     return <>{children}</>;
@@ -81,6 +78,12 @@ export default function Layout({ children }) {
       </div>
     );
   }
+
+  // Skip auth check for development - remove this once login is implemented
+  // if (!user) {
+  //   window.location.href = '/home';
+  //   return null;
+  // }
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
