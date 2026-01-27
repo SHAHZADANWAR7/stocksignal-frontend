@@ -1,16 +1,23 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, LineChart, Brain, Target, Shield, Zap, CheckCircle } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  TrendingUp,
+  LineChart,
+  Brain,
+  Target,
+  Shield,
+  Zap,
+  CheckCircle,
+} from "lucide-react";
+import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 
 export default function Home() {
-  const navigate = useNavigate();
-
+  // Home page must be PUBLIC — no auth checks here
   const handleGetStarted = () => {
-    navigate("/login");
+    window.location.href = "/Login";
   };
 
   return (
@@ -62,18 +69,20 @@ export default function Home() {
               className="text-xl md:text-2xl text-slate-300 mb-12 max-w-4xl mx-auto leading-relaxed"
             >
               Transform your investment journey with cutting-edge AI analysis,
-              risk-free paper trading, and real-time market insights.
+              risk-free paper trading, and real-time market insights. Build
+              wealth confidently with data-driven decisions.
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
+              className="flex justify-center items-center"
             >
               <Button
                 onClick={handleGetStarted}
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-xl px-12 py-8 rounded-2xl shadow-2xl hover:scale-105 font-bold"
+                className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white text-xl px-12 py-8 rounded-2xl shadow-2xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-all hover:scale-105 font-bold"
               >
                 Start Learning Free
                 <TrendingUp className="w-6 h-6 ml-2" />
@@ -83,18 +92,102 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Features Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 relative">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <h2 className="text-5xl md:text-6xl font-bold text-center text-white mb-6">
+            Everything You Need to Succeed
+          </h2>
+          <p className="text-xl text-slate-400 text-center mb-16 max-w-3xl mx-auto">
+            Professional-grade tools and insights designed to help you make
+            smarter investment decisions
+          </p>
+        </motion.div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            {
+              icon: Brain,
+              title: "AI-Powered Analysis",
+              desc: "Advanced algorithms analyze market trends, company valuations, and risk factors to deliver actionable investment insights.",
+              gradient: "from-blue-500 to-indigo-600",
+            },
+            {
+              icon: TrendingUp,
+              title: "Risk-Free Paper Trading",
+              desc: "Practice trading strategies with virtual money. Learn, experiment, and master the markets without financial risk.",
+              gradient: "from-emerald-500 to-teal-600",
+            },
+            {
+              icon: LineChart,
+              title: "Real-Time Market Data",
+              desc: "Live quotes, charts, and analytics powered by Yahoo Finance. Stay ahead with up-to-the-second market information.",
+              gradient: "from-purple-500 to-pink-600",
+            },
+            {
+              icon: Target,
+              title: "Smart Goal Planning",
+              desc: "Set financial milestones and receive personalized portfolio recommendations to achieve your investment objectives.",
+              gradient: "from-orange-500 to-red-600",
+            },
+            {
+              icon: Shield,
+              title: "Advanced Risk Analysis",
+              desc: "Comprehensive portfolio health checks, volatility metrics, diversification scores, and behavioral bias detection.",
+              gradient: "from-cyan-500 to-blue-600",
+            },
+            {
+              icon: Zap,
+              title: "Daily Market Insights",
+              desc: "AI-generated market sentiment, sector performance analysis, and economic indicators delivered fresh every day.",
+              gradient: "from-yellow-500 to-orange-600",
+            },
+          ].map((feature, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.05 }}
+            >
+              <Card className="bg-white/5 backdrop-blur-xl border-white/10 hover:border-white/30 transition-all h-full hover:shadow-2xl hover:shadow-blue-500/20">
+                <CardContent className="p-8">
+                  <div
+                    className={`w-16 h-16 mb-6 bg-gradient-to-br ${feature.gradient} rounded-2xl flex items-center justify-center shadow-lg`}
+                  >
+                    <feature.icon className="w-9 h-9 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-4">
+                    {feature.title}
+                  </h3>
+                  <p className="text-slate-300 leading-relaxed">
+                    {feature.desc}
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
       {/* CTA Section */}
       <div className="relative py-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-5xl mx-auto text-center px-6"
+          className="max-w-5xl mx-auto text-center px-6 sm:px-8"
         >
           <Button
             onClick={handleGetStarted}
             size="lg"
-            className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-2xl px-14 py-10 rounded-2xl shadow-2xl hover:scale-105 font-bold"
+            className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-2xl px-14 py-10 rounded-2xl shadow-2xl"
           >
             Start Your Journey Free
             <TrendingUp className="w-7 h-7 ml-3" />
@@ -102,12 +195,33 @@ export default function Home() {
         </motion.div>
       </div>
 
+      {/* Footer */}
+      <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-t border-slate-700/50">
+        <div className="max-w-full mx-auto px-6 py-12 text-center">
+          <div className="flex justify-center gap-4 text-xs">
+            <Link to={createPageUrl("TermsOfService")}>Terms of Service</Link>
+            <span>•</span>
+            <Link to={createPageUrl("PrivacyPolicy")}>Privacy Policy</Link>
+            <span>•</span>
+            <Link to={createPageUrl("Disclaimer")}>Legal Disclaimer</Link>
+          </div>
+        </div>
+      </footer>
+
       <style jsx>{`
         @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
+          0% {
+            transform: translate(0px, 0px) scale(1);
+          }
+          33% {
+            transform: translate(30px, -50px) scale(1.1);
+          }
+          66% {
+            transform: translate(-20px, 20px) scale(0.9);
+          }
+          100% {
+            transform: translate(0px, 0px) scale(1);
+          }
         }
         .animate-blob {
           animation: blob 7s infinite;
