@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, LineChart, Brain, Target, Shield, Zap, CheckCircle } from "lucide-react";
+import { TrendingUp, LineChart, Brain, Target, Shield, Zap, CheckCircle, Mail } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { getCurrentUser } from 'aws-amplify/auth';
@@ -241,12 +241,13 @@ export default function Home() {
       {/* Footer */}
       <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-t-2 border-slate-700/50 backdrop-blur-xl overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-transparent to-indigo-600/5"></div>
+
         <div className="relative max-w-full mx-auto px-6 py-12">
-          <div className="grid md:grid-cols-3 gap-8 items-start">
+          <div className="grid md:grid-cols-3 gap-8 items-center">
             {/* Branding */}
             <div className="text-center md:text-left">
               <div className="flex flex-col sm:flex-row items-center gap-3 mb-3 justify-center md:justify-start">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                   <TrendingUp className="w-7 h-7 text-white" />
                 </div>
                 <div className="text-center sm:text-left">
@@ -261,9 +262,34 @@ export default function Home() {
               </p>
             </div>
 
+            {/* Support & Contact */}
+            <div className="text-center border-l border-r border-slate-700/50 py-4 px-6">
+              <p className="text-slate-500 text-xs uppercase tracking-widest mb-3 font-semibold">
+                Support & Contact
+              </p>
+              <h4 className="text-xl font-bold text-white mb-1">
+                StockSignal Team
+              </h4>
+              <p className="text-slate-300 text-sm mb-4">
+                We're here to help with your investment learning journey
+              </p>
+              <Link to={createPageUrl("ContactSupport")}>
+                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-105 w-full justify-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  Contact Support
+                </Button>
+              </Link>
+            </div>
+
             {/* Legal & Links */}
-            <div className="text-center">
-              <div className="flex flex-wrap justify-center gap-4 text-xs mb-4">
+            <div className="text-center md:text-right">
+              <p className="text-slate-400 text-sm mb-3">
+                © {new Date().getFullYear()} StockSignal
+              </p>
+              <p className="text-slate-500 text-xs mb-4">
+                All rights reserved
+              </p>
+              <div className="flex flex-wrap justify-center md:justify-end gap-4 text-xs">
                 <Link to={createPageUrl("TermsOfService")} className="text-slate-400 hover:text-blue-400 transition-colors">
                   Terms of Service
                 </Link>
@@ -276,16 +302,6 @@ export default function Home() {
                   Legal Disclaimer
                 </Link>
               </div>
-            </div>
-
-            {/* Copyright */}
-            <div className="text-center md:text-right">
-              <p className="text-slate-400 text-sm mb-1">
-                © 2026 StockSignal
-              </p>
-              <p className="text-slate-500 text-xs">
-                All rights reserved
-              </p>
             </div>
           </div>
         </div>
