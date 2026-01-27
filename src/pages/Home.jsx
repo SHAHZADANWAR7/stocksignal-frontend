@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, LineChart, Brain, Target, Shield, Zap, CheckCircle } from "lucide-react";
-import { Link } from "react-router-dom";
+import { TrendingUp, LineChart, Brain, Target, Shield, Zap, CheckCircle, BarChart, Users, Award, LogIn } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { getCurrentUser } from 'aws-amplify/auth';
 import { motion } from "framer-motion";
 
 export default function Home() {
   const [user, setUser] = useState(null);
-  const [isChecking, setIsChecking] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     checkAuth();
@@ -17,17 +17,18 @@ export default function Home() {
 
   const checkAuth = async () => {
     try {
-      const currentUser = await base44.auth.me();
+      const currentUser = await getCurrentUser();
       setUser(currentUser);
-    } catch {
+    } catch (error) {
       setUser(null);
     }
-    setIsChecking(false);
   };
 
   const handleGetStarted = () => {
-    if (!isChecking) {
-      window.location.href = user ? "/Dashboard" : "/Login";
+    if (user) {
+      window.location.href = "/Dashboard";
+    } else {
+      window.location.href = "/Login";
     }
   };
 
@@ -91,9 +92,8 @@ export default function Home() {
             >
               <Button 
                 onClick={handleGetStarted}
-                disabled={isChecking}
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white text-xl px-12 py-8 rounded-2xl shadow-2xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-all hover:scale-105 font-bold disabled:opacity-50"
+                className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white text-xl px-12 py-8 rounded-2xl shadow-2xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-all hover:scale-105 font-bold"
               >
                 Start Learning Free
                 <TrendingUp className="w-6 h-6 ml-2" />
@@ -228,9 +228,8 @@ export default function Home() {
           </p>
           <Button 
             onClick={handleGetStarted}
-            disabled={isChecking}
             size="lg"
-            className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white text-base sm:text-lg md:text-2xl px-6 sm:px-10 md:px-14 py-6 sm:py-8 md:py-10 rounded-2xl shadow-2xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-all hover:scale-105 font-bold w-full sm:w-auto max-w-full disabled:opacity-50"
+            className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white text-base sm:text-lg md:text-2xl px-6 sm:px-10 md:px-14 py-6 sm:py-8 md:py-10 rounded-2xl shadow-2xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-all hover:scale-105 font-bold w-full sm:w-auto max-w-full"
           >
             <span className="truncate">Start Your Journey Free</span>
             <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 ml-2 sm:ml-3 flex-shrink-0" />
@@ -238,78 +237,6 @@ export default function Home() {
           <p className="text-slate-300 mt-6 text-sm sm:text-base md:text-lg px-4">No credit card required • Get started in 30 seconds</p>
         </motion.div>
       </div>
-
-      {/* Footer */}
-      <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-t-2 border-slate-700/50 backdrop-blur-xl overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-transparent to-indigo-600/5"></div>
-
-        <div className="relative max-w-full mx-auto px-6 py-12">
-          <div className="grid md:grid-cols-3 gap-8 items-center">
-            {/* Branding */}
-            <div className="text-center md:text-left">
-              <div className="flex flex-col sm:flex-row items-center gap-3 mb-3 justify-center md:justify-start">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <TrendingUp className="w-7 h-7 text-white" />
-                </div>
-                <div className="text-center sm:text-left">
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                    StockSignal
-                  </h3>
-                  <p className="text-xs text-slate-400 uppercase tracking-widest">Investment Learning Platform</p>
-                </div>
-              </div>
-              <p className="text-slate-400 text-sm leading-relaxed max-w-xs mx-auto md:mx-0">
-                Educational platform for learning investment strategies with AI-powered simulations
-              </p>
-            </div>
-
-            {/* Support & Contact */}
-            <div className="text-center border-l border-r border-slate-700/50 py-4 px-6">
-              <p className="text-slate-500 text-xs uppercase tracking-widest mb-3 font-semibold">
-                Support & Contact
-              </p>
-              <h4 className="text-xl font-bold text-white mb-1">
-                StockSignal Team
-              </h4>
-              <p className="text-slate-300 text-sm mb-4">
-                We're here to help with your investment learning journey
-              </p>
-              <Link 
-                to={createPageUrl("ContactSupport")}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-105"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                Contact Support
-              </Link>
-            </div>
-
-            {/* Legal & Links */}
-            <div className="text-center md:text-right">
-              <p className="text-slate-400 text-sm mb-3">
-                © 2026 StockSignal
-              </p>
-              <p className="text-slate-500 text-xs mb-4">
-                All rights reserved
-              </p>
-              <div className="flex flex-wrap justify-center md:justify-end gap-4 text-xs">
-                <Link to={createPageUrl("TermsOfService")} className="text-slate-400 hover:text-blue-400 transition-colors">
-                  Terms of Service
-                </Link>
-                <span className="text-slate-700">•</span>
-                <Link to={createPageUrl("PrivacyPolicy")} className="text-slate-400 hover:text-blue-400 transition-colors">
-                  Privacy Policy
-                </Link>
-                <span className="text-slate-700">•</span>
-                <Link to={createPageUrl("Disclaimer")} className="text-slate-400 hover:text-blue-400 transition-colors">
-                  Legal Disclaimer
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
 
       <style jsx>{`
         @keyframes blob {
