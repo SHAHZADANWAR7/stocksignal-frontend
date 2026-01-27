@@ -4,6 +4,8 @@ import { createPageUrl } from "./utils";
 import { LayoutDashboard, Building2, LineChart, Briefcase, TrendingUp, Bell, BarChart3, Target, Brain, Heart, DollarSign, GitBranch, ArrowLeftRight, Trophy, FlaskConical, Newspaper, User, LogOut, LogIn, Mail, BookOpen } from "lucide-react";
 import { getCurrentUser, signOut } from 'aws-amplify/auth';
 
+const PUBLIC_PAGES = ['Home', 'Login', 'TermsOfService', 'PrivacyPolicy', 'Disclaimer', 'ContactSupport'];
+
 const navigationItems = [
   { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
   { title: "Practice Simulator", url: createPageUrl("PracticeTrading"), icon: TrendingUp },
@@ -31,7 +33,13 @@ export default function Layout({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isHomePage = location.pathname === '/home' || location.pathname === '/';
+
+  const isPublicPage = PUBLIC_PAGES.some(page => 
+    location.pathname === `/${page.toLowerCase()}` || 
+    location.pathname === createPageUrl(page) ||
+    location.pathname === '/' ||
+    location.pathname === '/home'
+  );
 
   useEffect(() => {
     loadUser();
@@ -43,9 +51,6 @@ export default function Layout({ children }) {
       setUser(currentUser);
     } catch (error) {
       setUser(null);
-      if (!isHomePage) {
-        window.location.href = '/home';
-      }
     }
     setIsLoading(false);
   };
@@ -54,10 +59,10 @@ export default function Layout({ children }) {
     try {
       await signOut();
       setUser(null);
-      window.location.href = '/home';
+      navigate(createPageUrl("Home"));
     } catch (error) {
       console.error('Logout error:', error);
-      window.location.href = '/home';
+      navigate(createPageUrl("Home"));
     }
   };
 
@@ -65,7 +70,7 @@ export default function Layout({ children }) {
     navigate(createPageUrl("Login"));
   };
 
-  if (isHomePage) {
+  if (isPublicPage) {
     return <>{children}</>;
   }
 
@@ -80,11 +85,11 @@ export default function Layout({ children }) {
     );
   }
 
-  // Skip auth check for development - remove this once login is implemented
-  // if (!user) {
-  //   window.location.href = '/home';
-  //   return null;
-  // }
+  if (!user) {
+    const redirectUrl = encodeURIComponent(location.pathname);
+    navigate(`${createPageUrl("Login")}?redirect=${redirectUrl}`);
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
