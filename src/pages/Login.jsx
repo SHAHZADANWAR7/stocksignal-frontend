@@ -72,7 +72,21 @@ export default function Login() {
     setError("");
 
     try {
-      await confirmSignUp({ username: email, confirmationCode });
+      try {
+        await confirmSignUp({ username: email, confirmationCode });
+      } catch (confirmErr) {
+        // If user is already confirmed, that's fine - proceed to sign in
+        if (confirmErr.message && confirmErr.message.includes("already been confirmed")) {
+          console.log("User already confirmed, proceeding to sign in");
+        } else if (confirmErr.message && confirmErr.message.includes("User cannot be confirmed")) {
+          console.log("User already confirmed, proceeding to sign in");
+        } else {
+          throw confirmErr;
+        }
+      }
+      
+      // Add a small delay to ensure confirmation is processed
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       await signIn({ username: email, password });
       
