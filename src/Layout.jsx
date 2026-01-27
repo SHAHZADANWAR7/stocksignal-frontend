@@ -78,7 +78,7 @@ export default function Layout({ children }) {
 
     const initAuth = async () => {
       try {
-        const currentUser = await Auth.currentAuthenticatedUser();
+        const currentUser = await Auth.getCurrentUser();
         setUser(currentUser);
       } catch {
         setUser(null);
@@ -91,7 +91,7 @@ export default function Layout({ children }) {
 
     unsubscribe = Hub.listen("auth", ({ payload }) => {
       if (payload.event === "signIn") {
-        Auth.currentAuthenticatedUser().then(setUser);
+        Auth.getCurrentUser().then(setUser).catch(() => setUser(null));
       }
       if (payload.event === "signOut") {
         setUser(null);
