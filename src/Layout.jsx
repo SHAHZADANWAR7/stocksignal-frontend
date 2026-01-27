@@ -24,6 +24,7 @@ import {
   BookOpen
 } from "lucide-react";
 import { getCurrentUser, signOut } from "aws-amplify/auth";
+import { Hub } from "aws-amplify/utils";
 
 const PUBLIC_PAGES = [
   "Home",
@@ -74,7 +75,33 @@ export default function Layout({ children }) {
   });
 
   useEffect(() => {
-    loadUser();
+    let unsubscribe;
+
+    const initAuth = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+      } catch {
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
+
+    unsubscribe = Hub.listen("auth", ({ payload }) => {
+      if (payload.event === "signedIn") {
+        getCurrentUser().then(setUser);
+      }
+      if (payload.event === "signedOut") {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -83,17 +110,6 @@ export default function Layout({ children }) {
       navigate(`${createPageUrl("Login")}?redirect=${redirectUrl}`, { replace: true });
     }
   }, [isLoading, user, isPublicPage, location.pathname, navigate]);
-
-  const loadUser = async () => {
-    try {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
-    } catch (error) {
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleLogout = async () => {
     try {
