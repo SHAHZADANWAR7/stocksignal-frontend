@@ -9,7 +9,7 @@ import { createPageUrl } from "@/utils";
 import { signIn, signUp, confirmSignUp } from 'aws-amplify/auth';
 
 export default function Login() {
-  const [mode, setMode] = useState("signin"); // "signin", "signup", "confirm"
+  const [mode, setMode] = useState("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -74,10 +74,12 @@ export default function Login() {
     try {
       await confirmSignUp({ username: email, confirmationCode });
       
-      // Auto sign in after confirmation
       await signIn({ username: email, password });
       
-      navigate(createPageUrl("Dashboard"));
+      const params = new URLSearchParams(location.search);
+      const redirectTo = params.get('redirect') || createPageUrl("Dashboard");
+      
+      navigate(redirectTo);
     } catch (err) {
       console.error("Confirmation error:", err);
       setError(err.message || "Invalid confirmation code. Please try again.");
