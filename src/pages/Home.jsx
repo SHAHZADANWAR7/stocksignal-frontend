@@ -88,7 +88,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
-              className="flex justify-center items-center flex-col sm:flex-row gap-4"
+              className="flex justify-center items-center"
             >
               <Button 
                 onClick={handleGetStarted}
@@ -96,15 +96,6 @@ export default function Home() {
                 className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white text-xl px-12 py-8 rounded-2xl shadow-2xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-all hover:scale-105 font-bold"
               >
                 Start Learning Free
-                <TrendingUp className="w-6 h-6 ml-2" />
-              </Button>
-
-              <Button 
-                onClick={handleGetStarted}
-                size="lg"
-                className="bg-gradient-to-r from-green-600 via-teal-600 to-cyan-600 hover:from-green-700 hover:via-teal-700 hover:to-cyan-700 text-white text-xl px-12 py-8 rounded-2xl shadow-2xl shadow-green-500/40 hover:shadow-green-500/60 transition-all hover:scale-105 font-bold"
-              >
-                Start Your Journey Free
                 <TrendingUp className="w-6 h-6 ml-2" />
               </Button>
             </motion.div>
@@ -251,7 +242,7 @@ export default function Home() {
       <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-t-2 border-slate-700/50 backdrop-blur-xl overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-transparent to-indigo-600/5"></div>
         <div className="relative max-w-full mx-auto px-6 py-12">
-          <div className="grid md:grid-cols-3 gap-8 items-center">
+          <div className="grid md:grid-cols-3 gap-8 items-start">
             {/* Branding */}
             <div className="text-center md:text-left">
               <div className="flex flex-col sm:flex-row items-center gap-3 mb-3 justify-center md:justify-start">
@@ -271,18 +262,30 @@ export default function Home() {
             </div>
 
             {/* Legal & Links */}
-            <div className="text-center md:text-right flex flex-wrap justify-center md:justify-end gap-4 mt-4 md:mt-0 text-xs">
-              <Link to={createPageUrl("TermsOfService")} className="text-slate-400 hover:text-blue-400 transition-colors">
-                Terms of Service
-              </Link>
-              <span className="text-slate-700">•</span>
-              <Link to={createPageUrl("PrivacyPolicy")} className="text-slate-400 hover:text-blue-400 transition-colors">
-                Privacy Policy
-              </Link>
-              <span className="text-slate-700">•</span>
-              <Link to={createPageUrl("Disclaimer")} className="text-slate-400 hover:text-blue-400 transition-colors">
-                Legal Disclaimer
-              </Link>
+            <div className="text-center">
+              <div className="flex flex-wrap justify-center gap-4 text-xs mb-4">
+                <Link to={createPageUrl("TermsOfService")} className="text-slate-400 hover:text-blue-400 transition-colors">
+                  Terms of Service
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link to={createPageUrl("PrivacyPolicy")} className="text-slate-400 hover:text-blue-400 transition-colors">
+                  Privacy Policy
+                </Link>
+                <span className="text-slate-700">•</span>
+                <Link to={createPageUrl("Disclaimer")} className="text-slate-400 hover:text-blue-400 transition-colors">
+                  Legal Disclaimer
+                </Link>
+              </div>
+            </div>
+
+            {/* Copyright */}
+            <div className="text-center md:text-right">
+              <p className="text-slate-400 text-sm mb-1">
+                © 2026 StockSignal
+              </p>
+              <p className="text-slate-500 text-xs">
+                All rights reserved
+              </p>
             </div>
           </div>
         </div>
