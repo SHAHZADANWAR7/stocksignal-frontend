@@ -1,16 +1,37 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "./utils";
-import { LayoutDashboard, Building2, LineChart, Briefcase, TrendingUp, Bell, BarChart3, Target, Brain, Heart, DollarSign, GitBranch, ArrowLeftRight, Trophy, FlaskConical, Newspaper, User, LogOut, LogIn, Mail, BookOpen } from "lucide-react";
-import { getCurrentUser, signOut } from 'aws-amplify/auth';
+import {
+  LayoutDashboard,
+  Building2,
+  LineChart,
+  Briefcase,
+  TrendingUp,
+  Bell,
+  BarChart3,
+  Target,
+  Brain,
+  Heart,
+  DollarSign,
+  GitBranch,
+  ArrowLeftRight,
+  Trophy,
+  FlaskConical,
+  Newspaper,
+  User,
+  LogOut,
+  Mail,
+  BookOpen
+} from "lucide-react";
+import { getCurrentUser, signOut } from "aws-amplify/auth";
 
 const PUBLIC_PAGES = [
-  'Home', 
-  'Login', 
-  'TermsOfService', 
-  'PrivacyPolicy', 
-  'Disclaimer', 
-  'ContactSupport'
+  "Home",
+  "Login",
+  "TermsOfService",
+  "PrivacyPolicy",
+  "Disclaimer",
+  "ContactSupport"
 ];
 
 const navigationItems = [
@@ -31,27 +52,37 @@ const navigationItems = [
   { title: "Market Insights", url: createPageUrl("MarketInsights"), icon: Newspaper },
   { title: "Platform Philosophy", url: createPageUrl("PlatformPhilosophy"), icon: BookOpen },
   { title: "Notification Settings", url: createPageUrl("NotificationSettings"), icon: Bell },
-  { title: "Contact Support", url: createPageUrl("ContactSupport"), icon: Mail },
+  { title: "Contact Support", url: createPageUrl("ContactSupport"), icon: Mail }
 ];
 
 export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
+
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const isPublicPage = PUBLIC_PAGES.some(page => {
+  const isPublicPage = PUBLIC_PAGES.some((page) => {
     const pageUrl = createPageUrl(page);
-    return location.pathname === pageUrl || 
-           location.pathname === `/${page.toLowerCase()}` || 
-           location.pathname === '/' ||
-           location.pathname === '/home';
+    return (
+      location.pathname === pageUrl ||
+      location.pathname === `/${page.toLowerCase()}` ||
+      location.pathname === "/" ||
+      location.pathname === "/home"
+    );
   });
 
   useEffect(() => {
     loadUser();
   }, []);
+
+  useEffect(() => {
+    if (!isLoading && !user && !isPublicPage) {
+      const redirectUrl = encodeURIComponent(location.pathname);
+      navigate(`${createPageUrl("Login")}?redirect=${redirectUrl}`, { replace: true });
+    }
+  }, [isLoading, user, isPublicPage, location.pathname, navigate]);
 
   const loadUser = async () => {
     try {
@@ -59,8 +90,9 @@ export default function Layout({ children }) {
       setUser(currentUser);
     } catch (error) {
       setUser(null);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleLogout = async () => {
@@ -69,13 +101,9 @@ export default function Layout({ children }) {
       setUser(null);
       navigate(createPageUrl("Home"));
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
       navigate(createPageUrl("Home"));
     }
-  };
-
-  const handleLogin = () => {
-    navigate(createPageUrl("Login"));
   };
 
   if (isPublicPage) {
@@ -94,15 +122,17 @@ export default function Layout({ children }) {
   }
 
   if (!user) {
-    const redirectUrl = encodeURIComponent(location.pathname);
-    navigate(`${createPageUrl("Login")}?redirect=${redirectUrl}`);
     return null;
   }
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         <div className="flex flex-col h-full">
           <div className="p-6 border-b border-slate-100">
             <div className="flex items-center gap-3">
@@ -123,8 +153,8 @@ export default function Layout({ children }) {
                 to={item.url}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl mb-1 transition-all ${
                   location.pathname === item.url
-                    ? 'bg-blue-50 text-blue-700 font-semibold'
-                    : 'text-slate-600 hover:bg-slate-50'
+                    ? "bg-blue-50 text-blue-700 font-semibold"
+                    : "text-slate-600 hover:bg-slate-50"
                 }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -134,22 +164,21 @@ export default function Layout({ children }) {
           </nav>
 
           <div className="p-4 border-t border-slate-100">
-            {user && (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <User className="w-5 h-5 text-slate-600" />
-                  <span className="text-sm text-slate-700">{user.username || user.attributes?.email || 'User'}</span>
-                </div>
-                <button onClick={handleLogout} className="text-rose-600 hover:text-rose-700 transition-colors">
-                  <LogOut className="w-5 h-5" />
-                </button>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <User className="w-5 h-5 text-slate-600" />
+                <span className="text-sm text-slate-700">
+                  {user?.username || user?.attributes?.email || "User"}
+                </span>
               </div>
-            )}
+              <button onClick={handleLogout} className="text-rose-600 hover:text-rose-700">
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </aside>
 
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -157,7 +186,6 @@ export default function Layout({ children }) {
         />
       )}
 
-      {/* Main content */}
       <div className="flex-1 lg:ml-64">
         <header className="bg-white border-b border-slate-200 px-4 py-3 lg:hidden">
           <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2">
@@ -171,7 +199,9 @@ export default function Layout({ children }) {
 
         <footer className="bg-slate-900 text-white p-6 m-6 rounded-2xl">
           <div className="text-center">
-            <p className="text-sm text-slate-400">© {new Date().getFullYear()} StockSignal - Investment Learning Platform</p>
+            <p className="text-sm text-slate-400">
+              © {new Date().getFullYear()} StockSignal - Investment Learning Platform
+            </p>
             <div className="flex justify-center gap-4 mt-2 text-xs">
               <Link to={createPageUrl("TermsOfService")} className="text-slate-400 hover:text-white">Terms</Link>
               <Link to={createPageUrl("PrivacyPolicy")} className="text-slate-400 hover:text-white">Privacy</Link>
