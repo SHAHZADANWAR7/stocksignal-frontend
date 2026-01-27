@@ -4,7 +4,14 @@ import { createPageUrl } from "./utils";
 import { LayoutDashboard, Building2, LineChart, Briefcase, TrendingUp, Bell, BarChart3, Target, Brain, Heart, DollarSign, GitBranch, ArrowLeftRight, Trophy, FlaskConical, Newspaper, User, LogOut, LogIn, Mail, BookOpen } from "lucide-react";
 import { getCurrentUser, signOut } from 'aws-amplify/auth';
 
-const PUBLIC_PAGES = ['Home', 'Login', 'TermsOfService', 'PrivacyPolicy', 'Disclaimer', 'ContactSupport'];
+const PUBLIC_PAGES = [
+  'Home', 
+  'Login', 
+  'TermsOfService', 
+  'PrivacyPolicy', 
+  'Disclaimer', 
+  'ContactSupport'
+];
 
 const navigationItems = [
   { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
@@ -34,12 +41,13 @@ export default function Layout({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const isPublicPage = PUBLIC_PAGES.some(page => 
-    location.pathname === `/${page.toLowerCase()}` || 
-    location.pathname === createPageUrl(page) ||
-    location.pathname === '/' ||
-    location.pathname === '/home'
-  );
+  const isPublicPage = PUBLIC_PAGES.some(page => {
+    const pageUrl = createPageUrl(page);
+    return location.pathname === pageUrl || 
+           location.pathname === `/${page.toLowerCase()}` || 
+           location.pathname === '/' ||
+           location.pathname === '/home';
+  });
 
   useEffect(() => {
     loadUser();
