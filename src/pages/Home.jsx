@@ -1,14 +1,34 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, LineChart, Brain, Target, Shield, Zap, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 
 export default function Home() {
+  const [user, setUser] = useState(null);
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+    } catch {
+      setUser(null);
+    }
+    setIsChecking(false);
+  };
+
   const handleGetStarted = () => {
-    window.location.href = "/Dashboard";
+    if (!isChecking) {
+      window.location.href = user ? "/Dashboard" : "/Login";
+    }
   };
 
   return (
@@ -71,8 +91,9 @@ export default function Home() {
             >
               <Button 
                 onClick={handleGetStarted}
+                disabled={isChecking}
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white text-xl px-12 py-8 rounded-2xl shadow-2xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-all hover:scale-105 font-bold"
+                className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white text-xl px-12 py-8 rounded-2xl shadow-2xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-all hover:scale-105 font-bold disabled:opacity-50"
               >
                 Start Learning Free
                 <TrendingUp className="w-6 h-6 ml-2" />
@@ -207,8 +228,9 @@ export default function Home() {
           </p>
           <Button 
             onClick={handleGetStarted}
+            disabled={isChecking}
             size="lg"
-            className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white text-base sm:text-lg md:text-2xl px-6 sm:px-10 md:px-14 py-6 sm:py-8 md:py-10 rounded-2xl shadow-2xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-all hover:scale-105 font-bold w-full sm:w-auto max-w-full"
+            className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white text-base sm:text-lg md:text-2xl px-6 sm:px-10 md:px-14 py-6 sm:py-8 md:py-10 rounded-2xl shadow-2xl shadow-blue-500/40 hover:shadow-blue-500/60 transition-all hover:scale-105 font-bold w-full sm:w-auto max-w-full disabled:opacity-50"
           >
             <span className="truncate">Start Your Journey Free</span>
             <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 ml-2 sm:ml-3 flex-shrink-0" />
