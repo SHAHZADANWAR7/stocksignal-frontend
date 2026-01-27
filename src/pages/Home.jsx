@@ -1,32 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, LineChart, Brain, Target, Shield, Zap, CheckCircle } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 
 export default function Home() {
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      setUser(currentUser);
-    } catch (error) {
-      setUser(null);
-    }
-  };
-
   const handleGetStarted = () => {
-    if (user) {
-      navigate(createPageUrl("Dashboard"));
-    } else {
-      navigate(createPageUrl("Login"));
-    }
+    window.location.href = "/Dashboard";
   };
 
   return (
