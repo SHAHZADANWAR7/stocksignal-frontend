@@ -25,7 +25,11 @@ export default function Home() {
   };
 
   const handleGetStarted = () => {
-    navigate(createPageUrl("Dashboard"));
+    if (user) {
+      navigate(createPageUrl("Dashboard"));
+    } else {
+      navigate(createPageUrl("Login"));
+    }
   };
 
   return (
