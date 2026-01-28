@@ -38,14 +38,67 @@ export default function CashIntelligence() {
   };
 
   const loadData = async () => {
-    const data = await awsApi.getCashIntelligence();
+    try {
+      const userId = localStorage.getItem('user_id');
+      const data = await awsApi.getStockBatch(userId);
+      
+      if (data && data.syncPortfolio && data.syncPortfolio.assets) {
+        setHoldings(data.syncPortfolio.assets);
+      }
+
+      const storedAnalysis = localStorage.getItem('cash_intelligence_analysis');
+      if (storedAnalysis) {
+        setAnalysis(JSON.parse(storedAnalysis));
+      }
+    } catch (error) {
+      console.error("Error loading data:", error);
+    }
+  };
+
+  const generateStaticRecommendation = (calculatedCash, marketUncertainty) => {
+    let deployment_signal = "gradual_entry";
+    let deployment_reasoning = "";
+    const optimal_actions = [];
+
+    const totalInvested = holdings.reduce((sum, h) => 
+      sum + (h.quantity * h.average_cost), 0);
     
-    if (data && data.analysis) {
-      setAnalysis(data.analysis);
+    const currentValue = holdings.reduce((sum, h) => 
+      sum + (h.quantity * (h.current_price || h.average_cost)), 0);
+
+    const portfolioGain = totalInvested > 0 ? ((currentValue - totalInvested) / totalInvested) * 100 : 0;
+
+    if (marketUncertainty > 70) {
+      deployment_signal = "hold_cash";
+      deployment_reasoning = `Market uncertainty is elevated at ${marketUncertainty}%. Given high volatility and uncertain market conditions, it's prudent to hold cash and wait for clearer market signals. Your idle cash of $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} can be deployed when uncertainty decreases.`;
+      optimal_actions.push("Monitor VIX and market volatility indicators daily.");
+      optimal_actions.push("Set price targets on key holdings for potential rebalancing.");
+      optimal_actions.push("Keep cash reserves at current levels for opportunistic buying.");
+    } else if (marketUncertainty > 50) {
+      deployment_signal = "gradual_entry";
+      deployment_reasoning = `Market uncertainty is moderate at ${marketUncertainty}%. Implement a dollar-cost averaging strategy with your $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} idle cash over the next 3-6 months. This reduces timing risk while deploying capital systematically.`;
+      optimal_actions.push(`Divide $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} into 6 equal monthly tranches of $${Math.round(calculatedCash.idle_cash_amount / 6).toLocaleString()}.`);
+      optimal_actions.push("Start with equal-weight distribution across your top performers.");
+      optimal_actions.push("Rebalance monthly based on market conditions and portfolio drift.");
+    } else if (portfolioGain > 15) {
+      deployment_signal = "pause_dca";
+      deployment_reasoning = `Your portfolio has gained ${portfolioGain.toFixed(1)}%, suggesting strong recent performance. With market uncertainty at ${marketUncertainty}%, consider pausing regular contributions temporarily. Your idle cash of $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} remains available if valuations become more attractive.`;
+      optimal_actions.push("Pause regular monthly contributions for 1-2 months.");
+      optimal_actions.push("Review profit-taking opportunities on top performers.");
+      optimal_actions.push("Monitor for pullback opportunities to resume dollar-cost averaging.");
+    } else {
+      deployment_signal = "invest_now";
+      deployment_reasoning = `Current market conditions favor deployment with uncertainty at ${marketUncertainty}%. Your portfolio shows modest gains with room for growth. Deploy your $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} idle cash now to take advantage of current valuations and benefit from compound growth.`;
+      optimal_actions.push(`Deploy full $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} across your diversified holdings.`);
+      optimal_actions.push("Focus on your highest-conviction positions first.");
+      optimal_actions.push("Complete deployment within 1-2 weeks before market conditions shift.");
     }
-    if (data && data.holdings) {
-      setHoldings(data.holdings);
-    }
+
+    return {
+      deployment_signal,
+      deployment_reasoning,
+      optimal_actions
+    };
   };
 
   const analyzeCashOpportunity = async () => {
@@ -65,61 +118,22 @@ export default function CashIntelligence() {
     const currentValue = holdings.reduce((sum, h) => 
       sum + (h.quantity * (h.current_price || h.average_cost)), 0);
 
-    const prompt = `Provide investment timing guidance based on current market conditions:
-
-CALCULATED OPPORTUNITY COSTS (JavaScript):
-- Idle Cash: $${calculatedCash.idle_cash_amount.toLocaleString()}
-- Months Idle: ${idleCashMonths}
-- Missed Returns: $${calculatedCash.missed_returns.toLocaleString()}
-- Total Opportunity Cost: $${calculatedCash.total_opportunity_cost.toLocaleString()}
-- Annual Return Used: ${calculatedCash.context.annualReturnUsed}%
-
-LOW-YIELD ASSETS DETECTED:
-${calculatedCash.low_yield_assets.map(a => `- ${a.symbol}: ${a.current_yield}% yield, $${Math.round(a.opportunity_cost)} opportunity cost`).join('\n')}
-
-PORTFOLIO CONTEXT:
-- Total Portfolio Value: $${calculatedCash.context.portfolioValue.toLocaleString()}
-- Total Invested: $${totalInvested.toLocaleString()}
-- Current Value: $${currentValue.toLocaleString()}
-
-MARKET CONDITIONS (Current):
-- Estimated Market Uncertainty: ${marketUncertainty}/100
-
-Your task: Provide deployment strategy (NOT recalculate opportunity costs):
-
-1. deployment_signal: Choose ONE based on current market:
-   - "invest_now" (favorable valuations)
-   - "pause_dca" (overvalued)
-   - "hold_cash" (high uncertainty)
-   - "gradual_entry" (moderate risk)
-
-2. market_uncertainty_score: 0-100 based on current conditions
-
-3. deployment_reasoning: Explain your signal with:
-   - Current market conditions
-   - Valuation environment
-   - Timing rationale
-
-4. optimal_actions: 3-5 specific actionable steps
-
-Focus on WHEN and HOW to deploy, not opportunity cost calculation.`;
-
     try {
-      const result = await awsApi.analyzeCashOpportunity(prompt, calculatedCash);
+      const recommendation = generateStaticRecommendation(calculatedCash, marketUncertainty);
 
       const analysisData = {
         idle_cash_amount: calculatedCash.idle_cash_amount,
         missed_returns: calculatedCash.missed_returns,
         low_yield_assets: calculatedCash.low_yield_assets,
-        deployment_signal: result.deployment_signal,
-        market_uncertainty_score: result.market_uncertainty_score,
-        deployment_reasoning: result.deployment_reasoning,
-        optimal_actions: result.optimal_actions,
+        deployment_signal: recommendation.deployment_signal,
+        market_uncertainty_score: marketUncertainty,
+        deployment_reasoning: recommendation.deployment_reasoning,
+        optimal_actions: recommendation.optimal_actions,
         analysis_date: format(new Date(), 'yyyy-MM-dd')
       };
 
-      await awsApi.saveCashAnalysis(analysisData);
-      await loadData();
+      localStorage.setItem('cash_intelligence_analysis', JSON.stringify(analysisData));
+      setAnalysis(analysisData);
     } catch (error) {
       console.error("Error analyzing:", error);
       alert("Error analyzing cash opportunity. Please try again.");
@@ -351,35 +365,8 @@ Focus on WHEN and HOW to deploy, not opportunity cost calculation.`;
                   </h4>
                   <div className="prose max-w-none">
                     <p className="text-slate-700 leading-relaxed text-base">
-                      {analysis.deployment_reasoning.replace(/\s*\(\[.*?\]\(.*?\)\)/g, '')}
+                      {analysis.deployment_reasoning}
                     </p>
-                  </div>
-                  <div className="mt-4 pt-4 border-t border-slate-200">
-                    <p className="text-sm font-semibold text-slate-600 mb-2">Sources:</p>
-                    <div className="flex flex-wrap gap-3">
-                      <a 
-                        href__="https://apnews.com/article/f77b286bdcee7e86714d89374e3288ee" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 hover:underline text-sm transition-colors"
-                      >
-                        AP News: Market Analysis
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                      </a>
-                      <a 
-                        href__="https://www.pers.ms.gov/sites/default/files/Content/Board_Materials/2025/April/Materials/Investment%20Committee%20Meeting_April%202025.pdf" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 hover:underline text-sm transition-colors"
-                      >
-                        PERS: Valuation Report
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                      </a>
-                    </div>
                   </div>
                 </div>
 
@@ -390,35 +377,16 @@ Focus on WHEN and HOW to deploy, not opportunity cost calculation.`;
                       Optimal Actions
                     </h4>
                     <div className="space-y-3">
-                      {analysis.optimal_actions.map((action, idx) => {
-                        const urlRegex = /(https?:\/\/[^\s]+)/g;
-                        const parts = action.split(urlRegex);
-                        
-                        return (
-                          <div key={idx} className="flex items-start gap-2 md:gap-3 bg-slate-50 rounded-lg p-3 md:p-4 border border-slate-200">
-                            <div className="w-6 h-6 md:w-7 md:h-7 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                              <span className="text-xs md:text-sm font-bold text-emerald-600">{idx + 1}</span>
-                            </div>
-                            <p className="text-xs md:text-sm text-slate-700 flex-1 break-words overflow-hidden">
-                              {parts.map((part, i) => 
-                                part.match(/(https?:\/\/)/) ? (
-                                  <a 
-                                    key={i}
-                                    href__={part} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-700 underline font-medium"
-                                  >
-                                    [link]
-                                  </a>
-                                ) : (
-                                  part
-                                )
-                              )}
-                            </p>
+                      {analysis.optimal_actions.map((action, idx) => (
+                        <div key={idx} className="flex items-start gap-2 md:gap-3 bg-slate-50 rounded-lg p-3 md:p-4 border border-slate-200">
+                          <div className="w-6 h-6 md:w-7 md:h-7 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-xs md:text-sm font-bold text-emerald-600">{idx + 1}</span>
                           </div>
-                        );
-                      })}
+                          <p className="text-xs md:text-sm text-slate-700 flex-1 break-words overflow-hidden">
+                            {action}
+                          </p>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
