@@ -23,7 +23,8 @@ import {
   Mail,
   BookOpen
 } from "lucide-react";
-import { Auth, Hub } from "aws-amplify";
+import { getCurrentUser, signOut } from 'aws-amplify/auth';
+import { Hub } from 'aws-amplify/utils';
 
 const PUBLIC_PAGES = [
   "Home",
@@ -78,7 +79,7 @@ export default function Layout({ children }) {
 
     const initAuth = async () => {
       try {
-        const currentUser = await Auth.getCurrentUser();
+        const currentUser = await getCurrentUser();
         setUser(currentUser);
       } catch {
         setUser(null);
@@ -91,7 +92,7 @@ export default function Layout({ children }) {
 
     unsubscribe = Hub.listen("auth", ({ payload }) => {
       if (payload.event === "signIn") {
-        Auth.getCurrentUser().then(setUser).catch(() => setUser(null));
+        getCurrentUser().then(setUser).catch(() => setUser(null));
       }
       if (payload.event === "signOut") {
         setUser(null);
@@ -112,7 +113,7 @@ export default function Layout({ children }) {
 
   const handleLogout = async () => {
     try {
-      await Auth.signOut();
+      await signOut();
       setUser(null);
       navigate(createPageUrl("Home"));
     } catch (error) {
