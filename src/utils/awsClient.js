@@ -70,6 +70,14 @@ export const awsApi = {
   getShadowPortfolios: (userId) =>
     invokeLambda("getShadowPortfolios", { userId }),
 
+  // Investor Score
+  getInvestorScore: () =>
+    invokeLambda("getInvestorScore", {}),
+  analyzeInvestorBehavior: (prompt, metrics) =>
+    invokeLambda("analyzeInvestorBehavior", { prompt, metrics }),
+  saveInvestorScore: (scoreData) =>
+    invokeLambda("saveInvestorScore", { scoreData }),
+
   // Companies (kept from original, adjust if needed)
   getCompanies: async () => {
     try {
