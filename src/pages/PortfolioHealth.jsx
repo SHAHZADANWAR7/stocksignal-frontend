@@ -41,17 +41,26 @@ export default function PortfolioHealth() {
   };
 
   const loadData = async () => {
-    const data = await awsApi.getPortfolioHealth();
-    
-    setHealthRecords(data.health_records || []);
-    if (data.health_records && data.health_records.length > 0) {
-      setCurrentHealth(data.health_records[0]);
-      if (data.health_records.length > 1) {
-        setPreviousHealth(data.health_records[1]);
+    try {
+      const userId = localStorage.getItem('user_id');
+      const data = await awsApi.getStockBatch(userId);
+      
+      if (data && data.syncPortfolio) {
+        setPortfolio(data.syncPortfolio);
+        
+        const storedRecords = localStorage.getItem('portfolio_health_records');
+        const records = storedRecords ? JSON.parse(storedRecords) : [];
+        
+        setHealthRecords(records);
+        if (records && records.length > 0) {
+          setCurrentHealth(records[0]);
+          if (records.length > 1) {
+            setPreviousHealth(records[1]);
+          }
+        }
       }
-    }
-    if (data.portfolio) {
-      setPortfolio(data.portfolio);
+    } catch (error) {
+      console.error("Error loading data:", error);
     }
   };
 
@@ -76,49 +85,49 @@ export default function PortfolioHealth() {
       ? differenceInDays(new Date(), new Date(previousHealth.analysis_date))
       : null;
 
-    const prompt = `Provide a natural language health summary for this portfolio:
-
-CALCULATED METRICS (JavaScript):
-- Diversification Score: ${calculatedHealth.diversification_score}/100
-- Fragility Index: ${calculatedHealth.fragility_index}/100 (lower is better)
-- Dependency Score: ${calculatedHealth.dependency_score}/100 (lower is better)
-- Risk Level: ${calculatedHealth.risk_level}/100
-- Correlation Coefficient: ${calculatedHealth.correlation_coefficient}
-
-PORTFOLIO DATA:
-- Total Value: $${totalValue.toLocaleString()}
-- Holdings: ${holdingsList.length} assets
-- Largest Position: ${calculatedHealth.metrics.maxConcentration.toFixed(1)}% of portfolio
-- HHI (Herfindahl Index): ${calculatedHealth.metrics.hhi.toFixed(3)}
-
-${previousHealth ? `CHANGES SINCE LAST CHECK (${daysSinceLastCheck} days ago):
-- Diversification: ${previousHealth.diversification_score} → ${calculatedHealth.diversification_score} (${calculatedHealth.diversification_score - previousHealth.diversification_score > 0 ? '+' : ''}${calculatedHealth.diversification_score - previousHealth.diversification_score})
-- Fragility: ${previousHealth.fragility_index} → ${calculatedHealth.fragility_index} (${calculatedHealth.fragility_index - previousHealth.fragility_index > 0 ? '+' : ''}${calculatedHealth.fragility_index - previousHealth.fragility_index})
-- Risk: ${previousHealth.risk_level} → ${calculatedHealth.risk_level} (${calculatedHealth.risk_level - previousHealth.risk_level > 0 ? '+' : ''}${calculatedHealth.risk_level - previousHealth.risk_level})
-` : ''}
-
-DETECTED ALERTS:
-${calculatedHealth.health_alerts.map(a => `- ${a.type} (${a.severity}): ${a.message}`).join('\n')}
-
-Provide a concise weekly_summary paragraph that:
-1. Explains overall portfolio health in simple terms
-2. Highlights key risks or strengths
-3. Mentions notable changes if previous data exists
-4. Is conversational and actionable
-
-Example: "Your portfolio shows moderate diversification with ${holdingsList.length} holdings, but your largest position represents ${calculatedHealth.metrics.maxConcentration.toFixed(0)}% of total value, creating significant fragility risk..."`;
+    let weeklySummary = `Your portfolio shows `;
+    
+    if (calculatedHealth.diversification_score >= 70) {
+      weeklysummary += `strong diversification with ${holdingsList.length} holdings`;
+    } else if (calculatedHealth.diversification_score >= 40) {
+      weeklysSummary += `moderate diversification with ${holdingsList.length} holdings`;
+    } else {
+      weeklysSummary += `limited diversification with only ${holdingsList.length} holdings`;
+    }
+    
+    weeklysSummary += `, totaling $${totalValue.toLocaleString()}. `;
+    
+    if (calculatedHealth.metrics.maxConcentration > 30) {
+      weeklysSummary += `Your largest position represents ${calculatedHealth.metrics.maxConcentration.toFixed(0)}% of total value, creating significant fragility risk. `;
+    }
+    
+    if (calculatedHealth.fragility_index > 60) {
+      weeklysSummary += `Portfolio fragility is high. `;
+    }
+    
+    if (calculatedHealth.correlation_coefficient > 0.7) {
+      weeklysSummary += `Assets are highly correlated, reducing diversification benefits. `;
+    }
+    
+    weeklysSummary += `Risk level: ${Math.round(calculatedHealth.risk_level)}/100.`;
 
     try {
-      const result = await awsApi.analyzePortfolioHealth(prompt, calculatedHealth);
-
       const healthData = {
         ...calculatedHealth,
-        weekly_summary: result.weekly_summary,
+        weekly_summary: weeklysSummary,
         analysis_date: new Date().toISOString()
       };
 
-      await awsApi.savePortfolioHealth(healthData);
-      await loadData();
+      const storedRecords = localStorage.getItem('portfolio_health_records');
+      const records = storedRecords ? JSON.parse(storedRecords) : [];
+      records.unshift(healthData);
+      localStorage.setItem('portfolio_health_records', JSON.stringify(records.slice(0, 100)));
+
+      setHealthRecords(records);
+      setCurrentHealth(healthData);
+      if (records.length > 1) {
+        setPreviousHealth(records[1]);
+      }
     } catch (error) {
       console.error("Error analyzing health:", error);
       alert("Error analyzing portfolio health. Please try again.");
