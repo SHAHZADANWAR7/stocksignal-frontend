@@ -56,12 +56,42 @@ const navigationItems = [
   { title: "Contact Support", url: createPageUrl("ContactSupport"), icon: Mail }
 ];
 
+// SOLUTION 1: Cache helpers for persistent auth
+const getCachedUserAttributes = () => {
+  try {
+    const cached = localStorage.getItem("stocksignal_user_attributes");
+    return cached ? JSON.parse(cached) : null;
+  } catch (e) {
+    console.warn("[Layout] Failed to parse cached user attributes:", e);
+    return null;
+  }
+};
+
+const cacheUserAttributes = (attributes) => {
+  try {
+    localStorage.setItem("stocksignal_user_attributes", JSON.stringify(attributes));
+  } catch (e) {
+    console.warn("[Layout] Failed to cache user attributes:", e);
+  }
+};
+
+const clearUserCache = () => {
+  try {
+    localStorage.removeItem("stocksignal_user_attributes");
+  } catch (e) {
+    console.warn("[Layout] Failed to clear user cache:", e);
+  }
+};
+
 export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [user, setUser] = useState(null);
-  const [userAttributes, setUserAttributes] = useState(null);
+  const [user, setUser] = useState(() => {
+    // Initialize from cache if available
+    return getCachedUserAttributes() ? { cached: true } : null;
+  });
+  const [userAttributes, setUserAttributes] = useState(() => getCachedUserAttributes());
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isAuthenticatedRef = useRef(false);
@@ -78,6 +108,7 @@ export default function Layout({ children }) {
 
   console.log("[Layout] Current pathname:", location.pathname);
   console.log("[Layout] Is public page:", isPublicPage);
+  console.log("[Layout] Has cached user attributes:", !!userAttributes);
 
   useEffect(() => {
     console.log("[Layout] useEffect - initAuth starting");
@@ -95,12 +126,16 @@ export default function Layout({ children }) {
           const attributes = await fetchUserAttributes();
           console.log("[Layout] initAuth - fetchUserAttributes SUCCESS:", attributes);
           setUserAttributes(attributes);
+          cacheUserAttributes(attributes);
         } catch (attrError) {
           console.log("[Layout] initAuth - fetchUserAttributes FAILED:", attrError);
         }
       } catch (error) {
         console.log("[Layout] initAuth - getCurrentUser FAILED:", error);
-        setUser(null);
+        // SOLUTION 2: Don't clear user if we have cached attributes
+        if (!userAttributes) {
+          setUser(null);
+        }
         isAuthenticatedRef.current = false;
       } finally {
         console.log("[Layout] initAuth - Setting isLoading to false");
@@ -125,13 +160,16 @@ export default function Layout({ children }) {
               const attributes = await fetchUserAttributes();
               console.log("[Layout] Hub.listen - fetchUserAttributes SUCCESS:", attributes);
               setUserAttributes(attributes);
+              cacheUserAttributes(attributes);
             } catch (attrError) {
               console.log("[Layout] Hub.listen - fetchUserAttributes FAILED:", attrError);
             }
           })
           .catch((error) => {
             console.log("[Layout] Hub.listen - getCurrentUser after signIn FAILED:", error);
-            setUser(null);
+            if (!userAttributes) {
+              setUser(null);
+            }
             isAuthenticatedRef.current = false;
           });
       }
@@ -140,6 +178,7 @@ export default function Layout({ children }) {
         setUser(null);
         setUserAttributes(null);
         isAuthenticatedRef.current = false;
+        clearUserCache();
       }
     });
 
@@ -147,16 +186,17 @@ export default function Layout({ children }) {
       console.log("[Layout] Cleanup - Unsubscribing from Hub");
       if (unsubscribe) unsubscribe();
     };
-  }, []);
+  }, [userAttributes]);
 
   useEffect(() => {
-    console.log("[Layout] Redirect check - isLoading:", isLoading, "user:", !!user, "isPublicPage:", isPublicPage);
-    if (!isLoading && !user && !isPublicPage && !isAuthenticatedRef.current) {
+    console.log("[Layout] Redirect check - isLoading:", isLoading, "user:", !!user, "userAttributes:", !!userAttributes, "isPublicPage:", isPublicPage);
+    // SOLUTION 1+2: Only redirect if definitively not authenticated (no user AND no cache)
+    if (!isLoading && !user && !userAttributes && !isPublicPage && !isAuthenticatedRef.current) {
       const redirectUrl = encodeURIComponent(location.pathname);
       console.log("[Layout] REDIRECTING to Login with redirect:", redirectUrl);
       navigate(`${createPageUrl("Login")}?redirect=${redirectUrl}`, { replace: true });
     }
-  }, [isLoading, user, isPublicPage, navigate]);
+  }, [isLoading, user, userAttributes, isPublicPage, navigate, location.pathname]);
 
   const handleLogout = async () => {
     console.log("[Layout] handleLogout - Starting logout");
@@ -166,9 +206,14 @@ export default function Layout({ children }) {
       setUser(null);
       setUserAttributes(null);
       isAuthenticatedRef.current = false;
+      clearUserCache();
       navigate(createPageUrl("Home"));
     } catch (error) {
       console.error("[Layout] handleLogout - signOut ERROR:", error);
+      setUser(null);
+      setUserAttributes(null);
+      isAuthenticatedRef.current = false;
+      clearUserCache();
       navigate(createPageUrl("Home"));
     }
   };
@@ -190,8 +235,9 @@ export default function Layout({ children }) {
     );
   }
 
-  if (!user && !isAuthenticatedRef.current) {
-    console.log("[Layout] No user and not loading - should redirect (returning null)");
+  // SOLUTION 2: Keep showing content if we have cached attributes (don't blank during navigation)
+  if (!user && !userAttributes && !isAuthenticatedRef.current) {
+    console.log("[Layout] No user and no cache - should redirect (returning null)");
     return null;
   }
 
