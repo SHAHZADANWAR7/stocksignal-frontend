@@ -169,7 +169,7 @@ export default function Layout({ children }) {
     return null;
   }
 
-  console.log("[Layout] Rendering authenticated layout for user:", user.username || user.attributes?.email);
+  console.log("[Layout] Rendering authenticated layout for user:", user.attributes?.name || user.attributes?.email);
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
@@ -214,7 +214,7 @@ export default function Layout({ children }) {
               <div className="flex items-center gap-3">
                 <User className="w-5 h-5 text-slate-600" />
                 <span className="text-sm text-slate-700">
-                  {user?.username || user?.attributes?.email || "User"}
+                  {user?.attributes?.name || user?.attributes?.email || "User"}
                 </span>
               </div>
               <button onClick={handleLogout} className="text-rose-600 hover:text-rose-700">
@@ -243,15 +243,73 @@ export default function Layout({ children }) {
 
         <main className="p-4 md:p-8">{children}</main>
 
-        <footer className="bg-slate-900 text-white p-6 m-6 rounded-2xl">
-          <div className="text-center">
-            <p className="text-sm text-slate-400">
-              © {new Date().getFullYear()} StockSignal - Investment Learning Platform
-            </p>
-            <div className="flex justify-center gap-4 mt-2 text-xs">
-              <Link to={createPageUrl("TermsOfService")} className="text-slate-400 hover:text-white">Terms</Link>
-              <Link to={createPageUrl("PrivacyPolicy")} className="text-slate-400 hover:text-white">Privacy</Link>
-              <Link to={createPageUrl("Disclaimer")} className="text-slate-400 hover:text-white">Disclaimer</Link>
+        <footer className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-2 border-slate-700/50 backdrop-blur-xl rounded-3xl mx-6 mb-6 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-transparent to-indigo-600/5"></div>
+
+          <div className="relative max-w-full mx-auto px-6 py-12">
+            <div className="grid md:grid-cols-3 gap-8 items-center">
+              {/* Branding */}
+              <div className="text-center md:text-left">
+                <div className="flex flex-col sm:flex-row items-center gap-3 mb-3 justify-center md:justify-start">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <TrendingUp className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="text-center sm:text-left">
+                    <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+                      StockSignal
+                    </h3>
+                    <p className="text-xs text-slate-400 uppercase tracking-widest">Investment Learning Platform</p>
+                  </div>
+                </div>
+                <p className="text-slate-400 text-sm leading-relaxed max-w-xs mx-auto md:mx-0">
+                  Educational platform for learning investment strategies with AI-powered simulations
+                </p>
+              </div>
+
+              {/* Support & Contact */}
+              <div className="text-center border-l border-r border-slate-700/50 py-4 px-6">
+                <p className="text-slate-500 text-xs uppercase tracking-widest mb-3 font-semibold">
+                  Support & Contact
+                </p>
+                <h4 className="text-xl font-bold text-white mb-1">
+                  StockSignal Team
+                </h4>
+                <p className="text-slate-300 text-sm mb-4">
+                  We're here to help with your investment learning journey
+                </p>
+                <Link 
+                  to={createPageUrl("ContactSupport")}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-105"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Contact Support
+                </Link>
+              </div>
+
+              {/* Legal & Links */}
+              <div className="text-center md:text-right">
+                <p className="text-slate-400 text-sm mb-3">
+                  © {new Date().getFullYear()} StockSignal
+                </p>
+                <p className="text-slate-500 text-xs mb-4">
+                  All rights reserved
+                </p>
+                <div className="flex flex-wrap justify-center md:justify-end gap-4 text-xs">
+                  <Link to={createPageUrl("TermsOfService")} className="text-slate-400 hover:text-blue-400 transition-colors">
+                    Terms of Service
+                  </Link>
+                  <span className="text-slate-700">•</span>
+                  <Link to={createPageUrl("PrivacyPolicy")} className="text-slate-400 hover:text-blue-400 transition-colors">
+                    Privacy Policy
+                  </Link>
+                  <span className="text-slate-700">•</span>
+                  <Link to={createPageUrl("Disclaimer")} className="text-slate-400 hover:text-blue-400 transition-colors">
+                    Legal Disclaimer
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </footer>
