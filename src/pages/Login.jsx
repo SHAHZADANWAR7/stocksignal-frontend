@@ -40,13 +40,16 @@ export default function Login() {
     setError("");
 
     try {
-      await signIn({ username: email, password });
+      const result = await signIn({ username: email, password });
       
-      Hub.dispatch('auth', { event: 'signIn' });
-
-      const params = new URLSearchParams(location.search);
-      const redirectTo = params.get('redirect') || createPageUrl("Dashboard");
-      navigate(redirectTo);
+      if (result.isSignedIn) {
+        Hub.dispatch('auth', { event: 'signIn' });
+        const params = new URLSearchParams(location.search);
+        const redirectTo = params.get('redirect') || createPageUrl("Dashboard");
+        navigate(redirectTo);
+      } else if (result.nextStep) {
+        setError(`Additional step required: ${result.nextStep.signInStep}`);
+      }
     } catch (err) {
       console.error("Login error:", err);
       if (err.message?.includes("User is not confirmed")) {
@@ -113,13 +116,16 @@ export default function Login() {
       await confirmSignUp({ username: email, confirmationCode });
       setError("");
       
-      await signIn({ username: email, password });
+      const result = await signIn({ username: email, password });
       
-      Hub.dispatch('auth', { event: 'signIn' });
-      
-      const params = new URLSearchParams(location.search);
-      const redirectTo = params.get('redirect') || createPageUrl("Dashboard");
-      navigate(redirectTo);
+      if (result.isSignedIn) {
+        Hub.dispatch('auth', { event: 'signIn' });
+        const params = new URLSearchParams(location.search);
+        const redirectTo = params.get('redirect') || createPageUrl("Dashboard");
+        navigate(redirectTo);
+      } else if (result.nextStep) {
+        setError(`Additional step required: ${result.nextStep.signInStep}`);
+      }
     } catch (err) {
       console.error("Confirmation error:", err);
       if (err.message?.includes("Invalid verification code")) {
