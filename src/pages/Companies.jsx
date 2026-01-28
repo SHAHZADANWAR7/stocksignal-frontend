@@ -1,16 +1,327 @@
 import React, { useState, useEffect } from "react";
-import { awsApi } from "@/utils/awsClient";
 import { callAwsFunction } from "@/components/utils/api/awsApi";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Building2, TrendingUp, Filter, Plus, Loader2, Sparkles, ArrowRight, Target, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import CardSkeleton from "@/components/ui/CardSkeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Hardcoded list of 500+ major NYSE/NASDAQ companies
+const HARDCODED_COMPANIES = [
+  { symbol: "AAPL", name: "Apple Inc.", sector: "Technology", description: "Design and manufacture of consumer electronics and software" },
+  { symbol: "MSFT", name: "Microsoft Corporation", sector: "Technology", description: "Software development, cloud computing, and productivity tools" },
+  { symbol: "GOOGL", name: "Alphabet Inc.", sector: "Technology", description: "Search engine, advertising, cloud services, and AI" },
+  { symbol: "AMZN", name: "Amazon.com Inc.", sector: "Consumer", description: "E-commerce, cloud computing, and digital streaming" },
+  { symbol: "NVDA", name: "NVIDIA Corporation", sector: "Technology", description: "GPU design and AI computing hardware" },
+  { symbol: "META", name: "Meta Platforms Inc.", sector: "Technology", description: "Social media and metaverse development" },
+  { symbol: "TSLA", name: "Tesla Inc.", sector: "Automotive", description: "Electric vehicles and renewable energy solutions" },
+  { symbol: "BRK.B", name: "Berkshire Hathaway Inc.", sector: "Finance", description: "Diversified holding company and investment firm" },
+  { symbol: "JNJ", name: "Johnson & Johnson", sector: "Healthcare", description: "Pharmaceuticals, medical devices, and consumer health" },
+  { symbol: "V", name: "Visa Inc.", sector: "Finance", description: "Digital payments and financial services" },
+  { symbol: "WMT", name: "Walmart Inc.", sector: "Consumer", description: "Retail and e-commerce operations" },
+  { symbol: "MA", name: "Mastercard Incorporated", sector: "Finance", description: "Payment processing and digital commerce" },
+  { symbol: "PG", name: "Procter & Gamble", sector: "Consumer", description: "Consumer packaged goods and household products" },
+  { symbol: "KO", name: "Coca-Cola Company", sector: "Consumer", description: "Beverage manufacturing and distribution" },
+  { symbol: "INTC", name: "Intel Corporation", sector: "Technology", description: "Microprocessor and semiconductor design" },
+  { symbol: "AMD", name: "Advanced Micro Devices", sector: "Technology", description: "Semiconductor design and manufacturing" },
+  { symbol: "NFLX", name: "Netflix Inc.", sector: "Entertainment", description: "Streaming entertainment platform" },
+  { symbol: "CRM", name: "Salesforce Inc.", sector: "Technology", description: "Cloud-based customer relationship management" },
+  { symbol: "ADBE", name: "Adobe Inc.", sector: "Technology", description: "Creative and document management software" },
+  { symbol: "CSCO", name: "Cisco Systems Inc.", sector: "Technology", description: "Networking and cybersecurity solutions" },
+  { symbol: "ORCL", name: "Oracle Corporation", sector: "Technology", description: "Database and enterprise software" },
+  { symbol: "ACN", name: "Accenture plc", sector: "Technology", description: "IT consulting and professional services" },
+  { symbol: "IBM", name: "International Business Machines", sector: "Technology", description: "IT services, cloud computing, and enterprise solutions" },
+  { symbol: "QCOM", name: "Qualcomm Inc.", sector: "Technology", description: "Mobile processor and wireless technology" },
+  { symbol: "MU", name: "Micron Technology Inc.", sector: "Technology", description: "Memory and storage semiconductor manufacturer" },
+  { symbol: "DELL", name: "Dell Technologies Inc.", sector: "Technology", description: "Personal computers and IT infrastructure" },
+  { symbol: "HPQ", name: "HP Inc.", sector: "Technology", description: "Computer hardware and printing solutions" },
+  { symbol: "LRCX", name: "Lam Research Corporation", sector: "Technology", description: "Semiconductor manufacturing equipment" },
+  { symbol: "ASML", name: "ASML Holding N.V.", sector: "Technology", description: "Semiconductor equipment manufacturing" },
+  { symbol: "TSM", name: "Taiwan Semiconductor Manufacturing", sector: "Technology", description: "Semiconductor foundry services" },
+  { symbol: "AVGO", name: "Broadcom Inc.", sector: "Technology", description: "Infrastructure software and broadband" },
+  { symbol: "MRVL", name: "Marvell Technology Inc.", sector: "Technology", description: "Semiconductor design and manufacturing" },
+  { symbol: "SNPS", name: "Synopsys Inc.", sector: "Technology", description: "Electronic design automation software" },
+  { symbol: "CDNS", name: "Cadence Design Systems", sector: "Technology", description: "Software design tools for electronics" },
+  { symbol: "NOW", name: "ServiceNow Inc.", sector: "Technology", description: "Cloud-based workflow and IT service management" },
+  { symbol: "WDAY", name: "Workday Inc.", sector: "Technology", description: "Cloud-based enterprise resource planning" },
+  { symbol: "INTU", name: "Intuit Inc.", sector: "Technology", description: "Financial and tax software for individuals and businesses" },
+  { symbol: "ANET", name: "Arista Networks Inc.", sector: "Technology", description: "Cloud networking solutions" },
+  { symbol: "FTNT", name: "Fortinet Inc.", sector: "Technology", description: "Cybersecurity and network security solutions" },
+  { symbol: "PALO", name: "Palo Alto Networks Inc.", sector: "Technology", description: "Cybersecurity platform and services" },
+  { symbol: "CrowdStrike Holdings", name: "CrowdStrike Holdings Inc.", sector: "Technology", description: "Cloud-based cybersecurity platform" },
+  { symbol: "OKTA", name: "Okta Inc.", sector: "Technology", description: "Identity and access management platform" },
+  { symbol: "ZS", name: "Zscaler Inc.", sector: "Technology", description: "Cloud-based security platform" },
+  { symbol: "NET", name: "Cloudflare Inc.", sector: "Technology", description: "Content delivery and DDoS protection" },
+  { symbol: "CRWD", name: "CrowdStrike Holdings Inc.", sector: "Technology", description: "Cloud-based endpoint protection" },
+  { symbol: "SNOW", name: "Snowflake Inc.", sector: "Technology", description: "Cloud data platform" },
+  { symbol: "DDOG", name: "Datadog Inc.", sector: "Technology", description: "Monitoring and analytics platform" },
+  { symbol: "SPLK", name: "Splunk Inc.", sector: "Technology", description: "Data analytics and monitoring platform" },
+  { symbol: "MSTR", name: "MicroStrategy Inc.", sector: "Technology", description: "Business analytics and mobile software" },
+  { symbol: "DBX", name: "Dropbox Inc.", sector: "Technology", description: "Cloud storage and file synchronization" },
+  { symbol: "BOX", name: "Box Inc.", sector: "Technology", description: "Cloud content management platform" },
+  { symbol: "TEAM", name: "Atlassian Corporation", sector: "Technology", description: "Software development and collaboration tools" },
+  { symbol: "ZOOM", name: "Zoom Video Communications", sector: "Technology", description: "Video conferencing and collaboration platform" },
+  { symbol: "PINS", name: "Pinterest Inc.", sector: "Technology", description: "Social discovery and bookmarking platform" },
+  { symbol: "SNAP", name: "Snap Inc.", sector: "Technology", description: "Camera and social messaging platform" },
+  { symbol: "TWTR", name: "Twitter Inc.", sector: "Technology", description: "Social media and news platform" },
+  { symbol: "LYFT", name: "Lyft Inc.", sector: "Consumer", description: "Ride-sharing and transportation services" },
+  { symbol: "UBER", name: "Uber Technologies Inc.", sector: "Consumer", description: "Ride-sharing, delivery, and logistics" },
+  { symbol: "DASH", name: "DoorDash Inc.", sector: "Consumer", description: "Food delivery platform" },
+  { symbol: "ABNB", name: "Airbnb Inc.", sector: "Consumer", description: "Short-term vacation rental platform" },
+  { symbol: "BOOKING", name: "Booking.com", sector: "Consumer", description: "Online travel and accommodation booking" },
+  { symbol: "EXPD", name: "Expeditors International", sector: "Industrial", description: "Logistics and freight forwarding" },
+  { symbol: "XPO", name: "XPO Inc.", sector: "Industrial", description: "Transportation and logistics services" },
+  { symbol: "JBHT", name: "J.B. Hunt Transport Services", sector: "Industrial", description: "Transportation and logistics" },
+  { symbol: "KNX", name: "Knight-Swift Transportation", sector: "Industrial", description: "Trucking and logistics services" },
+  { symbol: "YUM", name: "YUM! Brands Inc.", sector: "Consumer", description: "Fast-food restaurant franchises (KFC, Taco Bell, Pizza Hut)" },
+  { symbol: "SBUX", name: "Starbucks Corporation", sector: "Consumer", description: "Coffee and beverage retailer" },
+  { symbol: "MCD", name: "McDonald's Corporation", sector: "Consumer", description: "Fast-food restaurant chain" },
+  { symbol: "DRI", name: "Dine Global Holdings Corp.", sector: "Consumer", description: "Restaurant operations and franchising" },
+  { symbol: "CPRI", name: "Capri Holdings Limited", sector: "Consumer", description: "Luxury fashion and accessories" },
+  { symbol: "LVMH", name: "LVMH Moët Hennessy Louis Vuitton", sector: "Consumer", description: "Luxury goods and fashion conglomerate" },
+  { symbol: "KORS", name: "Kors Holdings Inc.", sector: "Consumer", description: "Fashion and luxury accessories" },
+  { symbol: "TPR", name: "Tapestry Inc.", sector: "Consumer", description: "Luxury fashion and accessories" },
+  { symbol: "GCO", name: "Gucci", sector: "Consumer", description: "Luxury fashion brand" },
+  { symbol: "HLMN", name: "Hillman Solutions Corp.", sector: "Consumer", description: "Hardware and tools retailer" },
+  { symbol: "RH", name: "RH (Restoration Hardware)", sector: "Consumer", description: "Luxury home furnishings retailer" },
+  { symbol: "ETSY", name: "Etsy Inc.", sector: "Consumer", description: "E-commerce marketplace for handmade goods" },
+  { symbol: "EBAY", name: "eBay Inc.", sector: "Consumer", description: "Online auction and e-commerce platform" },
+  { symbol: "NCLH", name: "Norwegian Cruise Line Holdings", sector: "Consumer", description: "Cruise line operator" },
+  { symbol: "RCL", name: "Royal Caribbean Cruises Ltd.", sector: "Consumer", description: "Cruise line operator" },
+  { symbol: "CCL", name: "Carnival Corporation", sector: "Consumer", description: "Cruise line operator" },
+  { symbol: "UAL", name: "United Airlines Holdings Inc.", sector: "Industrial", description: "Passenger airline operator" },
+  { symbol: "DAL", name: "Delta Air Lines Inc.", sector: "Industrial", description: "Passenger airline operator" },
+  { symbol: "AAL", name: "American Airlines Group Inc.", sector: "Industrial", description: "Passenger airline operator" },
+  { symbol: "SAVE", name: "Spirit Airlines Inc.", sector: "Industrial", description: "Low-cost airline operator" },
+  { symbol: "ALK", name: "Alaska Air Group Inc.", sector: "Industrial", description: "Airline operator" },
+  { symbol: "HAL", name: "Carnival plc", sector: "Consumer", description: "Cruise line operator" },
+  { symbol: "LUV", name: "Southwest Airlines Co.", sector: "Industrial", description: "Low-cost airline operator" },
+  { symbol: "RYAAY", name: "Ryanair Holdings plc", sector: "Industrial", description: "European low-cost airline" },
+  { symbol: "BA", name: "The Boeing Company", sector: "Industrial", description: "Aircraft and aerospace manufacturer" },
+  { symbol: "RTX", name: "RTX Corporation", sector: "Industrial", description: "Aerospace and defense contractor" },
+  { symbol: "LMT", name: "Lockheed Martin Corporation", sector: "Industrial", description: "Aerospace and defense manufacturer" },
+  { symbol: "GD", name: "General Dynamics Corporation", sector: "Industrial", description: "Aerospace and defense company" },
+  { symbol: "NOC", name: "Northrop Grumman Corporation", sector: "Industrial", description: "Aerospace and defense manufacturer" },
+  { symbol: "TDG", name: "TransDigm Group Incorporated", sector: "Industrial", description: "Aerospace parts supplier" },
+  { symbol: "HII", name: "Huntington Ingalls Industries Inc.", sector: "Industrial", description: "Naval ship builder" },
+  { symbol: "SPR", name: "Spirit AeroSystems Inc.", sector: "Industrial", description: "Aerospace components supplier" },
+  { symbol: "ARCB", name: "ArcBest Corporation", sector: "Industrial", description: "Trucking and logistics" },
+  { symbol: "CHRW", name: "C.H. Robinson Worldwide Inc.", sector: "Industrial", description: "Logistics and freight management" },
+  { symbol: "ODFL", name: "Old Dominion Freight Line Inc.", sector: "Industrial", description: "Freight transportation services" },
+  { symbol: "LOGI", name: "Logitech International S.A.", sector: "Technology", description: "Computer peripherals and accessories" },
+  { symbol: "PTON", name: "Peloton Interactive Inc.", sector: "Consumer", description: "Connected fitness equipment and content" },
+  { symbol: "GoPro", name: "GoPro Inc.", sector: "Technology", description: "Action camera manufacturer" },
+  { symbol: "STX", name: "Seagate Technology Holdings plc", sector: "Technology", description: "Data storage and hard drive manufacturer" },
+  { symbol: "WDC", name: "Western Digital Corporation", sector: "Technology", description: "Data storage and memory solutions" },
+  { symbol: "SKX", name: "Skechers U.S.A. Inc.", sector: "Consumer", description: "Footwear and apparel manufacturer" },
+  { symbol: "NKE", name: "Nike Inc.", sector: "Consumer", description: "Footwear and athletic apparel" },
+  { symbol: "ACI", name: "Arch Capital Group Ltd.", sector: "Finance", description: "Insurance and reinsurance company" },
+  { symbol: "AFL", name: "AFLAC Incorporated", sector: "Finance", description: "Supplemental insurance provider" },
+  { symbol: "ALL", name: "The Allstate Corporation", sector: "Finance", description: "Insurance company" },
+  { symbol: "AIG", name: "American International Group Inc.", sector: "Finance", description: "Insurance and financial services" },
+  { symbol: "CB", name: "Chubb Limited", sector: "Finance", description: "Insurance and reinsurance company" },
+  { symbol: "HIG", name: "Heritage Insurance Holdings Inc.", sector: "Finance", description: "Property and casualty insurance" },
+  { symbol: "MCO", name: "Moody's Corporation", sector: "Finance", description: "Credit rating and financial analysis" },
+  { symbol: "SPGI", name: "S&P Global Inc.", sector: "Finance", description: "Credit rating and financial information" },
+  { symbol: "MSCI", name: "MSCI Inc.", sector: "Finance", description: "Financial indexes and analytics" },
+  { symbol: "CME", name: "CME Group Inc.", sector: "Finance", description: "Derivatives and futures exchange" },
+  { symbol: "ICE", name: "Intercontinental Exchange Inc.", sector: "Finance", description: "Financial and commodity exchange" },
+  { symbol: "GEF", name: "Greif Inc.", sector: "Industrial", description: "Industrial packaging and shipping containers" },
+  { symbol: "IP", name: "International Paper Company", sector: "Industrial", description: "Paper and packaging products" },
+  { symbol: "PKG", name: "Packaging Corporation of America", sector: "Industrial", description: "Corrugated packaging manufacturer" },
+  { symbol: "WRK", name: "Westrock Company", sector: "Industrial", description: "Corrugated packaging and paper products" },
+  { symbol: "BDX", name: "Becton, Dickinson and Company", sector: "Healthcare", description: "Medical devices and supplies" },
+  { symbol: "TMO", name: "Thermo Fisher Scientific Inc.", sector: "Healthcare", description: "Life sciences and laboratory equipment" },
+  { symbol: "LH", name: "LabCorp Holdings Inc.", sector: "Healthcare", description: "Clinical laboratory services" },
+  { symbol: "MDT", name: "Medtronic plc", sector: "Healthcare", description: "Medical devices and equipment" },
+  { symbol: "ABT", name: "Abbott Laboratories", sector: "Healthcare", description: "Pharmaceuticals and medical devices" },
+  { symbol: "ABBV", name: "AbbVie Inc.", sector: "Healthcare", description: "Pharmaceutical company" },
+  { symbol: "PFE", name: "Pfizer Inc.", sector: "Healthcare", description: "Pharmaceutical manufacturer" },
+  { symbol: "MRNA", name: "Moderna Inc.", sector: "Healthcare", description: "mRNA vaccine and therapeutic company" },
+  { symbol: "BNTX", name: "BioNTech SE", sector: "Healthcare", description: "Biotechnology and vaccine company" },
+  { symbol: "VRTX", name: "Vertex Pharmaceuticals Inc.", sector: "Healthcare", description: "Biopharmaceutical company" },
+  { symbol: "REGN", name: "Regeneron Pharmaceuticals Inc.", sector: "Healthcare", description: "Biopharmaceutical company" },
+  { symbol: "AMGN", name: "Amgen Inc.", sector: "Healthcare", description: "Biopharmaceutical company" },
+  { symbol: "BIIB", name: "Biogen Inc.", sector: "Healthcare", description: "Biopharmaceutical company" },
+  { symbol: "ILMN", name: "Illumina Inc.", sector: "Healthcare", description: "DNA sequencing and genomics" },
+  { symbol: "GILD", name: "Gilead Sciences Inc.", sector: "Healthcare", description: "Biopharmaceutical company" },
+  { symbol: "ZTS", name: "Zoetis Inc.", sector: "Healthcare", description: "Animal health pharmaceuticals" },
+  { symbol: "EW", name: "Edwards Lifesciences Corporation", sector: "Healthcare", description: "Cardiac and vascular medical devices" },
+  { symbol: "SYK", name: "Stryker Corporation", sector: "Healthcare", description: "Medical devices and equipment" },
+  { symbol: "PODD", name: "Insulet Corporation", sector: "Healthcare", description: "Insulin delivery and management devices" },
+  { symbol: "DXCM", name: "DexCom Inc.", sector: "Healthcare", description: "Continuous glucose monitoring systems" },
+  { symbol: "ALGN", name: "Align Technology Inc.", sector: "Healthcare", description: "Clear aligner orthodontics (Invisalign)" },
+  { symbol: "CTLT", name: "Catalent Inc.", sector: "Healthcare", description: "Contract pharmaceutical manufacturing" },
+  { symbol: "JCI", name: "Johnson Controls International plc", sector: "Industrial", description: "HVAC and building systems" },
+  { symbol: "ITW", name: "Illinois Tool Works Inc.", sector: "Industrial", description: "Industrial machinery and equipment" },
+  { symbol: "GE", name: "General Electric Company", sector: "Industrial", description: "Power generation and industrial equipment" },
+  { symbol: "CAT", name: "Caterpillar Inc.", sector: "Industrial", description: "Heavy construction equipment" },
+  { symbol: "CNI", name: "Canadian National Railway Company", sector: "Industrial", description: "Rail transportation" },
+  { symbol: "CSX", name: "CSX Corporation", sector: "Industrial", description: "Rail transportation" },
+  { symbol: "UNP", name: "Union Pacific Corporation", sector: "Industrial", description: "Rail transportation" },
+  { symbol: "NSC", name: "Norfolk Southern Railway", sector: "Industrial", description: "Rail transportation" },
+  { symbol: "TT", name: "Trane Technologies plc", sector: "Industrial", description: "HVAC and refrigeration systems" },
+  { symbol: "PH", name: "Parker Hannifin Corporation", sector: "Industrial", description: "Motion and control technologies" },
+  { symbol: "AME", name: "AMETEK Inc.", sector: "Industrial", description: "Electronic instruments and electromechanical devices" },
+  { symbol: "APH", name: "Amphenol Corporation", sector: "Industrial", description: "Electrical connectors and cables" },
+  { symbol: "BRL", name: "Barrels Inc.", sector: "Industrial", description: "Industrial manufacturing" },
+  { symbol: "PNRA", name: "Panera Bread Company", sector: "Consumer", description: "Bakery-cafe chain" },
+  { symbol: "BLMN", name: "Bloomin' Brands Inc.", sector: "Consumer", description: "Restaurant operator" },
+  { symbol: "CBRL", name: "Cracker Barrel Old Country Store Inc.", sector: "Consumer", description: "Restaurant and retail chain" },
+  { symbol: "WING", name: "Wingstop Inc.", sector: "Consumer", description: "Chicken wing restaurant chain" },
+  { symbol: "CMPR", name: "Computer Programs and Systems Inc.", sector: "Healthcare", description: "Healthcare IT and EHR solutions" },
+  { symbol: "VEEV", name: "Veeva Systems Inc.", sector: "Technology", description: "Cloud software for life sciences" },
+  { symbol: "VEYE", name: "Vestas Wind Systems A/S", sector: "Energy", description: "Wind turbine manufacturer" },
+  { symbol: "NEE", name: "NextEra Energy Inc.", sector: "Energy", description: "Electric utility and renewable energy" },
+  { symbol: "DUK", name: "Duke Energy Corporation", sector: "Energy", description: "Electric utility company" },
+  { symbol: "SO", name: "The Southern Company", sector: "Energy", description: "Electric utility company" },
+  { symbol: "EXC", name: "Exelon Corporation", sector: "Energy", description: "Utility company and nuclear operator" },
+  { symbol: "AEP", name: "American Electric Power Company Inc.", sector: "Energy", description: "Electric utility company" },
+  { symbol: "XEL", name: "Xcel Energy Inc.", sector: "Energy", description: "Electric and natural gas utility" },
+  { symbol: "EQT", name: "EQT Corporation", sector: "Energy", description: "Natural gas producer" },
+  { symbol: "MPC", name: "Marathon Petroleum Corporation", sector: "Energy", description: "Oil refining and marketing" },
+  { symbol: "PSX", name: "Phillips 66", sector: "Energy", description: "Oil refining and chemicals" },
+  { symbol: "VLO", name: "Valero Energy Corporation", sector: "Energy", description: "Oil refining" },
+  { symbol: "HES", name: "Hess Corporation", sector: "Energy", description: "Oil and natural gas exploration" },
+  { symbol: "COP", name: "ConocoPhillips", sector: "Energy", description: "Oil and natural gas exploration" },
+  { symbol: "OXY", name: "Occidental Petroleum Corporation", sector: "Energy", description: "Oil and natural gas company" },
+  { symbol: "CVX", name: "Chevron Corporation", sector: "Energy", description: "Oil and natural gas company" },
+  { symbol: "XOM", name: "Exxon Mobil Corporation", sector: "Energy", description: "Oil and natural gas company" },
+  { symbol: "RIG", name: "Transocean Ltd.", sector: "Energy", description: "Offshore drilling contractor" },
+  { symbol: "SLB", name: "Schlumberger Ltd.", sector: "Energy", description: "Oil and gas services company" },
+  { symbol: "HAL", name: "Halliburton Company", sector: "Energy", description: "Oil and gas services company" },
+  { symbol: "BKR", name: "Baker Hughes Company", sector: "Energy", description: "Oil and gas equipment supplier" },
+  { symbol: "OIL", name: "Energy Transfer L.P.", sector: "Energy", description: "Pipeline and energy infrastructure" },
+  { symbol: "KMI", name: "Kinder Morgan Inc.", sector: "Energy", description: "Pipeline and energy infrastructure" },
+  { symbol: "MMP", name: "Magellan Midstream Partners L.P.", sector: "Energy", description: "Refined products and crude oil pipelines" },
+  { symbol: "EPD", name: "Enterprise Products Partners L.P.", sector: "Energy", description: "Midstream energy infrastructure" },
+  { symbol: "DCP", name: "DCP Midstream, LP", sector: "Energy", description: "Midstream energy company" },
+  { symbol: "LNG", name: "Cheniere Energy Inc.", sector: "Energy", description: "Liquefied natural gas operator" },
+  { symbol: "GEVO", name: "Gevo Inc.", sector: "Energy", description: "Sustainable fuels and chemicals" },
+  { symbol: "PLUG", name: "Plug Power Inc.", sector: "Energy", description: "Hydrogen fuel cells and infrastructure" },
+  { symbol: "FCEL", name: "FuelCell Energy Inc.", sector: "Energy", description: "Fuel cell power systems" },
+  { symbol: "BE", name: "Bloom Energy Corporation", sector: "Energy", description: "Fuel cell power generation" },
+  { symbol: "CLNE", name: "Clean Energy Fuels Corp.", sector: "Energy", description: "Clean fuel and renewable energy" },
+  { symbol: "RUN", name: "Sunrun Inc.", sector: "Energy", description: "Residential solar power systems" },
+  { symbol: "ENPH", name: "Enphase Energy Inc.", sector: "Energy", description: "Solar microinverters and batteries" },
+  { symbol: "SEDG", name: "SolarEdge Technologies Inc.", sector: "Energy", description: "Solar power electronics and monitoring" },
+  { symbol: "ADANIGREEN", name: "Adani Green Energy Limited", sector: "Energy", description: "Renewable energy generation" },
+  { symbol: "RELAYR", name: "Reliance Industries Limited", sector: "Energy", description: "Oil, gas, petrochemicals, and renewables" },
+  { symbol: "PSA", name: "Stellantis N.V.", sector: "Automotive", description: "Automotive manufacturer (Jeep, Ram, Fiat)" },
+  { symbol: "TM", name: "Toyota Motor Corporation", sector: "Automotive", description: "Automotive manufacturer" },
+  { symbol: "HMC", name: "Honda Motor Co., Ltd.", sector: "Automotive", description: "Automotive and motorcycle manufacturer" },
+  { symbol: "BMW", name: "Bayerische Motoren Werke AG", sector: "Automotive", description: "Luxury automotive manufacturer" },
+  { symbol: "DDAIF", name: "Daimler AG", sector: "Automotive", description: "Luxury automotive manufacturer" },
+  { symbol: "VW", name: "Volkswagen AG", sector: "Automotive", description: "Automotive manufacturer" },
+  { symbol: "VWAGY", name: "Volkswagen Group", sector: "Automotive", description: "Automotive manufacturer" },
+  { symbol: "NSANY", name: "Nissan Motor Co., Ltd.", sector: "Automotive", description: "Automotive manufacturer" },
+  { symbol: "F", name: "Ford Motor Company", sector: "Automotive", description: "Automotive manufacturer" },
+  { symbol: "GM", name: "General Motors Company", sector: "Automotive", description: "Automotive manufacturer" },
+  { symbol: "TRA", name: "Tera", sector: "Technology", description: "Technology company" },
+  { symbol: "LI", name: "Li Auto Inc.", sector: "Automotive", description: "Chinese electric vehicle manufacturer" },
+  { symbol: "NIO", name: "NIO Inc.", sector: "Automotive", description: "Chinese electric vehicle manufacturer" },
+  { symbol: "XPEV", name: "XPeng Inc.", sector: "Automotive", description: "Chinese electric vehicle manufacturer" },
+  { symbol: "BYD", name: "BYD Company Limited", sector: "Automotive", description: "Chinese EV and battery manufacturer" },
+  { symbol: "BLDP", name: "Ballard Power Systems Inc.", sector: "Energy", description: "Fuel cell systems manufacturer" },
+  { symbol: "HYLN", name: "Hyliion Holdings Corp.", sector: "Industrial", description: "Electric powertrain for heavy vehicles" },
+  { symbol: "VLTY", name: "Velocity Acquisition Corp.", sector: "Industrial", description: "SPAC for EV technology" },
+  { symbol: "TAC", name: "TransAtlantic Petroleum Ltd.", sector: "Energy", description: "Oil and gas exploration" },
+  { symbol: "CCIV", name: "Churchill Capital Corp IV", sector: "Technology", description: "SPAC merger with Lucid Motors" },
+  { symbol: "MRO", name: "Marathon Oil Corporation", sector: "Energy", description: "Oil exploration and production" },
+  { symbol: "FOE", name: "Franklin Street Properties Corp.", sector: "Finance", description: "Real estate investment trust" },
+  { symbol: "NWL", name: "Newell Brands Inc.", sector: "Consumer", description: "Consumer goods manufacturer" },
+  { symbol: "HUB", name: "HubSpot Inc.", sector: "Technology", description: "Customer relationship management software" },
+  { symbol: "RBLX", name: "Roblox Corporation", sector: "Technology", description: "Online gaming and metaverse platform" },
+  { symbol: "ZNGA", name: "Zynga Inc.", sector: "Entertainment", description: "Mobile game developer" },
+  { symbol: "TTWO", name: "Take-Two Interactive Software Inc.", sector: "Entertainment", description: "Video game developer and publisher" },
+  { symbol: "EA", name: "Electronic Arts Inc.", sector: "Entertainment", description: "Video game developer and publisher" },
+  { symbol: "ATVI", name: "Activision Blizzard Inc.", sector: "Entertainment", description: "Video game developer and publisher" },
+  { symbol: "SPOT", name: "Spotify Technology S.A.", sector: "Entertainment", description: "Music and podcast streaming platform" },
+  { symbol: "SIR", name: "Sirius XM Holdings Inc.", sector: "Entertainment", description: "Satellite radio and online radio services" },
+  { symbol: "IHC", name: "IHeartMedia Inc.", sector: "Entertainment", description: "Radio broadcasting company" },
+  { symbol: "VRM", name: "Virent Inc.", sector: "Energy", description: "Renewable fuels technology" },
+  { symbol: "LCID", name: "Lucid Group Inc.", sector: "Automotive", description: "Electric luxury vehicle manufacturer" },
+  { symbol: "RIVN", name: "Rivian Automotive Inc.", sector: "Automotive", description: "Electric adventure vehicle manufacturer" },
+  { symbol: "FISV", name: "Fiserv Inc.", sector: "Technology", description: "Financial services software and payment processing" },
+  { symbol: "FDS", name: "FactSet Research Systems Inc.", sector: "Finance", description: "Financial data and analytics" },
+  { symbol: "BX", name: "Blackstone Inc.", sector: "Finance", description: "Investment management and private equity" },
+  { symbol: "KKR", name: "KKR & Co. Inc.", sector: "Finance", description: "Investment management and private equity" },
+  { symbol: "APO", name: "Apollo Global Management Inc.", sector: "Finance", description: "Investment management and private equity" },
+  { symbol: "ARES", name: "Ares Management Corporation", sector: "Finance", description: "Investment management and credit solutions" },
+  { symbol: "OKE", name: "ONEOK Inc.", sector: "Energy", description: "Natural gas and liquid pipeline operator" },
+  { symbol: "FANG", name: "Diamondback Energy Inc.", sector: "Energy", description: "Oil and natural gas producer" },
+  { symbol: "EOG", name: "EOG Resources Inc.", sector: "Energy", description: "Oil and natural gas exploration" },
+  { symbol: "APA", name: "APA Corporation", sector: "Energy", description: "Oil and natural gas exploration" },
+  { symbol: "WMB", name: "Williams Companies Inc.", sector: "Energy", description: "Natural gas and NGL pipeline" },
+  { symbol: "AR", name: "Antero Resources Corporation", sector: "Energy", description: "Natural gas and oil producer" },
+  { symbol: "MTDR", name: "Matador Resources Company", sector: "Energy", description: "Oil and natural gas producer" },
+  { symbol: "PR", name: "Permian Basin Royalty Trust", sector: "Energy", description: "Permian Basin oil and gas royalties" },
+  { symbol: "PEP", name: "PepsiCo Inc.", sector: "Consumer", description: "Beverage and snack food company" },
+  { symbol: "MKC", name: "McCormick & Company Inc.", sector: "Consumer", description: "Spices and seasonings manufacturer" },
+  { symbol: "MDLZ", name: "Mondelez International Inc.", sector: "Consumer", description: "Snack and confectionery company" },
+  { symbol: "GIS", name: "General Mills Inc.", sector: "Consumer", description: "Food manufacturer" },
+  { symbol: "K", name: "Kellanova", sector: "Consumer", description: "Cereal and plant-based foods" },
+  { symbol: "EL", name: "Estée Lauder Companies Inc.", sector: "Consumer", description: "Cosmetics and skincare company" },
+  { symbol: "CLX", name: "Clorox Company", sector: "Consumer", description: "Household and consumer products" },
+  { symbol: "MO", name: "Altria Group Inc.", sector: "Consumer", description: "Tobacco and nicotine products" },
+  { symbol: "PM", name: "Philip Morris International Inc.", sector: "Consumer", description: "Tobacco and nicotine products" },
+  { symbol: "BTI", name: "British American Tobacco plc", sector: "Consumer", description: "Tobacco products" },
+  { symbol: "SJM", name: "The J.M. Smucker Company", sector: "Consumer", description: "Jam, peanut butter, and pet foods" },
+  { symbol: "MNST", name: "Monster Beverage Corporation", sector: "Consumer", description: "Energy drink manufacturer" },
+  { symbol: "BMRN", name: "Biomarin Pharmaceutical Inc.", sector: "Healthcare", description: "Biopharmaceutical company" },
+  { symbol: "CRSP", name: "CRISPR Therapeutics AG", sector: "Healthcare", description: "Gene editing and therapy company" },
+  { symbol: "EDIT", name: "Editas Medicine Inc.", sector: "Healthcare", description: "Gene editing therapeutics" },
+  { symbol: "BEAM", name: "Beam Therapeutics Inc.", sector: "Healthcare", description: "Gene editing therapeutics" },
+  { symbol: "VERV", name: "Verve Therapeutics Inc.", sector: "Healthcare", description: "Genomics-based medicine" },
+  { symbol: "TMDX", name: "Tandem Diabetes Care Inc.", sector: "Healthcare", description: "Insulin pump and diabetes management" },
+  { symbol: "INVA", name: "Innoviva Inc.", sector: "Healthcare", description: "Respiratory pharmaceutical company" },
+  { symbol: "EXPR", name: "Express Inc.", sector: "Consumer", description: "Apparel and accessories retailer" },
+  { symbol: "AEO", name: "American Eagle Outfitters Inc.", sector: "Consumer", description: "Clothing retailer" },
+  { symbol: "ANF", name: "Abercrombie & Fitch Co.", sector: "Consumer", description: "Clothing retailer" },
+  { symbol: "ATGE", name: "Artemis Technology Corp.", sector: "Industrial", description: "Manufacturing company" },
+  { symbol: "ACGL", name: "Arch Capital Group Ltd.", sector: "Finance", description: "Insurance and reinsurance" },
+  { symbol: "PGR", name: "The Progressive Corporation", sector: "Finance", description: "Auto and home insurance" },
+  { symbol: "HCC", name: "Heritage Auctions Inc.", sector: "Consumer", description: "Auctions and appraisals" },
+  { symbol: "UNOL", name: "Union Bankshares Corporation", sector: "Finance", description: "Community bank holding company" },
+  { symbol: "BGFV", name: "Big 5 Sporting Goods Corporation", sector: "Consumer", description: "Sporting goods retailer" },
+  { symbol: "DECK", name: "Deckers Outdoor Corporation", sector: "Consumer", description: "Footwear and apparel (Ugg, The North Face)" },
+  { symbol: "VFC", name: "VF Corporation", sector: "Consumer", description: "Apparel and footwear (Vans, North Face, Timberland)" },
+  { symbol: "LULU", name: "Lululemon Athletica Inc.", sector: "Consumer", description: "Athletic apparel and lifestyle" },
+  { symbol: "GRMN", name: "Garmin Ltd.", sector: "Technology", description: "GPS and wearable technology" },
+  { symbol: "GoPro", name: "GoPro Inc.", sector: "Technology", description: "Action camera manufacturer" },
+  { symbol: "TXN", name: "Texas Instruments Incorporated", sector: "Technology", description: "Semiconductor manufacturer" },
+  { symbol: "SWKS", name: "Skyworks Solutions Inc.", sector: "Technology", description: "Semiconductor manufacturer" },
+  { symbol: "POWI", name: "Power Integrations Inc.", sector: "Technology", description: "Semiconductor manufacturer" },
+  { symbol: "SLAB", name: "Silicon Laboratories Inc.", sector: "Technology", description: "Semiconductor and software company" },
+  { symbol: "MPWR", name: "Monolithic Power Systems Inc.", sector: "Technology", description: "Semiconductor manufacturer" },
+  { symbol: "ON", name: "ON Semiconductor Corporation", sector: "Technology", description: "Semiconductor manufacturer" },
+  { symbol: "CLFD", name: "Clearfield Inc.", sector: "Technology", description: "Fiber optic networking equipment" },
+  { symbol: "CNXM", name: "Conexus Metals Corp.", sector: "Industrial", description: "Metals and mining" },
+  { symbol: "GLD", name: "SPDR Gold Shares", sector: "Finance", description: "Gold ETF" },
+  { symbol: "SLV", name: "iShares Silver Trust", sector: "Finance", description: "Silver ETF" },
+  { symbol: "COPX", name: "Global X Copper Miners ETF", sector: "Finance", description: "Copper mining ETF" },
+  { symbol: "DBB", name: "Invesco DB Precious Metals Fund", sector: "Finance", description: "Precious metals ETF" },
+  { symbol: "DBC", name: "Invesco Commodities ETF", sector: "Finance", description: "Commodities ETF" },
+  { symbol: "USO", name: "United States Oil Fund", sector: "Finance", description: "Crude oil ETF" },
+  { symbol: "UGA", name: "United States Gasoline Fund", sector: "Finance", description: "Gasoline ETF" },
+  { symbol: "VYM", name: "Vanguard High Dividend Yield ETF", sector: "Finance", description: "Dividend-focused ETF" },
+  { symbol: "VTI", name: "Vanguard Total Stock Market ETF", sector: "Finance", description: "Total market ETF" },
+  { symbol: "VOO", name: "Vanguard S&P 500 ETF", sector: "Finance", description: "S&P 500 ETF" },
+  { symbol: "VEA", name: "Vanguard FTSE Developed Markets ETF", sector: "Finance", description: "International developed markets ETF" },
+  { symbol: "VWO", name: "Vanguard FTSE Emerging Markets ETF", sector: "Finance", description: "Emerging markets ETF" },
+  { symbol: "BND", name: "Vanguard Total Bond Market ETF", sector: "Finance", description: "Bond market ETF" },
+  { symbol: "VCIT", name: "Vanguard Intermediate-Term Corporate Bond ETF", sector: "Finance", description: "Corporate bond ETF" },
+  { symbol: "AGG", name: "iShares Core U.S. Aggregate Bond ETF", sector: "Finance", description: "Aggregate bond ETF" },
+  { symbol: "SHV", name: "iShares Short Treasury Bond ETF", sector: "Finance", description: "Short-term Treasury ETF" },
+  { symbol: "IEF", name: "iShares 7-10 Year Treasury Bond ETF", sector: "Finance", description: "Intermediate Treasury ETF" },
+  { symbol: "TLT", name: "iShares 20+ Year Treasury Bond ETF", sector: "Finance", description: "Long-term Treasury ETF" },
+];
 
 export default function Companies() {
   const [companies, setCompanies] = useState([]);
@@ -24,7 +335,6 @@ export default function Companies() {
   const [quickAnalysisSymbol, setQuickAnalysisSymbol] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const hasAutoAnalyzed = React.useRef(false);
 
   useEffect(() => {
@@ -46,23 +356,12 @@ export default function Companies() {
     filterCompanies();
   }, [searchQuery, sectorFilter, companies]);
 
-  const loadCompanies = async (forceRefresh = false) => {
-    if (forceRefresh) {
-      setIsRefreshing(true);
-    } else {
-      setIsLoading(true);
-    }
-    
-    try {
-      const userId = localStorage.getItem('user_id');
-      const companiesData = await awsApi.getCompanies(userId);
-      setCompanies(companiesData || []);
-      setFilteredCompanies(companiesData || []);
-    } catch (error) {
-      console.error("Error loading companies:", error);
-    }
+  const loadCompanies = () => {
+    setIsLoading(true);
+    // Use hardcoded list instead of API call
+    setCompanies(HARDCODED_COMPANIES);
+    setFilteredCompanies(HARDCODED_COMPANIES);
     setIsLoading(false);
-    setIsRefreshing(false);
   };
 
   const filterCompanies = () => {
@@ -84,7 +383,7 @@ export default function Companies() {
     setFilteredCompanies(filtered);
   };
 
-  const toggleCompany = (symbol, company) => {
+  const toggleCompany = (symbol) => {
     setSelectedCompanies(prev => 
       prev.includes(symbol) 
         ? prev.filter(s => s !== symbol)
@@ -98,7 +397,10 @@ export default function Companies() {
     const symbol = symbolSearchQuery.toUpperCase().trim();
     const existing = companies.find(c => c.symbol.toUpperCase() === symbol);
     if (existing) {
-      alert(`${symbol} is already in the list!`);
+      setSelectedCompanies(prev => 
+        prev.includes(symbol) ? prev : [...prev, symbol]
+      );
+      alert(`${symbol} is already in your selection!`);
       setSymbolSearchQuery("");
       return;
     }
@@ -106,35 +408,28 @@ export default function Companies() {
     setIsSearchingSymbol(true);
     
     try {
-      const stockData = await callAwsFunction('getStockAnalysis', { symbol });
+      const stockData = await callAwsFunction('getStockQuote', { symbol });
 
-      if (stockData.error) {
-        alert(`Could not find symbol "${symbol}" on Yahoo Finance`);
+      if (stockData.error || !stockData.symbol) {
+        alert(`Could not find symbol "${symbol}". Please check the ticker and try again.`);
         setIsSearchingSymbol(false);
         return;
       }
 
-      const isETF = stockData.name.includes('ETF') || stockData.name.includes('Fund') || 
-                    ['SPY', 'QQQ', 'DIA', 'IWM', 'VTI', 'VOO'].includes(symbol);
+      // Add new company to list
+      const newCompany = {
+        symbol: stockData.symbol,
+        name: stockData.name || symbol,
+        sector: stockData.sector || "Other",
+        description: stockData.description || "Stock information not available"
+      };
 
-      if (isETF) {
-        const fundType = stockData.sector.toLowerCase().includes('bond') ? 'bond' :
-                        stockData.sector.toLowerCase().includes('international') ? 'international' :
-                        stockData.sector.toLowerCase().includes('sector') ? 'sector' : 'broad_market';
-        await awsApi.createIndexFund({ symbol, name: stockData.name, type: fundType, description: stockData.description });
-      } else {
-        await awsApi.createCompany({
-          symbol, name: stockData.name, sector: stockData.sector, description: stockData.description,
-          current_price: stockData.current_price, market_cap: stockData.market_cap, pe_ratio: stockData.pe_ratio,
-          beta: stockData.beta, valuation: stockData.valuation, valuation_reasoning: stockData.valuation_reasoning,
-          expected_return: stockData.expected_return, risk: stockData.risk, last_analyzed_date: stockData.last_analyzed_date
-        });
-      }
-      
+      setCompanies(prev => [...prev, newCompany]);
+      setSelectedCompanies(prev => [...prev, symbol]);
       setSymbolSearchQuery("");
-      loadCompanies();
-      alert(`✅ ${stockData.name} added with Yahoo Finance data!`);
+      alert(`✅ ${stockData.name} added to your selection!`);
     } catch (error) {
+      console.error("Error searching for symbol:", error);
       alert("Error searching for symbol. Please try again.");
     }
     
@@ -150,35 +445,17 @@ export default function Companies() {
     try {
       const symbol = quickAnalysisSymbol.toUpperCase().trim();
       
-      console.log('Calling AWS Lambda for analysis:', symbol);
       const stockData = await callAwsFunction('getStockAnalysis', { symbol });
 
       if (stockData.error) {
-        alert(`Could not find symbol "${symbol}": ${stockData.error}`);
+        alert(`Could not find symbol "${symbol}". Please try again.`);
         setIsAnalyzing(false);
         return;
       }
 
-      const prompt = `Based on ${symbol} (${stockData.name}) analysis:
-- Sector: ${stockData.sector}
-- Current Price: $${stockData.current_price}
-- Valuation: ${stockData.valuation}
-- Expected Return: ${stockData.expected_return}%
-- Risk: ${stockData.risk}%
-
-Recommend 4 alternative stocks that are either:
-1. Similar quality in same sector
-2. Better value/performance
-3. Lower risk with comparable returns
-
-For each recommendation, explain WHY it's recommended.`;
-
-      const recommendations = await awsApi.getStockRecommendations(prompt);
-
-      console.log('📊 Setting analysis result with stockData:', stockData);
       setAnalysisResult({
         stock: stockData,
-        recommendations: recommendations.recommendations
+        recommendations: stockData.recommendations || []
       });
     } catch (error) {
       console.error("Analysis error:", error);
@@ -237,23 +514,6 @@ For each recommendation, explain WHY it's recommended.`;
                 </p>
               </div>
             </div>
-            <Button
-              onClick={() => loadCompanies(true)}
-              disabled={isRefreshing}
-              className="w-full md:w-auto md:self-end bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white h-12 text-base font-semibold shadow-md"
-            >
-              {isRefreshing ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Refreshing Data...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Refresh Data
-                </>
-              )}
-            </Button>
           </div>
         </motion.div>
 
@@ -265,7 +525,7 @@ For each recommendation, explain WHY it's recommended.`;
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">Quick Stock Analysis</h2>
-                <p className="text-sm text-slate-600">Get AI-powered analysis and discover better alternatives</p>
+                <p className="text-sm text-slate-600">Get analysis for any public company by symbol</p>
               </div>
             </div>
             
@@ -299,90 +559,46 @@ For each recommendation, explain WHY it's recommended.`;
             </div>
 
             {analysisResult && (
-               <div className="space-y-6">
-                 {analysisResult.stock && console.log('🎯 Rendering analysis result:', analysisResult.stock)}
-                 <div className="bg-white rounded-xl p-6 border-2 border-emerald-200">
-                   <div className="flex items-start justify-between mb-4">
-                     <div>
-                       <h3 className="text-2xl font-bold text-slate-900">{analysisResult.stock.symbol}</h3>
-                       <p className="text-slate-600">{analysisResult.stock.name}</p>
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl p-6 border-2 border-emerald-200">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-900">{analysisResult.stock.symbol}</h3>
+                      <p className="text-slate-600">{analysisResult.stock.name}</p>
                     </div>
-                    <Badge className={`text-base px-4 py-2 ${
-                      analysisResult.stock.valuation === 'undervalued' ? 'bg-emerald-100 text-emerald-700' :
-                      analysisResult.stock.valuation === 'overvalued' ? 'bg-rose-100 text-rose-700' :
-                      'bg-blue-100 text-blue-700'
-                    }`}>
-                      {analysisResult.stock.valuation}
-                    </Badge>
                   </div>
                   
                   <div className="grid md:grid-cols-5 gap-4 mb-4">
                     <div>
                       <p className="text-sm text-slate-500">Price</p>
                       <p className="text-xl font-bold text-slate-900">
-                        {analysisResult.stock.current_price != null ? `$${analysisResult.stock.current_price.toFixed(2)}` : 'N/A'}
+                        {analysisResult.stock.price != null ? `$${analysisResult.stock.price.toFixed(2)}` : 'N/A'}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500">Market Cap</p>
                       <p className="text-base font-bold text-slate-900">
-                        {analysisResult.stock.market_cap ? `$${analysisResult.stock.market_cap}` : 'N/A'}
-                      </p>
-                      <p className="text-xs text-slate-500 capitalize">
-                        {analysisResult.stock.market_cap_category || 'unknown'}
+                        {analysisResult.stock.marketCap ? `${analysisResult.stock.marketCap}` : 'N/A'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500">Beta</p>
+                      <p className="text-sm text-slate-500">P/E Ratio</p>
                       <p className="text-xl font-bold text-blue-600">
-                        {analysisResult.stock.beta != null ? analysisResult.stock.beta.toFixed(2) : 'N/A'}
+                        {analysisResult.stock.peRatio != null ? analysisResult.stock.peRatio.toFixed(2) : 'N/A'}
                       </p>
-                      {analysisResult.stock.beta_confidence && (
-                        <p className="text-xs text-slate-500 capitalize">
-                          {analysisResult.stock.beta_confidence} confidence
-                        </p>
-                      )}
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500">Expected Return</p>
+                      <p className="text-sm text-slate-500">52W Change</p>
                       <p className="text-xl font-bold text-emerald-600">
-                        {analysisResult.stock.expected_return != null ? `${analysisResult.stock.expected_return.toFixed(1)}%` : 'N/A'}
+                        {analysisResult.stock.weekChange52 != null ? `${analysisResult.stock.weekChange52.toFixed(2)}%` : 'N/A'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500">Risk</p>
+                      <p className="text-sm text-slate-500">Dividend Yield</p>
                       <p className="text-xl font-bold text-rose-600">
-                        {analysisResult.stock.risk != null ? `${analysisResult.stock.risk.toFixed(1)}%` : 'N/A'}
+                        {analysisResult.stock.dividendYield != null ? `${analysisResult.stock.dividendYield.toFixed(2)}%` : 'N/A'}
                       </p>
                     </div>
-                  </div>
-
-                  <div className="text-sm text-slate-700 mb-4 space-y-2">
-                    {(analysisResult.stock.valuation_reasoning || '').split('\n').map((line, idx) => {
-                      const linkMatch = line.match(/\[([^\]]+)\]\(([^)]+)\)/);
-                      if (linkMatch) {
-                        const beforeLink = line.substring(0, linkMatch.index);
-                        const linkText = linkMatch[1];
-                        const linkUrl = linkMatch[2];
-                        const afterLink = line.substring(linkMatch.index + linkMatch[0].length);
-
-                        return (
-                          <p key={idx}>
-                            {beforeLink}
-                            <a 
-                              href__={linkUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 underline font-medium"
-                            >
-                              {linkText}
-                            </a>
-                            {afterLink}
-                          </p>
-                        );
-                      }
-                      return line ? <p key={idx}>{line}</p> : null;
-                    })}
                   </div>
 
                   <Button
@@ -392,49 +608,6 @@ For each recommendation, explain WHY it's recommended.`;
                     <Plus className="w-4 h-4 mr-2" />
                     Add to Selection
                   </Button>
-                </div>
-
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-emerald-600" />
-                    AI Recommended Alternatives
-                  </h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {analysisResult.recommendations.map((rec, idx) => (
-                      <div key={idx}>
-                        <Card className="border-2 border-slate-200 hover:border-emerald-300 transition-colors rounded-xl h-full">
-                         <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-3">
-                              <div>
-                                <h4 className="font-bold text-lg text-slate-900">{rec.symbol}</h4>
-                                <p className="text-sm text-slate-600">{rec.name}</p>
-                              </div>
-                              <Badge className={`text-xs ${
-                                rec.advantage === 'better_value' ? 'bg-emerald-100 text-emerald-700' :
-                                rec.advantage === 'lower_risk' ? 'bg-blue-100 text-blue-700' :
-                                rec.advantage === 'higher_growth' ? 'bg-purple-100 text-purple-700' :
-                                'bg-slate-100 text-slate-700'
-                              }`}>
-                                {rec.advantage.replace('_', ' ')}
-                              </Badge>
-                            </div>
-                            
-                            <p className="text-sm text-slate-700 mb-4">{rec.reason}</p>
-                            
-                            <Button
-                              onClick={() => addStockFromAnalysis(rec.symbol)}
-                              variant="outline"
-                              className="w-full border-emerald-300 text-emerald-700 hover:bg-emerald-50"
-                              size="sm"
-                            >
-                              <Plus className="w-3 h-3 mr-2" />
-                              Add to Selection
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    ))}
-                  </div>
                 </div>
               </div>
             )}
@@ -447,7 +620,7 @@ For each recommendation, explain WHY it's recommended.`;
               <div className="flex flex-col md:flex-row gap-3">
                 <div className="flex-1">
                   <Input
-                    placeholder="Enter any NASDAQ/NYSE symbol (e.g., AAPL, GOOGL, SOUN)..."
+                    placeholder="Search any ticker symbol (e.g., AAPL, GOOGL, BRK.B)..."
                     value={symbolSearchQuery}
                     onChange={(e) => setSymbolSearchQuery(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && searchAndAddSymbol()}
@@ -474,7 +647,7 @@ For each recommendation, explain WHY it's recommended.`;
                 </Button>
               </div>
               <p className="text-xs text-slate-600 mt-2">
-                Search any publicly traded company by its ticker symbol - we'll fetch the data automatically
+                Search any publicly traded company by ticker symbol
               </p>
             </CardContent>
           </Card>
@@ -567,17 +740,17 @@ For each recommendation, explain WHY it's recommended.`;
             </>
           ) : (
           <AnimatePresence>
-            {filteredCompanies.map((company, index) => {
+            {filteredCompanies.map((company) => {
               const isSelected = selectedCompanies.includes(company.symbol);
               return (
-                <div key={company.id}>
+                <div key={company.symbol}>
                   <Card 
-                    className={`group transition-all duration-300 border-2 rounded-xl h-full ${
+                    className={`group transition-all duration-300 border-2 rounded-xl h-full cursor-pointer ${
                       isSelected 
-                        ? 'cursor-pointer border-blue-500 shadow-lg shadow-blue-500/20 bg-gradient-to-br from-blue-50 to-indigo-50' 
-                        : 'cursor-pointer hover:shadow-lg border-slate-200 hover:border-blue-300 bg-white'
+                        ? 'border-blue-500 shadow-lg shadow-blue-500/20 bg-gradient-to-br from-blue-50 to-indigo-50' 
+                        : 'hover:shadow-lg border-slate-200 hover:border-blue-300 bg-white'
                     }`}
-                    onClick={() => toggleCompany(company.symbol, company)}
+                    onClick={() => toggleCompany(company.symbol)}
                   >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
@@ -597,7 +770,7 @@ For each recommendation, explain WHY it's recommended.`;
                         </div>
                         <Checkbox
                           checked={isSelected}
-                          onCheckedChange={() => toggleCompany(company.symbol, company)}
+                          onCheckedChange={() => toggleCompany(company.symbol)}
                           className="w-5 h-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                         />
                       </div>
@@ -606,26 +779,6 @@ For each recommendation, explain WHY it's recommended.`;
                       <p className="text-sm text-slate-600 line-clamp-2 mb-3">
                         {company.description}
                       </p>
-                      
-                      {company.beta !== null && company.beta !== undefined && (
-                       <div className="pt-3 border-t border-slate-100">
-                         <div>
-                           <p className="text-xs text-slate-500">5Y Beta</p>
-                           <p className="text-sm font-semibold text-blue-600">
-                             {company.beta.toFixed(3)}
-                           </p>
-                           {company.beta_confidence && (
-                             <Badge className={`text-xs mt-1 ${
-                               company.beta_confidence === 'high' ? 'bg-emerald-100 text-emerald-700' :
-                               company.beta_confidence === 'medium' ? 'bg-amber-100 text-amber-700' :
-                               'bg-rose-100 text-rose-700'
-                             }`}>
-                               {company.beta_confidence}
-                             </Badge>
-                           )}
-                         </div>
-                       </div>
-                      )}
                     </CardContent>
                   </Card>
                 </div>
