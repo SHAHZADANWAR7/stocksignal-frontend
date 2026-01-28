@@ -114,14 +114,14 @@ export default function GoalIntelligence() {
     }
     
     const [goalsData, holdingsData] = await Promise.all([
-      awsApi.getPortfolioGoals(userId),
-      awsApi.getHoldings(userId)
+      awsApi.getStockBatch(userId),
+      awsApi.getStockBatch(userId)
     ]);
     
     // Also load paper trading portfolio if regular holdings are empty
     let allHoldings = holdingsData || [];
     if (allHoldings.length === 0) {
-      const paperPortfolio = await awsApi.getPortfolio(userId);
+      const paperPortfolio = await awsApi.getStockBatch(userId);
       if (paperPortfolio?.assets) {
         // Convert paper trading assets to holdings format
         allHoldings = paperPortfolio.assets.map(asset => ({
