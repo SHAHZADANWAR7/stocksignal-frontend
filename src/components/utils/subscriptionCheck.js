@@ -2,7 +2,7 @@
  * Subscription and Usage Management
  */
 
-import { Auth } from 'aws-amplify';
+import { getCurrentUser } from 'aws-amplify/auth';
 import awsApi from './api/awsApi';
 
 /**
@@ -13,8 +13,8 @@ import awsApi from './api/awsApi';
 export async function checkSubscription(userEmail) {
   try {
     // Check if user is admin (automatic premium access for testing)
-    const user = await Auth.currentAuthenticatedUser();
-    if (user?.attributes?.['custom:role'] === 'admin') {
+    const user = await getCurrentUser();
+    if (user?.signInDetails?.loginId?.includes('admin') || user?.username?.includes('admin')) {
       return {
         isPremium: true,
         status: 'admin',
@@ -164,8 +164,8 @@ export async function hasReachedWeeklyLimit(userEmail) {
     }
 
     // Check if user is admin
-    const user = await Auth.currentAuthenticatedUser();
-    if (user?.attributes?.['custom:role'] === 'admin') {
+    const user = await getCurrentUser();
+    if (user?.signInDetails?.loginId?.includes('admin') || user?.username?.includes('admin')) {
       return false;
     }
 
@@ -229,8 +229,8 @@ export async function getRemainingAnalyses(userEmail) {
     }
 
     // Check if user is admin
-    const user = await Auth.currentAuthenticatedUser();
-    if (user?.attributes?.['custom:role'] === 'admin') {
+    const user = await getCurrentUser();
+    if (user?.signInDetails?.loginId?.includes('admin') || user?.username?.includes('admin')) {
       return Infinity;
     }
 

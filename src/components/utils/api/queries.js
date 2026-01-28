@@ -3,7 +3,8 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Auth, API } from 'aws-amplify';
+import { getCurrentUser, fetchAuthSession } from 'aws-amplify/auth';
+import { get, post, put, del } from 'aws-amplify/api';
 import awsApi from './awsApi';
 
 // Query keys for consistent caching
@@ -30,7 +31,7 @@ export function useUser() {
     queryKey: [QUERY_KEYS.USER],
     queryFn: async () => {
       try {
-        const user = await Auth.currentAuthenticatedUser();
+        const user = await getCurrentUser();
         return user;
       } catch (error) {
         return null;
@@ -47,12 +48,18 @@ export function useHoldings() {
     queryKey: [QUERY_KEYS.HOLDINGS],
     queryFn: async () => {
       try {
-        const response = await API.get('api', '/holdings', {
-          headers: {
-            Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+        const session = await fetchAuthSession();
+        const response = await get({
+          apiName: 'api',
+          path: '/holdings',
+          options: {
+            headers: {
+              Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+            },
           },
-        });
-        return response.data || [];
+        }).response;
+        const data = await response.body.json();
+        return data.data || [];
       } catch (error) {
         console.error('Error fetching holdings:', error);
         return [];
@@ -69,12 +76,18 @@ export function usePortfolio() {
     queryKey: [QUERY_KEYS.PORTFOLIO],
     queryFn: async () => {
       try {
-        const response = await API.get('api', '/portfolio', {
-          headers: {
-            Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+        const session = await fetchAuthSession();
+        const response = await get({
+          apiName: 'api',
+          path: '/portfolio',
+          options: {
+            headers: {
+              Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+            },
           },
-        });
-        return response.data || null;
+        }).response;
+        const data = await response.body.json();
+        return data.data || null;
       } catch (error) {
         console.error('Error fetching portfolio:', error);
         return null;
@@ -91,12 +104,18 @@ export function useCompanies() {
     queryKey: [QUERY_KEYS.COMPANIES],
     queryFn: async () => {
       try {
-        const response = await API.get('api', '/companies', {
-          headers: {
-            Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+        const session = await fetchAuthSession();
+        const response = await get({
+          apiName: 'api',
+          path: '/companies',
+          options: {
+            headers: {
+              Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+            },
           },
-        });
-        return response.data || [];
+        }).response;
+        const data = await response.body.json();
+        return data.data || [];
       } catch (error) {
         console.error('Error fetching companies:', error);
         return [];
@@ -132,12 +151,18 @@ export function useIndexFunds() {
     queryKey: [QUERY_KEYS.INDEX_FUNDS],
     queryFn: async () => {
       try {
-        const response = await API.get('api', '/index-funds', {
-          headers: {
-            Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+        const session = await fetchAuthSession();
+        const response = await get({
+          apiName: 'api',
+          path: '/index-funds',
+          options: {
+            headers: {
+              Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+            },
           },
-        });
-        return response.data || [];
+        }).response;
+        const data = await response.body.json();
+        return data.data || [];
       } catch (error) {
         console.error('Error fetching index funds:', error);
         return [];
@@ -154,12 +179,18 @@ export function useTransactions() {
     queryKey: [QUERY_KEYS.TRANSACTIONS],
     queryFn: async () => {
       try {
-        const response = await API.get('api', '/transactions', {
-          headers: {
-            Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+        const session = await fetchAuthSession();
+        const response = await get({
+          apiName: 'api',
+          path: '/transactions',
+          options: {
+            headers: {
+              Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+            },
           },
-        });
-        return response.data || [];
+        }).response;
+        const data = await response.body.json();
+        return data.data || [];
       } catch (error) {
         console.error('Error fetching transactions:', error);
         return [];
@@ -176,12 +207,18 @@ export function useTrades() {
     queryKey: [QUERY_KEYS.TRADES],
     queryFn: async () => {
       try {
-        const response = await API.get('api', '/trades', {
-          headers: {
-            Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+        const session = await fetchAuthSession();
+        const response = await get({
+          apiName: 'api',
+          path: '/trades',
+          options: {
+            headers: {
+              Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+            },
           },
-        });
-        return response.data || [];
+        }).response;
+        const data = await response.body.json();
+        return data.data || [];
       } catch (error) {
         console.error('Error fetching trades:', error);
         return [];
@@ -198,12 +235,18 @@ export function usePortfolioHealth() {
     queryKey: [QUERY_KEYS.PORTFOLIO_HEALTH],
     queryFn: async () => {
       try {
-        const response = await API.get('api', '/portfolio/health', {
-          headers: {
-            Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+        const session = await fetchAuthSession();
+        const response = await get({
+          apiName: 'api',
+          path: '/portfolio/health',
+          options: {
+            headers: {
+              Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+            },
           },
-        });
-        return response.data || null;
+        }).response;
+        const data = await response.body.json();
+        return data.data || null;
       } catch (error) {
         console.error('Error fetching portfolio health:', error);
         return null;
@@ -220,12 +263,18 @@ export function useInvestorScore() {
     queryKey: [QUERY_KEYS.INVESTOR_SCORE],
     queryFn: async () => {
       try {
-        const response = await API.get('api', '/investor-score', {
-          headers: {
-            Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+        const session = await fetchAuthSession();
+        const response = await get({
+          apiName: 'api',
+          path: '/investor-score',
+          options: {
+            headers: {
+              Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+            },
           },
-        });
-        return response.data || null;
+        }).response;
+        const data = await response.body.json();
+        return data.data || null;
       } catch (error) {
         console.error('Error fetching investor score:', error);
         return null;
@@ -242,12 +291,18 @@ export function useGoals() {
     queryKey: [QUERY_KEYS.GOALS],
     queryFn: async () => {
       try {
-        const response = await API.get('api', '/goals', {
-          headers: {
-            Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+        const session = await fetchAuthSession();
+        const response = await get({
+          apiName: 'api',
+          path: '/goals',
+          options: {
+            headers: {
+              Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+            },
           },
-        });
-        return response.data || [];
+        }).response;
+        const data = await response.body.json();
+        return data.data || [];
       } catch (error) {
         console.error('Error fetching goals:', error);
         return [];
@@ -281,18 +336,18 @@ export function useSubscription() {
   const { data: user } = useUser();
   
   return useQuery({
-    queryKey: [QUERY_KEYS.SUBSCRIPTION, user?.attributes?.email],
+    queryKey: [QUERY_KEYS.SUBSCRIPTION, user?.username],
     queryFn: async () => {
-      if (!user?.attributes?.email) return null;
+      if (!user?.username) return null;
       try {
-        const response = await awsApi.checkSubscription(user.attributes.email);
+        const response = await awsApi.checkSubscription(user.username);
         return response || null;
       } catch (error) {
         console.error('Error fetching subscription:', error);
         return null;
       }
     },
-    enabled: !!user?.attributes?.email,
+    enabled: !!user?.username,
   });
 }
 
@@ -304,13 +359,19 @@ export function useCreateHolding() {
   
   return useMutation({
     mutationFn: async (holdingData) => {
-      const response = await API.post('api', '/holdings', {
-        headers: {
-          Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+      const session = await fetchAuthSession();
+      const response = await post({
+        apiName: 'api',
+        path: '/holdings',
+        options: {
+          headers: {
+            Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+          },
+          body: holdingData,
         },
-        body: holdingData,
-      });
-      return response.data;
+      }).response;
+      const data = await response.body.json();
+      return data.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.HOLDINGS] });
@@ -327,13 +388,19 @@ export function useUpdateHolding() {
   
   return useMutation({
     mutationFn: async ({ id, data }) => {
-      const response = await API.put('api', `/holdings/${id}`, {
-        headers: {
-          Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+      const session = await fetchAuthSession();
+      const response = await put({
+        apiName: 'api',
+        path: `/holdings/${id}`,
+        options: {
+          headers: {
+            Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+          },
+          body: data,
         },
-        body: data,
-      });
-      return response.data;
+      }).response;
+      const responseData = await response.body.json();
+      return responseData.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.HOLDINGS] });
@@ -350,12 +417,18 @@ export function useDeleteHolding() {
   
   return useMutation({
     mutationFn: async (id) => {
-      const response = await API.del('api', `/holdings/${id}`, {
-        headers: {
-          Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+      const session = await fetchAuthSession();
+      const response = await del({
+        apiName: 'api',
+        path: `/holdings/${id}`,
+        options: {
+          headers: {
+            Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+          },
         },
-      });
-      return response.data;
+      }).response;
+      const data = await response.body.json();
+      return data.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.HOLDINGS] });
@@ -372,13 +445,19 @@ export function useCreateGoal() {
   
   return useMutation({
     mutationFn: async (goalData) => {
-      const response = await API.post('api', '/goals', {
-        headers: {
-          Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+      const session = await fetchAuthSession();
+      const response = await post({
+        apiName: 'api',
+        path: '/goals',
+        options: {
+          headers: {
+            Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+          },
+          body: goalData,
         },
-        body: goalData,
-      });
-      return response.data;
+      }).response;
+      const data = await response.body.json();
+      return data.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GOALS] });
@@ -394,13 +473,19 @@ export function useUpdateGoal() {
   
   return useMutation({
     mutationFn: async ({ id, data }) => {
-      const response = await API.put('api', `/goals/${id}`, {
-        headers: {
-          Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+      const session = await fetchAuthSession();
+      const response = await put({
+        apiName: 'api',
+        path: `/goals/${id}`,
+        options: {
+          headers: {
+            Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+          },
+          body: data,
         },
-        body: data,
-      });
-      return response.data;
+      }).response;
+      const responseData = await response.body.json();
+      return responseData.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GOALS] });
@@ -416,12 +501,18 @@ export function useDeleteGoal() {
   
   return useMutation({
     mutationFn: async (id) => {
-      const response = await API.del('api', `/goals/${id}`, {
-        headers: {
-          Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+      const session = await fetchAuthSession();
+      const response = await del({
+        apiName: 'api',
+        path: `/goals/${id}`,
+        options: {
+          headers: {
+            Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+          },
         },
-      });
-      return response.data;
+      }).response;
+      const data = await response.body.json();
+      return data.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GOALS] });
@@ -437,13 +528,19 @@ export function useExecuteTrade() {
   
   return useMutation({
     mutationFn: async (tradeData) => {
-      const response = await API.post('api', '/trades', {
-        headers: {
-          Authorization: `Bearer ${(await Auth.currentSession()).getIdToken().getJwtToken()}`,
+      const session = await fetchAuthSession();
+      const response = await post({
+        apiName: 'api',
+        path: '/trades',
+        options: {
+          headers: {
+            Authorization: `Bearer ${session.tokens.idToken.toString()}`,
+          },
+          body: tradeData,
         },
-        body: tradeData,
-      });
-      return response.data;
+      }).response;
+      const data = await response.body.json();
+      return data.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.TRADES] });
