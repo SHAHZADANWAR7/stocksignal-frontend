@@ -28,7 +28,17 @@ const awsConfig = {
   }
 };
 
+console.log('[aws-config] Configuring Amplify with:');
+console.log('[aws-config] User Pool ID:', awsConfig.Auth.Cognito.userPoolId);
+console.log('[aws-config] Client ID:', awsConfig.Auth.Cognito.userPoolClientId);
+console.log('[aws-config] Region:', awsConfig.Auth.Cognito.region);
+console.log('[aws-config] Environment variables:', {
+  VITE_COGNITO_USER_POOL_ID: import.meta.env.VITE_COGNITO_USER_POOL_ID,
+  VITE_COGNITO_APP_CLIENT_ID: import.meta.env.VITE_COGNITO_APP_CLIENT_ID,
+  VITE_COGNITO_REGION: import.meta.env.VITE_COGNITO_REGION
+});
+
 Amplify.configure(awsConfig);
-console.log('Amplify Auth configured');
+console.log('[aws-config] Amplify Auth configured successfully');
 
 export default awsConfig;
