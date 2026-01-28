@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import {
@@ -23,7 +23,7 @@ import {
   Mail,
   BookOpen
 } from "lucide-react";
-import { getCurrentUser, signOut } from 'aws-amplify/auth';
+import { getCurrentUser, fetchUserAttributes, signOut } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 
 const PUBLIC_PAGES = [
@@ -61,8 +61,10 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
 
   const [user, setUser] = useState(null);
+  const [userAttributes, setUserAttributes] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isAuthenticatedRef = useRef(false);
 
   const isPublicPage = PUBLIC_PAGES.some((page) => {
     const pageUrl = createPageUrl(page);
@@ -87,9 +89,19 @@ export default function Layout({ children }) {
         const currentUser = await getCurrentUser();
         console.log("[Layout] initAuth - getCurrentUser SUCCESS:", currentUser);
         setUser(currentUser);
+        isAuthenticatedRef.current = true;
+
+        try {
+          const attributes = await fetchUserAttributes();
+          console.log("[Layout] initAuth - fetchUserAttributes SUCCESS:", attributes);
+          setUserAttributes(attributes);
+        } catch (attrError) {
+          console.log("[Layout] initAuth - fetchUserAttributes FAILED:", attrError);
+        }
       } catch (error) {
         console.log("[Layout] initAuth - getCurrentUser FAILED:", error);
         setUser(null);
+        isAuthenticatedRef.current = false;
       } finally {
         console.log("[Layout] initAuth - Setting isLoading to false");
         setIsLoading(false);
@@ -104,18 +116,30 @@ export default function Layout({ children }) {
       if (payload.event === "signIn") {
         console.log("[Layout] Hub.listen - signIn event, fetching current user");
         getCurrentUser()
-          .then((currentUser) => {
+          .then(async (currentUser) => {
             console.log("[Layout] Hub.listen - getCurrentUser after signIn SUCCESS:", currentUser);
             setUser(currentUser);
+            isAuthenticatedRef.current = true;
+
+            try {
+              const attributes = await fetchUserAttributes();
+              console.log("[Layout] Hub.listen - fetchUserAttributes SUCCESS:", attributes);
+              setUserAttributes(attributes);
+            } catch (attrError) {
+              console.log("[Layout] Hub.listen - fetchUserAttributes FAILED:", attrError);
+            }
           })
           .catch((error) => {
             console.log("[Layout] Hub.listen - getCurrentUser after signIn FAILED:", error);
             setUser(null);
+            isAuthenticatedRef.current = false;
           });
       }
       if (payload.event === "signOut") {
         console.log("[Layout] Hub.listen - signOut event");
         setUser(null);
+        setUserAttributes(null);
+        isAuthenticatedRef.current = false;
       }
     });
 
@@ -127,12 +151,12 @@ export default function Layout({ children }) {
 
   useEffect(() => {
     console.log("[Layout] Redirect check - isLoading:", isLoading, "user:", !!user, "isPublicPage:", isPublicPage);
-    if (!isLoading && !user && !isPublicPage) {
+    if (!isLoading && !user && !isPublicPage && !isAuthenticatedRef.current) {
       const redirectUrl = encodeURIComponent(location.pathname);
       console.log("[Layout] REDIRECTING to Login with redirect:", redirectUrl);
       navigate(`${createPageUrl("Login")}?redirect=${redirectUrl}`, { replace: true });
     }
-  }, [isLoading, user, isPublicPage, location.pathname, navigate]);
+  }, [isLoading, user, isPublicPage, navigate]);
 
   const handleLogout = async () => {
     console.log("[Layout] handleLogout - Starting logout");
@@ -140,6 +164,8 @@ export default function Layout({ children }) {
       await signOut();
       console.log("[Layout] handleLogout - signOut SUCCESS");
       setUser(null);
+      setUserAttributes(null);
+      isAuthenticatedRef.current = false;
       navigate(createPageUrl("Home"));
     } catch (error) {
       console.error("[Layout] handleLogout - signOut ERROR:", error);
@@ -164,12 +190,13 @@ export default function Layout({ children }) {
     );
   }
 
-  if (!user) {
+  if (!user && !isAuthenticatedRef.current) {
     console.log("[Layout] No user and not loading - should redirect (returning null)");
     return null;
   }
 
-  console.log("[Layout] Rendering authenticated layout for user:", user.attributes?.name || user.attributes?.email);
+  const displayName = userAttributes?.name || userAttributes?.email || user?.attributes?.name || user?.attributes?.email || user?.username || "User";
+  console.log("[Layout] Rendering authenticated layout for user:", displayName);
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
@@ -213,8 +240,8 @@ export default function Layout({ children }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <User className="w-5 h-5 text-slate-600" />
-                <span className="text-sm text-slate-700">
-                  {user?.attributes?.name || user?.attributes?.email || "User"}
+                <span className="text-sm text-slate-700 truncate max-w-[150px]">
+                  {displayName}
                 </span>
               </div>
               <button onClick={handleLogout} className="text-rose-600 hover:text-rose-700">
