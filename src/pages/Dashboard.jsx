@@ -14,6 +14,7 @@ import { dashboardSteps } from "@/components/tutorial/tutorialSteps";
 
 export default function Dashboard() {
   const [analyses, setAnalyses] = useState([]);
+  const [portfolioSummary, setPortfolioSummary] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -47,8 +48,12 @@ export default function Dashboard() {
     setIsLoading(true);
     try {
       const userId = localStorage.getItem('user_id');
-      const data = await awsApi.getPortfolioAnalyses(userId);
+      const data = await awsApi.getStockBatch(userId);
       setAnalyses(data ? data.slice(0, 5) : []);
+      
+      if (data && data.syncPortfolio) {
+        setPortfolioSummary(data.syncPortfolio);
+      }
     } catch (error) {
       console.error("Error loading analyses:", error);
     }
@@ -110,6 +115,51 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {portfolioSummary && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8"
+          >
+            <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg rounded-3xl">
+              <CardHeader>
+                <CardTitle className="text-2xl text-slate-900">Portfolio Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {portfolioSummary.totalValue && (
+                    <div className="bg-white rounded-xl p-4 shadow-sm">
+                      <p className="text-sm text-slate-600 mb-1">Total Value</p>
+                      <p className="text-2xl font-bold text-green-600">${portfolioSummary.totalValue.toLocaleString()}</p>
+                    </div>
+                  )}
+                  {portfolioSummary.totalGain !== undefined && (
+                    <div className="bg-white rounded-xl p-4 shadow-sm">
+                      <p className="text-sm text-slate-600 mb-1">Total Gain/Loss</p>
+                      <p className={`text-2xl font-bold ${portfolioSummary.totalGain >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {portfolioSummary.totalGain >= 0 ? '+' : ''}{portfolioSummary.totalGain.toFixed(2)}%
+                      </p>
+                    </div>
+                  )}
+                  {portfolioSummary.holdingsCount !== undefined && (
+                    <div className="bg-white rounded-xl p-4 shadow-sm">
+                      <p className="text-sm text-slate-600 mb-1">Holdings</p>
+                      <p className="text-2xl font-bold text-slate-900">{portfolioSummary.holdingsCount}</p>
+                    </div>
+                  )}
+                  {portfolioSummary.lastUpdated && (
+                    <div className="bg-white rounded-xl p-4 shadow-sm">
+                      <p className="text-sm text-slate-600 mb-1">Last Updated</p>
+                      <p className="text-sm font-semibold text-slate-900">{format(new Date(portfolioSummary.lastUpdated), 'MMM d, yyyy')}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="h-full">
