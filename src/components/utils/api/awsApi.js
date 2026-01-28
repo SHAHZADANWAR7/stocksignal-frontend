@@ -31,17 +31,17 @@ export const awsApi = {
     return awsClient.getStockAnalysis(symbol);
   },
 
-  // Portfolio calculations
-  calculateExpectedReturn: async (data) => {
-    return awsClient.calculateExpectedReturn(data);
+  getStockBatch: async (symbols) => {
+    return awsClient.getStockBatch(symbols);
   },
 
-  getPortfolioAnalysis: async (data) => {
-    return awsClient.getPortfolioAnalysis(data);
+  // Portfolio operations
+  syncPortfolio: async (data) => {
+    return awsClient.syncPortfolio(data);
   },
 
-  saveAnalysis: async (data) => {
-    return awsClient.saveAnalysis(data);
+  executePaperTrade: async (data) => {
+    return awsClient.executePaperTrade(data);
   },
 
   // Market data
@@ -49,15 +49,7 @@ export const awsApi = {
     return awsClient.getVIXData();
   },
 
-  getMarketData: async (params) => {
-    return callAwsFunction('getMarketData', params);
-  },
-
-  getCompanies: async (params) => {
-    return callAwsFunction('getCompanies', params);
-  },
-
-  getIndexFunds: async (params) => {
-    return callAwsFunction('getIndexFunds', params);
+  calculateRealBeta: async (data) => {
+    return awsClient.calculateRealBeta(data);
   }
 };
