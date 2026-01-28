@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { awsApi } from "@/utils/awsClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { callAwsFunction } from "@/components/utils/api/awsApi";
 import { Button } from "@/components/ui/button";
@@ -9,9 +8,6 @@ import {
   TrendingUp, 
   TrendingDown, 
   BarChart3,
-import CardSkeleton from "@/components/ui/CardSkeleton";
-  Globe,
-  DollarSign,
   Search,
   Loader2,
   RefreshCw,
@@ -21,6 +17,53 @@ import CardSkeleton from "@/components/ui/CardSkeleton";
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CardSkeleton from "@/components/ui/CardSkeleton";
+
+// Hardcoded list of major index funds and ETFs
+const HARDCODED_INDEX_FUNDS = [
+  { symbol: "SPY", name: "SPDR S&P 500 ETF Trust", type: "broad_market", description: "Tracks the S&P 500 Index - broad U.S. market exposure", expense_ratio: 0.03 },
+  { symbol: "VOO", name: "Vanguard S&P 500 ETF", type: "broad_market", description: "Low-cost S&P 500 tracking", expense_ratio: 0.03 },
+  { symbol: "IVV", name: "iShares Core S&P 500 ETF", type: "broad_market", description: "Core S&P 500 index fund", expense_ratio: 0.03 },
+  { symbol: "VTI", name: "Vanguard Total Stock Market ETF", type: "broad_market", description: "Total U.S. stock market including small-cap", expense_ratio: 0.03 },
+  { symbol: "QQQ", name: "Invesco QQQ Trust", type: "broad_market", description: "Tracks NASDAQ-100 - tech-heavy U.S. stocks", expense_ratio: 0.20 },
+  { symbol: "DIA", name: "SPDR Dow Jones Industrial Average ETF", type: "broad_market", description: "Tracks the Dow Jones Industrial Average", expense_ratio: 0.16 },
+  { symbol: "IWM", name: "iShares Russell 2000 ETF", type: "broad_market", description: "Tracks small-cap U.S. stocks", expense_ratio: 0.20 },
+  { symbol: "VGT", name: "Vanguard Information Technology ETF", type: "sector", description: "Technology sector exposure", expense_ratio: 0.10 },
+  { symbol: "VHO", name: "Vanguard Healthcare ETF", type: "sector", description: "Healthcare sector exposure", expense_ratio: 0.10 },
+  { symbol: "VFV", name: "Vanguard Financial ETF", type: "sector", description: "Financial sector exposure", expense_ratio: 0.10 },
+  { symbol: "VDC", name: "Vanguard Consumer Discretionary ETF", type: "sector", description: "Consumer discretionary sector", expense_ratio: 0.10 },
+  { symbol: "VPU", name: "Vanguard Utilities ETF", type: "sector", description: "Utility sector exposure", expense_ratio: 0.10 },
+  { symbol: "XLK", name: "Technology Select Sector SPDR Fund", type: "sector", description: "Technology stocks", expense_ratio: 0.13 },
+  { symbol: "XLV", name: "Health Care Select Sector SPDR Fund", type: "sector", description: "Healthcare stocks", expense_ratio: 0.13 },
+  { symbol: "XLY", name: "Consumer Discretionary Select Sector SPDR Fund", type: "sector", description: "Consumer discretionary stocks", expense_ratio: 0.13 },
+  { symbol: "XLE", name: "Energy Select Sector SPDR Fund", type: "sector", description: "Energy sector stocks", expense_ratio: 0.13 },
+  { symbol: "XLF", name: "Financial Select Sector SPDR Fund", type: "sector", description: "Financial sector stocks", expense_ratio: 0.13 },
+  { symbol: "XLI", name: "Industrial Select Sector SPDR Fund", type: "sector", description: "Industrial sector stocks", expense_ratio: 0.13 },
+  { symbol: "XLP", name: "Consumer Staples Select Sector SPDR Fund", type: "sector", description: "Consumer staples stocks", expense_ratio: 0.13 },
+  { symbol: "XLRE", name: "Real Estate Select Sector SPDR Fund", type: "sector", description: "Real estate sector", expense_ratio: 0.13 },
+  { symbol: "XLU", name: "Utilities Select Sector SPDR Fund", type: "sector", description: "Utility stocks", expense_ratio: 0.13 },
+  { symbol: "XLM", name: "Materials Select Sector SPDR Fund", type: "sector", description: "Materials sector stocks", expense_ratio: 0.13 },
+  { symbol: "VEA", name: "Vanguard FTSE Developed Markets ETF", type: "international", description: "Developed international markets", expense_ratio: 0.05 },
+  { symbol: "VWO", name: "Vanguard FTSE Emerging Markets ETF", type: "international", description: "Emerging markets exposure", expense_ratio: 0.08 },
+  { symbol: "EWJ", name: "iShares MSCI Japan ETF", type: "international", description: "Japan equity exposure", expense_ratio: 0.47 },
+  { symbol: "EWG", name: "iShares MSCI Germany ETF", type: "international", description: "Germany equity exposure", expense_ratio: 0.47 },
+  { symbol: "EWU", name: "iShares MSCI United Kingdom ETF", type: "international", description: "UK equity exposure", expense_ratio: 0.47 },
+  { symbol: "EWA", name: "iShares MSCI Australia ETF", type: "international", description: "Australia equity exposure", expense_ratio: 0.47 },
+  { symbol: "BND", name: "Vanguard Total Bond Market ETF", type: "bond", description: "Total U.S. bond market", expense_ratio: 0.03 },
+  { symbol: "AGG", name: "iShares Core U.S. Aggregate Bond ETF", type: "bond", description: "Aggregate bond market", expense_ratio: 0.03 },
+  { symbol: "BRK", name: "Vanguard Intermediate-Term Corporate Bond ETF", type: "bond", description: "Corporate bonds", expense_ratio: 0.04 },
+  { symbol: "SHV", name: "iShares Short Treasury Bond ETF", type: "bond", description: "Short-term Treasuries", expense_ratio: 0.15 },
+  { symbol: "IEF", name: "iShares 7-10 Year Treasury Bond ETF", type: "bond", description: "Intermediate Treasuries", expense_ratio: 0.15 },
+  { symbol: "TLT", name: "iShares 20+ Year Treasury Bond ETF", type: "bond", description: "Long-term Treasuries", expense_ratio: 0.15 },
+  { symbol: "HYG", name: "iShares High Yield Corporate Bond ETF", type: "bond", description: "High-yield bonds", expense_ratio: 0.49 },
+  { symbol: "GLD", name: "SPDR Gold Shares", type: "commodity", description: "Gold bullion exposure", expense_ratio: 0.40 },
+  { symbol: "SLV", name: "iShares Silver Trust", type: "commodity", description: "Silver bullion exposure", expense_ratio: 0.50 },
+  { symbol: "DBC", name: "Commodities Select Sector SPDR Fund", type: "commodity", description: "Broad commodity exposure", expense_ratio: 0.85 },
+  { symbol: "USO", name: "United States Oil Fund", type: "commodity", description: "Crude oil exposure", expense_ratio: 0.73 },
+  { symbol: "UGA", name: "United States Gasoline Fund", type: "commodity", description: "Gasoline exposure", expense_ratio: 0.60 },
+  { symbol: "DBB", name: "Invesco DB Precious Metals Fund", type: "commodity", description: "Precious metals exposure", expense_ratio: 0.75 },
+  { symbol: "COPX", name: "Global X Copper Miners ETF", type: "commodity", description: "Copper mining stocks", expense_ratio: 0.65 },
+];
 
 export default function IndexFunds() {
   const [indexFunds, setIndexFunds] = useState([]);
@@ -43,21 +86,10 @@ export default function IndexFunds() {
     }
   }, [indexFunds]);
 
-  const loadIndexFunds = async () => {
+  const loadIndexFunds = () => {
     setIsLoading(true);
-    const data = await awsApi.getIndexFunds();
-    
-    const uniqueFunds = [];
-    const seenSymbols = new Set();
-    
-    for (const fund of data) {
-      if (!seenSymbols.has(fund.symbol)) {
-        seenSymbols.add(fund.symbol);
-        uniqueFunds.push(fund);
-      }
-    }
-    
-    setIndexFunds(uniqueFunds);
+    // Use hardcoded list instead of API call
+    setIndexFunds(HARDCODED_INDEX_FUNDS);
     setIsLoading(false);
   };
 
@@ -78,39 +110,40 @@ export default function IndexFunds() {
         symbol: symbolUpper
       });
 
-      if (stockData.error) {
-        alert("Symbol not found or data unavailable");
+      if (stockData.error || !stockData.symbol) {
+        alert("Symbol not found or data unavailable. Please check the ticker and try again.");
         setIsAddingSymbol(false);
         return;
       }
 
       const isETF = stockData.name.includes('ETF') || 
                     stockData.name.includes('Fund') || 
-                    stockData.name.includes('Trust');
+                    stockData.name.includes('Trust') ||
+                    stockData.name.includes('Shares');
 
       if (!isETF) {
-        alert("This appears to be a stock, not an ETF/index fund.");
+        alert("This appears to be a stock, not an ETF/index fund. Try searching for a ticker symbol that represents an ETF.");
         setIsAddingSymbol(false);
         return;
       }
 
       const fundType = stockData.name.toLowerCase().includes('bond') ? 'bond' :
-                      stockData.name.toLowerCase().includes('international') || stockData.name.toLowerCase().includes('emerging') ? 'international' :
-                      stockData.name.toLowerCase().includes('sector') || stockData.name.toLowerCase().includes('industry') ? 'sector' :
-                      stockData.name.toLowerCase().includes('commodity') || stockData.name.toLowerCase().includes('gold') ? 'commodity' :
+                      stockData.name.toLowerCase().includes('international') || stockData.name.toLowerCase().includes('emerging') || stockData.name.toLowerCase().includes('msci') ? 'international' :
+                      stockData.name.toLowerCase().includes('sector') || stockData.name.toLowerCase().includes('select') ? 'sector' :
+                      stockData.name.toLowerCase().includes('commodity') || stockData.name.toLowerCase().includes('gold') || stockData.name.toLowerCase().includes('oil') || stockData.name.toLowerCase().includes('copper') ? 'commodity' :
                       'broad_market';
 
-      await awsApi.createIndexFund({
+      const newFund = {
         symbol: symbolUpper,
         name: stockData.name,
         type: fundType,
-        description: `${stockData.exchange} listed ${fundType.replace('_', ' ')} fund`,
-        expense_ratio: 0.03
-      });
+        description: `${fundType.replace('_', ' ')} ETF - ${stockData.exchange || 'listed'} trading`,
+        expense_ratio: 0.10
+      };
 
+      setIndexFunds(prev => [...prev, newFund]);
       setNewSymbol("");
-      await loadIndexFunds();
-      alert(`${stockData.name} added with Yahoo Finance data!`);
+      alert(`✅ ${stockData.name} added successfully!`);
     } catch (error) {
       console.error("Error adding symbol:", error);
       alert("Error adding symbol. Please check if it's a valid ETF/index fund symbol.");
@@ -384,7 +417,7 @@ export default function IndexFunds() {
 
               return (
                 <motion.div
-                  key={fund.id}
+                  key={fund.symbol}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
@@ -601,8 +634,8 @@ export default function IndexFunds() {
                           <p className="text-xs text-slate-600">• Traded like stocks with high liquidity</p>
                         </div>
                       </div>
-                      </CardContent>
-                      </Card>
+                    </CardContent>
+                  </Card>
                 </motion.div>
               );
             })}
