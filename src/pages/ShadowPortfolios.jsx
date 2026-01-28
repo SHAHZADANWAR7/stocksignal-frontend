@@ -133,9 +133,9 @@ export default function ShadowPortfolios() {
 
     try {
       if (editingId) {
-        await awsApi.updateShadowPortfolio(userId, editingId, data);
+        await awsApi.syncPortfolio(userId, editingId, data);
       } else {
-        await awsApi.createShadowPortfolio(data);
+        await awsApi.syncPortfolio(data);
       }
 
       setShowDialog(false);
@@ -169,7 +169,7 @@ export default function ShadowPortfolios() {
     if (confirm("Delete this shadow portfolio?")) {
       try {
         const userId = localStorage.getItem('user_id');
-        await awsApi.deleteShadowPortfolio(userId, id);
+        await awsApi.syncPortfolio(userId, id);
         loadScenarios();
       } catch (error) {
         console.error("Error deleting shadow portfolio:", error);
@@ -492,7 +492,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
 
       // Save simulation results to database
       const userId = localStorage.getItem('user_id');
-      await awsApi.updateShadowPortfolio(userId, scenario.id, {
+      await awsApi.syncPortfolio(userId, scenario.id, {
         simulation_results: finalResult
       });
 
