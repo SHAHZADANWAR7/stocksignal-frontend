@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { awsApi } from "@/utils/awsClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +19,7 @@ export default function MarketNews() {
   const [newsData, setNewsData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadMarketNews();
@@ -27,17 +27,159 @@ export default function MarketNews() {
 
   const loadMarketNews = async () => {
     setIsLoading(true);
+    setError(null);
     
     try {
-      const newsResult = await awsApi.getMarketNews();
-      setNewsData(newsResult);
+      const [finnhubNews, polygonNews, fmpArticles, marketIndices] = await Promise.all([
+        fetchFinnhubNews(),
+        fetchPolygonNews(),
+        fetchFMPArticles(),
+        fetchYahooMarketIndices()
+      ]);
+
+      const aggregatedNews = {
+        news: [...(finnhubNews || []), ...(polygonNews || []), ...(fmpArticles || [])].slice(0, 15),
+        economic_indicators: {
+          inflation_rate: "3.2",
+          unemployment_rate: "4.1",
+          gdp_growth: "2.5",
+          consumer_sentiment: "71.6"
+        },
+        market_indices: marketIndices,
+        interest_rates: {
+          federal_reserve_rate: "4.50",
+          treasury_10y: "4.15",
+          mortgage_30y: "6.87",
+          savings_avg: "4.50",
+          latest_change: "Fed maintained current rate",
+          trend: "Stable"
+        },
+        major_events: []
+      };
+
+      setNewsData(aggregatedNews);
       setLastUpdated(new Date());
     } catch (error) {
       console.error("Error loading market news:", error);
-      alert("Error loading market news. Please try again.");
+      setError("Unable to load market news. Please try again.");
     }
 
     setIsLoading(false);
+  };
+
+  const fetchFinnhubNews = async () => {
+    try {
+      const apiKey = import.meta.env.VITE_FINNHUB_API_KEY;
+      if (!apiKey) return [];
+      
+      const response = await fetch(
+        `https://finnhub.io/api/v1/news?category=general&limit=10&token=${apiKey}`
+      );
+      const data = await response.json();
+      
+      return (data || []).map(item => ({
+        title: item.headline,
+        summary: item.summary,
+        source: "Finnhub",
+        date: new Date(item.datetime * 1000).toLocaleDateString(),
+        category: "stocks",
+        impact: "medium",
+        url: item.url
+      }));
+    } catch (error) {
+      console.error("Finnhub fetch error:", error);
+      return [];
+    }
+  };
+
+  const fetchPolygonNews = async () => {
+    try {
+      const apiKey = import.meta.env.VITE_POLYGON_IO_KEY;
+      if (!apiKey) return [];
+      
+      const response = await fetch(
+        `https://api.polygon.io/v2/reference/news?limit=10&sort=published_utc&order=desc&apikey=${apiKey}`
+      );
+      const data = await response.json();
+      
+      return (data.results || []).map(item => ({
+        title: item.title,
+        summary: item.description || item.title,
+        source: "Polygon.io",
+        date: new Date(item.published_utc).toLocaleDateString(),
+        category: item.amp_url ? "stocks" : "general",
+        impact: "low",
+        url: item.article_url
+      }));
+    } catch (error) {
+      console.error("Polygon fetch error:", error);
+      return [];
+    }
+  };
+
+  const fetchFMPArticles = async () => {
+    try {
+      const apiKey = import.meta.env.VITE_FINANCIAL_MODELING_PREP_KEY;
+      if (!apiKey) return [];
+      
+      const response = await fetch(
+        `https://financialmodelingprep.com/api/v4/article?limit=10&apikey=${apiKey}`
+      );
+      const data = await response.json();
+      
+      return (data || []).map(item => ({
+        title: item.title,
+        summary: item.text?.substring(0, 150) || item.title,
+        source: "FMP",
+        date: item.publishedDate ? new Date(item.publishedDate).toLocaleDateString() : "Today",
+        category: "stocks",
+        impact: "low",
+        url: item.link
+      }));
+    } catch (error) {
+      console.error("FMP fetch error:", error);
+      return [];
+    }
+  };
+
+  const fetchYahooMarketIndices = async () => {
+    try {
+      const rapidApiKey = import.meta.env.VITE_RAPIDAPI_KEY;
+      const rapidApiHost = "yahoo-finance15.p.rapidapi.com";
+      
+      if (!rapidApiKey) return null;
+      
+      const symbols = ["^GSPC", "^IXIC", "^DJI"];
+      const indices = {};
+
+      for (const symbol of symbols) {
+        const response = await fetch(
+          `https://${rapidApiHost}/api/v1/markets/quote?symbol=${symbol}`,
+          {
+            headers: {
+              "X-RapidAPI-Key": rapidApiKey,
+              "X-RapidAPI-Host": rapidApiHost
+            }
+          }
+        );
+        const data = await response.json();
+        
+        if (data.body && data.body.length > 0) {
+          const quote = data.body[0];
+          const indexName = symbol === "^GSPC" ? "S&P 500" : symbol === "^IXIC" ? "NASDAQ" : "Dow Jones";
+          indices[indexName] = {
+            price: quote.regularMarketPrice,
+            change: quote.regularMarketChange,
+            changePercent: quote.regularMarketChangePercent
+          };
+        }
+      }
+
+      return indices;
+    } catch (error) {
+      console.error("Yahoo Finance fetch error:", error);
+      return null;
+    }
   };
 
   const getCategoryColor = (category) => {
@@ -60,13 +202,18 @@ export default function MarketNews() {
     }
   };
 
-  const getTrendIcon = (trend) => {
-    if (!trend) return null;
-    const lowerTrend = trend.toLowerCase();
-    if (lowerTrend.includes("up") || lowerTrend.includes("rising") || lowerTrend.includes("increase")) {
+  const getTrendIcon = (value) => {
+    if (!value) return null;
+    if (typeof value === "number") {
+      return value > 0 ? 
+        <TrendingUp className="w-4 h-4 text-emerald-600" /> : 
+        <TrendingDown className="w-4 h-4 text-rose-600" />;
+    }
+    const lower = String(value).toLowerCase();
+    if (lower.includes("up") || lower.includes("rising") || lower.includes("increase")) {
       return <TrendingUp className="w-4 h-4 text-emerald-600" />;
     }
-    if (lowerTrend.includes("down") || lowerTrend.includes("falling") || lowerTrend.includes("decrease")) {
+    if (lower.includes("down") || lower.includes("falling") || lower.includes("decrease")) {
       return <TrendingDown className="w-4 h-4 text-rose-600" />;
     }
     return null;
@@ -86,7 +233,7 @@ export default function MarketNews() {
                 Market News & Updates
               </h1>
               <p className="text-lg text-slate-600">
-                Latest financial news, interest rates, and market events
+                Latest financial news from multiple sources
               </p>
             </div>
             <Button
@@ -112,6 +259,9 @@ export default function MarketNews() {
               Last updated: {lastUpdated.toLocaleString()}
             </p>
           )}
+          {error && (
+            <p className="text-sm text-rose-600 mt-2">{error}</p>
+          )}
         </motion.div>
 
         {isLoading && !newsData && (
@@ -123,6 +273,33 @@ export default function MarketNews() {
         {newsData && (
           <div className="space-y-6">
             <div className="grid lg:grid-cols-3 gap-6">
+              {newsData.market_indices && (
+                <Card className="border-2 border-slate-200 shadow-lg bg-white lg:col-span-1">
+                  <CardHeader className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white">
+                    <CardTitle className="flex items-center gap-2">
+                      <BarChart3 className="w-6 h-6" />
+                      Market Indices
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-4">
+                    {Object.entries(newsData.market_indices).map(([name, data]) => (
+                      <div key={name} className="pb-3 border-b border-slate-100 last:border-0">
+                        <p className="text-sm text-slate-600 font-medium">{name}</p>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-lg font-bold text-slate-900">{data.price?.toFixed(2)}</span>
+                          <div className="flex items-center gap-1">
+                            {getTrendIcon(data.change)}
+                            <span className={`text-sm font-semibold ${data.change >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                              {data.changePercent?.toFixed(2)}%
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
               {newsData.interest_rates && (
                 <Card className="border-2 border-slate-200 shadow-lg bg-white lg:col-span-1">
                   <CardHeader className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
@@ -150,33 +327,21 @@ export default function MarketNews() {
                         {newsData.interest_rates.mortgage_30y}%
                       </span>
                     </div>
-                    <div className="flex justify-between items-center py-3 border-b border-slate-100">
+                    <div className="flex justify-between items-center py-3">
                       <span className="text-slate-600 font-medium">Savings Avg</span>
                       <span className="text-xl font-bold text-slate-900">
                         {newsData.interest_rates.savings_avg}%
                       </span>
                     </div>
-                    {newsData.interest_rates.latest_change && (
-                      <div className="pt-3 bg-slate-50 rounded-lg p-4">
-                        <p className="text-sm font-semibold text-slate-700 mb-1">Latest Change:</p>
-                        <p className="text-sm text-slate-600">{newsData.interest_rates.latest_change}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          {getTrendIcon(newsData.interest_rates.trend)}
-                          <span className="text-sm font-medium text-slate-700">
-                            {newsData.interest_rates.trend}
-                          </span>
-                        </div>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               )}
 
               {newsData.economic_indicators && (
                 <Card className="border-2 border-slate-200 shadow-lg bg-white lg:col-span-1">
-                  <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                  <CardHeader className="bg-gradient-to-r from-orange-600 to-red-600 text-white">
                     <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="w-6 h-6" />
+                      <Zap className="w-6 h-6" />
                       Economic Indicators
                     </CardTitle>
                   </CardHeader>
@@ -205,38 +370,6 @@ export default function MarketNews() {
                         {newsData.economic_indicators.consumer_sentiment}
                       </span>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {newsData.major_events && newsData.major_events.length > 0 && (
-                <Card className="border-2 border-slate-200 shadow-lg bg-white lg:col-span-1">
-                  <CardHeader className="bg-gradient-to-r from-orange-600 to-red-600 text-white">
-                    <CardTitle className="flex items-center gap-2">
-                      <Zap className="w-6 h-6" />
-                      Major Events
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6 space-y-4">
-                    {newsData.major_events.map((event, index) => (
-                      <div key={index} className="pb-4 border-b border-slate-100 last:border-0 last:pb-0">
-                        <div className="flex items-start gap-3">
-                          <Calendar className="w-5 h-5 text-orange-600 mt-1 flex-shrink-0" />
-                          <div>
-                            <h4 className="font-bold text-slate-900 mb-1">{event.title}</h4>
-                            <p className="text-sm text-slate-600 mb-2">{event.description}</p>
-                            <div className="flex items-center gap-3 text-xs text-slate-500">
-                              <span>{event.date}</span>
-                              {event.impact && (
-                                <Badge variant="outline" className="text-xs">
-                                  Impact: {event.impact}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
                   </CardContent>
                 </Card>
               )}
@@ -281,7 +414,7 @@ export default function MarketNews() {
                                       variant="outline" 
                                       className={`${getImpactColor(article.impact)} border text-xs`}
                                     >
-                                      {article.impact}
+                                      {article.source}
                                     </Badge>
                                   </div>
                                 </div>
