@@ -44,9 +44,13 @@ export default function Login() {
       
       if (result.isSignedIn) {
         Hub.dispatch('auth', { event: 'signIn' });
+        
+        // Wait for Layout to process the auth event
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
         const params = new URLSearchParams(location.search);
         const redirectTo = params.get('redirect') || createPageUrl("Dashboard");
-        navigate(redirectTo);
+        navigate(redirectTo, { replace: true });
       } else if (result.nextStep) {
         setError(`Additional step required: ${result.nextStep.signInStep}`);
       }
@@ -120,9 +124,13 @@ export default function Login() {
       
       if (result.isSignedIn) {
         Hub.dispatch('auth', { event: 'signIn' });
+        
+        // Wait for Layout to process the auth event
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
         const params = new URLSearchParams(location.search);
         const redirectTo = params.get('redirect') || createPageUrl("Dashboard");
-        navigate(redirectTo);
+        navigate(redirectTo, { replace: true });
       } else if (result.nextStep) {
         setError(`Additional step required: ${result.nextStep.signInStep}`);
       }
