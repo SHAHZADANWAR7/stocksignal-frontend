@@ -16,7 +16,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { checkUsageLimit, incrementUsage, getRemainingUsage } from "@/components/utils/usageLimit";
+import { getRemainingUsage } from "@/components/utils/usageLimit";
 import { format } from "date-fns";
 import { calculateInvestorMetrics } from "@/components/utils/calculations/investorMetrics";
 
@@ -28,7 +28,6 @@ export default function InvestorScore() {
   const [holdings, setHoldings] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [remainingUsage, setRemainingUsage] = useState(null);
-  const [previousScore, setPreviousScore] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -41,97 +40,72 @@ export default function InvestorScore() {
   };
 
   const loadData = async () => {
-    const data = await awsApi.getInvestorScore();
-    
-    if (data && data.scores && data.scores.length > 0) {
-      setScore(data.scores[0]);
-      if (data.scores.length > 1) {
-        setPreviousScore(data.scores[1]);
-      }
-    }
-    
-    if (data && data.trades) {
-      setPaperTrades(data.trades);
-    }
-    if (data && data.portfolio) {
-      setPortfolio(data.portfolio);
-    }
-    if (data && data.transactions) {
-      setTransactions(data.transactions);
-    }
-    if (data && data.holdings) {
-      setHoldings(data.holdings);
+    try {
+      // Fetch all data from DynamoDB
+      const [txData, holdingsData, tradesData] = await Promise.all([
+        awsApi.getTransactions(null).catch(() => []),
+        awsApi.getHoldings(null).catch(() => []),
+        awsApi.getPaperTrades(null).catch(() => [])
+      ]);
+
+      setTransactions(txData || []);
+      setHoldings(holdingsData || []);
+      setPaperTrades(tradesData || []);
+
+      // Calculate portfolio from holdings
+      const totalValue = (holdingsData || []).reduce((sum, h) => sum + (h.quantity * (h.current_price || 0)), 0);
+      const portfolioData = {
+        totalValue,
+        assets: holdingsData || []
+      };
+      setPortfolio(portfolioData);
+
+      // Calculate metrics locally
+      const metrics = calculateInvestorMetrics(tradesData || [], portfolioData);
+      setScore(metrics);
+    } catch (error) {
+      console.error("Error loading data:", error);
     }
   };
 
   const analyzeDecisionQuality = async () => {
     setIsAnalyzing(true);
 
-    const calculatedMetrics = calculateInvestorMetrics(paperTrades, portfolio);
-
-    const filledTrades = paperTrades.filter(t => t.status === 'filled');
-    const portfolioValue = portfolio?.totalValue || 0;
-    const currentPositions = portfolio?.assets || [];
-
-    const txSummary = transactions.slice(0, 30).map(tx => ({
-      type: tx.type,
-      symbol: tx.symbol,
-      date: tx.transaction_date,
-      emotional_state: tx.emotional_state,
-      why: tx.why_bought_sold
-    }));
-
-    const prompt = `Analyze this paper trading investor's behavioral patterns:
-
-CALCULATED METRICS (JavaScript):
-- Overall Score: ${calculatedMetrics.overall_score}/100
-- Discipline Score: ${calculatedMetrics.discipline_score}/100
-- Trading Frequency Score: ${calculatedMetrics.overtrading_score}/100
-- Emotional Control Score: ${calculatedMetrics.panic_selling_score}/100
-- Diversification Score: ${calculatedMetrics.concentration_score}/100
-
-RAW DATA:
-- Win Rate: ${calculatedMetrics.metrics.winRate.toFixed(1)}%
-- Avg Holding Days: ${calculatedMetrics.metrics.avgHoldingDays.toFixed(0)}
-- Trades Per Day: ${calculatedMetrics.metrics.tradesPerDay.toFixed(2)}
-- Total Trades: ${calculatedMetrics.metrics.totalTrades}
-- Closed Positions: ${calculatedMetrics.metrics.closedPositions}
-
-TRANSACTION JOURNAL:
-${JSON.stringify(txSummary)}
-
-Your task: Provide ONLY qualitative insights:
-
-1. BEHAVIORAL BIASES (based on the metrics and journal):
-   - Loss aversion
-   - Recency bias
-   - Overconfidence
-   - Chasing returns
-   
-   For each detected bias provide:
-   - bias_type (string)
-   - severity (low/medium/high)
-   - description (specific evidence)
-
-2. IMPROVEMENT SUGGESTIONS:
-   - Specific actionable recommendations
-   - Behavioral adjustments
-   - Risk management improvements
-
-DO NOT recalculate scores. Use the provided calculated metrics.`;
-
     try {
-      const result = await awsApi.analyzeInvestorBehavior(prompt, calculatedMetrics);
+      const metrics = calculateInvestorMetrics(paperTrades, portfolio);
+      
+      // Call Lambda with Bedrock for AI analysis
+      const result = await awsApi.analyzeInvestorBehavior({
+        metrics: {
+          totalTrades: paperTrades.length,
+          profitableTrades: paperTrades.filter(t => (t.profit || 0) > 0).length,
+          averageHoldingDays: paperTrades.length > 0 
+            ? paperTrades.reduce((sum, t) => sum + (t.holdingDays || 0), 0) / paperTrades.length 
+            : 0,
+          averageLoss: paperTrades.length > 0
+            ? paperTrades.filter(t => (t.profit || 0) < 0).reduce((sum, t) => sum + (t.profit || 0), 0) / Math.max(paperTrades.filter(t => (t.profit || 0) < 0).length, 1)
+            : 0,
+          daysActive: 30,
+          holdings: holdings.map(h => ({
+            symbol: h.symbol,
+            allocation: (h.quantity * (h.current_price || 0)) / (portfolio?.totalValue || 1) * 100
+          }))
+        },
+        userEmail: "unknown"
+      });
 
-      const scoreData = {
-        ...calculatedMetrics,
-        biases_detected: result.biases_detected,
-        improvement_suggestions: result.improvement_suggestions,
+      // Combine calculated metrics with AI analysis
+      const finalScore = {
+        ...metrics,
+        biases_detected: result.biases_detected || [],
+        improvement_suggestions: result.improvement_suggestions || [],
         analysis_date: new Date().toISOString()
       };
 
-      await awsApi.saveInvestorScore(scoreData);
-      await loadData();
+      setScore(finalScore);
+      
+      // Save to DynamoDB
+      await awsApi.saveInvestorScore(finalScore);
     } catch (error) {
       console.error("Error analyzing:", error);
       alert("Error analyzing decision quality. Please try again.");
@@ -221,7 +195,7 @@ DO NOT recalculate scores. Use the provided calculated metrics.`;
                   ) : (
                     <>
                       <RefreshCw className="w-4 h-4 mr-2" />
-                      {score ? "Refresh Analysis" : "Analyze My Decisions"}
+                      {score?.analysis_date ? "Refresh Analysis" : "Analyze My Decisions"}
                     </>
                   )}
                 </Button>
@@ -260,32 +234,12 @@ DO NOT recalculate scores. Use the provided calculated metrics.`;
                     <p className={`text-5xl md:text-6xl font-bold ${getScoreColor(score.overall_score)} break-words`}>
                       {Math.round(score.overall_score)}
                     </p>
-                    <p className="text-sm text-slate-600 mt-2">
-                      Last analyzed: {format(new Date(score.analysis_date), 'MMM d, yyyy h:mm a')}
-                    </p>
-                  </div>
-                  {previousScore && (
-                    <div className="text-right">
-                      <p className="text-sm text-slate-600 mb-1">Previous Score</p>
-                      <p className="text-2xl font-semibold text-slate-400">
-                        {Math.round(previousScore.overall_score)}
+                    {score.analysis_date && (
+                      <p className="text-sm text-slate-600 mt-2">
+                        Last analyzed: {format(new Date(score.analysis_date), 'MMM d, yyyy h:mm a')}
                       </p>
-                      <div className="flex items-center gap-1 mt-1">
-                        {score.overall_score > previousScore.overall_score ? (
-                          <>
-                            <TrendingUp className="w-4 h-4 text-emerald-600" />
-                            <span className="text-sm font-semibold text-emerald-600">
-                              +{Math.round(score.overall_score - previousScore.overall_score)} points
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="text-sm text-slate-500">No change</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
                 <p className="text-slate-700">
                   {score.overall_score >= 80 && "Excellent! You demonstrate strong investment discipline and decision-making."}
@@ -311,12 +265,12 @@ DO NOT recalculate scores. Use the provided calculated metrics.`;
               </Card>
 
               <Card className="border border-slate-200 shadow-md">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Activity className="w-5 h-5 text-purple-600" />
-                    <h4 className="font-semibold text-slate-900">Trading Frequency</h4>
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                    <Activity className="w-4 h-4 md:w-5 md:h-5 text-purple-600" />
+                    <h4 className="font-semibold text-sm md:text-base text-slate-900">Trading Frequency</h4>
                   </div>
-                  <p className="text-3xl font-bold text-slate-900 mb-2">
+                  <p className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 break-words">
                     {Math.round(score.overtrading_score)}
                   </p>
                   <Progress value={score.overtrading_score} className="h-2" />
@@ -324,12 +278,12 @@ DO NOT recalculate scores. Use the provided calculated metrics.`;
               </Card>
 
               <Card className="border border-slate-200 shadow-md">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Brain className="w-5 h-5 text-emerald-600" />
-                    <h4 className="font-semibold text-slate-900">Emotional Control</h4>
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                    <Brain className="w-4 h-4 md:w-5 md:h-5 text-emerald-600" />
+                    <h4 className="font-semibold text-sm md:text-base text-slate-900">Emotional Control</h4>
                   </div>
-                  <p className="text-3xl font-bold text-slate-900 mb-2">
+                  <p className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 break-words">
                     {Math.round(score.panic_selling_score)}
                   </p>
                   <Progress value={score.panic_selling_score} className="h-2" />
@@ -337,12 +291,12 @@ DO NOT recalculate scores. Use the provided calculated metrics.`;
               </Card>
 
               <Card className="border border-slate-200 shadow-md">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <TrendingUp className="w-5 h-5 text-amber-600" />
-                    <h4 className="font-semibold text-slate-900">Diversification</h4>
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                    <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-amber-600" />
+                    <h4 className="font-semibold text-sm md:text-base text-slate-900">Diversification</h4>
                   </div>
-                  <p className="text-3xl font-bold text-slate-900 mb-2">
+                  <p className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 break-words">
                     {Math.round(score.concentration_score)}
                   </p>
                   <Progress value={score.concentration_score} className="h-2" />
