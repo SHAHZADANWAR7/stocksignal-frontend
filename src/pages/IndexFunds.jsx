@@ -9,6 +9,7 @@ import {
   TrendingUp, 
   TrendingDown, 
   BarChart3,
+import CardSkeleton from "@/components/ui/CardSkeleton";
   Globe,
   DollarSign,
   Search,

@@ -9,6 +9,7 @@ import { Search, Building2, TrendingUp, Filter, Plus, Loader2, Sparkles, ArrowRi
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import CardSkeleton from "@/components/ui/CardSkeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Companies() {
