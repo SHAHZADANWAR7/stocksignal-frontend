@@ -74,59 +74,86 @@ export default function Layout({ children }) {
     );
   });
 
+  console.log("[Layout] Current pathname:", location.pathname);
+  console.log("[Layout] Is public page:", isPublicPage);
+
   useEffect(() => {
+    console.log("[Layout] useEffect - initAuth starting");
     let unsubscribe;
 
     const initAuth = async () => {
+      console.log("[Layout] initAuth - Calling getCurrentUser()");
       try {
         const currentUser = await getCurrentUser();
+        console.log("[Layout] initAuth - getCurrentUser SUCCESS:", currentUser);
         setUser(currentUser);
-      } catch {
+      } catch (error) {
+        console.log("[Layout] initAuth - getCurrentUser FAILED:", error);
         setUser(null);
       } finally {
+        console.log("[Layout] initAuth - Setting isLoading to false");
         setIsLoading(false);
       }
     };
 
     initAuth();
 
+    console.log("[Layout] Setting up Hub.listen for auth events");
     unsubscribe = Hub.listen("auth", ({ payload }) => {
+      console.log("[Layout] Hub.listen - Auth event received:", payload.event);
       if (payload.event === "signIn") {
-        getCurrentUser().then(setUser).catch(() => setUser(null));
+        console.log("[Layout] Hub.listen - signIn event, fetching current user");
+        getCurrentUser()
+          .then((currentUser) => {
+            console.log("[Layout] Hub.listen - getCurrentUser after signIn SUCCESS:", currentUser);
+            setUser(currentUser);
+          })
+          .catch((error) => {
+            console.log("[Layout] Hub.listen - getCurrentUser after signIn FAILED:", error);
+            setUser(null);
+          });
       }
       if (payload.event === "signOut") {
+        console.log("[Layout] Hub.listen - signOut event");
         setUser(null);
       }
     });
 
     return () => {
+      console.log("[Layout] Cleanup - Unsubscribing from Hub");
       if (unsubscribe) unsubscribe();
     };
   }, []);
 
   useEffect(() => {
+    console.log("[Layout] Redirect check - isLoading:", isLoading, "user:", !!user, "isPublicPage:", isPublicPage);
     if (!isLoading && !user && !isPublicPage) {
       const redirectUrl = encodeURIComponent(location.pathname);
+      console.log("[Layout] REDIRECTING to Login with redirect:", redirectUrl);
       navigate(`${createPageUrl("Login")}?redirect=${redirectUrl}`, { replace: true });
     }
   }, [isLoading, user, isPublicPage, location.pathname, navigate]);
 
   const handleLogout = async () => {
+    console.log("[Layout] handleLogout - Starting logout");
     try {
       await signOut();
+      console.log("[Layout] handleLogout - signOut SUCCESS");
       setUser(null);
       navigate(createPageUrl("Home"));
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("[Layout] handleLogout - signOut ERROR:", error);
       navigate(createPageUrl("Home"));
     }
   };
 
   if (isPublicPage) {
+    console.log("[Layout] Rendering public page");
     return <>{children}</>;
   }
 
   if (isLoading) {
+    console.log("[Layout] Rendering loading screen");
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
         <div className="text-center">
@@ -138,8 +165,11 @@ export default function Layout({ children }) {
   }
 
   if (!user) {
+    console.log("[Layout] No user and not loading - should redirect (returning null)");
     return null;
   }
+
+  console.log("[Layout] Rendering authenticated layout for user:", user.username || user.attributes?.email);
 
   return (
     <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
