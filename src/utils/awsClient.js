@@ -1,7 +1,7 @@
-// Proxy configuration - calls through apiGatewayProxy Lambda
+// Proxy configuration - uses Base44 secrets
 const PROXY_CONFIG = {
-  API_GATEWAY_URL: "https://4ku664jsl7.execute-api.us-east-1.amazonaws.com/Production1",
-  API_KEY: "gJO8hx6k6u7e4JjcEIkJE1IMVxwQtDwz5sDpbD1Y",
+  API_GATEWAY_URL: import.meta.env.VITE_AWS_API_GATEWAY_URL || "https://4ku664jsl7.execute-api.us-east-1.amazonaws.com/Production1",
+  API_KEY: import.meta.env.VITE_AWS_API_KEY,
   PROXY_ENDPOINT: "apiGatewayProxy"
 };
 
