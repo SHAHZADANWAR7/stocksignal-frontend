@@ -1,19 +1,30 @@
 import { awsApi as awsClient } from './awsClient';
 
 /**
- * Call AWS Lambda function
+ * Call AWS Lambda function via API Gateway
  * @param {string} functionName - Name of Lambda function
  * @param {Object} params - Parameters to pass
  * @returns {Promise} API response
  */
 export async function callAwsFunction(functionName, params) {
   try {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-    const response = await fetch(`${apiUrl}/api/${functionName}`, {
+    const apiUrl = import.meta.env.VITE_AWS_API_GATEWAY_URL || import.meta.env.VITE_API_GATEWAY_URL || 'https://YOUR_API_GATEWAY_URL';
+    const apiKey = import.meta.env.VITE_AWS_API_KEY;
+    
+    const response = await fetch(`${apiUrl}/${functionName}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(apiKey && { 'x-api-key': apiKey })
+      },
       body: JSON.stringify(params)
     });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`API Error ${response.status}: ${errorText}`);
+    }
+    
     return response.json();
   } catch (error) {
     console.error(`Error calling ${functionName}:`, error);
