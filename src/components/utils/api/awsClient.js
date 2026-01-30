@@ -1,150 +1,236 @@
-import awsConfig from '../../../aws-config.js'; // canonical config
-import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
+import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 
-// Get JWT token from Cognito
-const getAuthToken = async () => {
+// Initialize Lambda client with credentials from environment
+const lambdaClient = new LambdaClient({
+  region: import.meta.env.VITE_AWS_REGION || "us-east-1",
+  credentials: {
+    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
+    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
+  },
+});
+// Generic Lambda invocation
+const invokeLambda = async (functionName, payload) => {
   try {
-    const session = await fetchAuthSession();
-    return session.tokens?.idToken?.toString() || null;
-  } catch (error) {
-    console.error("Error getting auth token:", error);
-    return null;
-  }
-};
-
-// Generic API Gateway call
-const apiCall = async (path, method = "POST", body = null) => {
-  try {
-    const token = await getAuthToken();
-    const options = {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-    };
-
-    if (body) {
-      options.body = JSON.stringify(body);
+    const command = new InvokeCommand({
+      FunctionName: functionName,
+      InvocationType: "RequestResponse",
+      Payload: JSON.stringify(payload),
+    });
+    const response = await lambdaClient.send(command);
+    const result = JSON.parse(new TextDecoder().decode(response.Payload));
+    
+    if (result.errorMessage) {
+      throw new Error(result.errorMessage);
     }
-
-    const url = `${awsConfig.API.endpoints[0].endpoint}${path}`;
-    const response = await fetch(url, options);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API Error ${response.status}: ${errorText}`);
-    }
-
-    return response.json();
+    return result;
   } catch (error) {
-    console.error(`API call failed: ${method} ${path}`, error);
+    console.error(`Lambda invocation failed: ${functionName}`, error);
     throw error;
   }
 };
-
 // Export all API methods
 export const awsApi = {
   // Stock data
-  getStockQuote: async (symbol) => await apiCall('/getStockQuote', 'POST', { symbol }),
-  getStockBatch: async (symbols, forceRefresh = true) => await apiCall('/getStockBatch', 'POST', { symbols, forceRefresh }),
-  getStockAnalysis: async (symbol) => await apiCall('/getStockAnalysis', 'POST', { symbol }),
-  getVIXData: async () => await apiCall('/getVIXData', 'POST'),
-
+  getStockQuote: (symbol) =>
+    invokeLambda("getStockQuote", { symbol }),
+  getStockBatch: (symbols, forceRefresh = true) =>
+    invokeLambda("getStockBatch", { symbols, forceRefresh }),
+  getStockAnalysis: (payload) =>
+    invokeLambda("getStockAnalysis", payload),
+  getVIXData: () =>
+    invokeLambda("getVIXData", {}),
   // Trading
-  executePaperTrade: async (tradeData) => await apiCall('/executePaperTrade', 'POST', tradeData),
-  syncPortfolio: async (portfolioData) => await apiCall('/syncPortfolio', 'POST', portfolioData),
-
+  executePaperTrade: (tradeData) =>
+    invokeLambda("executePaperTrade", tradeData),
+  syncPortfolio: (portfolioData) =>
+    invokeLambda("syncPortfolio", portfolioData),
   // Beta
-  calculateRealBeta: async (symbol) => await apiCall('/calculateRealBeta', 'POST', { symbol }),
-
+  calculateRealBeta: (symbol) =>
+    invokeLambda("calculateRealBeta", { symbol }),
   // Emails
-  sendWeeklySummary: async (email) => await apiCall('/sendWeeklySummary', 'POST', { email }),
-  sendDailyAlert: async (email) => await apiCall('/sendDailyAlert', 'POST', { email }),
-  sendMonthlyReport: async (email) => await apiCall('/sendMonthlyReport', 'POST', { email }),
-  sendNewsletter: async (email) => await apiCall('/sendNewsletter', 'POST', { email }),
-  sendSupportEmail: async (data) => await apiCall('/sendSupportEmail', 'POST', data),
-
-  // LLM
-  invokeLLM: async (prompt, addContext = false, responseSchema = null) =>
-    await apiCall('/invokeLLM', 'POST', { prompt, add_context_from_internet: addContext, response_json_schema: responseSchema }),
-
-  // Companies
+  sendWeeklySummary: (email) =>
+    invokeLambda("sendWeeklySummary", { email }),
+  sendDailyAlert: (email) =>
+    invokeLambda("sendDailyAlert", { email }),
+  sendMonthlyReport: (email) =>
+    invokeLambda("sendMonthlyReport", { email }),
+  sendNewsletter: (email) =>
+    invokeLambda("sendNewsletter", { email }),
+  sendSupportEmail: (data) =>
+    invokeLambda("sendSupportEmail", data),
+  // Shadow Portfolios
+  getShadowPortfolios: (userId) =>
+    invokeLambda("getShadowPortfolios", { userId }),
+  // Investor Score
+  saveInvestorScore: (scoreData) =>
+    invokeLambda("saveInvestorScore", { scoreData }),
+  // Companies (kept from original, adjust if needed)
   getCompanies: async () => {
-    const response = await apiCall("/companies", "GET");
-    return response?.Items || response?.items || [];
+    try {
+      const response = await invokeLambda("getCompanies", {});
+      return response?.Items || response?.items || [];
+    } catch {
+      return [];
+    }
   },
-
   // Analyses
   getPortfolioAnalyses: async (userId) => {
-    const response = await apiCall(`/analyses?userId=${userId}`, "GET");
-    return response?.Items || response?.items || [];
+    try {
+      const response = await invokeLambda("getPortfolioAnalyses", { userId });
+      return response?.Items || response?.items || [];
+    } catch {
+      return [];
+    }
   },
-
   getAnalysis: async (analysisId) => {
-    const response = await apiCall(`/analyses/${analysisId}`, "GET");
+    const response = await invokeLambda("getAnalysis", { analysisId });
     return response?.Item || response;
   },
-
   saveAnalysis: async (data) => {
-    const user = await getCurrentUser();
-    return await apiCall("/saveAnalysis", "POST", { userId: user.userId, ...data });
+    return invokeLambda("saveAnalysis", data);
   },
-
   // Trades
-  executeTrade: async (tradeData) => await apiCall("/executeTrade", "POST", tradeData),
-
+  executeTrade: (tradeData) =>
+    invokeLambda("executeTrade", tradeData),
   // Portfolio
   getPortfolio: async (userId) => {
-    const response = await apiCall(`/portfolio?userId=${userId}`, "GET");
+    const response = await invokeLambda("getPortfolio", { userId });
     return response?.Item || response;
   },
-
-  syncPortfolioData: async (userId) => await apiCall("/syncPortfolio", "POST", { userId }),
-
+  syncPortfolioData: (userId) =>
+    invokeLambda("syncPortfolio", { userId }),
   // Transactions
   getTransactions: async (userId) => {
-    const response = await apiCall(`/transactions?userId=${userId}`, "GET");
-    return response?.Items || response?.items || [];
+    try {
+      const response = await invokeLambda("getTransactions", { userId });
+      return response?.Items || response?.items || [];
+    } catch {
+      return [];
+    }
   },
-
   createTransaction: async (data) => {
-    const response = await apiCall("/transactions", "POST", data);
+    const response = await invokeLambda("createTransaction", data);
     return response?.Item || response;
   },
-
   // Holdings
   getHoldings: async (userId) => {
-    const response = await apiCall(`/holdings?userId=${userId}`, "GET");
-    return response?.Items || response?.items || [];
+    try {
+      const response = await invokeLambda("getHoldings", { userId });
+      return response?.Items || response?.items || [];
+    } catch {
+      return [];
+    }
   },
-
   createHolding: async (data) => {
-    const response = await apiCall("/holdings", "POST", data);
+    const response = await invokeLambda("createHolding", data);
     return response?.Item || response;
   },
-
-  updateHolding: async (holdingId, data) => {
-    const response = await apiCall(`/holdings/${holdingId}`, "PUT", data);
-    return response?.Item || response;
-  },
-
-  deleteHolding: async (holdingId) => await apiCall(`/holdings/${holdingId}`, "DELETE"),
-
+  updateHolding: async (holdingId, data) =>
+    invokeLambda("updateHolding", { holdingId, ...data }),
+  deleteHolding: async (holdingId) =>
+    invokeLambda("deleteHolding", { holdingId }),
   // Investment Journal
   getInvestmentJournals: async (userId) => {
-    const response = await apiCall(`/journals?userId=${userId}`, "GET");
-    return response?.Items || response?.items || [];
+    try {
+      const response = await invokeLambda("getInvestmentJournals", { userId });
+      return response?.Items || response?.items || [];
+    } catch {
+      return [];
+    }
   },
-
   createInvestmentJournal: async (data) => {
-    const response = await apiCall("/journals", "POST", data);
+    const response = await invokeLambda("createInvestmentJournal", data);
     return response?.Item || response;
   },
-
   // Behavioral Analysis
   analyzeBehavioralPatterns: async (prompt) => {
-    const response = await apiCall("/analyzeBehavior", "POST", { prompt });
+    const response = await invokeLambda("analyzeBehavioralPatterns", { prompt });
     return response?.analysis || response;
   },
+  // User Management
+  getUser: (userId) =>
+    invokeLambda("getUser", { userId }),
+  getUserByEmail: (email) =>
+    invokeLambda("getUserByEmail", { email }),
+  getCurrentUser: () =>
+    invokeLambda("getCurrentUser", {}),
+  updateUser: (userId, data) =>
+    invokeLambda("updateUser", { userId, ...data }),
+  deleteUser: (userId) =>
+    invokeLambda("deleteUser", { userId }),
+  // Challenges
+  getChallenges: () =>
+    invokeLambda("getChallenges", {}),
+  createChallenge: (data) =>
+    invokeLambda("createChallenge", data),
+  joinChallenge: (challengeId, userId) =>
+    invokeLambda("joinChallenge", { challengeId, userId }),
+  getChallengeLeaderboard: (challengeId) =>
+    invokeLambda("getChallengeLeaderboard", { challengeId }),
+  inviteUserToChallenge: (challengeId, email) =>
+    invokeLambda("inviteUserToChallenge", { challengeId, email }),
+  enterChallengeWithPortfolio: (data) =>
+    invokeLambda("enterChallengeWithPortfolio", data),
+  syncChallengePortfolios: () =>
+    invokeLambda("syncChallengePortfolios", {}),
+  generateChallengeReports: () =>
+    invokeLambda("generateChallengeReports", {}),
+  // Simulation
+  createSimulationPortfolio: (data) =>
+    invokeLambda("createSimulationPortfolio", data),
+  updateSimulationPortfolio: (portfolioId, data) =>
+    invokeLambda("updateSimulationPortfolio", { portfolioId, ...data }),
+  deleteSimulationPortfolio: (portfolioId) =>
+    invokeLambda("deleteSimulationPortfolio", { portfolioId }),
+  createSimulationChallenge: (data) =>
+    invokeLambda("createSimulationChallenge", data),
+  getSimulationResults: (simulationId) =>
+    invokeLambda("getSimulationResults", { simulationId }),
+  runScenarioSimulation: (data) =>
+    invokeLambda("runScenarioSimulation", data),
+  // Portfolio Goals
+  createPortfolioGoal: (data) =>
+    invokeLambda("createPortfolioGoal", data),
+  updatePortfolioGoal: (goalId, data) =>
+    invokeLambda("updatePortfolioGoal", { goalId, ...data }),
+  deletePortfolioGoal: (goalId) =>
+    invokeLambda("deletePortfolioGoal", { goalId }),
+  // Black Swan
+  createBlackSwanSimulation: (data) =>
+    invokeLambda("createBlackSwanSimulation", data),
+  getBlackSwanSimulations: (userId) =>
+    invokeLambda("getBlackSwanSimulations", { userId }),
+  // Subscription & Billing
+  getSubscriptions: (userId) =>
+    invokeLambda("getSubscriptions", { userId }),
+  createSubscription: (data) =>
+    invokeLambda("createSubscription", data),
+  updateSubscription: (subscriptionId, data) =>
+    invokeLambda("updateSubscription", { subscriptionId, ...data }),
+  checkSubscription: (userId) =>
+    invokeLambda("checkSubscription", { userId }),
+  createCheckoutSession: (data) =>
+    invokeLambda("createCheckoutSession", data),
+  createPortalSession: (customerId) =>
+    invokeLambda("createPortalSession", { customerId }),
+  // Portfolio Optimization & Analysis
+  optimizePortfolio: (data) =>
+    invokeLambda("optimizePortfolio", data),
+  getUserPortfolio: (userId) =>
+    invokeLambda("getUserPortfolio", { userId }),
+  analyzeInvestmentBehavior: (data) =>
+    invokeLambda("analyzeInvestmentBehavior", data),
+  // Market Insights
+  generateMarketInsights: () =>
+    invokeLambda("generateMarketInsights", {}),
+  cacheMarketInsights: (data) =>
+    invokeLambda("cacheMarketInsights", data),
+  getUserTrades: (userId) =>
+    invokeLambda("getUserTrades", { userId }),
+  // AI/LLM
+  invokeLLM: (prompt, context) =>
+    invokeLambda("invokeLLM", { prompt, context }),
+  // Email
+  sendEmail: (data) =>
+    invokeLambda("sendEmail", data),
 };
