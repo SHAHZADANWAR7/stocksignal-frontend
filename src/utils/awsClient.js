@@ -8,6 +8,7 @@ const lambdaClient = new LambdaClient({
     secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
   },
 });
+
 // Generic Lambda invocation
 const invokeLambda = async (functionName, payload) => {
   try {
@@ -28,6 +29,7 @@ const invokeLambda = async (functionName, payload) => {
     throw error;
   }
 };
+
 // Export all API methods
 export const awsApi = {
   // Stock data
@@ -64,50 +66,73 @@ export const awsApi = {
   // Investor Score
   saveInvestorScore: (scoreData) =>
     invokeLambda("saveInvestorScore", { scoreData }),
-  // Companies (kept from original, adjust if needed)
+  // Companies
   getCompanies: async () => {
     try {
       const response = await invokeLambda("getCompanies", {});
       return response?.Items || response?.items || [];
     } catch {
       return [];
+    }
+  },
   // Analyses
   getPortfolioAnalyses: async (userId) => {
-      const response = await invokeLambda("getPortfolioAnalyses", { userId });
+    const response = await invokeLambda("getPortfolioAnalyses", { userId });
+    return response?.Items || response?.items || [];
+  },
   getAnalysis: async (analysisId) => {
     const response = await invokeLambda("getAnalysis", { analysisId });
     return response?.Item || response;
+  },
   saveAnalysis: async (data) => {
     return invokeLambda("saveAnalysis", data);
+  },
   // Trades
   executeTrade: (tradeData) =>
     invokeLambda("executeTrade", tradeData),
   // Portfolio
   getPortfolio: async (userId) => {
     const response = await invokeLambda("getPortfolio", { userId });
+    return response?.Item || response;
+  },
   syncPortfolioData: (userId) =>
     invokeLambda("syncPortfolio", { userId }),
   // Transactions
   getTransactions: async (userId) => {
-      const response = await invokeLambda("getTransactions", { userId });
+    const response = await invokeLambda("getTransactions", { userId });
+    return response?.Items || response?.items || [];
+  },
   createTransaction: async (data) => {
     const response = await invokeLambda("createTransaction", data);
+    return response;
+  },
   // Holdings
   getHoldings: async (userId) => {
-      const response = await invokeLambda("getHoldings", { userId });
+    const response = await invokeLambda("getHoldings", { userId });
+    return response?.Items || response?.items || [];
+  },
   createHolding: async (data) => {
     const response = await invokeLambda("createHolding", data);
+    return response;
+  },
   updateHolding: async (holdingId, data) =>
     invokeLambda("updateHolding", { holdingId, ...data }),
   deleteHolding: async (holdingId) =>
     invokeLambda("deleteHolding", { holdingId }),
   // Investment Journal
   getInvestmentJournals: async (userId) => {
-      const response = await invokeLambda("getInvestmentJournals", { userId });
+    const response = await invokeLambda("getInvestmentJournals", { userId });
+    return response?.Items || response?.items || [];
+  },
   createInvestmentJournal: async (data) => {
     const response = await invokeLambda("createInvestmentJournal", data);
+    return response;
+  },
   // Behavioral Analysis
   analyzeBehavioralPatterns: async (prompt) => {
+    const response = await invokeLambda("analyzeBehavioralPatterns", { prompt });
+    return response?.analysis || response;
+  },
   // User Management
   getUser: (userId) =>
     invokeLambda("getUser", { userId }),
@@ -194,5 +219,4 @@ export const awsApi = {
   // Email
   sendEmail: (data) =>
     invokeLambda("sendEmail", data),
-    const response = await invokeLambda("analyzeBehavioralPatterns", { prompt });
-    return response?.analysis || response;
+};
