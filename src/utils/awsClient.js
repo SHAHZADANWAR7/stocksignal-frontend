@@ -1,222 +1,110 @@
-import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+// Proxy configuration - calls through apiGatewayProxy Lambda
+const PROXY_CONFIG = {
+  API_GATEWAY_URL: "https://4ku664jsl7.execute-api.us-east-1.amazonaws.com/Production1",
+  API_KEY: "gJO8hx6k6u7e4JjcEIkJE1IMVxwQtDwz5sDpbD1Y",
+  PROXY_ENDPOINT: "apiGatewayProxy"
+};
 
-// Initialize Lambda client with credentials from environment
-const lambdaClient = new LambdaClient({
-  region: import.meta.env.VITE_AWS_REGION || "us-east-1",
-  credentials: {
-    accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID,
-    secretAccessKey: import.meta.env.VITE_AWS_SECRET_ACCESS_KEY,
-  },
-});
-
-// Generic Lambda invocation
-const invokeLambda = async (functionName, payload) => {
+// Generic proxy invocation - calls through apiGatewayProxy
+const invokeProxy = async (functionName, payload) => {
   try {
-    const command = new InvokeCommand({
-      FunctionName: functionName,
-      InvocationType: "RequestResponse",
-      Payload: JSON.stringify(payload),
+    const response = await fetch(`${PROXY_CONFIG.API_GATEWAY_URL}/${PROXY_CONFIG.PROXY_ENDPOINT}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': PROXY_CONFIG.API_KEY
+      },
+      body: JSON.stringify({
+        functionName,
+        payload
+      })
     });
-    const response = await lambdaClient.send(command);
-    const result = JSON.parse(new TextDecoder().decode(response.Payload));
-    
-    if (result.errorMessage) {
-      throw new Error(result.errorMessage);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    return result;
+
+    const data = await response.json();
+    
+    if (data.errorMessage) {
+      throw new Error(data.errorMessage);
+    }
+    
+    return data;
   } catch (error) {
-    console.error(`Lambda invocation failed: ${functionName}`, error);
+    console.error(`Proxy invocation failed: ${functionName}`, error);
     throw error;
   }
 };
 
 // Export all API methods
 export const awsApi = {
-  // Stock data
-  getStockQuote: (symbol) =>
-    invokeLambda("getStockQuote", { symbol }),
-  getStockBatch: (symbols, forceRefresh = true) =>
-    invokeLambda("getStockBatch", { symbols, forceRefresh }),
-  getStockAnalysis: (payload) =>
-    invokeLambda("getStockAnalysis", payload),
-  getVIXData: () =>
-    invokeLambda("getVIXData", {}),
-  // Trading
-  executePaperTrade: (tradeData) =>
-    invokeLambda("executePaperTrade", tradeData),
-  syncPortfolio: (portfolioData) =>
-    invokeLambda("syncPortfolio", portfolioData),
-  // Beta
-  calculateRealBeta: (symbol) =>
-    invokeLambda("calculateRealBeta", { symbol }),
-  // Emails
-  sendWeeklySummary: (email) =>
-    invokeLambda("sendWeeklySummary", { email }),
-  sendDailyAlert: (email) =>
-    invokeLambda("sendDailyAlert", { email }),
-  sendMonthlyReport: (email) =>
-    invokeLambda("sendMonthlyReport", { email }),
-  sendNewsletter: (email) =>
-    invokeLambda("sendNewsletter", { email }),
-  sendSupportEmail: (data) =>
-    invokeLambda("sendSupportEmail", data),
-  // Shadow Portfolios
-  getShadowPortfolios: (userId) =>
-    invokeLambda("getShadowPortfolios", { userId }),
-  // Investor Score
-  saveInvestorScore: (scoreData) =>
-    invokeLambda("saveInvestorScore", { scoreData }),
-  // Companies
-  getCompanies: async () => {
-    try {
-      const response = await invokeLambda("getCompanies", {});
-      return response?.Items || response?.items || [];
-    } catch {
-      return [];
-    }
-  },
-  // Analyses
-  getPortfolioAnalyses: async (userId) => {
-    const response = await invokeLambda("getPortfolioAnalyses", { userId });
-    return response?.Items || response?.items || [];
-  },
-  getAnalysis: async (analysisId) => {
-    const response = await invokeLambda("getAnalysis", { analysisId });
-    return response?.Item || response;
-  },
-  saveAnalysis: async (data) => {
-    return invokeLambda("saveAnalysis", data);
-  },
-  // Trades
-  executeTrade: (tradeData) =>
-    invokeLambda("executeTrade", tradeData),
-  // Portfolio
-  getPortfolio: async (userId) => {
-    const response = await invokeLambda("getPortfolio", { userId });
-    return response?.Item || response;
-  },
-  syncPortfolioData: (userId) =>
-    invokeLambda("syncPortfolio", { userId }),
-  // Transactions
-  getTransactions: async (userId) => {
-    const response = await invokeLambda("getTransactions", { userId });
-    return response?.Items || response?.items || [];
-  },
-  createTransaction: async (data) => {
-    const response = await invokeLambda("createTransaction", data);
-    return response;
-  },
-  // Holdings
-  getHoldings: async (userId) => {
-    const response = await invokeLambda("getHoldings", { userId });
-    return response?.Items || response?.items || [];
-  },
-  createHolding: async (data) => {
-    const response = await invokeLambda("createHolding", data);
-    return response;
-  },
-  updateHolding: async (holdingId, data) =>
-    invokeLambda("updateHolding", { holdingId, ...data }),
-  deleteHolding: async (holdingId) =>
-    invokeLambda("deleteHolding", { holdingId }),
-  // Investment Journal
-  getInvestmentJournals: async (userId) => {
-    const response = await invokeLambda("getInvestmentJournals", { userId });
-    return response?.Items || response?.items || [];
-  },
-  createInvestmentJournal: async (data) => {
-    const response = await invokeLambda("createInvestmentJournal", data);
-    return response;
-  },
-  // Behavioral Analysis
-  analyzeBehavioralPatterns: async (prompt) => {
-    const response = await invokeLambda("analyzeBehavioralPatterns", { prompt });
-    return response?.analysis || response;
-  },
-  // User Management
-  getUser: (userId) =>
-    invokeLambda("getUser", { userId }),
-  getUserByEmail: (email) =>
-    invokeLambda("getUserByEmail", { email }),
-  getCurrentUser: () =>
-    invokeLambda("getCurrentUser", {}),
-  updateUser: (userId, data) =>
-    invokeLambda("updateUser", { userId, ...data }),
-  deleteUser: (userId) =>
-    invokeLambda("deleteUser", { userId }),
-  // Challenges
-  getChallenges: () =>
-    invokeLambda("getChallenges", {}),
-  createChallenge: (data) =>
-    invokeLambda("createChallenge", data),
-  joinChallenge: (challengeId, userId) =>
-    invokeLambda("joinChallenge", { challengeId, userId }),
-  getChallengeLeaderboard: (challengeId) =>
-    invokeLambda("getChallengeLeaderboard", { challengeId }),
-  inviteUserToChallenge: (challengeId, email) =>
-    invokeLambda("inviteUserToChallenge", { challengeId, email }),
-  enterChallengeWithPortfolio: (data) =>
-    invokeLambda("enterChallengeWithPortfolio", data),
-  syncChallengePortfolios: () =>
-    invokeLambda("syncChallengePortfolios", {}),
-  generateChallengeReports: () =>
-    invokeLambda("generateChallengeReports", {}),
-  // Simulation
-  createSimulationPortfolio: (data) =>
-    invokeLambda("createSimulationPortfolio", data),
-  updateSimulationPortfolio: (portfolioId, data) =>
-    invokeLambda("updateSimulationPortfolio", { portfolioId, ...data }),
-  deleteSimulationPortfolio: (portfolioId) =>
-    invokeLambda("deleteSimulationPortfolio", { portfolioId }),
-  createSimulationChallenge: (data) =>
-    invokeLambda("createSimulationChallenge", data),
-  getSimulationResults: (simulationId) =>
-    invokeLambda("getSimulationResults", { simulationId }),
-  runScenarioSimulation: (data) =>
-    invokeLambda("runScenarioSimulation", data),
-  // Portfolio Goals
-  createPortfolioGoal: (data) =>
-    invokeLambda("createPortfolioGoal", data),
-  updatePortfolioGoal: (goalId, data) =>
-    invokeLambda("updatePortfolioGoal", { goalId, ...data }),
-  deletePortfolioGoal: (goalId) =>
-    invokeLambda("deletePortfolioGoal", { goalId }),
-  // Black Swan
-  createBlackSwanSimulation: (data) =>
-    invokeLambda("createBlackSwanSimulation", data),
-  getBlackSwanSimulations: (userId) =>
-    invokeLambda("getBlackSwanSimulations", { userId }),
-  // Subscription & Billing
-  getSubscriptions: (userId) =>
-    invokeLambda("getSubscriptions", { userId }),
-  createSubscription: (data) =>
-    invokeLambda("createSubscription", data),
-  updateSubscription: (subscriptionId, data) =>
-    invokeLambda("updateSubscription", { subscriptionId, ...data }),
-  checkSubscription: (userId) =>
-    invokeLambda("checkSubscription", { userId }),
-  createCheckoutSession: (data) =>
-    invokeLambda("createCheckoutSession", data),
-  createPortalSession: (customerId) =>
-    invokeLambda("createPortalSession", { customerId }),
-  // Portfolio Optimization & Analysis
-  optimizePortfolio: (data) =>
-    invokeLambda("optimizePortfolio", data),
-  getUserPortfolio: (userId) =>
-    invokeLambda("getUserPortfolio", { userId }),
-  analyzeInvestmentBehavior: (data) =>
-    invokeLambda("analyzeInvestmentBehavior", data),
-  // Market Insights
-  generateMarketInsights: () =>
-    invokeLambda("generateMarketInsights", {}),
-  cacheMarketInsights: (data) =>
-    invokeLambda("cacheMarketInsights", data),
-  getUserTrades: (userId) =>
-    invokeLambda("getUserTrades", { userId }),
-  // AI/LLM
-  invokeLLM: (prompt, context) =>
-    invokeLambda("invokeLLM", { prompt, context }),
-  // Email
-  sendEmail: (data) =>
-    invokeLambda("sendEmail", data),
+  getStockQuote: (symbol) => invokeProxy("getStockQuote", { symbol }),
+  getStockBatch: (symbols, forceRefresh = true) => invokeProxy("getStockBatch", { symbols, forceRefresh }),
+  getStockAnalysis: (payload) => invokeProxy("getStockAnalysis", payload),
+  getVIXData: () => invokeProxy("getVIXData", {}),
+  executePaperTrade: (tradeData) => invokeProxy("executePaperTrade", tradeData),
+  syncPortfolio: (portfolioData) => invokeProxy("syncPortfolio", portfolioData),
+  calculateRealBeta: (symbol) => invokeProxy("calculateRealBeta", { symbol }),
+  sendWeeklySummary: (email) => invokeProxy("sendWeeklySummary", { email }),
+  sendDailyAlert: (email) => invokeProxy("sendDailyAlert", { email }),
+  sendMonthlyReport: (email) => invokeProxy("sendMonthlyReport", { email }),
+  sendNewsletter: (email) => invokeProxy("sendNewsletter", { email }),
+  sendSupportEmail: (data) => invokeProxy("sendSupportEmail", data),
+  getShadowPortfolios: (userId) => invokeProxy("getShadowPortfolios", { userId }),
+  saveInvestorScore: (scoreData) => invokeProxy("saveInvestorScore", { scoreData }),
+  getCompanies: async () => { try { const response = await invokeProxy("getCompanies", {}); return response?.Items || response?.items || []; } catch { return []; } },
+  getPortfolioAnalyses: async (userId) => { const response = await invokeProxy("getPortfolioAnalyses", { userId }); return response?.Items || response?.items || []; },
+  getAnalysis: async (analysisId) => { const response = await invokeProxy("getAnalysis", { analysisId }); return response?.Item || response; },
+  saveAnalysis: async (data) => invokeProxy("saveAnalysis", data),
+  executeTrade: (tradeData) => invokeProxy("executeTrade", tradeData),
+  getPortfolio: async (userId) => { const response = await invokeProxy("getPortfolio", { userId }); return response?.Item || response; },
+  syncPortfolioData: (userId) => invokeProxy("syncPortfolio", { userId }),
+  getTransactions: async (userId) => { const response = await invokeProxy("getTransactions", { userId }); return response?.Items || response?.items || []; },
+  createTransaction: async (data) => invokeProxy("createTransaction", data),
+  getHoldings: async (userId) => { const response = await invokeProxy("getHoldings", { userId }); return response?.Items || response?.items || []; },
+  createHolding: async (data) => invokeProxy("createHolding", data),
+  updateHolding: async (holdingId, data) => invokeProxy("updateHolding", { holdingId, ...data }),
+  deleteHolding: async (holdingId) => invokeProxy("deleteHolding", { holdingId }),
+  getInvestmentJournals: async (userId) => { const response = await invokeProxy("getInvestmentJournals", { userId }); return response?.Items || response?.items || []; },
+  createInvestmentJournal: async (data) => invokeProxy("createInvestmentJournal", data),
+  analyzeBehavioralPatterns: async (prompt) => { const response = await invokeProxy("analyzeBehavioralPatterns", { prompt }); return response?.analysis || response; },
+  getUser: (userId) => invokeProxy("getUser", { userId }),
+  getUserByEmail: (email) => invokeProxy("getUserByEmail", { email }),
+  getCurrentUser: () => invokeProxy("getCurrentUser", {}),
+  updateUser: (userId, data) => invokeProxy("updateUser", { userId, ...data }),
+  deleteUser: (userId) => invokeProxy("deleteUser", { userId }),
+  getChallenges: () => invokeProxy("getChallenges", {}),
+  createChallenge: (data) => invokeProxy("createChallenge", data),
+  joinChallenge: (challengeId, userId) => invokeProxy("joinChallenge", { challengeId, userId }),
+  getChallengeLeaderboard: (challengeId) => invokeProxy("getChallengeLeaderboard", { challengeId }),
+  inviteUserToChallenge: (challengeId, email) => invokeProxy("inviteUserToChallenge", { challengeId, email }),
+  enterChallengeWithPortfolio: (data) => invokeProxy("enterChallengeWithPortfolio", data),
+  syncChallengePortfolios: () => invokeProxy("syncChallengePortfolios", {}),
+  generateChallengeReports: () => invokeProxy("generateChallengeReports", {}),
+  createSimulationPortfolio: (data) => invokeProxy("createSimulationPortfolio", data),
+  updateSimulationPortfolio: (portfolioId, data) => invokeProxy("updateSimulationPortfolio", { portfolioId, ...data }),
+  deleteSimulationPortfolio: (portfolioId) => invokeProxy("deleteSimulationPortfolio", { portfolioId }),
+  createSimulationChallenge: (data) => invokeProxy("createSimulationChallenge", data),
+  getSimulationResults: (simulationId) => invokeProxy("getSimulationResults", { simulationId }),
+  runScenarioSimulation: (data) => invokeProxy("runScenarioSimulation", data),
+  createPortfolioGoal: (data) => invokeProxy("createPortfolioGoal", data),
+  updatePortfolioGoal: (goalId, data) => invokeProxy("updatePortfolioGoal", { goalId, ...data }),
+  deletePortfolioGoal: (goalId) => invokeProxy("deletePortfolioGoal", { goalId }),
+  createBlackSwanSimulation: (data) => invokeProxy("createBlackSwanSimulation", data),
+  getBlackSwanSimulations: (userId) => invokeProxy("getBlackSwanSimulations", { userId }),
+  getSubscriptions: (userId) => invokeProxy("getSubscriptions", { userId }),
+  createSubscription: (data) => invokeProxy("createSubscription", data),
+  updateSubscription: (subscriptionId, data) => invokeProxy("updateSubscription", { subscriptionId, ...data }),
+  checkSubscription: (userId) => invokeProxy("checkSubscription", { userId }),
+  createCheckoutSession: (data) => invokeProxy("createCheckoutSession", data),
+  createPortalSession: (customerId) => invokeProxy("createPortalSession", { customerId }),
+  optimizePortfolio: (data) => invokeProxy("optimizePortfolio", data),
+  getUserPortfolio: (userId) => invokeProxy("getUserPortfolio", { userId }),
+  analyzeInvestmentBehavior: (data) => invokeProxy("analyzeInvestmentBehavior", data),
+  generateMarketInsights: () => invokeProxy("generateMarketInsights", {}),
+  cacheMarketInsights: (data) => invokeProxy("cacheMarketInsights", data),
+  getUserTrades: (userId) => invokeProxy("getUserTrades", { userId }),
+  invokeLLM: (prompt, context) => invokeProxy("invokeLLM", { prompt, context }),
+  sendEmail: (data) => invokeProxy("sendEmail", data),
 };
