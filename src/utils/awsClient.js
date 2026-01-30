@@ -169,7 +169,203 @@ export const awsApi = {
 
   // Behavioral Analysis
   analyzeBehavioralPatterns: async (prompt) => {
+
+  // User Management
+  getUser: (userId) =>
+    invokeLambda("getUser", { userId }),
+  getUserByEmail: (email) =>
+    invokeLambda("getUserByEmail", { email }),
+  getCurrentUser: () =>
+    invokeLambda("getCurrentUser", {}),
+  updateUser: (userId, data) =>
+    invokeLambda("updateUser", { userId, ...data }),
+  deleteUser: (userId) =>
+    invokeLambda("deleteUser", { userId }),
+
+  // Challenges
+  getChallenges: () =>
+    invokeLambda("getChallenges", {}),
+  createChallenge: (data) =>
+    invokeLambda("createChallenge", data),
+  joinChallenge: (challengeId, userId) =>
+    invokeLambda("joinChallenge", { challengeId, userId }),
+  getChallengeLeaderboard: (challengeId) =>
+    invokeLambda("getChallengeLeaderboard", { challengeId }),
+  inviteUserToChallenge: (challengeId, email) =>
+    invokeLambda("inviteUserToChallenge", { challengeId, email }),
+  enterChallengeWithPortfolio: (data) =>
+    invokeLambda("enterChallengeWithPortfolio", data),
+  syncChallengePortfolios: () =>
+    invokeLambda("syncChallengePortfolios", {}),
+  generateChallengeReports: () =>
+    invokeLambda("generateChallengeReports", {}),
+
+  // Simulation
+  createSimulationPortfolio: (data) =>
+    invokeLambda("createSimulationPortfolio", data),
+  updateSimulationPortfolio: (portfolioId, data) =>
+    invokeLambda("updateSimulationPortfolio", { portfolioId, ...data }),
+  deleteSimulationPortfolio: (portfolioId) =>
+    invokeLambda("deleteSimulationPortfolio", { portfolioId }),
+  createSimulationChallenge: (data) =>
+    invokeLambda("createSimulationChallenge", data),
+  getSimulationResults: (simulationId) =>
+    invokeLambda("getSimulationResults", { simulationId }),
+  runScenarioSimulation: (data) =>
+    invokeLambda("runScenarioSimulation", data),
+
+  // Portfolio Goals
+  createPortfolioGoal: (data) =>
+    invokeLambda("createPortfolioGoal", data),
+  updatePortfolioGoal: (goalId, data) =>
+    invokeLambda("updatePortfolioGoal", { goalId, ...data }),
+  deletePortfolioGoal: (goalId) =>
+    invokeLambda("deletePortfolioGoal", { goalId }),
+
+  // Black Swan
+  createBlackSwanSimulation: (data) =>
+    invokeLambda("createBlackSwanSimulation", data),
+  getBlackSwanSimulations: (userId) =>
+    invokeLambda("getBlackSwanSimulations", { userId }),
+
+  // Subscription & Billing
+  getSubscriptions: (userId) =>
+    invokeLambda("getSubscriptions", { userId }),
+  createSubscription: (data) =>
+    invokeLambda("createSubscription", data),
+  updateSubscription: (subscriptionId, data) =>
+    invokeLambda("updateSubscription", { subscriptionId, ...data }),
+  checkSubscription: (userId) =>
+    invokeLambda("checkSubscription", { userId }),
+  createCheckoutSession: (data) =>
+    invokeLambda("createCheckoutSession", data),
+  createPortalSession: (customerId) =>
+    invokeLambda("createPortalSession", { customerId }),
+
+  // Portfolio Optimization & Analysis
+  optimizePortfolio: (data) =>
+    invokeLambda("optimizePortfolio", data),
+  getUserPortfolio: (userId) =>
+    invokeLambda("getUserPortfolio", { userId }),
+  analyzeInvestmentBehavior: (data) =>
+    invokeLambda("analyzeInvestmentBehavior", data),
+
+  // Market Insights
+  generateMarketInsights: () =>
+    invokeLambda("generateMarketInsights", {}),
+  cacheMarketInsights: (data) =>
+    invokeLambda("cacheMarketInsights", data),
+
+  // Trading
+  getUserTrades: (userId) =>
+    invokeLambda("getUserTrades", { userId }),
+
+  // AI/LLM
+  invokeLLM: (prompt, context) =>
+    invokeLambda("invokeLLM", { prompt, context }),
+
+  // Email
+  sendEmail: (data) =>
+    invokeLambda("sendEmail", data),
     const response = await invokeLambda("analyzeBehavioralPatterns", { prompt });
+
+  // User Management
+  getUser: (userId) =>
+    invokeLambda("getUser", { userId }),
+  getUserByEmail: (email) =>
+    invokeLambda("getUserByEmail", { email }),
+  getCurrentUser: () =>
+    invokeLambda("getCurrentUser", {}),
+  updateUser: (userId, data) =>
+    invokeLambda("updateUser", { userId, ...data }),
+  deleteUser: (userId) =>
+    invokeLambda("deleteUser", { userId }),
+
+  // Challenges
+  getChallenges: () =>
+    invokeLambda("getChallenges", {}),
+  createChallenge: (data) =>
+    invokeLambda("createChallenge", data),
+  joinChallenge: (challengeId, userId) =>
+    invokeLambda("joinChallenge", { challengeId, userId }),
+  getChallengeLeaderboard: (challengeId) =>
+    invokeLambda("getChallengeLeaderboard", { challengeId }),
+  inviteUserToChallenge: (challengeId, email) =>
+    invokeLambda("inviteUserToChallenge", { challengeId, email }),
+  enterChallengeWithPortfolio: (data) =>
+    invokeLambda("enterChallengeWithPortfolio", data),
+  syncChallengePortfolios: () =>
+    invokeLambda("syncChallengePortfolios", {}),
+  generateChallengeReports: () =>
+    invokeLambda("generateChallengeReports", {}),
+
+  // Simulation
+  createSimulationPortfolio: (data) =>
+    invokeLambda("createSimulationPortfolio", data),
+  updateSimulationPortfolio: (portfolioId, data) =>
+    invokeLambda("updateSimulationPortfolio", { portfolioId, ...data }),
+  deleteSimulationPortfolio: (portfolioId) =>
+    invokeLambda("deleteSimulationPortfolio", { portfolioId }),
+  createSimulationChallenge: (data) =>
+    invokeLambda("createSimulationChallenge", data),
+  getSimulationResults: (simulationId) =>
+    invokeLambda("getSimulationResults", { simulationId }),
+  runScenarioSimulation: (data) =>
+    invokeLambda("runScenarioSimulation", data),
+
+  // Portfolio Goals
+  createPortfolioGoal: (data) =>
+    invokeLambda("createPortfolioGoal", data),
+  updatePortfolioGoal: (goalId, data) =>
+    invokeLambda("updatePortfolioGoal", { goalId, ...data }),
+  deletePortfolioGoal: (goalId) =>
+    invokeLambda("deletePortfolioGoal", { goalId }),
+
+  // Black Swan
+  createBlackSwanSimulation: (data) =>
+    invokeLambda("createBlackSwanSimulation", data),
+  getBlackSwanSimulations: (userId) =>
+    invokeLambda("getBlackSwanSimulations", { userId }),
+
+  // Subscription & Billing
+  getSubscriptions: (userId) =>
+    invokeLambda("getSubscriptions", { userId }),
+  createSubscription: (data) =>
+    invokeLambda("createSubscription", data),
+  updateSubscription: (subscriptionId, data) =>
+    invokeLambda("updateSubscription", { subscriptionId, ...data }),
+  checkSubscription: (userId) =>
+    invokeLambda("checkSubscription", { userId }),
+  createCheckoutSession: (data) =>
+    invokeLambda("createCheckoutSession", data),
+  createPortalSession: (customerId) =>
+    invokeLambda("createPortalSession", { customerId }),
+
+  // Portfolio Optimization & Analysis
+  optimizePortfolio: (data) =>
+    invokeLambda("optimizePortfolio", data),
+  getUserPortfolio: (userId) =>
+    invokeLambda("getUserPortfolio", { userId }),
+  analyzeInvestmentBehavior: (data) =>
+    invokeLambda("analyzeInvestmentBehavior", data),
+
+  // Market Insights
+  generateMarketInsights: () =>
+    invokeLambda("generateMarketInsights", {}),
+  cacheMarketInsights: (data) =>
+    invokeLambda("cacheMarketInsights", data),
+
+  // Trading
+  getUserTrades: (userId) =>
+    invokeLambda("getUserTrades", { userId }),
+
+  // AI/LLM
+  invokeLLM: (prompt, context) =>
+    invokeLambda("invokeLLM", { prompt, context }),
+
+  // Email
+  sendEmail: (data) =>
+    invokeLambda("sendEmail", data),
     return response?.analysis || response;
   },
 };
