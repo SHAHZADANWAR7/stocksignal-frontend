@@ -20,7 +20,7 @@ export default function Dashboard() {
   const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
-    loadAnalyses();
+    loadDashboardData();
     checkFirstVisit();
   }, []);
 
@@ -43,19 +43,18 @@ export default function Dashboard() {
     localStorage.setItem('stocksignal_tutorial_completed', 'true');
   };
 
-  const loadAnalyses = async () => {
+  const loadDashboardData = async () => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const userId = localStorage.getItem('user_id');
-      const data = await awsApi.getStockBatch(userId);
-      setAnalyses(data ? data.slice(0, 5) : []);
+      const data = await awsApi.getUserDashboardData({});
       
-      if (data && data.syncPortfolio) {
-        setPortfolioSummary(data.syncPortfolio);
+      if (data) {
+        setAnalyses(data.recentAnalyses || []);
+        setPortfolioSummary(data.portfolioSummary || null);
       }
     } catch (error) {
-      console.error("Error loading analyses:", error);
+      console.error("Error loading dashboard data:", error);
     }
     setIsLoading(false);
   };
@@ -230,21 +229,13 @@ export default function Dashboard() {
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-slate-900 mb-2 break-words">
-                              {analysis.selected_companies.join(', ')}
+                              {(analysis.selected_companies || []).join(', ')}
                             </p>
                             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs md:text-sm text-slate-600">
-                              <span className="break-words">Investment: ${analysis.total_investment.toLocaleString()}</span>
+                              <span className="break-words">Investment: ${(analysis.total_investment || 0).toLocaleString()}</span>
                               <span className="break-words">Date: {format(new Date(analysis.analysis_date), 'MMM d, yyyy')}</span>
                             </div>
                           </div>
-                          {analysis.analysis_data?.portfolio_metrics && (
-                            <div className="text-left sm:text-right flex-shrink-0">
-                              <p className="text-xl md:text-2xl font-bold text-blue-600 break-words">
-                                {analysis.analysis_data.portfolio_metrics.total_expected_return.toFixed(1)}%
-                              </p>
-                              <p className="text-[10px] md:text-xs text-slate-500">Expected Return</p>
-                            </div>
-                          )}
                         </div>
                       </CardContent>
                     </Card>
