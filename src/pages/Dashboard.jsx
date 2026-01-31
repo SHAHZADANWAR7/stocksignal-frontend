@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { callAwsFunction } from "@/components/utils/api/awsApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LineChart, TrendingUp, Building2, Target } from "lucide-react";
@@ -18,6 +18,24 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+
+  // Transform Lambda response fields from snake_case to camelCase
+  const transformDashboardData = (data) => {
+    return {
+      portfolioSummary: data.portfolio_summary ? {
+        totalValue: data.portfolio_summary.total_value,
+        totalGain: data.portfolio_summary.total_gain,
+        holdingsCount: data.portfolio_summary.holdings_count,
+        lastUpdated: data.portfolio_summary.last_updated
+      } : null,
+      recentAnalyses: (data.recent_analyses || []).map(analysis => ({
+        id: analysis.id,
+        selected_companies: analysis.selected_companies,
+        total_investment: analysis.total_investment,
+        analysis_date: analysis.analysis_date
+      }))
+    };
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -47,20 +65,12 @@ export default function Dashboard() {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const user = await base44.auth.me();
-      if (!user) {
-        console.error("User not authenticated");
-        setIsLoading(false);
-        return;
-      }
-
-      const data = await base44.functions.invoke('getUserDashboardData', {
-        userId: user.email
-      });
+      const data = await callAwsFunction('getUserDashboardData', {});
       
       if (data) {
-        setAnalyses(data.recentAnalyses || []);
-        setPortfolioSummary(data.portfolioSummary || null);
+        const transformed = transformDashboardData(data);
+        setAnalyses(transformed.recentAnalyses || []);
+        setPortfolioSummary(transformed.portfolioSummary || null);
       }
     } catch (error) {
       console.error("Error loading dashboard data:", error);
