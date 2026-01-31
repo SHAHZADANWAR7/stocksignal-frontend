@@ -43,7 +43,8 @@ export default function Companies() {
       valuation_reasoning: data.valuation_reasoning,
       expected_return: data.expected_return,
       risk: data.risk,
-      data_sources: data.data_sources
+      data_sources: data.data_sources,
+      recommendations: data.recommendations
     };
   };
 
@@ -164,19 +165,19 @@ export default function Companies() {
     try {
       const symbol = quickAnalysisSymbol.toUpperCase().trim();
       
-      const batchResult = await callAwsFunction('getStockBatch', { symbols: [symbol] });
+      // Call getStockAnalysis for comprehensive AI analysis
+      const analysisData = await callAwsFunction('getStockAnalysis', { symbol });
 
-      if (!batchResult.stocks || batchResult.stocks.length === 0) {
-        alert(`Could not find symbol "${symbol}". Please try again.`);
+      if (!analysisData || !analysisData.symbol) {
+        alert(`Could not analyze symbol "${symbol}". Please try again.`);
         setIsAnalyzing(false);
         return;
       }
 
-      const stockData = batchResult.stocks[0];
-      const transformedData = transformStockData(stockData);
+      const transformedData = transformStockData(analysisData);
       setAnalysisResult({
         stock: transformedData,
-        recommendations: stockData.recommendations || []
+        recommendations: analysisData.recommendations || []
       });
     } catch (error) {
       console.error("Analysis error:", error);
@@ -246,7 +247,7 @@ export default function Companies() {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">Quick Stock Analysis</h2>
-                <p className="text-sm text-slate-600">Get analysis for any public company by symbol</p>
+                <p className="text-sm text-slate-600">Get AI-powered analysis for any public company by symbol</p>
               </div>
             </div>
             
@@ -321,6 +322,36 @@ export default function Companies() {
                       </p>
                     </div>
                   </div>
+
+                  <div className="grid md:grid-cols-3 gap-4 mb-4">
+                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                      <p className="text-sm text-slate-600 mb-1">Valuation</p>
+                      <p className="text-lg font-bold text-slate-900">
+                        {analysisResult.stock.valuation ? analysisResult.stock.valuation.charAt(0).toUpperCase() + analysisResult.stock.valuation.slice(1) : 'N/A'}
+                      </p>
+                    </div>
+                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                      <p className="text-sm text-slate-600 mb-1">Expected Return</p>
+                      <p className="text-lg font-bold text-blue-600">
+                        {analysisResult.stock.expected_return != null ? `${analysisResult.stock.expected_return.toFixed(1)}%` : 'N/A'}
+                      </p>
+                    </div>
+                    <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                      <p className="text-sm text-slate-600 mb-1">Risk/Volatility</p>
+                      <p className="text-lg font-bold text-orange-600">
+                        {analysisResult.stock.risk != null ? `${analysisResult.stock.risk.toFixed(1)}%` : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {analysisResult.stock.valuation_reasoning && (
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200 mb-4">
+                      <p className="text-sm font-semibold text-slate-900 mb-2">AI Analysis</p>
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        {analysisResult.stock.valuation_reasoning}
+                      </p>
+                    </div>
+                  )}
 
                   <Button
                     onClick={() => addStockFromAnalysis(analysisResult.stock.symbol)}
