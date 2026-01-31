@@ -4,7 +4,7 @@ import { awsApi as awsClient } from './awsClient';
  * Call AWS Lambda function via API Gateway
  * @param {string} functionName - Name of Lambda function
  * @param {Object} params - Parameters to pass
- * @returns {Promise} API response
+ * @returns {Promise} API response (auto-parses body if string)
  */
 export async function callAwsFunction(functionName, params) {
   try {
@@ -25,7 +25,19 @@ export async function callAwsFunction(functionName, params) {
       throw new Error(`API Error ${response.status}: ${errorText}`);
     }
     
-    return response.json();
+    const result = await response.json();
+    
+    // Auto-parse body if it's a JSON string (Lambda via API Gateway format)
+    if (result.body && typeof result.body === 'string') {
+      try {
+        return JSON.parse(result.body);
+      } catch (e) {
+        console.warn('Could not parse response body as JSON:', e);
+        return result;
+      }
+    }
+    
+    return result;
   } catch (error) {
     console.error(`Error calling ${functionName}:`, error);
     throw error;
