@@ -25,8 +25,8 @@ import { TrendingUp, Loader2, Target, DollarSign, Calendar, AlertCircle, AlertTr
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import AnalysisTabs from "@/components/analysis/AnalysisTabs";
-import * as PortfolioCalcs from "@/pages/../hooks/usePortfolioCalculations";
-import * as AdvancedAnalysis from "@/pages/../hooks/useAdvancedAnalysis";
+import * as PortfolioCalcs from "@/hooks/usePortfolioCalculations";
+import * as AdvancedAnalysis from "@/hooks/useAdvancedAnalysis";
 
 export default function Analysis() {
   // State management
@@ -73,7 +73,7 @@ export default function Analysis() {
       if (analysisId) {
         try {
           const userId = localStorage.getItem('user_id');
-          const analysis = await awsApi.getStockAnalysis(userId, analysisId);
+          const analysis = await awsApi.getAnalysisById(userId, analysisId);
           if (analysis) {
             setSelectedSymbols(analysis.selected_companies || []);
             setInvestmentAmount((analysis.total_investment || 10000).toString());
@@ -95,7 +95,7 @@ export default function Analysis() {
   const loadCompanies = async () => {
     try {
       const userId = localStorage.getItem('user_id');
-      const data = await awsApi.getStockAnalysis(userId);
+      const data = await awsApi.getCompanies(userId);
       setCompanies(data || []);
     } catch (e) {
       console.error("Error loading companies:", e);
@@ -220,7 +220,7 @@ export default function Analysis() {
 
       // Save to database
       try {
-        await awsApi.getStockAnalysis({
+        await awsApi.saveAnalysis({
           userId,
           selected_companies: selectedSymbols,
           total_investment: parseFloat(investmentAmount),
