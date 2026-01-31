@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { awsApi } from "@/utils/awsClient";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LineChart, TrendingUp, Building2, Target } from "lucide-react";
@@ -47,7 +47,16 @@ export default function Dashboard() {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const data = await awsApi.getUserDashboardData({});
+      const user = await base44.auth.me();
+      if (!user) {
+        console.error("User not authenticated");
+        setIsLoading(false);
+        return;
+      }
+
+      const data = await base44.functions.invoke('getUserDashboardData', {
+        userId: user.email
+      });
       
       if (data) {
         setAnalyses(data.recentAnalyses || []);
