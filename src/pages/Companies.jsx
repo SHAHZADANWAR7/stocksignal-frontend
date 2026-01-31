@@ -26,6 +26,27 @@ export default function Companies() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const hasAutoAnalyzed = React.useRef(false);
 
+  // Transform Lambda response from snake_case to camelCase
+  const transformStockData = (data) => {
+    return {
+      symbol: data.symbol,
+      name: data.name,
+      price: data.current_price,
+      marketCap: data.market_cap,
+      peRatio: data.pe_ratio,
+      weekChange52: data.week_change_52,
+      dividendYield: data.dividend_yield,
+      beta: data.beta,
+      sector: data.sector,
+      description: data.description,
+      valuation: data.valuation,
+      valuation_reasoning: data.valuation_reasoning,
+      expected_return: data.expected_return,
+      risk: data.risk,
+      data_sources: data.data_sources
+    };
+  };
+
   useEffect(() => {
     loadCompanies();
     
@@ -149,8 +170,9 @@ export default function Companies() {
         return;
       }
 
+      const transformedData = transformStockData(stockData);
       setAnalysisResult({
-        stock: stockData,
+        stock: transformedData,
         recommendations: stockData.recommendations || []
       });
     } catch (error) {
