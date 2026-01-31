@@ -125,13 +125,15 @@ export default function Companies() {
     setIsSearchingSymbol(true);
     
     try {
-      const stockData = await callAwsFunction('getStockQuote', { symbol });
-
-      if (stockData.error || !stockData.symbol) {
+      const batchResult = await callAwsFunction('getStockBatch', { symbols: [symbol] });
+      
+      if (!batchResult.stocks || batchResult.stocks.length === 0) {
         alert(`Could not find symbol "${symbol}". Please check the ticker and try again.`);
         setIsSearchingSymbol(false);
         return;
       }
+
+      const stockData = batchResult.stocks[0];
 
       // Add new company to list
       const newCompany = {
@@ -162,14 +164,15 @@ export default function Companies() {
     try {
       const symbol = quickAnalysisSymbol.toUpperCase().trim();
       
-      const stockData = await callAwsFunction('getStockAnalysis', { symbol });
+      const batchResult = await callAwsFunction('getStockBatch', { symbols: [symbol] });
 
-      if (stockData.error) {
+      if (!batchResult.stocks || batchResult.stocks.length === 0) {
         alert(`Could not find symbol "${symbol}". Please try again.`);
         setIsAnalyzing(false);
         return;
       }
 
+      const stockData = batchResult.stocks[0];
       const transformedData = transformStockData(stockData);
       setAnalysisResult({
         stock: transformedData,
