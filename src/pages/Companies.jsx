@@ -147,7 +147,9 @@ export default function Companies() {
         symbol: stockData.symbol,
         name: stockData.name || symbol,
         sector: stockData.sector || "Other",
-        description: stockData.description || "Stock information not available"
+        description: stockData.description || "Stock information not available",
+        beta: stockData.beta, // Assuming getStockQuote returns beta
+        market_cap: stockData.market_cap // Assuming getStockQuote returns market_cap
       };
 
       setCompanies(prev => [...prev, newCompany]);
