@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Building2, TrendingUp, Filter, Plus, Loader2, Sparkles, ArrowRight, Target, RefreshCw } from "lucide-react";
+import { Search, Building2, TrendingUp, Filter, Plus, Loader2, Sparkles, Target, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -36,16 +36,16 @@ export default function Companies() {
       symbol: data.symbol,
       name: data.name,
       price: safeParseFloat(data.current_price),
-      marketCap: data.market_cap ? String(data.market_cap) : null,
+      marketCap: data.market_cap && data.market_cap !== 'N/A' ? String(data.market_cap) : null,
       peRatio: safeParseFloat(data.pe_ratio),
-      peRatioFormatted: data.pe_ratio_formatted,
+      peRatioFormatted: data.pe_ratio_formatted && data.pe_ratio_formatted !== 'N/A' ? data.pe_ratio_formatted : null,
       weekChange52: safeParseFloat(data.week_change_52),
       dividendYield: safeParseFloat(data.dividend_yield),
       beta: safeParseFloat(data.beta),
       betaConfidence: data.beta_confidence,
       sector: data.sector,
       description: data.description,
-      valuation: data.valuation || null,
+      valuation: data.valuation && data.valuation !== 'N/A' ? data.valuation : null,
       valuationReasoning: data.valuation_reasoning,
       expectedReturn: safeParseFloat(data.expected_return),
       risk: safeParseFloat(data.risk),
@@ -301,51 +301,71 @@ export default function Companies() {
                   </div>
                   
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    <div>
-                      <p className="text-sm text-slate-500">Valuation</p>
-                      <p className={`text-xl font-bold ${analysisResult.stock.valuation === 'overvalued' ? 'text-red-500' : analysisResult.stock.valuation === 'undervalued' ? 'text-green-500' : 'text-blue-600'}`}>
-                        {analysisResult.stock.valuation ? analysisResult.stock.valuation.charAt(0).toUpperCase() + analysisResult.stock.valuation.slice(1) : 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500">Price</p>
-                      <p className="text-xl font-bold text-slate-900">
-                        {analysisResult.stock.price != null ? `$${analysisResult.stock.price.toFixed(2)}` : 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500">Market Cap</p>
-                      <p className="text-xl font-bold text-slate-900">
-                        {analysisResult.stock.marketCap != null ? analysisResult.stock.marketCap : 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500">P/E Ratio</p>
-                      <p className="text-xl font-bold text-blue-600">
-                        {analysisResult.stock.peRatioFormatted || (analysisResult.stock.peRatio != null ? analysisResult.stock.peRatio.toFixed(2) : 'N/A')}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500">Beta</p>
-                      <p className="text-xl font-bold text-slate-900">
-                        {analysisResult.stock.beta != null ? analysisResult.stock.beta.toFixed(2) : 'N/A'}
-                      </p>
-                      {analysisResult.stock.betaConfidence && (
-                        <span className="text-xs text-slate-500">{analysisResult.stock.betaConfidence} confidence</span>
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500">Expected Return</p>
-                      <p className="text-xl font-bold text-blue-600">
-                        {analysisResult.stock.expectedReturn != null ? `${analysisResult.stock.expectedReturn.toFixed(1)}%` : 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-500">Risk</p>
-                      <p className="text-xl font-bold text-orange-600">
-                        {analysisResult.stock.risk != null ? `${analysisResult.stock.risk.toFixed(1)}%` : 'N/A'}
-                      </p>
-                    </div>
+                    {analysisResult.stock.valuation && (
+                      <div>
+                        <p className="text-sm text-slate-500">Valuation</p>
+                        <p className={`text-xl font-bold ${analysisResult.stock.valuation === 'overvalued' ? 'text-red-500' : analysisResult.stock.valuation === 'undervalued' ? 'text-green-500' : 'text-blue-600'}`}>
+                          {analysisResult.stock.valuation.charAt(0).toUpperCase() + analysisResult.stock.valuation.slice(1)}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {analysisResult.stock.price != null && (
+                      <div>
+                        <p className="text-sm text-slate-500">Price</p>
+                        <p className="text-xl font-bold text-slate-900">
+                          ${analysisResult.stock.price.toFixed(2)}
+                        </p>
+                      </div>
+                    )}
+
+                    {analysisResult.stock.marketCap && (
+                      <div>
+                        <p className="text-sm text-slate-500">Market Cap</p>
+                        <p className="text-xl font-bold text-slate-900">
+                          {analysisResult.stock.marketCap}
+                        </p>
+                      </div>
+                    )}
+
+                    {(analysisResult.stock.peRatioFormatted || analysisResult.stock.peRatio != null) && (
+                      <div>
+                        <p className="text-sm text-slate-500">P/E Ratio</p>
+                        <p className="text-xl font-bold text-blue-600">
+                          {analysisResult.stock.peRatioFormatted || analysisResult.stock.peRatio.toFixed(2)}
+                        </p>
+                      </div>
+                    )}
+
+                    {analysisResult.stock.beta != null && (
+                      <div>
+                        <p className="text-sm text-slate-500">Beta</p>
+                        <p className="text-xl font-bold text-slate-900">
+                          {analysisResult.stock.beta.toFixed(2)}
+                        </p>
+                        {analysisResult.stock.betaConfidence && (
+                          <span className="text-xs text-slate-500">{analysisResult.stock.betaConfidence} confidence</span>
+                        )}
+                      </div>
+                    )}
+
+                    {analysisResult.stock.expectedReturn != null && (
+                      <div>
+                        <p className="text-sm text-slate-500">Expected Return</p>
+                        <p className="text-xl font-bold text-blue-600">
+                          {analysisResult.stock.expectedReturn.toFixed(1)}%
+                        </p>
+                      </div>
+                    )}
+
+                    {analysisResult.stock.risk != null && (
+                      <div>
+                        <p className="text-sm text-slate-500">Risk</p>
+                        <p className="text-xl font-bold text-orange-600">
+                          {analysisResult.stock.risk.toFixed(1)}%
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {analysisResult.stock.valuationReasoning && (
