@@ -166,7 +166,8 @@ export default function Companies() {
       const symbol = quickAnalysisSymbol.toUpperCase().trim();
       
       // Call getStockAnalysis for comprehensive AI analysis
-      const analysisData = await callAwsFunction('getStockAnalysis', { symbol });
+      // Pass refresh: true to force a fresh analysis and bypass cache
+      const analysisData = await callAwsFunction('getStockAnalysis', { symbol, refresh: true });
 
       if (!analysisData || !analysisData.symbol) {
         alert(`Could not analyze symbol "${symbol}". Please try again.`);
@@ -187,7 +188,7 @@ export default function Companies() {
     setIsAnalyzing(false);
   };
 
-  const addStockFromAnalysis = (symbol) => { // Removed async as it's not performing async operations here directly
+  const addStockFromAnalysis = (symbol) => { 
     const existing = companies.find(c => c.symbol.toUpperCase() === symbol.toUpperCase());
     if (!existing) {
       // If the recommended stock is not in our current list, add it first.
@@ -255,7 +256,7 @@ export default function Companies() {
         </motion.div>
 
         <Card className="border-2 border-emerald-300 shadow-lg mb-8 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
-          <CardContent className="p-6">
+          <CardContent className="p-10"> {/* Adjusted padding here */}
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center">
                 <Sparkles className="w-7 h-7 text-white" />
@@ -389,9 +390,13 @@ export default function Companies() {
                             <div>
                               <p className="text-lg font-bold text-slate-900">{rec.symbol}</p>
                               <p className="text-sm text-slate-600">{rec.name}</p>
+                              {rec.beta != null && ( // Display beta if available
+                                <p className="text-xs text-slate-500">Beta: {rec.beta.toFixed(2)}</p>
+                              )}
                             </div>
                           </div>
-                          <p className="text-sm text-slate-700 mb-3">{rec.explanation}</p>
+                          {/* Render explanation content, assuming it might contain markdown or HTML from the backend */}
+                          <div className="text-sm text-slate-700 mb-3" dangerouslySetInnerHTML={{ __html: rec.explanation }} />
                           <Button
                             onClick={() => addStockFromAnalysis(rec.symbol)}
                             variant="outline"
@@ -410,9 +415,9 @@ export default function Companies() {
           </CardContent>
         </Card>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200 p-4 md:p-6 mb-8">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200 p-8 md:p-10 mb-8"> {/* Adjusted padding here */}
           <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 mb-4 rounded-xl">
-            <CardContent className="p-4">
+            <CardContent className="p-6"> {/* Adjusted padding here */}
               <div className="flex flex-col md:flex-row gap-3">
                 <div className="flex-1">
                   <Input
@@ -489,7 +494,7 @@ export default function Companies() {
                       <div className="flex items-center gap-4 min-w-0">
                         <div className="relative">
                           <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl blur opacity-50"></div>
-                          <div className="relative w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                          <div className="relative w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
                             <TrendingUp className="w-6 h-6 md:w-7 md:h-7 text-white" />
                           </div>
                         </div>
@@ -579,7 +584,7 @@ export default function Companies() {
                       </div>
                       
                       <h4 className="font-semibold text-slate-900 mb-2">{company.name}</h4>
-                      <p className="text-sm text-slate-600 line-clamp-2 mb-3">
+                      <p className="text-sm text-slate-600 mb-3"> {/* Removed line-clamp-2 */}
                         {company.description}
                       </p>
                     </CardContent>
