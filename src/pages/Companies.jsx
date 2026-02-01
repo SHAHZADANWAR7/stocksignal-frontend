@@ -236,8 +236,7 @@ export default function Companies() {
                   <Button
                     onClick={loadCompanies}
                     disabled={isLoading}
-                    variant="outline"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
                   >
                     {isLoading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -392,7 +391,7 @@ export default function Companies() {
                               <p className="text-sm text-slate-600">{rec.name}</p>
                             </div>
                           </div>
-                          <p className="text-sm text-slate-700 mb-3">{rec.description}</p>
+                          <p className="text-sm text-slate-700 mb-3">{rec.explanation}</p>
                           <Button
                             onClick={() => addStockFromAnalysis(rec.symbol)}
                             variant="outline"
@@ -540,7 +539,14 @@ export default function Companies() {
             {filteredCompanies.map((company) => {
               const isSelected = selectedCompanies.includes(company.symbol);
               return (
-                <div key={company.symbol}>
+                <motion.div
+                  key={company.symbol}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.2 }}
+                >
                   <Card 
                     className={`group transition-all duration-300 border-2 rounded-xl h-full cursor-pointer ${
                       isSelected 
@@ -578,7 +584,7 @@ export default function Companies() {
                       </p>
                     </CardContent>
                   </Card>
-                </div>
+                </motion.div>
               );
             })}
           </AnimatePresence>
