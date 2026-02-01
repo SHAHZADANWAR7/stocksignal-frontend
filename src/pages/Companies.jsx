@@ -34,17 +34,19 @@ export default function Companies() {
       price: data.current_price,
       marketCap: data.market_cap,
       peRatio: data.pe_ratio,
+      peRatioFormatted: data.pe_ratio_formatted, // Added for formatted P/E
       weekChange52: data.week_change_52,
       dividendYield: data.dividend_yield,
       beta: data.beta,
+      betaConfidence: data.beta_confidence, // Added for beta confidence
       sector: data.sector,
       description: data.description,
       valuation: data.valuation,
-      valuation_reasoning: data.valuation_reasoning,
-      expected_return: data.expected_return,
+      valuationReasoning: data.valuation_reasoning, // Changed to camelCase
+      expectedReturn: data.expected_return, // Changed to camelCase
       risk: data.risk,
-      data_sources: data.data_sources,
-      recommendations: data.recommendations
+      dataSources: data.data_sources, // Changed to camelCase
+      logoUrl: data.logo_url // Added for logo
     };
   };
 
@@ -126,15 +128,13 @@ export default function Companies() {
     setIsSearchingSymbol(true);
     
     try {
-      const batchResult = await callAwsFunction('getStockBatch', { symbols: [symbol] });
-      
-      if (!batchResult.stocks || batchResult.stocks.length === 0) {
+      const stockData = await callAwsFunction('getStockQuote', { symbol }); // Using getStockQuote to get basic info for new company
+
+      if (!stockData || !stockData.symbol) {
         alert(`Could not find symbol "${symbol}". Please check the ticker and try again.`);
         setIsSearchingSymbol(false);
         return;
       }
-
-      const stockData = batchResult.stocks[0];
 
       // Add new company to list
       const newCompany = {
@@ -187,18 +187,19 @@ export default function Companies() {
     setIsAnalyzing(false);
   };
 
-  const addStockFromAnalysis = async (symbol) => {
+  const addStockFromAnalysis = (symbol) => { // Removed async as it's not performing async operations here directly
     const existing = companies.find(c => c.symbol.toUpperCase() === symbol.toUpperCase());
-    if (existing) {
-      setSelectedCompanies(prev => 
-        prev.includes(existing.symbol) ? prev : [...prev, existing.symbol]
-      );
-      alert(`${symbol} added to your selection!`);
-      return;
+    if (!existing) {
+      // If the recommended stock is not in our current list, add it first.
+      // For simplicity, we'll assume it's added to the general list and then selected.
+      // In a real app, you might want to fetch full company details for the recommendation here.
+      setCompanies(prev => [...prev, { symbol, name: symbol, sector: "Other", description: "AI Recommended" }]);
     }
-
-    setSymbolSearchQuery(symbol);
-    await searchAndAddSymbol();
+    setSelectedCompanies(prev => 
+      prev.includes(symbol) ? prev : [...prev, symbol]
+    );
+    // Optionally alert the user or show a toast
+    // alert(`${symbol} added to your selection!`);
   };
 
   const sectors = [...new Set(companies.map(c => c.sector))];
@@ -228,9 +229,24 @@ export default function Companies() {
                 <Building2 className="w-6 h-6 md:w-7 md:h-7 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-2 leading-tight">
-                  Browse Investments
-                </h1>
+                <div className="flex items-center justify-between mb-2">
+                  <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight">
+                    Browse Investments
+                  </h1>
+                  <Button
+                    onClick={loadCompanies}
+                    disabled={isLoading}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-4 h-4" />
+                    )}
+                    Refresh Data
+                  </Button>
+                </div>
                 <p className="text-sm md:text-base lg:text-lg text-slate-600 leading-relaxed">
                   Select stocks and index funds to get AI-powered investment recommendations
                 </p>
@@ -247,7 +263,7 @@ export default function Companies() {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">Quick Stock Analysis</h2>
-                <p className="text-sm text-slate-600">Get AI-powered analysis for any public company by symbol</p>
+                <p className="text-sm text-slate-600">Get AI-powered analysis and discover better alternatives</p>
               </div>
             </div>
             
@@ -284,13 +300,24 @@ export default function Companies() {
               <div className="space-y-6">
                 <div className="bg-white rounded-xl p-6 border-2 border-emerald-200">
                   <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-2xl font-bold text-slate-900">{analysisResult.stock.symbol}</h3>
-                      <p className="text-slate-600">{analysisResult.stock.name}</p>
+                    <div className="flex items-center gap-3">
+                      {analysisResult.stock.logoUrl && (
+                        <img src={analysisResult.stock.logoUrl} alt={`${analysisResult.stock.name} logo`} className="w-10 h-10 rounded-full" />
+                      )}
+                      <div>
+                        <h3 className="text-2xl font-bold text-slate-900">{analysisResult.stock.symbol}</h3>
+                        <p className="text-slate-600">{analysisResult.stock.name}</p>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className="grid md:grid-cols-5 gap-4 mb-4">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div>
+                      <p className="text-sm text-slate-500">Valuation</p>
+                      <p className={`text-xl font-bold ${analysisResult.stock.valuation === 'overvalued' ? 'text-red-500' : analysisResult.stock.valuation === 'undervalued' ? 'text-green-500' : 'text-blue-600'}`}>
+                        {analysisResult.stock.valuation ? analysisResult.stock.valuation.charAt(0).toUpperCase() + analysisResult.stock.valuation.slice(1) : 'N/A'}
+                      </p>
+                    </div>
                     <div>
                       <p className="text-sm text-slate-500">Price</p>
                       <p className="text-xl font-bold text-slate-900">
@@ -299,56 +326,44 @@ export default function Companies() {
                     </div>
                     <div>
                       <p className="text-sm text-slate-500">Market Cap</p>
-                      <p className="text-base font-bold text-slate-900">
+                      <p className="text-xl font-bold text-slate-900">
                         {analysisResult.stock.marketCap ? `${analysisResult.stock.marketCap}` : 'N/A'}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500">P/E Ratio</p>
                       <p className="text-xl font-bold text-blue-600">
-                        {analysisResult.stock.peRatio != null ? analysisResult.stock.peRatio.toFixed(2) : 'N/A'}
+                        {analysisResult.stock.peRatioFormatted || (analysisResult.stock.peRatio != null ? analysisResult.stock.peRatio.toFixed(2) : 'N/A')}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500">52W Change</p>
-                      <p className="text-xl font-bold text-emerald-600">
-                        {analysisResult.stock.weekChange52 != null ? `${analysisResult.stock.weekChange52.toFixed(2)}%` : 'N/A'}
+                      <p className="text-sm text-slate-500">Beta</p>
+                      <p className="text-xl font-bold text-slate-900">
+                        {analysisResult.stock.beta != null ? analysisResult.stock.beta.toFixed(2) : 'N/A'}
+                      </p>
+                      {analysisResult.stock.betaConfidence && (
+                        <span className="text-xs text-slate-500">{analysisResult.stock.betaConfidence} confidence</span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Expected Return</p>
+                      <p className="text-xl font-bold text-blue-600">
+                        {analysisResult.stock.expectedReturn != null ? `${analysisResult.stock.expectedReturn.toFixed(1)}%` : 'N/A'}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-slate-500">Dividend Yield</p>
-                      <p className="text-xl font-bold text-rose-600">
-                        {analysisResult.stock.dividendYield != null ? `${analysisResult.stock.dividendYield.toFixed(2)}%` : 'N/A'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="grid md:grid-cols-3 gap-4 mb-4">
-                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                      <p className="text-sm text-slate-600 mb-1">Valuation</p>
-                      <p className="text-lg font-bold text-slate-900">
-                        {analysisResult.stock.valuation ? analysisResult.stock.valuation.charAt(0).toUpperCase() + analysisResult.stock.valuation.slice(1) : 'N/A'}
-                      </p>
-                    </div>
-                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                      <p className="text-sm text-slate-600 mb-1">Expected Return</p>
-                      <p className="text-lg font-bold text-blue-600">
-                        {analysisResult.stock.expected_return != null ? `${analysisResult.stock.expected_return.toFixed(1)}%` : 'N/A'}
-                      </p>
-                    </div>
-                    <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                      <p className="text-sm text-slate-600 mb-1">Risk/Volatility</p>
-                      <p className="text-lg font-bold text-orange-600">
+                      <p className="text-sm text-slate-500">Risk</p>
+                      <p className="text-xl font-bold text-orange-600">
                         {analysisResult.stock.risk != null ? `${analysisResult.stock.risk.toFixed(1)}%` : 'N/A'}
                       </p>
                     </div>
                   </div>
 
-                  {analysisResult.stock.valuation_reasoning && (
+                  {analysisResult.stock.valuationReasoning && (
                     <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200 mb-4">
                       <p className="text-sm font-semibold text-slate-900 mb-2">AI Analysis</p>
                       <p className="text-sm text-slate-700 leading-relaxed">
-                        {analysisResult.stock.valuation_reasoning}
+                        {analysisResult.stock.valuationReasoning}
                       </p>
                     </div>
                   )}
@@ -361,6 +376,36 @@ export default function Companies() {
                     Add to Selection
                   </Button>
                 </div>
+
+                {analysisResult.recommendations && analysisResult.recommendations.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-bold text-slate-900">AI Recommended Alternatives</h3>
+                    {analysisResult.recommendations.map((rec) => (
+                      <Card key={rec.symbol} className="bg-white rounded-xl p-4 border-2 border-blue-100">
+                        <CardContent className="p-0">
+                          <div className="flex items-center gap-3 mb-2">
+                            {rec.logo_url && (
+                              <img src={rec.logo_url} alt={`${rec.name} logo`} className="w-8 h-8 rounded-full" />
+                            )}
+                            <div>
+                              <p className="text-lg font-bold text-slate-900">{rec.symbol}</p>
+                              <p className="text-sm text-slate-600">{rec.name}</p>
+                            </div>
+                          </div>
+                          <p className="text-sm text-slate-700 mb-3">{rec.description}</p>
+                          <Button
+                            onClick={() => addStockFromAnalysis(rec.symbol)}
+                            variant="outline"
+                            className="w-full border-blue-300 text-blue-600 hover:bg-blue-50"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add to Selection
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
@@ -507,9 +552,9 @@ export default function Companies() {
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center">
-                            <Building2 className="w-6 h-6 text-slate-700" />
-                          </div>
+                          {company.logo_url && (
+                            <img src={company.logo_url} alt={`${company.name} logo`} className="w-10 h-10 rounded-full" />
+                          )}
                           <div>
                             <h3 className="font-bold text-slate-900 text-lg">{company.symbol}</h3>
                             <Badge 
