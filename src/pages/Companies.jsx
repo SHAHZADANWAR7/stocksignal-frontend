@@ -26,9 +26,7 @@ export default function Companies() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const hasAutoAnalyzed = React.useRef(false);
 
-  // Transform Lambda response from snake_case to camelCase
   const transformStockData = (data) => {
-    // Helper to safely parse and handle numbers, converting NaN to null
     const safeParseFloat = (value) => {
       const num = parseFloat(value);
       return isNaN(num) ? null : num;
@@ -38,21 +36,21 @@ export default function Companies() {
       symbol: data.symbol,
       name: data.name,
       price: safeParseFloat(data.current_price),
-      marketCap: data.market_cap ? String(data.market_cap) : null, // Ensure string or null
+      marketCap: data.market_cap ? String(data.market_cap) : null,
       peRatio: safeParseFloat(data.pe_ratio),
-      peRatioFormatted: data.pe_ratio_formatted, // Added for formatted P/E
+      peRatioFormatted: data.pe_ratio_formatted,
       weekChange52: safeParseFloat(data.week_change_52),
       dividendYield: safeParseFloat(data.dividend_yield),
       beta: safeParseFloat(data.beta),
-      betaConfidence: data.beta_confidence, // Added for beta confidence
+      betaConfidence: data.beta_confidence,
       sector: data.sector,
       description: data.description,
-      valuation: data.valuation || null, // Default to null if not provided
-      valuationReasoning: data.valuation_reasoning, // Changed to camelCase
-      expectedReturn: safeParseFloat(data.expected_return), // Changed to camelCase
+      valuation: data.valuation || null,
+      valuationReasoning: data.valuation_reasoning,
+      expectedReturn: safeParseFloat(data.expected_return),
       risk: safeParseFloat(data.risk),
-      dataSources: data.data_sources, // Changed to camelCase
-      logoUrl: data.logo_url // Added for logo
+      dataSources: data.data_sources,
+      logoUrl: data.logo_url
     };
   };
 
@@ -98,7 +96,7 @@ export default function Companies() {
       filtered = filtered.filter(c => 
         c.name.toLowerCase().includes(query) || 
         c.symbol.toLowerCase().includes(query) ||
-        c.sector.toLowerCase().includes(query)
+        (c.sector && c.sector.toLowerCase().includes(query))
       );
     }
 
@@ -126,7 +124,6 @@ export default function Companies() {
       setSelectedCompanies(prev => 
         prev.includes(symbol) ? prev : [...prev, symbol]
       );
-      alert();
       setSymbolSearchQuery("");
       return;
     }
@@ -134,31 +131,28 @@ export default function Companies() {
     setIsSearchingSymbol(true);
     
     try {
-      const stockData = await callAwsFunction('getStockQuote', { symbol }); // Using getStockQuote to get basic info for new company
+      const stockData = await callAwsFunction('getStockQuote', { symbol });
 
       if (!stockData || !stockData.symbol) {
-        alert();
+        alert(`Could not find symbol "${symbol}".`);
         setIsSearchingSymbol(false);
         return;
       }
 
-      // Add new company to list
       const newCompany = {
         symbol: stockData.symbol,
         name: stockData.name || symbol,
         sector: stockData.sector || "Other",
         description: stockData.description || "Stock information not available",
-        beta: stockData.beta, // Assuming getStockQuote returns beta
-        market_cap: stockData.market_cap // Assuming getStockQuote returns market_cap
+        beta: stockData.beta,
+        market_cap: stockData.market_cap
       };
 
       setCompanies(prev => [...prev, newCompany]);
       setSelectedCompanies(prev => [...prev, symbol]);
       setSymbolSearchQuery("");
-      alert();
     } catch (error) {
       console.error("Error searching for symbol:", error);
-      alert("Error searching for symbol. Please try again.");
     }
     
     setIsSearchingSymbol(false);
@@ -172,13 +166,10 @@ export default function Companies() {
     
     try {
       const symbol = quickAnalysisSymbol.toUpperCase().trim();
-      
-      // Call getStockAnalysis for comprehensive AI analysis
-      // Pass refresh: true to force a fresh analysis and bypass cache
       const analysisData = await callAwsFunction('getStockAnalysis', { symbol, refresh: true });
 
       if (!analysisData || !analysisData.symbol) {
-        alert();
+        alert(`Could not analyze symbol "${symbol}".`);
         setIsAnalyzing(false);
         return;
       }
@@ -190,7 +181,6 @@ export default function Companies() {
       });
     } catch (error) {
       console.error("Analysis error:", error);
-      alert("Error analyzing stock. Please try again.");
     }
     
     setIsAnalyzing(false);
@@ -199,19 +189,14 @@ export default function Companies() {
   const addStockFromAnalysis = (symbol) => { 
     const existing = companies.find(c => c.symbol.toUpperCase() === symbol.toUpperCase());
     if (!existing) {
-      // If the recommended stock is not in our current list, add it first.
-      // For simplicity, we'll assume it's added to the general list and then selected.
-      // In a real app, you might want to fetch full company details for the recommendation here.
       setCompanies(prev => [...prev, { symbol, name: symbol, sector: "Other", description: "AI Recommended" }]);
     }
     setSelectedCompanies(prev => 
       prev.includes(symbol) ? prev : [...prev, symbol]
     );
-    // Optionally alert the user or show a toast
-    // alert();
   };
 
-  const sectors = [...new Set(companies.map(c => c.sector))];
+  const sectors = [...new Set(companies.map(c => c.sector))].filter(Boolean);
 
   const sectorColors = {
     "Technology": "bg-blue-100 text-blue-700 border-blue-200",
@@ -247,11 +232,7 @@ export default function Companies() {
                     disabled={isLoading}
                     className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
                   >
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="w-4 h-4" />
-                    )}
+                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                     Refresh Data
                   </Button>
                 </div>
@@ -264,7 +245,7 @@ export default function Companies() {
         </motion.div>
 
         <Card className="border-2 border-emerald-300 shadow-lg mb-8 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
-          <CardContent className="p-10"> {/* Adjusted padding here */}
+          <CardContent className="p-10">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center">
                 <Sparkles className="w-7 h-7 text-white" />
@@ -310,7 +291,7 @@ export default function Companies() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       {analysisResult.stock.logoUrl && (
-                        <img src={analysisResult.stock.logoUrl} alt={} className="w-10 h-10 rounded-full" />
+                        <img src={analysisResult.stock.logoUrl} alt={`${analysisResult.stock.name} logo`} className="w-10 h-10 rounded-full" />
                       )}
                       <div>
                         <h3 className="text-2xl font-bold text-slate-900">{analysisResult.stock.symbol}</h3>
@@ -322,14 +303,14 @@ export default function Companies() {
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <div>
                       <p className="text-sm text-slate-500">Valuation</p>
-                      <p className={}>
+                      <p className={`text-xl font-bold ${analysisResult.stock.valuation === 'overvalued' ? 'text-red-500' : analysisResult.stock.valuation === 'undervalued' ? 'text-green-500' : 'text-blue-600'}`}>
                         {analysisResult.stock.valuation ? analysisResult.stock.valuation.charAt(0).toUpperCase() + analysisResult.stock.valuation.slice(1) : 'N/A'}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500">Price</p>
                       <p className="text-xl font-bold text-slate-900">
-                        {analysisResult.stock.price != null ?  : 'N/A'}
+                        {analysisResult.stock.price != null ? `$${analysisResult.stock.price.toFixed(2)}` : 'N/A'}
                       </p>
                     </div>
                     <div>
@@ -356,13 +337,13 @@ export default function Companies() {
                     <div>
                       <p className="text-sm text-slate-500">Expected Return</p>
                       <p className="text-xl font-bold text-blue-600">
-                        {analysisResult.stock.expectedReturn != null ?  : 'N/A'}
+                        {analysisResult.stock.expectedReturn != null ? `${analysisResult.stock.expectedReturn.toFixed(1)}%` : 'N/A'}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-slate-500">Risk</p>
                       <p className="text-xl font-bold text-orange-600">
-                        {analysisResult.stock.risk != null ?  : 'N/A'}
+                        {analysisResult.stock.risk != null ? `${analysisResult.stock.risk.toFixed(1)}%` : 'N/A'}
                       </p>
                     </div>
                   </div>
@@ -393,17 +374,16 @@ export default function Companies() {
                         <CardContent className="p-0">
                           <div className="flex items-center gap-3 mb-2">
                             {rec.logo_url && (
-                              <img src={rec.logo_url} alt={} className="w-8 h-8 rounded-full" />
+                              <img src={rec.logo_url} alt={`${rec.name} logo`} className="w-8 h-8 rounded-full" />
                             )}
                             <div>
                               <p className="text-lg font-bold text-slate-900">{rec.symbol}</p>
                               <p className="text-sm text-slate-600">{rec.name}</p>
-                              {rec.beta != null && ( // Display beta if available
+                              {rec.beta != null && (
                                 <p className="text-xs text-slate-500">Beta: {rec.beta.toFixed(2)}</p>
                               )}
                             </div>
                           </div>
-                          {/* Render explanation content, assuming it might contain markdown or HTML from the backend */}
                           <div className="text-sm text-slate-700 mb-3" dangerouslySetInnerHTML={{ __html: rec.explanation }} />
                           <Button
                             onClick={() => addStockFromAnalysis(rec.symbol)}
@@ -423,9 +403,9 @@ export default function Companies() {
           </CardContent>
         </Card>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200 p-8 md:p-10 mb-8"> {/* Adjusted padding here */}
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200 p-8 md:p-10 mb-8">
           <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 mb-4 rounded-xl">
-            <CardContent className="p-6"> {/* Adjusted padding here */}
+            <CardContent className="p-6">
               <div className="flex flex-col md:flex-row gap-3">
                 <div className="flex-1">
                   <Input
@@ -525,7 +505,7 @@ export default function Companies() {
                           </p>
                         </div>
                       </div>
-                      <Link to={createPageUrl("Analysis") + } className="w-full sm:w-auto flex-shrink-0">
+                      <Link to={createPageUrl("Analysis") + `?companies=${selectedCompanies.join(',')}`} className="w-full sm:w-auto flex-shrink-0">
                         <Button className="group relative w-full h-13 md:h-14 text-base md:text-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white shadow-2xl shadow-blue-500/50 hover:shadow-blue-600/60 font-bold px-8 md:px-10 rounded-xl transition-all duration-300 hover:scale-105">
                           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
                           <TrendingUp className="relative w-5 h-5 md:w-6 md:h-6 mr-3 flex-shrink-0" />
@@ -542,65 +522,63 @@ export default function Companies() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
-            <>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <CardSkeleton key={i} />
-              ))}
-            </>
+            Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
           ) : (
-          <AnimatePresence>
-            {filteredCompanies.map((company) => {
-              const isSelected = selectedCompanies.includes(company.symbol);
-              return (
-                <motion.div
-                  key={company.symbol}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Card 
-                    className={}
-                    onClick={() => toggleCompany(company.symbol)}
+            <AnimatePresence>
+              {filteredCompanies.map((company) => {
+                const isSelected = selectedCompanies.includes(company.symbol);
+                return (
+                  <motion.div
+                    key={company.symbol}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          {company.logo_url && (
-                            <img src={company.logo_url} alt={} className="w-10 h-10 rounded-full" />
-                          )}
-                          <div>
-                            <h3 className="font-bold text-slate-900 text-lg">{company.symbol}</h3>
-                            <Badge 
-                              variant="secondary"
-                              className={}
-                            >
-                              {company.sector}
-                            </Badge>
+                    <Card 
+                      className={`group transition-all duration-300 border-2 rounded-xl h-full cursor-pointer ${
+                        isSelected 
+                          ? 'border-blue-500 shadow-lg shadow-blue-500/20 bg-gradient-to-br from-blue-50 to-indigo-50' 
+                          : 'hover:shadow-lg border-slate-200 hover:border-blue-300 bg-white'
+                      }`}
+                      onClick={() => toggleCompany(company.symbol)}
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            {company.logo_url && (
+                              <img src={company.logo_url} alt={`${company.name} logo`} className="w-10 h-10 rounded-full" />
+                            )}
+                            <div>
+                              <h3 className="font-bold text-slate-900 text-lg">{company.symbol}</h3>
+                              <Badge 
+                                variant="secondary"
+                                className={`${sectorColors[company.sector] || 'bg-gray-100 text-gray-700'} border text-xs`}
+                              >
+                                {company.sector}
+                              </Badge>
+                            </div>
                           </div>
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleCompany(company.symbol)}
+                            className="w-5 h-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                          />
                         </div>
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleCompany(company.symbol)}
-                          className="w-5 h-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                        />
-                      </div>
-                      
-                      <h4 className="font-semibold text-slate-900 mb-2">{company.name}</h4>
-                      <p className="text-sm text-slate-600 mb-3"> {/* Removed line-clamp-2 */}
-                        {company.description}
-                      </p>
-                      <div className="flex justify-between items-center text-xs text-slate-500 mt-2">
-                        <span>Beta: {company.beta != null ? company.beta.toFixed(2) : 'N/A'}</span>
-                        <span>Market Cap: {company.market_cap != null ? company.market_cap : 'N/A'}</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+                        
+                        <h4 className="font-semibold text-slate-900 mb-2">{company.name}</h4>
+                        <p className="text-sm text-slate-600 mb-3">{company.description}</p>
+                        <div className="flex justify-between items-center text-xs text-slate-500 mt-2">
+                          <span>Beta: {company.beta != null ? company.beta.toFixed(2) : 'N/A'}</span>
+                          <span>Market Cap: {company.market_cap != null ? company.market_cap : 'N/A'}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           )}
         </div>
 
