@@ -245,7 +245,7 @@ export default function Companies() {
         </motion.div>
 
         <Card className="border-2 border-emerald-300 shadow-lg mb-8 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
-          <CardContent className="p-10">
+          <CardContent className="p-12">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center">
                 <Sparkles className="w-7 h-7 text-white" />
@@ -394,7 +394,7 @@ export default function Companies() {
                         <CardContent className="p-0">
                           <div className="flex items-center gap-3 mb-2">
                             {rec.logo_url && (
-                              <img src={rec.logo_url} alt={`${rec.name} logo`} className="w-8 h-8 rounded-full" />
+                              <img src={rec.logo_url} alt={`${rec.name} logo`} className="w-8 h-8 rounded-full object-contain" />
                             )}
                             <div>
                               <p className="text-lg font-bold text-slate-900">{rec.symbol}</p>
@@ -425,11 +425,11 @@ export default function Companies() {
 
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200 p-8 md:p-10 mb-8">
           <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 mb-4 rounded-xl">
-            <CardContent className="p-6">
+            <CardContent className="p-8">
               <div className="flex flex-col md:flex-row gap-3">
                 <div className="flex-1">
                   <Input
-                    placeholder="Search any ticker symbol (e.g., AAPL, GOOGL, BRK.B)..."
+                    placeholder="Search any publicly traded company by its ticker symbol"
                     value={symbolSearchQuery}
                     onChange={(e) => setSymbolSearchQuery(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && searchAndAddSymbol()}
@@ -456,7 +456,7 @@ export default function Companies() {
                 </Button>
               </div>
               <p className="text-xs text-slate-600 mt-2">
-                Search any publicly traded company by ticker symbol
+                Search any publicly traded company by its ticker symbol - we'll fetch the data automatically
               </p>
             </CardContent>
           </Card>
