@@ -388,9 +388,6 @@ export default function Companies() {
                       <Card key={rec.symbol} className="bg-white rounded-xl p-4 border-2 border-blue-100">
                         <CardContent className="p-0">
                           <div className="flex items-center gap-3 mb-2">
-                            {rec.logo_url && (
-                              <img src={rec.logo_url} alt={`${rec.name} logo`} className="w-8 h-8 rounded-full object-contain" />
-                            )}
                             <div>
                               <p className="text-lg font-bold text-slate-900">{rec.symbol}</p>
                               <p className="text-sm text-slate-600">{rec.name}</p>
