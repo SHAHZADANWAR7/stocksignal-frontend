@@ -420,7 +420,7 @@ export default function Companies() {
 
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200 p-8 md:p-10 mb-8">
           <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 mb-4 rounded-xl">
-            <CardContent className="p-8 py-6 flex flex-col justify-center">
+            <CardContent className="p-8 py-6 flex flex-col justify-center min-h-[120px]">
               <div className="flex flex-col md:flex-row gap-3 items-center">
                 <div className="flex-1">
                   <Input
