@@ -67,38 +67,56 @@ export default function Companies() {
     filterCompanies();
   }, [searchQuery, sectorFilter, companies]);
 
+  // Robust loadCompanies: handle different response shapes and avoid leaving filteredCompanies empty due to errors
   const loadCompanies = async () => {
     setIsLoading(true);
     try {
       const result = await callAwsFunction('getCompanies', {});
-      const companiesData = result.items || [];
+      // Support multiple response shapes: result.items, result.data, or result (if array)
+      let companiesData = [];
+      if (Array.isArray(result?.items)) companiesData = result.items;
+      else if (Array.isArray(result?.data)) companiesData = result.data;
+      else if (Array.isArray(result)) companiesData = result;
+      else companiesData = [];
+
+      // Ensure we always set companies and filteredCompanies (even if empty) to avoid stale state
       setCompanies(companiesData);
       setFilteredCompanies(companiesData);
     } catch (error) {
+      // Log and set empty arrays so UI handles "No companies found" explicitly
       console.error("Error loading companies:", error);
       setCompanies([]);
       setFilteredCompanies([]);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
+  // Defensive filterCompanies: guard against undefined fields and avoid throwing
   const filterCompanies = () => {
-    let filtered = companies;
+    try {
+      let filtered = Array.isArray(companies) ? companies.slice() : [];
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(c => 
-        c.name.toLowerCase().includes(query) || 
-        c.symbol.toLowerCase().includes(query) ||
-        c.sector.toLowerCase().includes(query)
-      );
+      if ((searchQuery || "").trim()) {
+        const query = (searchQuery || "").toLowerCase();
+        filtered = filtered.filter((c) => {
+          const name = (c && c.name) ? String(c.name).toLowerCase() : "";
+          const symbol = (c && c.symbol) ? String(c.symbol).toLowerCase() : "";
+          const sector = (c && c.sector) ? String(c.sector).toLowerCase() : "";
+          return name.includes(query) || symbol.includes(query) || sector.includes(query);
+        });
+      }
+
+      if ((sectorFilter || "all") !== "all") {
+        filtered = filtered.filter((c) => (c && c.sector) === sectorFilter);
+      }
+
+      setFilteredCompanies(filtered);
+    } catch (err) {
+      console.error("filterCompanies error:", err);
+      // If filtering fails for any reason, fallback to showing loaded companies
+      setFilteredCompanies(Array.isArray(companies) ? companies : []);
     }
-
-    if (sectorFilter !== "all") {
-      filtered = filtered.filter(c => c.sector === sectorFilter);
-    }
-
-    setFilteredCompanies(filtered);
   };
 
   const toggleCompany = (symbol) => {
@@ -113,7 +131,7 @@ export default function Companies() {
     if (!symbolSearchQuery.trim()) return;
     
     const symbol = symbolSearchQuery.toUpperCase().trim();
-    const existing = companies.find(c => c.symbol.toUpperCase() === symbol);
+    const existing = companies.find(c => (c.symbol || "").toUpperCase() === symbol);
     if (existing) {
       setSelectedCompanies(prev => 
         prev.includes(symbol) ? prev : [...prev, symbol]
@@ -188,7 +206,7 @@ export default function Companies() {
   };
 
   const addStockFromAnalysis = async (symbol) => {
-    const existing = companies.find(c => c.symbol.toUpperCase() === symbol.toUpperCase());
+    const existing = companies.find(c => (c.symbol || "").toUpperCase() === (symbol || "").toUpperCase());
     if (existing) {
       setSelectedCompanies(prev => 
         prev.includes(existing.symbol) ? prev : [...prev, existing.symbol]
@@ -201,7 +219,7 @@ export default function Companies() {
     await searchAndAddSymbol();
   };
 
-  const sectors = [...new Set(companies.map(c => c.sector))];
+  const sectors = [...new Set((companies || []).map(c => c && c.sector).filter(Boolean))];
 
   const sectorColors = {
     "Technology": "bg-blue-100 text-blue-700 border-blue-200",
