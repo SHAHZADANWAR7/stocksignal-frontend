@@ -25,8 +25,27 @@ export function createPageUrl(pageName) {
     "Disclaimer": "disclaimer",
   };
 
-  const safeName = pageName || "";
-  const path = pathMapping[safeName] || safeName.toLowerCase().replace(/\s+/g, '-');
+  const safeName = (pageName || "").trim();
+
+  // 1) Exact mapping match
+  if (pathMapping[safeName]) {
+    return `/${pathMapping[safeName]}`;
+  }
+
+  // 2) Normalize camelCase/PascalCase into space-separated words, e.g. "PracticeTrading" -> "Practice Trading"
+  const splitCamel = safeName
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")     // aB -> a B
+    .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")   // XMLHttp -> XML Http
+    .trim();
+
+  // 3) Check mapping for the split form (e.g. if mapping uses "Practice Simulator" vs "Practice Simulator")
+  if (pathMapping[splitCamel]) {
+    return `/${pathMapping[splitCamel]}`;
+  }
+
+  // 4) Fallback: lower-case and replace spaces with hyphens
+  const path = splitCamel.toLowerCase().replace(/\s+/g, '-');
+
   return `/${path}`;
 }
 
