@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Building2, TrendingUp, Filter, Plus, Loader2, Sparkles, Target, RefreshCw } from "lucide-react";
+import { Search, Building2, TrendingUp, Filter, Plus, Loader2, Sparkles, ArrowRight, Target, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -26,31 +26,25 @@ export default function Companies() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const hasAutoAnalyzed = React.useRef(false);
 
+  // Transform Lambda response from snake_case to camelCase
   const transformStockData = (data) => {
-    const safeParseFloat = (value) => {
-      const num = parseFloat(value);
-      return isNaN(num) ? null : num;
-    };
-
     return {
       symbol: data.symbol,
       name: data.name,
-      price: safeParseFloat(data.current_price),
-      marketCap: data.market_cap && data.market_cap !== 'N/A' ? String(data.market_cap) : null,
-      peRatio: safeParseFloat(data.pe_ratio),
-      peRatioFormatted: data.pe_ratio_formatted && data.pe_ratio_formatted !== 'N/A' ? data.pe_ratio_formatted : null,
-      weekChange52: safeParseFloat(data.week_change_52),
-      dividendYield: safeParseFloat(data.dividend_yield),
-      beta: safeParseFloat(data.beta),
-      betaConfidence: data.beta_confidence,
+      price: data.current_price,
+      marketCap: data.market_cap,
+      peRatio: data.pe_ratio,
+      weekChange52: data.week_change_52,
+      dividendYield: data.dividend_yield,
+      beta: data.beta,
       sector: data.sector,
       description: data.description,
-      valuation: data.valuation && data.valuation !== 'N/A' ? data.valuation : null,
-      valuationReasoning: data.valuation_reasoning,
-      expectedReturn: safeParseFloat(data.expected_return),
-      risk: safeParseFloat(data.risk),
-      dataSources: data.data_sources,
-      logoUrl: data.logo_url
+      valuation: data.valuation,
+      valuation_reasoning: data.valuation_reasoning,
+      expected_return: data.expected_return,
+      risk: data.risk,
+      data_sources: data.data_sources,
+      recommendations: data.recommendations
     };
   };
 
@@ -96,7 +90,7 @@ export default function Companies() {
       filtered = filtered.filter(c => 
         c.name.toLowerCase().includes(query) || 
         c.symbol.toLowerCase().includes(query) ||
-        (c.sector && c.sector.toLowerCase().includes(query))
+        c.sector.toLowerCase().includes(query)
       );
     }
 
@@ -124,6 +118,7 @@ export default function Companies() {
       setSelectedCompanies(prev => 
         prev.includes(symbol) ? prev : [...prev, symbol]
       );
+      alert(`${symbol} is already in your selection!`);
       setSymbolSearchQuery("");
       return;
     }
@@ -131,28 +126,31 @@ export default function Companies() {
     setIsSearchingSymbol(true);
     
     try {
-      const stockData = await callAwsFunction('getStockQuote', { symbol });
-
-      if (!stockData || !stockData.symbol) {
-        alert(`Could not find symbol "${symbol}".`);
+      const batchResult = await callAwsFunction('getStockBatch', { symbols: [symbol] });
+      
+      if (!batchResult.stocks || batchResult.stocks.length === 0) {
+        alert(`Could not find symbol "${symbol}". Please check the ticker and try again.`);
         setIsSearchingSymbol(false);
         return;
       }
 
+      const stockData = batchResult.stocks[0];
+
+      // Add new company to list
       const newCompany = {
         symbol: stockData.symbol,
         name: stockData.name || symbol,
         sector: stockData.sector || "Other",
-        description: stockData.description || "Stock information not available",
-        beta: stockData.beta,
-        market_cap: stockData.market_cap
+        description: stockData.description || "Stock information not available"
       };
 
       setCompanies(prev => [...prev, newCompany]);
       setSelectedCompanies(prev => [...prev, symbol]);
       setSymbolSearchQuery("");
+      alert(`✅ ${stockData.name} added to your selection!`);
     } catch (error) {
       console.error("Error searching for symbol:", error);
+      alert("Error searching for symbol. Please try again.");
     }
     
     setIsSearchingSymbol(false);
@@ -166,10 +164,12 @@ export default function Companies() {
     
     try {
       const symbol = quickAnalysisSymbol.toUpperCase().trim();
-      const analysisData = await callAwsFunction('getStockAnalysis', { symbol, refresh: true });
+      
+      // Call getStockAnalysis for comprehensive AI analysis
+      const analysisData = await callAwsFunction('getStockAnalysis', { symbol });
 
       if (!analysisData || !analysisData.symbol) {
-        alert(`Could not analyze symbol "${symbol}".`);
+        alert(`Could not analyze symbol "${symbol}". Please try again.`);
         setIsAnalyzing(false);
         return;
       }
@@ -181,22 +181,27 @@ export default function Companies() {
       });
     } catch (error) {
       console.error("Analysis error:", error);
+      alert("Error analyzing stock. Please try again.");
     }
     
     setIsAnalyzing(false);
   };
 
-  const addStockFromAnalysis = (symbol) => { 
+  const addStockFromAnalysis = async (symbol) => {
     const existing = companies.find(c => c.symbol.toUpperCase() === symbol.toUpperCase());
-    if (!existing) {
-      setCompanies(prev => [...prev, { symbol, name: symbol, sector: "Other", description: "AI Recommended" }]);
+    if (existing) {
+      setSelectedCompanies(prev => 
+        prev.includes(existing.symbol) ? prev : [...prev, existing.symbol]
+      );
+      alert(`${symbol} added to your selection!`);
+      return;
     }
-    setSelectedCompanies(prev => 
-      prev.includes(symbol) ? prev : [...prev, symbol]
-    );
+
+    setSymbolSearchQuery(symbol);
+    await searchAndAddSymbol();
   };
 
-  const sectors = [...new Set(companies.map(c => c.sector))].filter(Boolean);
+  const sectors = [...new Set(companies.map(c => c.sector))];
 
   const sectorColors = {
     "Technology": "bg-blue-100 text-blue-700 border-blue-200",
@@ -223,19 +228,9 @@ export default function Companies() {
                 <Building2 className="w-6 h-6 md:w-7 md:h-7 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-2">
-                  <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-slate-900 leading-tight">
-                    Browse Investments
-                  </h1>
-                  <Button
-                    onClick={loadCompanies}
-                    disabled={isLoading}
-                    className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-                  >
-                    {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                    Refresh Data
-                  </Button>
-                </div>
+                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-2 leading-tight">
+                  Browse Investments
+                </h1>
                 <p className="text-sm md:text-base lg:text-lg text-slate-600 leading-relaxed">
                   Select stocks and index funds to get AI-powered investment recommendations
                 </p>
@@ -245,12 +240,12 @@ export default function Companies() {
         </motion.div>
 
         <Card className="border-2 border-emerald-300 shadow-lg mb-8 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
-          <CardContent className="p-12">
-            <div className="flex items-center gap-3 mb-4">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-4 justify-center">
               <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center">
                 <Sparkles className="w-7 h-7 text-white" />
               </div>
-              <div>
+              <div className="text-center">
                 <h2 className="text-2xl font-bold text-slate-900">Quick Stock Analysis</h2>
                 <p className="text-sm text-slate-600">Get AI-powered analysis and discover better alternatives</p>
               </div>
@@ -289,90 +284,71 @@ export default function Companies() {
               <div className="space-y-6">
                 <div className="bg-white rounded-xl p-6 border-2 border-emerald-200">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      {analysisResult.stock.logoUrl && (
-                        <img src={analysisResult.stock.logoUrl} alt={`${analysisResult.stock.name} logo`} className="w-10 h-10 rounded-full" />
-                      )}
-                      <div>
-                        <h3 className="text-2xl font-bold text-slate-900">{analysisResult.stock.symbol}</h3>
-                        <p className="text-slate-600">{analysisResult.stock.name}</p>
-                      </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-slate-900">{analysisResult.stock.symbol}</h3>
+                      <p className="text-slate-600">{analysisResult.stock.name}</p>
                     </div>
                   </div>
                   
-                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    {analysisResult.stock.valuation && (
-                      <div>
-                        <p className="text-sm text-slate-500">Valuation</p>
-                        <p className={`text-xl font-bold ${analysisResult.stock.valuation === 'overvalued' ? 'text-red-500' : analysisResult.stock.valuation === 'undervalued' ? 'text-green-500' : 'text-blue-600'}`}>
-                          {analysisResult.stock.valuation.charAt(0).toUpperCase() + analysisResult.stock.valuation.slice(1)}
-                        </p>
-                      </div>
-                    )}
-                    
-                    {analysisResult.stock.price != null && (
-                      <div>
-                        <p className="text-sm text-slate-500">Price</p>
-                        <p className="text-xl font-bold text-slate-900">
-                          ${analysisResult.stock.price.toFixed(2)}
-                        </p>
-                      </div>
-                    )}
-
-                    {analysisResult.stock.marketCap && (
-                      <div>
-                        <p className="text-sm text-slate-500">Market Cap</p>
-                        <p className="text-xl font-bold text-slate-900">
-                          {analysisResult.stock.marketCap}
-                        </p>
-                      </div>
-                    )}
-
-                    {(analysisResult.stock.peRatioFormatted || analysisResult.stock.peRatio != null) && (
-                      <div>
-                        <p className="text-sm text-slate-500">P/E Ratio</p>
-                        <p className="text-xl font-bold text-blue-600">
-                          {analysisResult.stock.peRatioFormatted || analysisResult.stock.peRatio.toFixed(2)}
-                        </p>
-                      </div>
-                    )}
-
-                    {analysisResult.stock.beta != null && (
-                      <div>
-                        <p className="text-sm text-slate-500">Beta</p>
-                        <p className="text-xl font-bold text-slate-900">
-                          {analysisResult.stock.beta.toFixed(2)}
-                        </p>
-                        {analysisResult.stock.betaConfidence && (
-                          <span className="text-xs text-slate-500">{analysisResult.stock.betaConfidence} confidence</span>
-                        )}
-                      </div>
-                    )}
-
-                    {analysisResult.stock.expectedReturn != null && (
-                      <div>
-                        <p className="text-sm text-slate-500">Expected Return</p>
-                        <p className="text-xl font-bold text-blue-600">
-                          {analysisResult.stock.expectedReturn.toFixed(1)}%
-                        </p>
-                      </div>
-                    )}
-
-                    {analysisResult.stock.risk != null && (
-                      <div>
-                        <p className="text-sm text-slate-500">Risk</p>
-                        <p className="text-xl font-bold text-orange-600">
-                          {analysisResult.stock.risk.toFixed(1)}%
-                        </p>
-                      </div>
-                    )}
+                  <div className="grid md:grid-cols-5 gap-4 mb-4">
+                    <div>
+                      <p className="text-sm text-slate-500">Price</p>
+                      <p className="text-xl font-bold text-slate-900">
+                        {analysisResult.stock.price != null ? `$${analysisResult.stock.price.toFixed(2)}` : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Market Cap</p>
+                      <p className="text-base font-bold text-slate-900">
+                        {analysisResult.stock.marketCap ? `${analysisResult.stock.marketCap}` : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">P/E Ratio</p>
+                      <p className="text-xl font-bold text-blue-600">
+                        {analysisResult.stock.peRatio != null ? analysisResult.stock.peRatio.toFixed(2) : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">52W Change</p>
+                      <p className="text-xl font-bold text-emerald-600">
+                        {analysisResult.stock.weekChange52 != null ? `${analysisResult.stock.weekChange52.toFixed(2)}%` : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Dividend Yield</p>
+                      <p className="text-xl font-bold text-rose-600">
+                        {analysisResult.stock.dividendYield != null ? `${analysisResult.stock.dividendYield.toFixed(2)}%` : 'N/A'}
+                      </p>
+                    </div>
                   </div>
 
-                  {analysisResult.stock.valuationReasoning && (
+                  <div className="grid md:grid-cols-3 gap-4 mb-4">
+                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                      <p className="text-sm text-slate-600 mb-1">Valuation</p>
+                      <p className="text-lg font-bold text-slate-900">
+                        {analysisResult.stock.valuation ? analysisResult.stock.valuation.charAt(0).toUpperCase() + analysisResult.stock.valuation.slice(1) : 'N/A'}
+                      </p>
+                    </div>
+                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                      <p className="text-sm text-slate-600 mb-1">Expected Return</p>
+                      <p className="text-lg font-bold text-blue-600">
+                        {analysisResult.stock.expected_return != null ? `${analysisResult.stock.expected_return.toFixed(1)}%` : 'N/A'}
+                      </p>
+                    </div>
+                    <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                      <p className="text-sm text-slate-600 mb-1">Risk/Volatility</p>
+                      <p className="text-lg font-bold text-orange-600">
+                        {analysisResult.stock.risk != null ? `${analysisResult.stock.risk.toFixed(1)}%` : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {analysisResult.stock.valuation_reasoning && (
                     <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200 mb-4">
                       <p className="text-sm font-semibold text-slate-900 mb-2">AI Analysis</p>
                       <p className="text-sm text-slate-700 leading-relaxed">
-                        {analysisResult.stock.valuationReasoning}
+                        {analysisResult.stock.valuation_reasoning}
                       </p>
                     </div>
                   )}
@@ -385,48 +361,15 @@ export default function Companies() {
                     Add to Selection
                   </Button>
                 </div>
-
-                {analysisResult.recommendations && analysisResult.recommendations.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-bold text-slate-900">AI Recommended Alternatives</h3>
-                    {analysisResult.recommendations.map((rec) => (
-                      <Card key={rec.symbol} className="bg-white rounded-xl p-4 border-2 border-blue-100">
-                        <CardContent className="p-0">
-                          <div className="flex items-center gap-3 mb-2">
-                            {rec.logo_url && (
-                              <img src={rec.logo_url} alt={`${rec.name} logo`} className="w-8 h-8 rounded-full object-contain" />
-                            )}
-                            <div>
-                              <p className="text-lg font-bold text-slate-900">{rec.symbol}</p>
-                              <p className="text-sm text-slate-600">{rec.name}</p>
-                              {rec.beta != null && (
-                                <p className="text-xs text-slate-500">Beta: {rec.beta.toFixed(2)}</p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-sm text-slate-700 mb-3" dangerouslySetInnerHTML={{ __html: rec.explanation }} />
-                          <Button
-                            onClick={() => addStockFromAnalysis(rec.symbol)}
-                            variant="outline"
-                            className="w-full border-blue-300 text-blue-600 hover:bg-blue-50"
-                          >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add to Selection
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
           </CardContent>
         </Card>
 
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200 p-8 md:p-10 mb-8">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200 p-4 md:p-6 mb-8">
           <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 mb-4 rounded-xl">
-            <CardContent className="p-8">
-              <div className="flex flex-col md:flex-row gap-3">
+          <CardContent className="pt-12 pb-8 px-8">
+              <div className="flex flex-col md:flex-row gap-3 items-center justify-center text-center w-full">
                 <div className="flex-1">
                   <Input
                     placeholder="Search any publicly traded company by its ticker symbol"
@@ -455,7 +398,7 @@ export default function Companies() {
                   )}
                 </Button>
               </div>
-              <p className="text-xs text-slate-600 mt-2">
+              <p className="text-xs text-slate-600 mt-4 text-center">
                 Search any publicly traded company by its ticker symbol - we'll fetch the data automatically
               </p>
             </CardContent>
@@ -502,7 +445,7 @@ export default function Companies() {
                       <div className="flex items-center gap-4 min-w-0">
                         <div className="relative">
                           <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl blur opacity-50"></div>
-                          <div className="relative w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                          <div className="relative w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
                             <TrendingUp className="w-6 h-6 md:w-7 md:h-7 text-white" />
                           </div>
                         </div>
@@ -542,63 +485,58 @@ export default function Companies() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {isLoading ? (
-            Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
+            <>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <CardSkeleton key={i} />
+              ))}
+            </>
           ) : (
-            <AnimatePresence>
-              {filteredCompanies.map((company) => {
-                const isSelected = selectedCompanies.includes(company.symbol);
-                return (
-                  <motion.div
-                    key={company.symbol}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.2 }}
+          <AnimatePresence>
+            {filteredCompanies.map((company) => {
+              const isSelected = selectedCompanies.includes(company.symbol);
+              return (
+                <div key={company.symbol}>
+                  <Card 
+                    className={`group transition-all duration-300 border-2 rounded-xl h-full cursor-pointer ${
+                      isSelected 
+                        ? 'border-blue-500 shadow-lg shadow-blue-500/20 bg-gradient-to-br from-blue-50 to-indigo-50' 
+                        : 'hover:shadow-lg border-slate-200 hover:border-blue-300 bg-white'
+                    }`}
+                    onClick={() => toggleCompany(company.symbol)}
                   >
-                    <Card 
-                      className={`group transition-all duration-300 border-2 rounded-xl h-full cursor-pointer ${
-                        isSelected 
-                          ? 'border-blue-500 shadow-lg shadow-blue-500/20 bg-gradient-to-br from-blue-50 to-indigo-50' 
-                          : 'hover:shadow-lg border-slate-200 hover:border-blue-300 bg-white'
-                      }`}
-                      onClick={() => toggleCompany(company.symbol)}
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            {company.logo_url && (
-                              <img src={company.logo_url} alt={`${company.name} logo`} className="w-10 h-10 rounded-full" />
-                            )}
-                            <div>
-                              <h3 className="font-bold text-slate-900 text-lg">{company.symbol}</h3>
-                              <Badge 
-                                variant="secondary"
-                                className={`${sectorColors[company.sector] || 'bg-gray-100 text-gray-700'} border text-xs`}
-                              >
-                                {company.sector}
-                              </Badge>
-                            </div>
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center">
+                            <Building2 className="w-6 h-6 text-slate-700" />
                           </div>
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleCompany(company.symbol)}
-                            className="w-5 h-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                          />
+                          <div>
+                            <h3 className="font-bold text-slate-900 text-lg">{company.symbol}</h3>
+                            <Badge 
+                              variant="secondary"
+                              className={`${sectorColors[company.sector] || 'bg-gray-100 text-gray-700'} border text-xs`}
+                            >
+                              {company.sector}
+                            </Badge>
+                          </div>
                         </div>
-                        
-                        <h4 className="font-semibold text-slate-900 mb-2">{company.name}</h4>
-                        <p className="text-sm text-slate-600 mb-3">{company.description}</p>
-                        <div className="flex justify-between items-center text-xs text-slate-500 mt-2">
-                          <span>Beta: {company.beta != null ? company.beta.toFixed(2) : 'N/A'}</span>
-                          <span>Market Cap: {company.market_cap != null ? company.market_cap : 'N/A'}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleCompany(company.symbol)}
+                          className="w-5 h-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                        />
+                      </div>
+                      
+                      <h4 className="font-semibold text-slate-900 mb-2">{company.name}</h4>
+                      <p className="text-sm text-slate-600 line-clamp-2 mb-3">
+                        {company.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              );
+            })}
+          </AnimatePresence>
           )}
         </div>
 
