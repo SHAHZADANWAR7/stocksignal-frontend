@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; // Added useRef
 import { callAwsFunction } from "@/components/utils/api/awsApi";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,13 @@ export default function Companies() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const hasAutoAnalyzed = React.useRef(false);
 
+  // --- NEW STATE FOR INFINITE SCROLLING ---
+  const [currentPage, setCurrentPage] = useState(0); // Page number for loading more companies
+  const [companiesPerPage] = useState(30); // Number of companies to load per page
+  const [hasMore, setHasMore] = useState(true); // Tracks if there are more companies to load
+  const [isRefreshing, setIsRefreshing] = useState(false); // Indicates a full data refresh
+  const loadMoreRef = useRef(null); // Ref for the element to observe for infinite scrolling
+
   // Transform Lambda response from snake_case to camelCase
   const transformStockData = (data) => {
     return {
@@ -49,8 +56,10 @@ export default function Companies() {
   };
 
   useEffect(() => {
-    loadCompanies();
+    // Initial load of companies
+    loadCompanies(false, 0, companiesPerPage); 
     
+    // Check for analyze parameter in URL
     const urlParams = new URLSearchParams(window.location.search);
     const symbolToAnalyze = urlParams.get('analyze');
     if (symbolToAnalyze && !hasAutoAnalyzed.current) {
@@ -63,31 +72,87 @@ export default function Companies() {
     }
   }, []);
 
+  // --- NEW useEffect for Intersection Observer ---
   useEffect(() => {
-    filterCompanies();
+    if (loadMoreRef.current) {
+      const observer = new IntersectionObserver((entries) => {
+        // Only load more if the target element is visible, there's more data, not currently loading, not refreshing, and no active search query
+        if (entries[0].isIntersecting && hasMore && !isLoading && !isRefreshing && !searchQuery) {
+          setCurrentPage((prevPage) => prevPage + 1);
+        }
+      }, { threshold: 1.0 });
+      observer.observe(loadMoreRef.current);
+      return () => observer.disconnect();
+    }
+  }, [hasMore, isLoading, isRefreshing, searchQuery]); // Re-run if these change
+
+  // --- NEW useEffect to trigger fetching when currentPage changes ---
+  useEffect(() => {
+    // This useEffect is responsible for loading the next batch of companies
+    // It's triggered when currentPage changes, and only if there's more data and not already loading.
+    // Also, prevent loading when there's an active search query, as search filters existing data.
+    if (currentPage > 0 && hasMore && !isLoading && !searchQuery) {
+      loadCompanies(false, currentPage, companiesPerPage);
+    }
+  }, [currentPage]); // Depend on currentPage
+
+  useEffect(() => {
+    // When search query or sector filter changes, reset pagination and filter immediately
+    if (searchQuery.trim() || sectorFilter !== "all") {
+      filterCompanies();
+    } else {
+      // If filters are cleared, reset to show all loaded companies
+      setFilteredCompanies(companies);
+    }
   }, [searchQuery, sectorFilter, companies]);
 
-  const loadCompanies = async () => {
+  // --- MODIFIED loadCompanies function for pagination and refresh ---
+  const loadCompanies = async (forceRefresh = false, page = 0, limit = companiesPerPage) => {
+    if (forceRefresh) {
+      setIsRefreshing(true);
+      setCompanies([]); // Clear existing companies on refresh
+      setFilteredCompanies([]);
+      setCurrentPage(0); // Reset page to 0 for a full refresh
+      setHasMore(true);
+    } else if (isLoading || !hasMore || (page > 0 && searchQuery)) {
+      // Prevent multiple loads or loading when no more data, or when searching (search filters existing)
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const result = await callAwsFunction('getCompanies', {});
+      const skip = page * limit;
+      // Using callAwsFunction for getCompanies with skip and limit
+      const result = await callAwsFunction('getCompanies', { skip, limit });
       const companiesData = result.items || [];
-      setCompanies(companiesData);
-      setFilteredCompanies(companiesData);
+
+      if (forceRefresh) {
+        setCompanies(companiesData);
+        setFilteredCompanies(companiesData); // Apply filter after refresh
+      } else {
+        setCompanies((prevCompanies) => {
+            // Filter out duplicates in case the same items are returned
+            const newCompanies = companiesData.filter(
+                (newComp) => !prevCompanies.some((oldComp) => oldComp.id === newComp.id)
+            );
+            return [...prevCompanies, ...newCompanies];
+        });
+      }
+      setHasMore(companiesData.length === limit); // If fewer than limit returned, assume no more data
     } catch (error) {
       console.error("Error loading companies:", error);
-      setCompanies([]);
-      setFilteredCompanies([]);
+      setHasMore(false); // Stop trying to load more on error
     }
     setIsLoading(false);
+    setIsRefreshing(false);
   };
 
   const filterCompanies = () => {
-    let filtered = companies;
+    let currentFiltered = companies; // Filter from currently loaded companies (which now accumulates)
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(c => 
+      currentFiltered = currentFiltered.filter(c => 
         c.name.toLowerCase().includes(query) || 
         c.symbol.toLowerCase().includes(query) ||
         c.sector.toLowerCase().includes(query)
@@ -95,10 +160,10 @@ export default function Companies() {
     }
 
     if (sectorFilter !== "all") {
-      filtered = filtered.filter(c => c.sector === sectorFilter);
+      currentFiltered = currentFiltered.filter(c => c.sector === sectorFilter);
     }
 
-    setFilteredCompanies(filtered);
+    setFilteredCompanies(currentFiltered);
   };
 
   const toggleCompany = (symbol) => {
@@ -145,6 +210,7 @@ export default function Companies() {
       };
 
       setCompanies(prev => [...prev, newCompany]);
+      setFilteredCompanies(prev => [...prev, newCompany]); // Also add to filtered list
       setSelectedCompanies(prev => [...prev, symbol]);
       setSymbolSearchQuery("");
       alert(`✅ ${stockData.name} added to your selection!`);
@@ -236,6 +302,24 @@ export default function Companies() {
                 </p>
               </div>
             </div>
+            {/* --- REFRESH BUTTON MOVED TO TOP-RIGHT --- */}
+            <Button
+              onClick={() => loadCompanies(true)} // Trigger full refresh
+              disabled={isRefreshing}
+              className="ml-auto w-fit md:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white h-12 text-base font-semibold shadow-md"
+            >
+              {isRefreshing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Refreshing Data...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Refresh Data
+                </>
+              )}
+            </Button>
           </div>
         </motion.div>
 
@@ -285,9 +369,7 @@ export default function Companies() {
                 <div className="bg-white rounded-xl p-6 border-2 border-emerald-200">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      {analysisResult.stock.logoUrl && (
-                        <img src={analysisResult.stock.logoUrl} alt={`${analysisResult.stock.name} logo`} className="w-10 h-10 rounded-full" />
-                      )}
+                      {/* Removed logo from here as per previous request */}
                       <div>
                         <h3 className="text-2xl font-bold text-slate-900">{analysisResult.stock.symbol}</h3>
                         <p className="text-slate-600">{analysisResult.stock.name}</p>
@@ -314,14 +396,14 @@ export default function Companies() {
                       </div>
                     )}
 
-                    {analysisResult.stock.marketCap && (
-                      <div>
+                    {/* --- Market Cap Display (with "Not Available") --- */}
+                    <div> {/* Always render the div to maintain consistent layout */}
                         <p className="text-sm text-slate-500">Market Cap</p>
                         <p className="text-xl font-bold text-slate-900">
-                          {analysisResult.stock.marketCap}
+                            {analysisResult.stock.marketCap != null ? analysisResult.stock.marketCap : 'Not Available'}
                         </p>
-                      </div>
-                    )}
+                    </div>
+
 
                     {(analysisResult.stock.peRatioFormatted || analysisResult.stock.peRatio != null) && (
                       <div>
@@ -332,17 +414,16 @@ export default function Companies() {
                       </div>
                     )}
 
-                    {analysisResult.stock.beta != null && (
-                      <div>
+                    {/* --- Beta Display (with "Not Available") --- */}
+                    <div> {/* Always render the div to maintain consistent layout */}
                         <p className="text-sm text-slate-500">Beta</p>
                         <p className="text-xl font-bold text-slate-900">
-                          {analysisResult.stock.beta.toFixed(2)}
+                            {analysisResult.stock.beta != null ? analysisResult.stock.beta.toFixed(2) : 'Not Available'}
                         </p>
-                        {analysisResult.stock.betaConfidence && (
-                          <span className="text-xs text-slate-500">{analysisResult.stock.betaConfidence} confidence</span>
+                        {analysisResult.stock.betaConfidence && analysisResult.stock.beta != null && ( // Only show confidence if beta is available
+                            <span className="text-xs text-slate-500">{analysisResult.stock.betaConfidence} confidence</span>
                         )}
-                      </div>
-                    )}
+                    </div>
 
                     {analysisResult.stock.expectedReturn != null && (
                       <div>
@@ -533,7 +614,7 @@ export default function Companies() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading ? (
+          {isLoading && currentPage === 0 && searchQuery.length === 0 ? ( // Only show skeleton on initial load and no search
             Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
           ) : (
             <AnimatePresence>
@@ -541,7 +622,7 @@ export default function Companies() {
                 const isSelected = selectedCompanies.includes(company.symbol);
                 return (
                   <motion.div
-                    key={company.symbol}
+                    key={company.id || company.symbol} // Use company.id if available, fallback to symbol
                     layout
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -580,10 +661,13 @@ export default function Companies() {
                         </div>
                         
                         <h4 className="font-semibold text-slate-900 mb-2">{company.name}</h4>
-                        <p className="text-sm text-slate-600 mb-3">{company.description}</p>
+                        {/* --- Changed to line-clamp-4 --- */}
+                        <p className="text-sm text-slate-600 line-clamp-4 mb-3">{company.description}</p>
                         <div className="flex justify-between items-center text-xs text-slate-500 mt-2">
-                          <span>Beta: {company.beta != null ? company.beta.toFixed(2) : 'N/A'}</span>
-                          <span>Market Cap: {company.market_cap != null ? company.market_cap : 'N/A'}</span>
+                          {/* --- Changed 'N/A' to 'Not Available' for Beta --- */}
+                          <span>Beta: {company.beta != null ? company.beta.toFixed(2) : 'Not Available'}</span>
+                          {/* --- Changed 'N/A' to 'Not Available' for Market Cap --- */}
+                          <span>Market Cap: {company.market_cap != null ? company.market_cap : 'Not Available'}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -592,8 +676,24 @@ export default function Companies() {
               })}
             </AnimatePresence>
           )}
+          {/* --- Infinite Scroll Loader --- */}
+          {isLoading && hasMore && searchQuery.length === 0 && ( // Show loader for infinite scroll only if not searching
+            <div className="col-span-full text-center py-8">
+              <Loader2 className="w-8 h-8 mx-auto animate-spin text-blue-500" />
+              <p className="text-slate-600 mt-2">Loading more companies...</p>
+            </div>
+          )}
+          {/* --- End of list message --- */}
+          {!isLoading && !hasMore && filteredCompanies.length > 0 && searchQuery.length === 0 && (
+            <div className="col-span-full text-center py-8 text-slate-500">
+              You've reached the end of the list!
+            </div>
+          )}
+          {/* --- Invisible element to observe for infinite scroll --- */}
+          <div ref__={loadMoreRef} className="col-span-full h-1" /> 
         </div>
 
+        {/* --- Empty state when no companies are found by filters/search --- */}
         {filteredCompanies.length === 0 && !isLoading && (
           <div className="text-center py-16">
             <Building2 className="w-16 h-16 mx-auto mb-4 text-slate-300" />
