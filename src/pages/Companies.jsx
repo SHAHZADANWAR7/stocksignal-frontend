@@ -24,7 +24,6 @@ export default function Companies() {
   const [quickAnalysisSymbol, setQuickAnalysisSymbol] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
-  const [loadError, setLoadError] = useState(null);
   const hasAutoAnalyzed = React.useRef(false);
 
   // Transform Lambda response from snake_case to camelCase
@@ -68,64 +67,38 @@ export default function Companies() {
     filterCompanies();
   }, [searchQuery, sectorFilter, companies]);
 
-  // Robust loadCompanies: handle different response shapes and report errors
   const loadCompanies = async () => {
     setIsLoading(true);
-    setLoadError(null);
     try {
       const result = await callAwsFunction('getCompanies', {});
-      console.debug("getCompanies raw result:", result);
-
-      // Support several shapes: result.items, result.data, or result itself as array
-      let companiesData = [];
-      if (Array.isArray(result?.items)) companiesData = result.items;
-      else if (Array.isArray(result?.data)) companiesData = result.data;
-      else if (Array.isArray(result)) companiesData = result;
-      else companiesData = [];
-
+      const companiesData = result.items || [];
       setCompanies(companiesData);
       setFilteredCompanies(companiesData);
     } catch (error) {
       console.error("Error loading companies:", error);
       setCompanies([]);
       setFilteredCompanies([]);
-      setLoadError(error?.message || "Failed to load companies");
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   };
 
-  // Defensive filtering (avoid crashes from undefined fields)
   const filterCompanies = () => {
-    try {
-      let filtered = Array.isArray(companies) ? companies.slice() : [];
+    let filtered = companies;
 
-      if ((searchQuery || "").trim()) {
-        const q = (searchQuery || "").toLowerCase();
-        filtered = filtered.filter((c) => {
-          const name = (c && c.name) ? String(c.name).toLowerCase() : "";
-          const symbol = (c && c.symbol) ? String(c.symbol).toLowerCase() : "";
-          const sector = (c && c.sector) ? String(c.sector).toLowerCase() : "";
-          return name.includes(q) || symbol.includes(q) || sector.includes(q);
-        });
-      }
-
-      if ((sectorFilter || "all") !== "all") {
-        filtered = filtered.filter((c) => (c && c.sector) === sectorFilter);
-      }
-
-      console.debug("filterCompanies:", {
-        searchQuery,
-        sectorFilter,
-        companiesCount: Array.isArray(companies) ? companies.length : 0,
-        filteredCount: filtered.length
-      });
-
-      setFilteredCompanies(filtered);
-    } catch (err) {
-      console.error("filterCompanies error:", err);
-      setFilteredCompanies(Array.isArray(companies) ? companies : []);
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(c => 
+        c.name.toLowerCase().includes(query) || 
+        c.symbol.toLowerCase().includes(query) ||
+        c.sector.toLowerCase().includes(query)
+      );
     }
+
+    if (sectorFilter !== "all") {
+      filtered = filtered.filter(c => c.sector === sectorFilter);
+    }
+
+    setFilteredCompanies(filtered);
   };
 
   const toggleCompany = (symbol) => {
@@ -140,7 +113,7 @@ export default function Companies() {
     if (!symbolSearchQuery.trim()) return;
     
     const symbol = symbolSearchQuery.toUpperCase().trim();
-    const existing = companies.find(c => (c.symbol || "").toUpperCase() === symbol);
+    const existing = companies.find(c => c.symbol.toUpperCase() === symbol);
     if (existing) {
       setSelectedCompanies(prev => 
         prev.includes(symbol) ? prev : [...prev, symbol]
@@ -215,7 +188,7 @@ export default function Companies() {
   };
 
   const addStockFromAnalysis = async (symbol) => {
-    const existing = companies.find(c => (c.symbol || "").toUpperCase() === (symbol || "").toUpperCase());
+    const existing = companies.find(c => c.symbol.toUpperCase() === symbol.toUpperCase());
     if (existing) {
       setSelectedCompanies(prev => 
         prev.includes(existing.symbol) ? prev : [...prev, existing.symbol]
@@ -228,7 +201,7 @@ export default function Companies() {
     await searchAndAddSymbol();
   };
 
-  const sectors = [...new Set((companies || []).map(c => c && c.sector).filter(Boolean))];
+  const sectors = [...new Set(companies.map(c => c.sector))];
 
   const sectorColors = {
     "Technology": "bg-blue-100 text-blue-700 border-blue-200",
@@ -456,7 +429,11 @@ export default function Companies() {
                     disabled={isSearchingSymbol}
                   />
                 </div>
-                <Button onClick={searchAndAddSymbol} disabled={isSearchingSymbol || !symbolSearchQuery.trim()} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 h-12 px-6">
+                <Button
+                  onClick={searchAndAddSymbol}
+                  disabled={isSearchingSymbol || !symbolSearchQuery.trim()}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 h-12 px-6"
+                >
                   {isSearchingSymbol ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -603,10 +580,10 @@ export default function Companies() {
                         </div>
                         
                         <h4 className="font-semibold text-slate-900 mb-2">{company.name}</h4>
-                        <p className="text-sm text-slate-600 line-clamp-6 mb-3">{company.description}</p>
+                        <p className="text-sm text-slate-600 mb-3">{company.description}</p>
                         <div className="flex justify-between items-center text-xs text-slate-500 mt-2">
-                          <span>Beta: {company.beta != null ? Number(company.beta).toFixed(2) : 'Not Available'}</span>
-                          <span>Market Cap: {company.market_cap != null ? company.market_cap : 'Not Available'}</span>
+                          <span>Beta: {company.beta != null ? company.beta.toFixed(2) : 'N/A'}</span>
+                          <span>Market Cap: {company.market_cap != null ? company.market_cap : 'N/A'}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -618,26 +595,11 @@ export default function Companies() {
         </div>
 
         {filteredCompanies.length === 0 && !isLoading && (
-          // Show clearer messages depending on why the list is empty
-          companies.length === 0 ? (
-            <div className="text-center py-16">
-              <Building2 className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No companies loaded</h3>
-              <p className="text-slate-500 mb-4">{loadError ? `Error: ${loadError}` : "The API returned no companies."}</p>
-              <div className="flex items-center justify-center gap-2">
-                <Button onClick={loadCompanies}>Retry</Button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <Building2 className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No companies found</h3>
-              <p className="text-slate-500 mb-4">Try adjusting your search or filters</p>
-              <div className="flex items-center justify-center gap-2">
-                <Button onClick={() => { setSearchQuery(""); setSectorFilter("all"); }}>Clear filters</Button>
-              </div>
-            </div>
-          )
+          <div className="text-center py-16">
+            <Building2 className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+            <h3 className="text-xl font-semibold text-slate-900 mb-2">No companies found</h3>
+            <p className="text-slate-500">Try adjusting your search or filters</p>
+          </div>
         )}
       </div>
     </div>
