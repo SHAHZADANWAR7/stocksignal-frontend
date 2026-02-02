@@ -539,6 +539,21 @@ export default function Companies() {
             <AnimatePresence>
               {filteredCompanies.map((company) => {
                 const isSelected = selectedCompanies.includes(company.symbol);
+
+                // Description truncation + Beta / Market Cap normalization
+                const rawDescription = company.description || "";
+                const truncatedDescription = rawDescription.length > 150 ? rawDescription.substring(0, 150) + "..." : rawDescription || "No description available";
+
+                const betaNum = Number(company.beta);
+                const betaDisplay = Number.isFinite(betaNum) ? betaNum.toFixed(2) : "Not Available";
+
+                const marketCapRaw = company.market_cap;
+                // Accept numbers or formatted strings like "123.45B", "1,234M", "500K"
+                const marketCapIsValid =
+                  typeof marketCapRaw === "number" ||
+                  (typeof marketCapRaw === "string" && /^[\d,\.]+\s*[BMK]?$/i.test(marketCapRaw.trim()));
+                const marketCapDisplay = marketCapIsValid ? marketCapRaw : "Not Available";
+
                 return (
                   <motion.div
                     key={company.symbol}
@@ -580,10 +595,13 @@ export default function Companies() {
                         </div>
                         
                         <h4 className="font-semibold text-slate-900 mb-2">{company.name}</h4>
-                        <p className="text-sm text-slate-600 mb-3">{company.description}</p>
+                        {/* Truncate description to 150 characters with ellipsis */}
+                        <p className="text-sm text-slate-600 mb-3">{truncatedDescription}</p>
                         <div className="flex justify-between items-center text-xs text-slate-500 mt-2">
-                          <span>Beta: {company.beta != null ? company.beta.toFixed(2) : 'N/A'}</span>
-                          <span>Market Cap: {company.market_cap != null ? company.market_cap : 'N/A'}</span>
+                          {/* Display Beta, or 'Not Available' if not a number */}
+                          <span>Beta: {betaDisplay}</span>
+                          {/* Display Market Cap, or 'Not Available' if not a valid number/formatted string */}
+                          <span>Market Cap: {marketCapDisplay}</span>
                         </div>
                       </CardContent>
                     </Card>
