@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { callAwsFunction } from "@/components/utils/api/awsApi";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Building2, TrendingUp, Filter, Plus, Loader2, Sparkles, Target, RefreshCw } from "lucide-react";
+import { Search, Building2, TrendingUp, Filter, Plus, Loader2, Sparkles, ArrowRight, Target, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -24,208 +24,149 @@ export default function Companies() {
   const [quickAnalysisSymbol, setQuickAnalysisSymbol] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
-  const hasAutoAnalyzed = useRef(false);
+  const hasAutoAnalyzed = React.useRef(false);
 
-  const [currentPage, setCurrentPage] = useState(0);
-  const [companiesPerPage] = useState(30);
-  const [hasMore, setHasMore] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const loadMoreRef = useRef(null);
-
+  // Transform Lambda response from snake_case to camelCase
   const transformStockData = (data) => {
-    if (!data) return {};
     return {
       symbol: data.symbol,
       name: data.name,
-      price: data.current_price ?? data.price ?? null,
-      marketCap: data.market_cap ?? data.marketCap ?? null,
-      peRatio: data.pe_ratio ?? data.peRatio ?? null,
-      peRatioFormatted: data.pe_ratio_formatted ?? data.peRatioFormatted ?? null,
-      weekChange52: data.week_change_52 ?? data.weekChange52 ?? null,
-      dividendYield: data.dividend_yield ?? data.dividendYield ?? null,
-      beta: data.beta ?? null,
-      betaConfidence: data.beta_confidence ?? data.betaConfidence ?? null,
-      sector: data.sector ?? null,
-      description: data.description ?? null,
-      valuation: data.valuation ?? null,
-      valuationReasoning: data.valuation_reasoning ?? data.valuationReasoning ?? null,
-      expectedReturn: data.expected_return ?? data.expectedReturn ?? null,
-      risk: data.risk ?? null,
-      dataSources: data.data_sources ?? data.dataSources ?? null,
-      recommendations: data.recommendations ?? [],
-      logoUrl: data.logo_url ?? data.logoUrl ?? null
+      price: data.current_price,
+      marketCap: data.market_cap,
+      peRatio: data.pe_ratio,
+      weekChange52: data.week_change_52,
+      dividendYield: data.dividend_yield,
+      beta: data.beta,
+      sector: data.sector,
+      description: data.description,
+      valuation: data.valuation,
+      valuation_reasoning: data.valuation_reasoning,
+      expected_return: data.expected_return,
+      risk: data.risk,
+      data_sources: data.data_sources,
+      recommendations: data.recommendations
     };
   };
 
   useEffect(() => {
-    loadCompanies(false, 0, companiesPerPage);
-
+    loadCompanies();
+    
     const urlParams = new URLSearchParams(window.location.search);
-    const symbolToAnalyze = urlParams.get("analyze");
+    const symbolToAnalyze = urlParams.get('analyze');
     if (symbolToAnalyze && !hasAutoAnalyzed.current) {
       hasAutoAnalyzed.current = true;
       setQuickAnalysisSymbol(symbolToAnalyze.toUpperCase());
       setTimeout(() => {
-        const btn = document.querySelector("[data-analyze-btn]");
+        const btn = document.querySelector('[data-analyze-btn]');
         if (btn) btn.click();
       }, 1500);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    const node = loadMoreRef.current;
-    if (!node) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading && !isRefreshing && !searchQuery) {
-          setCurrentPage((p) => p + 1);
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [hasMore, isLoading, isRefreshing, searchQuery]);
-
-  useEffect(() => {
-    if (currentPage > 0 && hasMore && !isLoading && !searchQuery) {
-      loadCompanies(false, currentPage, companiesPerPage);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]);
-
-  useEffect(() => {
-    if (searchQuery.trim() || sectorFilter !== "all") {
-      filterCompanies();
-    } else {
-      setFilteredCompanies(companies);
-    }
+    filterCompanies();
   }, [searchQuery, sectorFilter, companies]);
 
-  const loadCompanies = async (forceRefresh = false, page = 0, limit = companiesPerPage) => {
-    if (forceRefresh) {
-      setIsRefreshing(true);
-      setCompanies([]);
-      setFilteredCompanies([]);
-      setCurrentPage(0);
-      setHasMore(true);
-    } else if (isLoading || !hasMore || (page > 0 && searchQuery)) {
-      return;
-    }
-
+  const loadCompanies = async () => {
     setIsLoading(true);
     try {
-      const skip = page * limit;
-      const result = await callAwsFunction("getCompanies", { skip, limit });
+      const result = await callAwsFunction('getCompanies', {});
       const companiesData = result.items || [];
-
-      if (forceRefresh) {
-        setCompanies(companiesData);
-        setFilteredCompanies(companiesData);
-      } else {
-        setCompanies((prevCompanies) => {
-          const newCompanies = companiesData.filter(
-            (newComp) => !prevCompanies.some((oldComp) => oldComp.id === newComp.id)
-          );
-          return [...prevCompanies, ...newCompanies];
-        });
-      }
-      setHasMore(companiesData.length === limit);
+      setCompanies(companiesData);
+      setFilteredCompanies(companiesData);
     } catch (error) {
       console.error("Error loading companies:", error);
-      setHasMore(false);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      setCompanies([]);
+      setFilteredCompanies([]);
     }
+    setIsLoading(false);
   };
 
   const filterCompanies = () => {
-    let currentFiltered = companies;
+    let filtered = companies;
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      currentFiltered = currentFiltered.filter((c) =>
-        (c.name || "").toLowerCase().includes(query) ||
-        (c.symbol || "").toLowerCase().includes(query) ||
-        (c.sector || "").toLowerCase().includes(query)
+      filtered = filtered.filter(c => 
+        c.name.toLowerCase().includes(query) || 
+        c.symbol.toLowerCase().includes(query) ||
+        c.sector.toLowerCase().includes(query)
       );
     }
 
     if (sectorFilter !== "all") {
-      currentFiltered = currentFiltered.filter((c) => c.sector === sectorFilter);
+      filtered = filtered.filter(c => c.sector === sectorFilter);
     }
 
-    setFilteredCompanies(currentFiltered);
+    setFilteredCompanies(filtered);
   };
 
   const toggleCompany = (symbol) => {
-    setSelectedCompanies((prev) =>
-      prev.includes(symbol) ? prev.filter((s) => s !== symbol) : [...prev, symbol]
+    setSelectedCompanies(prev => 
+      prev.includes(symbol) 
+        ? prev.filter(s => s !== symbol)
+        : [...prev, symbol]
     );
   };
 
-  const searchAndAddSymbol = async (overrideSymbol) => {
-    const rawSymbol = overrideSymbol ?? symbolSearchQuery;
-    if (!rawSymbol || !rawSymbol.trim()) return;
-
-    const symbol = rawSymbol.toUpperCase().trim();
-    const existing = companies.find((c) => (c.symbol || "").toUpperCase() === symbol);
+  const searchAndAddSymbol = async () => {
+    if (!symbolSearchQuery.trim()) return;
+    
+    const symbol = symbolSearchQuery.toUpperCase().trim();
+    const existing = companies.find(c => c.symbol.toUpperCase() === symbol);
     if (existing) {
-      setSelectedCompanies((prev) => (prev.includes(symbol) ? prev : [...prev, symbol]));
-      if (!overrideSymbol) setSymbolSearchQuery("");
+      setSelectedCompanies(prev => 
+        prev.includes(symbol) ? prev : [...prev, symbol]
+      );
       alert(`${symbol} is already in your selection!`);
+      setSymbolSearchQuery("");
       return;
     }
 
     setIsSearchingSymbol(true);
-
+    
     try {
-      const batchResult = await callAwsFunction("getStockBatch", { symbols: [symbol] });
-
+      const batchResult = await callAwsFunction('getStockBatch', { symbols: [symbol] });
+      
       if (!batchResult.stocks || batchResult.stocks.length === 0) {
         alert(`Could not find symbol "${symbol}". Please check the ticker and try again.`);
+        setIsSearchingSymbol(false);
         return;
       }
 
       const stockData = batchResult.stocks[0];
 
+      // Add new company to list
       const newCompany = {
-        id: stockData.id ?? `${symbol}`,
-        symbol: stockData.symbol ?? symbol,
-        name: stockData.name ?? symbol,
-        sector: stockData.sector ?? "Other",
-        description: stockData.description ?? "Stock information not available",
-        logo_url: stockData.logo_url ?? stockData.logoUrl ?? null,
-        beta: stockData.beta ?? null,
-        market_cap: stockData.market_cap ?? null
+        symbol: stockData.symbol,
+        name: stockData.name || symbol,
+        sector: stockData.sector || "Other",
+        description: stockData.description || "Stock information not available"
       };
 
-      setCompanies((prev) => [...prev, newCompany]);
-      setFilteredCompanies((prev) => [...prev, newCompany]);
-      setSelectedCompanies((prev) => [...prev, symbol]);
-      if (!overrideSymbol) setSymbolSearchQuery("");
-      alert(`✅ ${stockData.name ?? symbol} added to your selection!`);
+      setCompanies(prev => [...prev, newCompany]);
+      setSelectedCompanies(prev => [...prev, symbol]);
+      setSymbolSearchQuery("");
+      alert(`✅ ${stockData.name} added to your selection!`);
     } catch (error) {
       console.error("Error searching for symbol:", error);
       alert("Error searching for symbol. Please try again.");
-    } finally {
-      setIsSearchingSymbol(false);
     }
+    
+    setIsSearchingSymbol(false);
   };
 
   const analyzeStock = async () => {
     if (!quickAnalysisSymbol.trim()) return;
-
+    
     setIsAnalyzing(true);
     setAnalysisResult(null);
-
+    
     try {
       const symbol = quickAnalysisSymbol.toUpperCase().trim();
-      const analysisData = await callAwsFunction("getStockAnalysis", { symbol });
+      
+      // Call getStockAnalysis for comprehensive AI analysis
+      const analysisData = await callAwsFunction('getStockAnalysis', { symbol });
 
       if (!analysisData || !analysisData.symbol) {
         alert(`Could not analyze symbol "${symbol}". Please try again.`);
@@ -241,39 +182,46 @@ export default function Companies() {
     } catch (error) {
       console.error("Analysis error:", error);
       alert("Error analyzing stock. Please try again.");
-    } finally {
-      setIsAnalyzing(false);
     }
+    
+    setIsAnalyzing(false);
   };
 
   const addStockFromAnalysis = async (symbol) => {
-    const existing = companies.find((c) => (c.symbol || "").toUpperCase() === (symbol || "").toUpperCase());
+    const existing = companies.find(c => c.symbol.toUpperCase() === symbol.toUpperCase());
     if (existing) {
-      setSelectedCompanies((prev) => (prev.includes(existing.symbol) ? prev : [...prev, existing.symbol]));
+      setSelectedCompanies(prev => 
+        prev.includes(existing.symbol) ? prev : [...prev, existing.symbol]
+      );
       alert(`${symbol} added to your selection!`);
       return;
     }
 
-    await searchAndAddSymbol(symbol);
+    setSymbolSearchQuery(symbol);
+    await searchAndAddSymbol();
   };
 
-  const sectors = [...new Set(companies.map((c) => c.sector).filter(Boolean))];
+  const sectors = [...new Set(companies.map(c => c.sector))];
 
   const sectorColors = {
-    Technology: "bg-blue-100 text-blue-700 border-blue-200",
-    Healthcare: "bg-green-100 text-green-700 border-green-200",
-    Finance: "bg-purple-100 text-purple-700 border-purple-200",
-    Consumer: "bg-orange-100 text-orange-700 border-orange-200",
-    Energy: "bg-yellow-100 text-yellow-700 border-yellow-200",
-    Industrial: "bg-gray-100 text-gray-700 border-gray-200",
-    Automotive: "bg-red-100 text-red-700 border-red-200",
-    Entertainment: "bg-pink-100 text-pink-700 border-pink-200"
+    "Technology": "bg-blue-100 text-blue-700 border-blue-200",
+    "Healthcare": "bg-green-100 text-green-700 border-green-200",
+    "Finance": "bg-purple-100 text-purple-700 border-purple-200",
+    "Consumer": "bg-orange-100 text-orange-700 border-orange-200",
+    "Energy": "bg-yellow-100 text-yellow-700 border-yellow-200",
+    "Industrial": "bg-gray-100 text-gray-700 border-gray-200",
+    "Automotive": "bg-red-100 text-red-700 border-red-200",
+    "Entertainment": "bg-pink-100 text-pink-700 border-pink-200"
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 md:mb-8">
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 md:mb-8"
+        >
           <div className="flex flex-col gap-4">
             <div className="flex items-start gap-3 md:gap-4">
               <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
@@ -287,26 +235,6 @@ export default function Companies() {
                   Select stocks and index funds to get AI-powered investment recommendations
                 </p>
               </div>
-            </div>
-
-            <div className="ml-auto">
-              <Button
-                onClick={() => loadCompanies(true)}
-                disabled={isRefreshing}
-                className="w-fit md:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white h-12 text-base font-semibold shadow-md"
-              >
-                {isRefreshing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Refreshing Data...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Refresh Data
-                  </>
-                )}
-              </Button>
             </div>
           </div>
         </motion.div>
@@ -322,13 +250,13 @@ export default function Companies() {
                 <p className="text-sm text-slate-600">Get AI-powered analysis and discover better alternatives</p>
               </div>
             </div>
-
+            
             <div className="flex gap-3 mb-2">
               <Input
                 placeholder="Enter stock symbol (e.g., AAPL, TSLA, MSFT)..."
                 value={quickAnalysisSymbol}
                 onChange={(e) => setQuickAnalysisSymbol(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && analyzeStock()}
+                onKeyPress={(e) => e.key === 'Enter' && analyzeStock()}
                 className="flex-1 h-14 text-lg border-emerald-300 focus:border-emerald-500"
                 disabled={isAnalyzing}
               />
@@ -366,53 +294,71 @@ export default function Companies() {
                       </div>
                     </div>
                   </div>
-
+                  
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     {analysisResult.stock.valuation && (
                       <div>
                         <p className="text-sm text-slate-500">Valuation</p>
-                        <p className={`text-xl font-bold ${analysisResult.stock.valuation === "overvalued" ? "text-red-500" : analysisResult.stock.valuation === "undervalued" ? "text-green-500" : "text-blue-600"}`}>
+                        <p className={`text-xl font-bold ${analysisResult.stock.valuation === 'overvalued' ? 'text-red-500' : analysisResult.stock.valuation === 'undervalued' ? 'text-green-500' : 'text-blue-600'}`}>
                           {analysisResult.stock.valuation.charAt(0).toUpperCase() + analysisResult.stock.valuation.slice(1)}
                         </p>
                       </div>
                     )}
-
+                    
                     {analysisResult.stock.price != null && (
                       <div>
                         <p className="text-sm text-slate-500">Price</p>
-                        <p className="text-xl font-bold text-slate-900">${analysisResult.stock.price.toFixed(2)}</p>
+                        <p className="text-xl font-bold text-slate-900">
+                          ${analysisResult.stock.price.toFixed(2)}
+                        </p>
                       </div>
                     )}
 
-                    <div>
-                      <p className="text-sm text-slate-500">Market Cap</p>
-                      <p className="text-xl font-bold text-slate-900">{analysisResult.stock.marketCap != null ? analysisResult.stock.marketCap : "Not Available"}</p>
-                    </div>
+                    {analysisResult.stock.marketCap && (
+                      <div>
+                        <p className="text-sm text-slate-500">Market Cap</p>
+                        <p className="text-xl font-bold text-slate-900">
+                          {analysisResult.stock.marketCap}
+                        </p>
+                      </div>
+                    )}
 
                     {(analysisResult.stock.peRatioFormatted || analysisResult.stock.peRatio != null) && (
                       <div>
                         <p className="text-sm text-slate-500">P/E Ratio</p>
-                        <p className="text-xl font-bold text-blue-600">{analysisResult.stock.peRatioFormatted ?? (analysisResult.stock.peRatio != null ? analysisResult.stock.peRatio.toFixed(2) : "N/A")}</p>
+                        <p className="text-xl font-bold text-blue-600">
+                          {analysisResult.stock.peRatioFormatted || analysisResult.stock.peRatio.toFixed(2)}
+                        </p>
                       </div>
                     )}
 
-                    <div>
-                      <p className="text-sm text-slate-500">Beta</p>
-                      <p className="text-xl font-bold text-slate-900">{analysisResult.stock.beta != null ? analysisResult.stock.beta.toFixed(2) : "Not Available"}</p>
-                      {analysisResult.stock.betaConfidence && analysisResult.stock.beta != null && <span className="text-xs text-slate-500">{analysisResult.stock.betaConfidence} confidence</span>}
-                    </div>
+                    {analysisResult.stock.beta != null && (
+                      <div>
+                        <p className="text-sm text-slate-500">Beta</p>
+                        <p className="text-xl font-bold text-slate-900">
+                          {analysisResult.stock.beta.toFixed(2)}
+                        </p>
+                        {analysisResult.stock.betaConfidence && (
+                          <span className="text-xs text-slate-500">{analysisResult.stock.betaConfidence} confidence</span>
+                        )}
+                      </div>
+                    )}
 
                     {analysisResult.stock.expectedReturn != null && (
                       <div>
                         <p className="text-sm text-slate-500">Expected Return</p>
-                        <p className="text-xl font-bold text-blue-600">{analysisResult.stock.expectedReturn.toFixed(1)}%</p>
+                        <p className="text-xl font-bold text-blue-600">
+                          {analysisResult.stock.expectedReturn.toFixed(1)}%
+                        </p>
                       </div>
                     )}
 
                     {analysisResult.stock.risk != null && (
                       <div>
                         <p className="text-sm text-slate-500">Risk</p>
-                        <p className="text-xl font-bold text-orange-600">{analysisResult.stock.risk.toFixed(1)}%</p>
+                        <p className="text-xl font-bold text-orange-600">
+                          {analysisResult.stock.risk.toFixed(1)}%
+                        </p>
                       </div>
                     )}
                   </div>
@@ -426,7 +372,10 @@ export default function Companies() {
                     </div>
                   )}
 
-                  <Button onClick={() => addStockFromAnalysis(analysisResult.stock.symbol)} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                  <Button
+                    onClick={() => addStockFromAnalysis(analysisResult.stock.symbol)}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  >
                     <Plus className="w-4 h-4 mr-2" />
                     Add to Selection
                   </Button>
@@ -442,11 +391,17 @@ export default function Companies() {
                             <div>
                               <p className="text-lg font-bold text-slate-900">{rec.symbol}</p>
                               <p className="text-sm text-slate-600">{rec.name}</p>
-                              {rec.beta != null && <p className="text-xs text-slate-500">Beta: {rec.beta.toFixed(2)}</p>}
+                              {rec.beta != null && (
+                                <p className="text-xs text-slate-500">Beta: {rec.beta.toFixed(2)}</p>
+                              )}
                             </div>
                           </div>
-                          <div className="text-sm text-slate-700 mb-3" dangerouslySetInnerHTML={{ __html: rec.explanation || "" }} />
-                          <Button onClick={() => addStockFromAnalysis(rec.symbol)} variant="outline" className="w-full border-blue-300 text-blue-600 hover:bg-blue-50">
+                          <div className="text-sm text-slate-700 mb-3" dangerouslySetInnerHTML={{ __html: rec.explanation }} />
+                          <Button
+                            onClick={() => addStockFromAnalysis(rec.symbol)}
+                            variant="outline"
+                            className="w-full border-blue-300 text-blue-600 hover:bg-blue-50"
+                          >
                             <Plus className="w-4 h-4 mr-2" />
                             Add to Selection
                           </Button>
@@ -469,12 +424,16 @@ export default function Companies() {
                     placeholder="Search any publicly traded company by its ticker symbol"
                     value={symbolSearchQuery}
                     onChange={(e) => setSymbolSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && searchAndAddSymbol()}
+                    onKeyPress={(e) => e.key === 'Enter' && searchAndAddSymbol()}
                     className="h-12 text-base border-blue-300 focus:border-blue-500"
                     disabled={isSearchingSymbol}
                   />
                 </div>
-                <Button onClick={() => searchAndAddSymbol()} disabled={isSearchingSymbol || !symbolSearchQuery.trim()} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 h-12 px-6">
+                <Button
+                  onClick={searchAndAddSymbol}
+                  disabled={isSearchingSymbol || !symbolSearchQuery.trim()}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 h-12 px-6"
+                >
                   {isSearchingSymbol ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -497,7 +456,12 @@ export default function Companies() {
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <Input placeholder="Search companies by name, symbol, or sector..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-12 h-12 text-base border-slate-300 focus:border-blue-500" />
+              <Input
+                placeholder="Search companies by name, symbol, or sector..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-12 h-12 text-base border-slate-300 focus:border-blue-500"
+              />
             </div>
             <div className="flex gap-3">
               <div className="flex items-center gap-2">
@@ -508,10 +472,8 @@ export default function Companies() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sectors</SelectItem>
-                    {sectors.map((sector) => (
-                      <SelectItem key={sector} value={sector}>
-                        {sector}
-                      </SelectItem>
+                    {sectors.map(sector => (
+                      <SelectItem key={sector} value={sector}>{sector}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -538,15 +500,24 @@ export default function Companies() {
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-3 flex-wrap mb-1">
-                            <span className="text-lg md:text-xl font-bold text-slate-900">{selectedCompanies.length} Selected</span>
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedCompanies([])} className="text-slate-500 hover:text-slate-700 hover:bg-slate-100/50 text-xs md:text-sm h-7 px-3 rounded-lg font-medium">
+                            <span className="text-lg md:text-xl font-bold text-slate-900">
+                              {selectedCompanies.length} Selected
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedCompanies([])}
+                              className="text-slate-500 hover:text-slate-700 hover:bg-slate-100/50 text-xs md:text-sm h-7 px-3 rounded-lg font-medium"
+                            >
                               Clear all
                             </Button>
                           </div>
-                          <p className="text-xs md:text-sm text-slate-600 font-medium">Ready for AI-powered risk analysis</p>
+                          <p className="text-xs md:text-sm text-slate-600 font-medium">
+                            Ready for AI-powered risk analysis
+                          </p>
                         </div>
                       </div>
-                      <Link to={createPageUrl("Analysis") + `?companies=${selectedCompanies.join(",")}`} className="w-full sm:w-auto flex-shrink-0">
+                      <Link to={createPageUrl("Analysis") + `?companies=${selectedCompanies.join(',')}`} className="w-full sm:w-auto flex-shrink-0">
                         <Button className="group relative w-full h-13 md:h-14 text-base md:text-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white shadow-2xl shadow-blue-500/50 hover:shadow-blue-600/60 font-bold px-8 md:px-10 rounded-xl transition-all duration-300 hover:scale-105">
                           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
                           <TrendingUp className="relative w-5 h-5 md:w-6 md:h-6 mr-3 flex-shrink-0" />
@@ -562,39 +533,57 @@ export default function Companies() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {isLoading && currentPage === 0 && searchQuery.length === 0 ? (
+          {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
           ) : (
             <AnimatePresence>
               {filteredCompanies.map((company) => {
                 const isSelected = selectedCompanies.includes(company.symbol);
                 return (
-                  <motion.div key={company.id || company.symbol} layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.2 }}>
-                    <Card
+                  <motion.div
+                    key={company.symbol}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Card 
                       className={`group transition-all duration-300 border-2 rounded-xl h-full cursor-pointer ${
-                        isSelected ? "border-blue-500 shadow-lg shadow-blue-500/20 bg-gradient-to-br from-blue-50 to-indigo-50" : "hover:shadow-lg border-slate-200 hover:border-blue-300 bg-white"
+                        isSelected 
+                          ? 'border-blue-500 shadow-lg shadow-blue-500/20 bg-gradient-to-br from-blue-50 to-indigo-50' 
+                          : 'hover:shadow-lg border-slate-200 hover:border-blue-300 bg-white'
                       }`}
                       onClick={() => toggleCompany(company.symbol)}
                     >
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
-                            {company.logo_url && <img src={company.logo_url} alt={`${company.name} logo`} className="w-10 h-10 rounded-full" />}
+                            {company.logo_url && (
+                              <img src={company.logo_url} alt={`${company.name} logo`} className="w-10 h-10 rounded-full" />
+                            )}
                             <div>
                               <h3 className="font-bold text-slate-900 text-lg">{company.symbol}</h3>
-                              <Badge variant="secondary" className={`${sectorColors[company.sector] || "bg-gray-100 text-gray-700"} border text-xs`}>
+                              <Badge 
+                                variant="secondary"
+                                className={`${sectorColors[company.sector] || 'bg-gray-100 text-gray-700'} border text-xs`}
+                              >
                                 {company.sector}
                               </Badge>
                             </div>
                           </div>
-                          <Checkbox checked={isSelected} onCheckedChange={() => toggleCompany(company.symbol)} className="w-5 h-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600" />
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleCompany(company.symbol)}
+                            className="w-5 h-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                          />
                         </div>
-
+                        
                         <h4 className="font-semibold text-slate-900 mb-2">{company.name}</h4>
-                        <p className="text-sm text-slate-600 line-clamp-4 mb-3">{company.description}</p>
+                        <p className="text-sm text-slate-600 line-clamp-6 mb-3">{company.description}</p>
                         <div className="flex justify-between items-center text-xs text-slate-500 mt-2">
-                          <span>Beta: {company.beta != null ? Number(company.beta).toFixed(2) : "Not Available"}</span>
-                          <span>Market Cap: {company.market_cap != null ? company.market_cap : "Not Available"}</span>
+                          <span>Beta: {company.beta != null ? Number(company.beta).toFixed(2) : 'Not Available'}</span>
+                          <span>Market Cap: {company.market_cap != null ? company.market_cap : 'Not Available'}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -603,19 +592,6 @@ export default function Companies() {
               })}
             </AnimatePresence>
           )}
-
-          {isLoading && hasMore && searchQuery.length === 0 && (
-            <div className="col-span-full text-center py-8">
-              <Loader2 className="w-8 h-8 mx-auto animate-spin text-blue-500" />
-              <p className="text-slate-600 mt-2">Loading more companies...</p>
-            </div>
-          )}
-
-          {!isLoading && !hasMore && filteredCompanies.length > 0 && searchQuery.length === 0 && (
-            <div className="col-span-full text-center py-8 text-slate-500">You've reached the end of the list!</div>
-          )}
-
-          <div ref={loadMoreRef} className="col-span-full h-1" />
         </div>
 
         {filteredCompanies.length === 0 && !isLoading && (
