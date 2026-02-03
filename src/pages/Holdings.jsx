@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Lightbulb, TrendingDown, TrendingUp, Search } from "lucide-react";
+import TableSkeleton from "@/components/ui/TableSkeleton"; // Adjust path if TableSkeleton is not in ui/TableSkeleton
 
 export default function Holdings() {
   const [portfolio, setPortfolio] = useState(null);
@@ -91,7 +94,8 @@ export default function Holdings() {
     });
     const prompt = `Explain this portfolio like I'm 10. Simple language, analogies. Portfolio: ${JSON.stringify(holdingsList)} Total: $${totalValue.toLocaleString()}. Why own these? What risks? Why better/worse? What know?`;
     try {
-      const result = await awsApi.getStockAnalysis('PORTFOLIO', { prompt });
+      // Updated to invoke the LLM endpoint with the prompt directly
+      const result = await awsApi.invokeLLM(prompt);
       setExplanation(result);
     } catch (error) {
       console.error("Error explaining:", error);
