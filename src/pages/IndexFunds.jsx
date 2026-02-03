@@ -70,6 +70,7 @@ export default function IndexFunds() {
     
     setIsAddingSymbol(true);
     try {
+      // Step 1: Validate symbol exists
       const stockData = await callAwsFunction('getStockQuote', {
         symbol: symbolUpper
       });
@@ -80,6 +81,7 @@ export default function IndexFunds() {
         return;
       }
 
+      // Step 2: Verify it's an ETF
       const isETF = stockData.name.includes('ETF') || 
                     stockData.name.includes('Fund') || 
                     stockData.name.includes('Trust') ||
@@ -91,21 +93,22 @@ export default function IndexFunds() {
         return;
       }
 
-      const fundType = stockData.name.toLowerCase().includes('bond') ? 'bond' :
-                      stockData.name.toLowerCase().includes('international') || stockData.name.toLowerCase().includes('emerging') || stockData.name.toLowerCase().includes('msci') ? 'international' :
-                      stockData.name.toLowerCase().includes('sector') || stockData.name.toLowerCase().includes('select') ? 'sector' :
-                      stockData.name.toLowerCase().includes('commodity') || stockData.name.toLowerCase().includes('gold') || stockData.name.toLowerCase().includes('oil') || stockData.name.toLowerCase().includes('copper') ? 'commodity' :
-                      'broad_market';
-
-      const newFund = {
+      // Step 3: Call getCompanies with action=add to save to DynamoDB
+      const result = await callAwsFunction('getCompanies', {
+        action: 'add',
         symbol: symbolUpper,
         name: stockData.name,
-        type: fundType,
-        description: `${fundType.replace('_', ' ')} ETF - ${stockData.exchange || 'listed'} trading`,
-        expense_ratio: 0.10
-      };
+        itemType: 'index_fund'
+      });
 
-      setIndexFunds(prev => [...prev, newFund]);
+      if (result.error) {
+        alert(`Error saving fund: ${result.error}`);
+        setIsAddingSymbol(false);
+        return;
+      }
+
+      // Step 4: Reload funds from database
+      await loadIndexFunds();
       setNewSymbol("");
       alert(`✅ ${stockData.name} added successfully!`);
     } catch (error) {
