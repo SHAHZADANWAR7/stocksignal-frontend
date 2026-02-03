@@ -82,10 +82,11 @@ export default function IndexFunds() {
       }
 
       // Step 2: Verify it's an ETF
-      const isETF = stockData.name.includes('ETF') || 
-                    stockData.name.includes('Fund') || 
-                    stockData.name.includes('Trust') ||
-                    stockData.name.includes('Shares');
+      const nameForCheck = stockData.name || "";
+      const isETF = nameForCheck.includes('ETF') || 
+                    nameForCheck.includes('Fund') || 
+                    nameForCheck.includes('Trust') ||
+                    nameForCheck.includes('Shares');
 
       if (!isETF) {
         alert("This appears to be a stock, not an ETF/index fund. Try searching for a ticker symbol that represents an ETF.");
@@ -131,13 +132,15 @@ export default function IndexFunds() {
     setIsRefreshing(false);
   };
 
+  // Defensive filtering: coerce symbol/name to strings before calling string methods
   const filteredFunds = indexFunds.filter(fund => {
-    const matchesSearch = searchQuery === "" || 
-      fund.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      fund.name.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesType = selectedType === "all" || fund.type === selectedType;
-    
+    const q = (searchQuery || "").toString().toLowerCase();
+    const symbolStr = (fund && fund.symbol) ? String(fund.symbol).toLowerCase() : "";
+    const nameStr = (fund && fund.name) ? String(fund.name).toLowerCase() : "";
+
+    const matchesSearch = q === "" || symbolStr.includes(q) || nameStr.includes(q);
+    const matchesType = selectedType === "all" || (fund && fund.type) === selectedType;
+
     return matchesSearch && matchesType;
   });
 
@@ -185,6 +188,20 @@ export default function IndexFunds() {
     if (mood === "positive") return "text-blue-600 bg-blue-50 border-blue-200";
     if (mood === "negative") return "text-orange-600 bg-orange-50 border-orange-200";
     return "text-slate-600 bg-slate-50 border-slate-200";
+  };
+
+  const formatPrice = (v) => {
+    if (v === null || v === undefined) return "Not Available";
+    const num = Number(v);
+    if (Number.isNaN(num)) return "Not Available";
+    return num.toFixed(2);
+  };
+
+  const formatCurrencyDisplay = (v) => {
+    if (v === null || v === undefined) return "Not Available";
+    const num = Number(v);
+    if (Number.isNaN(num)) return "Not Available";
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   return (
@@ -306,13 +323,13 @@ export default function IndexFunds() {
           ) : (
           <AnimatePresence>
             {filteredFunds.map((fund, index) => {
-              const isPositive = fund.day_change_percent !== null && fund.day_change_percent !== undefined && fund.day_change_percent >= 0;
-              const indexData = getIndexData(fund.symbol);
-              const indexName = getIndexName(fund.symbol);
+              const isPositive = fund && fund.day_change_percent != null && fund.day_change_percent >= 0;
+              const indexData = getIndexData(fund && fund.symbol);
+              const indexName = getIndexName(fund && fund.symbol);
 
               return (
                 <motion.div
-                  key={fund.symbol}
+                  key={fund && fund.symbol}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
@@ -328,16 +345,16 @@ export default function IndexFunds() {
                           </div>
                           <div className="text-left sm:text-right flex-shrink-0">
                             <p className="text-lg md:text-2xl font-bold text-slate-900 break-words">
-                              {indexData.current_price?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              {indexData && indexData.current_price != null ? formatCurrencyDisplay(indexData.current_price) : 'Not Available'}
                             </p>
-                            {indexData.day_change !== null && indexData.day_change !== undefined && (
+                            {indexData && indexData.day_change != null && indexData.day_change !== undefined && (
                               <div className={`flex items-center gap-1 justify-start sm:justify-end ${indexData.day_change >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                                 {indexData.day_change >= 0 ? <TrendingUp className="w-3 h-3 flex-shrink-0" /> : <TrendingDown className="w-3 h-3 flex-shrink-0" />}
                                 <span className="text-xs md:text-sm font-semibold break-words">
-                                  {indexData.day_change >= 0 ? '+' : ''}{indexData.day_change.toFixed(2)}
+                                  {indexData.day_change >= 0 ? '+' : ''}{Number(indexData.day_change).toFixed(2)}
                                 </span>
                                 <span className="text-xs md:text-sm font-semibold break-words">
-                                  ({indexData.day_change_percent >= 0 ? '+' : ''}{indexData.day_change_percent?.toFixed(2)}%)
+                                  ({indexData.day_change_percent >= 0 ? '+' : ''}{(indexData.day_change_percent || 0).toFixed(2)}%)
                                 </span>
                               </div>
                             )}
@@ -353,21 +370,21 @@ export default function IndexFunds() {
                             <BarChart3 className="w-5 h-5 md:w-6 md:h-6 text-blue-600" />
                           </div>
                           <div className="min-w-0">
-                            <h3 className="font-bold text-lg md:text-xl text-slate-900 truncate">{fund.symbol}</h3>
-                            <Badge variant="outline" className={`${getTypeColor(fund.type)} border text-[10px] md:text-xs mt-1`}>
-                              {fund.type.replace('_', ' ')}
+                            <h3 className="font-bold text-lg md:text-xl text-slate-900 truncate">{fund && fund.symbol}</h3>
+                            <Badge variant="outline" className={`${getTypeColor(fund && fund.type)} border text-[10px] md:text-xs mt-1`}>
+                              { (typeof (fund && fund.type) === 'string' ? fund.type.replace('_', ' ') : 'unknown') }
                             </Badge>
                           </div>
                         </div>
                         <div className="flex flex-row sm:flex-col gap-1.5 self-start">
-                          {fund.long_term_trend && (
+                          {fund && fund.long_term_trend && (
                             <Badge variant="outline" className={`${getTrendColor(fund.long_term_trend)} border flex items-center gap-1 text-[10px] md:text-xs px-2 py-1`}>
                               {getTrendIcon(fund.long_term_trend)}
                               <span className="hidden sm:inline">Long: {fund.long_term_trend}</span>
                               <span className="sm:hidden">LT</span>
                             </Badge>
                           )}
-                          {fund.short_term_mood && (
+                          {fund && fund.short_term_mood && (
                             <Badge variant="outline" className={`${getMoodColor(fund.short_term_mood)} border flex items-center gap-1 text-[10px] md:text-xs px-2 py-1`}>
                               {getMoodIcon(fund.short_term_mood)}
                               <span className="hidden sm:inline">Short: {fund.short_term_mood}</span>
@@ -376,20 +393,20 @@ export default function IndexFunds() {
                           )}
                         </div>
                       </div>
-                      <h4 className="text-xs md:text-sm font-medium text-slate-600 break-words">{fund.name}</h4>
+                      <h4 className="text-xs md:text-sm font-medium text-slate-600 break-words">{fund && fund.name ? fund.name : 'Not Available'}</h4>
                     </CardHeader>
                     <CardContent className="space-y-3 md:space-y-4 flex-1 px-4 md:px-6 pb-4 md:pb-6">
-                      {fund.current_price !== undefined ? (
+                      {fund && fund.current_price != null ? (
                         <>
                           <div className="flex flex-col sm:flex-row sm:items-baseline gap-2">
                             <p className="text-2xl md:text-3xl font-bold text-slate-900 break-words">
-                              ${(fund.current_price || 0).toFixed(2)}
+                              ${formatPrice(fund.current_price)}
                             </p>
-                            {fund.day_change !== null && fund.day_change !== undefined && (
+                            {fund.day_change != null && fund.day_change !== undefined && (
                               <div className={`flex items-center gap-1 flex-wrap ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                                 {isPositive ? <TrendingUp className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" /> : <TrendingDown className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />}
                                 <span className="text-xs md:text-sm font-semibold break-words">
-                                  {isPositive ? '+' : ''}{fund.day_change.toFixed(2)}
+                                  {isPositive ? '+' : ''}{Number(fund.day_change).toFixed(2)}
                                 </span>
                                 <span className="text-xs md:text-sm font-semibold break-words">
                                   ({isPositive ? '+' : ''}{(fund.day_change_percent || 0).toFixed(2)}%)
@@ -401,7 +418,7 @@ export default function IndexFunds() {
                           <div className="pt-2 md:pt-3 border-t border-slate-100">
                             <p className="text-[10px] md:text-xs font-semibold text-slate-700 mb-2">Historical Returns</p>
                             <div className="grid grid-cols-2 gap-2">
-                              {fund.ytd_return !== null && fund.ytd_return !== undefined && (
+                              {fund.ytd_return != null && (
                                 <div className="bg-slate-50 rounded p-1.5 md:p-2">
                                   <p className="text-[10px] md:text-xs text-slate-500">YTD</p>
                                   <p className={`text-xs md:text-sm font-bold break-words ${fund.ytd_return >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
@@ -409,7 +426,7 @@ export default function IndexFunds() {
                                   </p>
                                 </div>
                               )}
-                              {fund.return_1y !== null && fund.return_1y !== undefined && (
+                              {fund.return_1y != null && (
                                 <div className="bg-slate-50 rounded p-2">
                                   <p className="text-xs text-slate-500">1 Year</p>
                                   <p className={`text-sm font-bold ${fund.return_1y >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
@@ -417,7 +434,7 @@ export default function IndexFunds() {
                                   </p>
                                 </div>
                               )}
-                              {fund.return_3y_annualized !== null && fund.return_3y_annualized !== undefined && (
+                              {fund.return_3y_annualized != null && (
                                 <div className="bg-slate-50 rounded p-2">
                                   <p className="text-xs text-slate-500">3Y Annual</p>
                                   <p className={`text-sm font-bold ${fund.return_3y_annualized >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
@@ -425,7 +442,7 @@ export default function IndexFunds() {
                                   </p>
                                 </div>
                               )}
-                              {fund.return_5y_total !== null && fund.return_5y_total !== undefined && (
+                              {fund.return_5y_total != null && (
                                 <div className="bg-blue-50 rounded p-2 border border-blue-200">
                                   <p className="text-xs text-blue-700 font-semibold">5Y Total</p>
                                   <p className={`text-sm font-bold ${fund.return_5y_total >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
@@ -433,7 +450,7 @@ export default function IndexFunds() {
                                   </p>
                                 </div>
                               )}
-                              {fund.return_10y_annualized !== null && fund.return_10y_annualized !== undefined && (
+                              {fund.return_10y_annualized != null && (
                                 <div className="bg-slate-50 rounded p-2">
                                   <p className="text-xs text-slate-500">10Y Annual</p>
                                   <p className={`text-sm font-bold ${fund.return_10y_annualized >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
@@ -441,7 +458,7 @@ export default function IndexFunds() {
                                   </p>
                                 </div>
                               )}
-                              {fund.total_return_inception !== null && fund.total_return_inception !== undefined && (
+                              {fund.total_return_inception != null && (
                                 <div className="bg-slate-50 rounded p-2">
                                   <p className="text-xs text-slate-500">Since Inception</p>
                                   <p className={`text-sm font-bold ${fund.total_return_inception >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
@@ -458,23 +475,23 @@ export default function IndexFunds() {
                               <div>
                                 <p className="text-xs text-slate-500 mb-1">Low</p>
                                 <p className="font-semibold text-slate-900">
-                                  {fund.fifty_two_week_low ? `$${fund.fifty_two_week_low.toFixed(2)}` : 'N/A'}
+                                  {fund.fifty_two_week_low != null ? `$${Number(fund.fifty_two_week_low).toFixed(2)}` : 'Not Available'}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-xs text-slate-500 mb-1">High</p>
                                 <p className="font-semibold text-slate-900">
-                                  {fund.fifty_two_week_high ? `$${fund.fifty_two_week_high.toFixed(2)}` : 'N/A'}
+                                  {fund.fifty_two_week_high != null ? `$${Number(fund.fifty_two_week_high).toFixed(2)}` : 'Not Available'}
                                 </p>
                               </div>
                             </div>
                           </div>
 
-                          {fund.volume && (
+                          {fund.volume != null && (
                             <div className="pt-3 border-t border-slate-100">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs text-slate-500">Volume</span>
-                                <span className="font-semibold text-slate-900">{fund.volume ? `${(fund.volume / 1000000).toFixed(1)}M` : 'N/A'}</span>
+                                <span className="font-semibold text-slate-900">{fund.volume ? `${(fund.volume / 1000000).toFixed(1)}M` : 'Not Available'}</span>
                               </div>
                             </div>
                           )}
@@ -499,30 +516,30 @@ export default function IndexFunds() {
                         </>
                       ) : (
                         <div className="flex items-center justify-center h-32">
-                          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                          <p className="text-sm text-slate-500">Not Available</p>
                         </div>
                       )}
 
                       <div className="pt-3 border-t border-slate-100">
-                        <p className="text-xs text-slate-600">{fund.description}</p>
+                        <p className="text-xs text-slate-600">{fund && fund.description ? fund.description : 'Not Available'}</p>
                       </div>
 
                       <div className="pt-3 border-t border-slate-100 bg-gradient-to-r from-slate-50 to-blue-50 rounded-lg p-3 mt-auto">
                         <p className="text-xs font-semibold text-slate-700 mb-2">About This Fund</p>
                         <div className="space-y-1.5">
-                          {fund.type === 'broad_market' && (
+                          {fund && fund.type === 'broad_market' && (
                             <p className="text-xs text-slate-600">• Diversified exposure across the entire market</p>
                           )}
-                          {fund.type === 'sector' && (
+                          {fund && fund.type === 'sector' && (
                             <p className="text-xs text-slate-600">• Focused on specific industry sectors</p>
                           )}
-                          {fund.type === 'international' && (
+                          {fund && fund.type === 'international' && (
                             <p className="text-xs text-slate-600">• Global diversification outside domestic markets</p>
                           )}
-                          {fund.type === 'bond' && (
+                          {fund && fund.type === 'bond' && (
                             <p className="text-xs text-slate-600">• Fixed income for stability and regular income</p>
                           )}
-                          {fund.type === 'commodity' && (
+                          {fund && fund.type === 'commodity' && (
                             <p className="text-xs text-slate-600">• Exposure to physical goods and resources</p>
                           )}
                           <p className="text-xs text-slate-600">• Passively managed for lower costs</p>
