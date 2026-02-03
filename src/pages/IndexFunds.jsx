@@ -19,55 +19,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CardSkeleton from "@/components/ui/CardSkeleton";
 
-// Hardcoded list of major index funds and ETFs
-const HARDCODED_INDEX_FUNDS = [
-  { symbol: "SPY", name: "SPDR S&P 500 ETF Trust", type: "broad_market", description: "Tracks the S&P 500 Index - broad U.S. market exposure", expense_ratio: 0.03 },
-  { symbol: "VOO", name: "Vanguard S&P 500 ETF", type: "broad_market", description: "Low-cost S&P 500 tracking", expense_ratio: 0.03 },
-  { symbol: "IVV", name: "iShares Core S&P 500 ETF", type: "broad_market", description: "Core S&P 500 index fund", expense_ratio: 0.03 },
-  { symbol: "VTI", name: "Vanguard Total Stock Market ETF", type: "broad_market", description: "Total U.S. stock market including small-cap", expense_ratio: 0.03 },
-  { symbol: "QQQ", name: "Invesco QQQ Trust", type: "broad_market", description: "Tracks NASDAQ-100 - tech-heavy U.S. stocks", expense_ratio: 0.20 },
-  { symbol: "DIA", name: "SPDR Dow Jones Industrial Average ETF", type: "broad_market", description: "Tracks the Dow Jones Industrial Average", expense_ratio: 0.16 },
-  { symbol: "IWM", name: "iShares Russell 2000 ETF", type: "broad_market", description: "Tracks small-cap U.S. stocks", expense_ratio: 0.20 },
-  { symbol: "VGT", name: "Vanguard Information Technology ETF", type: "sector", description: "Technology sector exposure", expense_ratio: 0.10 },
-  { symbol: "VHO", name: "Vanguard Healthcare ETF", type: "sector", description: "Healthcare sector exposure", expense_ratio: 0.10 },
-  { symbol: "VFV", name: "Vanguard Financial ETF", type: "sector", description: "Financial sector exposure", expense_ratio: 0.10 },
-  { symbol: "VDC", name: "Vanguard Consumer Discretionary ETF", type: "sector", description: "Consumer discretionary sector", expense_ratio: 0.10 },
-  { symbol: "VPU", name: "Vanguard Utilities ETF", type: "sector", description: "Utility sector exposure", expense_ratio: 0.10 },
-  { symbol: "XLK", name: "Technology Select Sector SPDR Fund", type: "sector", description: "Technology stocks", expense_ratio: 0.13 },
-  { symbol: "XLV", name: "Health Care Select Sector SPDR Fund", type: "sector", description: "Healthcare stocks", expense_ratio: 0.13 },
-  { symbol: "XLY", name: "Consumer Discretionary Select Sector SPDR Fund", type: "sector", description: "Consumer discretionary stocks", expense_ratio: 0.13 },
-  { symbol: "XLE", name: "Energy Select Sector SPDR Fund", type: "sector", description: "Energy sector stocks", expense_ratio: 0.13 },
-  { symbol: "XLF", name: "Financial Select Sector SPDR Fund", type: "sector", description: "Financial sector stocks", expense_ratio: 0.13 },
-  { symbol: "XLI", name: "Industrial Select Sector SPDR Fund", type: "sector", description: "Industrial sector stocks", expense_ratio: 0.13 },
-  { symbol: "XLP", name: "Consumer Staples Select Sector SPDR Fund", type: "sector", description: "Consumer staples stocks", expense_ratio: 0.13 },
-  { symbol: "XLRE", name: "Real Estate Select Sector SPDR Fund", type: "sector", description: "Real estate sector", expense_ratio: 0.13 },
-  { symbol: "XLU", name: "Utilities Select Sector SPDR Fund", type: "sector", description: "Utility stocks", expense_ratio: 0.13 },
-  { symbol: "XLM", name: "Materials Select Sector SPDR Fund", type: "sector", description: "Materials sector stocks", expense_ratio: 0.13 },
-  { symbol: "VEA", name: "Vanguard FTSE Developed Markets ETF", type: "international", description: "Developed international markets", expense_ratio: 0.05 },
-  { symbol: "VWO", name: "Vanguard FTSE Emerging Markets ETF", type: "international", description: "Emerging markets exposure", expense_ratio: 0.08 },
-  { symbol: "EWJ", name: "iShares MSCI Japan ETF", type: "international", description: "Japan equity exposure", expense_ratio: 0.47 },
-  { symbol: "EWG", name: "iShares MSCI Germany ETF", type: "international", description: "Germany equity exposure", expense_ratio: 0.47 },
-  { symbol: "EWU", name: "iShares MSCI United Kingdom ETF", type: "international", description: "UK equity exposure", expense_ratio: 0.47 },
-  { symbol: "EWA", name: "iShares MSCI Australia ETF", type: "international", description: "Australia equity exposure", expense_ratio: 0.47 },
-  { symbol: "BND", name: "Vanguard Total Bond Market ETF", type: "bond", description: "Total U.S. bond market", expense_ratio: 0.03 },
-  { symbol: "AGG", name: "iShares Core U.S. Aggregate Bond ETF", type: "bond", description: "Aggregate bond market", expense_ratio: 0.03 },
-  { symbol: "BRK", name: "Vanguard Intermediate-Term Corporate Bond ETF", type: "bond", description: "Corporate bonds", expense_ratio: 0.04 },
-  { symbol: "SHV", name: "iShares Short Treasury Bond ETF", type: "bond", description: "Short-term Treasuries", expense_ratio: 0.15 },
-  { symbol: "IEF", name: "iShares 7-10 Year Treasury Bond ETF", type: "bond", description: "Intermediate Treasuries", expense_ratio: 0.15 },
-  { symbol: "TLT", name: "iShares 20+ Year Treasury Bond ETF", type: "bond", description: "Long-term Treasuries", expense_ratio: 0.15 },
-  { symbol: "HYG", name: "iShares High Yield Corporate Bond ETF", type: "bond", description: "High-yield bonds", expense_ratio: 0.49 },
-  { symbol: "GLD", name: "SPDR Gold Shares", type: "commodity", description: "Gold bullion exposure", expense_ratio: 0.40 },
-  { symbol: "SLV", name: "iShares Silver Trust", type: "commodity", description: "Silver bullion exposure", expense_ratio: 0.50 },
-  { symbol: "DBC", name: "Commodities Select Sector SPDR Fund", type: "commodity", description: "Broad commodity exposure", expense_ratio: 0.85 },
-  { symbol: "USO", name: "United States Oil Fund", type: "commodity", description: "Crude oil exposure", expense_ratio: 0.73 },
-  { symbol: "UGA", name: "United States Gasoline Fund", type: "commodity", description: "Gasoline exposure", expense_ratio: 0.60 },
-  { symbol: "DBB", name: "Invesco DB Precious Metals Fund", type: "commodity", description: "Precious metals exposure", expense_ratio: 0.75 },
-  { symbol: "COPX", name: "Global X Copper Miners ETF", type: "commodity", description: "Copper mining stocks", expense_ratio: 0.65 },
-];
-
 export default function IndexFunds() {
   const [indexFunds, setIndexFunds] = useState([]);
-  const [liveData, setLiveData] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("all");
   const [isLoading, setIsLoading] = useState(true);
@@ -76,20 +29,31 @@ export default function IndexFunds() {
   const [newSymbol, setNewSymbol] = useState("");
   const [isAddingSymbol, setIsAddingSymbol] = useState(false);
 
+  // Reference mapping for index data display
+  const etfToIndexMap = {
+    'SPY': { symbol: '^GSPC', name: 'S&P 500 Index' },
+    'VOO': { symbol: '^GSPC', name: 'S&P 500 Index' },
+    'IVV': { symbol: '^GSPC', name: 'S&P 500 Index' },
+    'QQQ': { symbol: '^NDX', name: 'NASDAQ-100 Index' },
+    'DIA': { symbol: '^DJI', name: 'Dow Jones Industrial Average' },
+    'IWM': { symbol: '^RUT', name: 'Russell 2000 Index' },
+    'VTI': { symbol: '^GSPC', name: 'Total Market (S&P 500 Reference)' }
+  };
+
   useEffect(() => {
     loadIndexFunds();
   }, []);
 
-  useEffect(() => {
-    if (indexFunds.length > 0) {
-      loadLiveData();
-    }
-  }, [indexFunds]);
-
-  const loadIndexFunds = () => {
+  const loadIndexFunds = async () => {
     setIsLoading(true);
-    // Use hardcoded list instead of API call
-    setIndexFunds(HARDCODED_INDEX_FUNDS);
+    try {
+      const data = await callAwsFunction('getCompanies', { type: 'index_funds' });
+      setIndexFunds(data.items || []);
+      setLastUpdated(new Date());
+    } catch (error) {
+      console.error("Error loading index funds:", error);
+      alert("Error loading index funds. Please try again.");
+    }
     setIsLoading(false);
   };
 
@@ -151,72 +115,16 @@ export default function IndexFunds() {
     setIsAddingSymbol(false);
   };
 
-  const loadLiveData = async () => {
+  const refreshData = async () => {
     setIsRefreshing(true);
-    
     try {
-      const symbols = indexFunds.map(f => f.symbol);
-      
-      const etfToIndexMap = {
-        'SPY': '^GSPC', 'VOO': '^GSPC', 'IVV': '^GSPC', 'VTI': '^GSPC',
-        'QQQ': '^NDX',
-        'DIA': '^DJI',
-        'IWM': '^RUT'
-      };
-      
-      const indexSymbols = [...new Set(
-        symbols.map(s => etfToIndexMap[s]).filter(Boolean)
-      )];
-      
-      const allSymbols = [...symbols, ...indexSymbols];
-      
-      const batchData = await callAwsFunction('getStockBatch', {
-        symbols: allSymbols,
-        forceRefresh: true
-      });
-
-      const formattedData = batchData.stocks.map(stock => {
-        const prevClose = stock.previous_close;
-        const dayChange = prevClose && prevClose > 0 ? (stock.current_price - prevClose) : null;
-        const dayChangePct = prevClose && prevClose > 0 ? ((stock.current_price - prevClose) / prevClose * 100) : null;
-        
-        const return5y = stock.return_5y_total || 0;
-        let longTermTrend = 'neutral';
-        if (return5y > 60) longTermTrend = 'bullish';
-        else if (return5y < 54) longTermTrend = 'bearish';
-        
-        const ytdReturn = stock.ytd_return || 0;
-        let shortTermMood = 'flat';
-        if (dayChangePct > 0 || ytdReturn > 15) shortTermMood = 'positive';
-        else if (dayChangePct < 0 && ytdReturn < 5) shortTermMood = 'negative';
-        
-        return {
-          symbol: stock.symbol,
-          current_price: stock.current_price || 0,
-          day_change: dayChange,
-          day_change_percent: dayChangePct,
-          week_52_high: stock.fifty_two_week_high,
-          week_52_low: stock.fifty_two_week_low,
-          ytd_return: stock.ytd_return,
-          return_1y: stock.return_1y,
-          return_3y_annualized: stock.return_3y_annualized,
-          return_5y_total: stock.return_5y_total,
-          return_10y_annualized: stock.return_10y_annualized,
-          total_return_inception: stock.total_return_inception,
-          volume: stock.volume ? `${(stock.volume / 1000000).toFixed(1)}M` : 'N/A',
-          long_term_trend: longTermTrend,
-          short_term_mood: shortTermMood,
-          insight: `${longTermTrend === 'bullish' ? 'Strong' : longTermTrend === 'bearish' ? 'Weak' : 'Moderate'} long-term performance with ${shortTermMood} short-term momentum`
-        };
-      });
-
-      setLiveData({ funds: formattedData });
+      const data = await callAwsFunction('getCompanies', { type: 'index_funds', forceRefresh: true });
+      setIndexFunds(data.items || []);
       setLastUpdated(new Date());
     } catch (error) {
-      console.error("Error loading live data:", error);
+      console.error("Error refreshing data:", error);
       alert("Error loading some market data. Please try refreshing again.");
     }
-
     setIsRefreshing(false);
   };
 
@@ -230,26 +138,11 @@ export default function IndexFunds() {
     return matchesSearch && matchesType;
   });
 
-  const etfToIndexMap = {
-    'SPY': { symbol: '^GSPC', name: 'S&P 500 Index' },
-    'VOO': { symbol: '^GSPC', name: 'S&P 500 Index' },
-    'IVV': { symbol: '^GSPC', name: 'S&P 500 Index' },
-    'QQQ': { symbol: '^NDX', name: 'NASDAQ-100 Index' },
-    'DIA': { symbol: '^DJI', name: 'Dow Jones Industrial Average' },
-    'IWM': { symbol: '^RUT', name: 'Russell 2000 Index' },
-    'VTI': { symbol: '^GSPC', name: 'Total Market (S&P 500 Reference)' }
-  };
-
-  const getFundLiveData = (symbol) => {
-    if (!liveData || !liveData.funds) return null;
-    return liveData.funds.find(f => f.symbol === symbol);
-  };
-
   const getIndexData = (etfSymbol) => {
-    if (!liveData || !liveData.funds) return null;
+    if (!indexFunds) return null;
     const indexInfo = etfToIndexMap[etfSymbol];
     if (!indexInfo) return null;
-    return liveData.funds.find(f => f.symbol === indexInfo.symbol);
+    return indexFunds.find(f => f.symbol === indexInfo.symbol);
   };
 
   const getIndexName = (etfSymbol) => {
@@ -309,7 +202,7 @@ export default function IndexFunds() {
               </p>
             </div>
             <Button
-              onClick={loadLiveData}
+              onClick={refreshData}
               disabled={isRefreshing}
               className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             >
@@ -410,8 +303,7 @@ export default function IndexFunds() {
           ) : (
           <AnimatePresence>
             {filteredFunds.map((fund, index) => {
-              const liveInfo = getFundLiveData(fund.symbol);
-              const isPositive = liveInfo && liveInfo.day_change_percent !== null && liveInfo.day_change_percent !== undefined && liveInfo.day_change_percent >= 0;
+              const isPositive = fund.day_change_percent !== null && fund.day_change_percent !== undefined && fund.day_change_percent >= 0;
               const indexData = getIndexData(fund.symbol);
               const indexName = getIndexName(fund.symbol);
 
@@ -465,17 +357,17 @@ export default function IndexFunds() {
                           </div>
                         </div>
                         <div className="flex flex-row sm:flex-col gap-1.5 self-start">
-                          {liveInfo && liveInfo.long_term_trend && (
-                            <Badge variant="outline" className={`${getTrendColor(liveInfo.long_term_trend)} border flex items-center gap-1 text-[10px] md:text-xs px-2 py-1`}>
-                              {getTrendIcon(liveInfo.long_term_trend)}
-                              <span className="hidden sm:inline">Long: {liveInfo.long_term_trend}</span>
+                          {fund.long_term_trend && (
+                            <Badge variant="outline" className={`${getTrendColor(fund.long_term_trend)} border flex items-center gap-1 text-[10px] md:text-xs px-2 py-1`}>
+                              {getTrendIcon(fund.long_term_trend)}
+                              <span className="hidden sm:inline">Long: {fund.long_term_trend}</span>
                               <span className="sm:hidden">LT</span>
                             </Badge>
                           )}
-                          {liveInfo && liveInfo.short_term_mood && (
-                            <Badge variant="outline" className={`${getMoodColor(liveInfo.short_term_mood)} border flex items-center gap-1 text-[10px] md:text-xs px-2 py-1`}>
-                              {getMoodIcon(liveInfo.short_term_mood)}
-                              <span className="hidden sm:inline">Short: {liveInfo.short_term_mood}</span>
+                          {fund.short_term_mood && (
+                            <Badge variant="outline" className={`${getMoodColor(fund.short_term_mood)} border flex items-center gap-1 text-[10px] md:text-xs px-2 py-1`}>
+                              {getMoodIcon(fund.short_term_mood)}
+                              <span className="hidden sm:inline">Short: {fund.short_term_mood}</span>
                               <span className="sm:hidden">ST</span>
                             </Badge>
                           )}
@@ -484,20 +376,20 @@ export default function IndexFunds() {
                       <h4 className="text-xs md:text-sm font-medium text-slate-600 break-words">{fund.name}</h4>
                     </CardHeader>
                     <CardContent className="space-y-3 md:space-y-4 flex-1 px-4 md:px-6 pb-4 md:pb-6">
-                      {liveInfo ? (
+                      {fund.current_price !== undefined ? (
                         <>
                           <div className="flex flex-col sm:flex-row sm:items-baseline gap-2">
                             <p className="text-2xl md:text-3xl font-bold text-slate-900 break-words">
-                              ${(liveInfo.current_price || 0).toFixed(2)}
+                              ${(fund.current_price || 0).toFixed(2)}
                             </p>
-                            {liveInfo.day_change !== null && liveInfo.day_change !== undefined && (
+                            {fund.day_change !== null && fund.day_change !== undefined && (
                               <div className={`flex items-center gap-1 flex-wrap ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
                                 {isPositive ? <TrendingUp className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" /> : <TrendingDown className="w-3 h-3 md:w-4 md:h-4 flex-shrink-0" />}
                                 <span className="text-xs md:text-sm font-semibold break-words">
-                                  {isPositive ? '+' : ''}{liveInfo.day_change.toFixed(2)}
+                                  {isPositive ? '+' : ''}{fund.day_change.toFixed(2)}
                                 </span>
                                 <span className="text-xs md:text-sm font-semibold break-words">
-                                  ({isPositive ? '+' : ''}{(liveInfo.day_change_percent || 0).toFixed(2)}%)
+                                  ({isPositive ? '+' : ''}{(fund.day_change_percent || 0).toFixed(2)}%)
                                 </span>
                               </div>
                             )}
@@ -506,51 +398,51 @@ export default function IndexFunds() {
                           <div className="pt-2 md:pt-3 border-t border-slate-100">
                             <p className="text-[10px] md:text-xs font-semibold text-slate-700 mb-2">Historical Returns</p>
                             <div className="grid grid-cols-2 gap-2">
-                              {liveInfo.ytd_return !== null && liveInfo.ytd_return !== undefined && (
+                              {fund.ytd_return !== null && fund.ytd_return !== undefined && (
                                 <div className="bg-slate-50 rounded p-1.5 md:p-2">
                                   <p className="text-[10px] md:text-xs text-slate-500">YTD</p>
-                                  <p className={`text-xs md:text-sm font-bold break-words ${liveInfo.ytd_return >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {liveInfo.ytd_return >= 0 ? '+' : ''}{liveInfo.ytd_return.toFixed(1)}%
+                                  <p className={`text-xs md:text-sm font-bold break-words ${fund.ytd_return >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {fund.ytd_return >= 0 ? '+' : ''}{fund.ytd_return.toFixed(1)}%
                                   </p>
                                 </div>
                               )}
-                              {liveInfo.return_1y !== null && liveInfo.return_1y !== undefined && (
+                              {fund.return_1y !== null && fund.return_1y !== undefined && (
                                 <div className="bg-slate-50 rounded p-2">
                                   <p className="text-xs text-slate-500">1 Year</p>
-                                  <p className={`text-sm font-bold ${liveInfo.return_1y >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {liveInfo.return_1y >= 0 ? '+' : ''}{liveInfo.return_1y.toFixed(1)}%
+                                  <p className={`text-sm font-bold ${fund.return_1y >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {fund.return_1y >= 0 ? '+' : ''}{fund.return_1y.toFixed(1)}%
                                   </p>
                                 </div>
                               )}
-                              {liveInfo.return_3y_annualized !== null && liveInfo.return_3y_annualized !== undefined && (
+                              {fund.return_3y_annualized !== null && fund.return_3y_annualized !== undefined && (
                                 <div className="bg-slate-50 rounded p-2">
                                   <p className="text-xs text-slate-500">3Y Annual</p>
-                                  <p className={`text-sm font-bold ${liveInfo.return_3y_annualized >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {liveInfo.return_3y_annualized >= 0 ? '+' : ''}{liveInfo.return_3y_annualized.toFixed(1)}%
+                                  <p className={`text-sm font-bold ${fund.return_3y_annualized >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {fund.return_3y_annualized >= 0 ? '+' : ''}{fund.return_3y_annualized.toFixed(1)}%
                                   </p>
                                 </div>
                               )}
-                              {liveInfo.return_5y_total !== null && liveInfo.return_5y_total !== undefined && (
+                              {fund.return_5y_total !== null && fund.return_5y_total !== undefined && (
                                 <div className="bg-blue-50 rounded p-2 border border-blue-200">
                                   <p className="text-xs text-blue-700 font-semibold">5Y Total</p>
-                                  <p className={`text-sm font-bold ${liveInfo.return_5y_total >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                                    {liveInfo.return_5y_total >= 0 ? '+' : ''}{liveInfo.return_5y_total.toFixed(1)}%
+                                  <p className={`text-sm font-bold ${fund.return_5y_total >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                                    {fund.return_5y_total >= 0 ? '+' : ''}{fund.return_5y_total.toFixed(1)}%
                                   </p>
                                 </div>
                               )}
-                              {liveInfo.return_10y_annualized !== null && liveInfo.return_10y_annualized !== undefined && (
+                              {fund.return_10y_annualized !== null && fund.return_10y_annualized !== undefined && (
                                 <div className="bg-slate-50 rounded p-2">
                                   <p className="text-xs text-slate-500">10Y Annual</p>
-                                  <p className={`text-sm font-bold ${liveInfo.return_10y_annualized >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {liveInfo.return_10y_annualized >= 0 ? '+' : ''}{liveInfo.return_10y_annualized.toFixed(1)}%
+                                  <p className={`text-sm font-bold ${fund.return_10y_annualized >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {fund.return_10y_annualized >= 0 ? '+' : ''}{fund.return_10y_annualized.toFixed(1)}%
                                   </p>
                                 </div>
                               )}
-                              {liveInfo.total_return_inception !== null && liveInfo.total_return_inception !== undefined && (
+                              {fund.total_return_inception !== null && fund.total_return_inception !== undefined && (
                                 <div className="bg-slate-50 rounded p-2">
                                   <p className="text-xs text-slate-500">Since Inception</p>
-                                  <p className={`text-sm font-bold ${liveInfo.total_return_inception >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                    {liveInfo.total_return_inception >= 0 ? '+' : ''}{liveInfo.total_return_inception.toFixed(0)}%
+                                  <p className={`text-sm font-bold ${fund.total_return_inception >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {fund.total_return_inception >= 0 ? '+' : ''}{fund.total_return_inception.toFixed(0)}%
                                   </p>
                                 </div>
                               )}
@@ -563,23 +455,23 @@ export default function IndexFunds() {
                               <div>
                                 <p className="text-xs text-slate-500 mb-1">Low</p>
                                 <p className="font-semibold text-slate-900">
-                                  {liveInfo.week_52_low ? `$${liveInfo.week_52_low.toFixed(2)}` : 'N/A'}
+                                  {fund.fifty_two_week_low ? `$${fund.fifty_two_week_low.toFixed(2)}` : 'N/A'}
                                 </p>
                               </div>
                               <div>
                                 <p className="text-xs text-slate-500 mb-1">High</p>
                                 <p className="font-semibold text-slate-900">
-                                  {liveInfo.week_52_high ? `$${liveInfo.week_52_high.toFixed(2)}` : 'N/A'}
+                                  {fund.fifty_two_week_high ? `$${fund.fifty_two_week_high.toFixed(2)}` : 'N/A'}
                                 </p>
                               </div>
                             </div>
                           </div>
 
-                          {liveInfo.volume && (
+                          {fund.volume && (
                             <div className="pt-3 border-t border-slate-100">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs text-slate-500">Volume</span>
-                                <span className="font-semibold text-slate-900">{liveInfo.volume}</span>
+                                <span className="font-semibold text-slate-900">{fund.volume ? `${(fund.volume / 1000000).toFixed(1)}M` : 'N/A'}</span>
                               </div>
                             </div>
                           )}
@@ -593,11 +485,11 @@ export default function IndexFunds() {
                             </div>
                           )}
 
-                          {liveInfo.insight && (
+                          {fund.insight && (
                             <div className="pt-3 border-t border-slate-100 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-200">
                               <p className="text-xs text-slate-800 leading-relaxed">
                                 <Zap className="w-3 h-3 inline mr-1 text-blue-600" />
-                                {liveInfo.insight}
+                                {fund.insight}
                               </p>
                             </div>
                           )}
