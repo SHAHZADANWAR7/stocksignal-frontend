@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/Table";
-import { Lightbulb, TrendingDown, TrendingUp, Search } from "lucide-react";
+import { Lightbulb, TrendingDown, TrendingUp, Search, RefreshCw, Loader2  } from "lucide-react";
 import TableSkeleton from "@/components/ui/TableSkeleton"; // Adjust path if TableSkeleton is not in ui/TableSkeleton
 
 export default function Holdings() {
