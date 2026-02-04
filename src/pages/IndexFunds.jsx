@@ -247,9 +247,9 @@ export default function IndexFunds() {
         </motion.div>
 
         <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg mb-6 rounded-2xl">
-          {/* Slightly increased height, vertically-centered content (left aligned) */}
-          <CardContent className="p-6 flex items-center min-h-[192px]">
-            <div className="w-full flex flex-col justify-center items-start">
+          {/* Slightly decreased height from previous and vertically-centered content (left aligned) */}
+          <CardContent className="p-6 flex items-center min-h-[168px]">
+            <div className="w-full flex flex-col justify-center items-start h-full">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Building2 className="w-5 h-5 text-white" />
@@ -261,7 +261,7 @@ export default function IndexFunds() {
               </div>
 
               {/* Search row directly under the text, left-aligned.
-                  Make the input long so button sits to the right end of the card visually. */}
+                  Keep input long so button sits to the right end of the card visually. */}
               <div className="mt-4 w-full flex items-center gap-3">
                 <div className="w-full md:w-4/5">
                   <Input
@@ -298,10 +298,10 @@ export default function IndexFunds() {
         </Card>
 
         <Card className="border-2 border-slate-200 shadow-lg mb-8 bg-white/80 backdrop-blur-sm">
-          {/* Slightly increase height and vertically center children */}
-          <CardContent className="p-6 flex items-center min-h-[80px]">
-            <div className="flex flex-col md:flex-row gap-4 items-center w-full">
-              <div className="flex-1 relative w-full md:w-auto">
+          {/* Ensure this card is visually slightly taller and everything is truly vertically centered */}
+          <CardContent className="p-6 flex items-center min-h-[96px]">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
+              <div className="flex-1 relative w-full md:pr-4">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <Input
                   placeholder="Search by symbol or name..."
@@ -311,8 +311,8 @@ export default function IndexFunds() {
                 />
               </div>
 
-              {/* Tabs aligned vertically centered */}
-              <div className="flex items-center">
+              {/* Tabs aligned vertically centered and not stretching */}
+              <div className="flex items-center flex-none">
                 <Tabs value={selectedType} onValueChange={setSelectedType} className="w-full md:w-auto">
                   <TabsList className="grid grid-cols-3 md:grid-cols-6 h-12 items-center">
                     <TabsTrigger value="all">All</TabsTrigger>
@@ -353,7 +353,7 @@ export default function IndexFunds() {
                   <Card className="border-2 border-slate-200 hover:shadow-xl transition-all duration-300 bg-white group h-full flex flex-col">
                     {indexData && indexName && (
                       <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-b-2 border-amber-200 px-4 md:px-6 py-3 md:py-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items:center justify-between gap-2">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                           <div className="min-w-0">
                             <p className="text-[10px] md:text-xs font-semibold text-amber-900 mb-0.5 md:mb-1 truncate">{indexName}</p>
                             <p className="text-[9px] md:text-xs text-amber-700">(Index Level - Reference)</p>
