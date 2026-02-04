@@ -1,6 +1,6 @@
 import { fetchAuthSession } from 'aws-amplify/auth';
 
-// Proxy configuration - uses Base44 secrets
+// Proxy configuration 
 const PROXY_CONFIG = {
   API_GATEWAY_URL: import.meta.env.VITE_AWS_API_GATEWAY_URL || "https://4ku664jsl7.execute-api.us-east-1.amazonaws.com/Production1",
   API_KEY: import.meta.env.VITE_AWS_API_KEY,
@@ -155,6 +155,7 @@ const invokeProxy = async (functionName, payload = {}) => {
 
 // Export all API methods
 export const awsApi = {
+  callAwsFunction: (functionName, payload) => invokeProxy(functionName, payload),
   getStockQuote: (symbol) => invokeProxy("getStockQuote", { symbol }),
   getStockBatch: (symbols, forceRefresh = true) => invokeProxy("getStockBatch", { symbols, forceRefresh }),
   getStockAnalysis: (payload) => invokeProxy("getStockAnalysis", payload),
