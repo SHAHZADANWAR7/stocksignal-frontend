@@ -418,6 +418,15 @@ export default function IndexFunds() {
                             )}
                           </div>
 
+                          {/* Show AI-estimated badge when the data came from LLM fallback */}
+                          {fund && fund.llmFallback && (
+                            <div className="mt-2">
+                              <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[11px]">
+                                Estimated by AI — not a live market price
+                              </Badge>
+                            </div>
+                          )}
+
                           <div className="pt-2 md:pt-3 border-t border-slate-100">
                             <p className="text-[10px] md:text-xs font-semibold text-slate-700 mb-2">Historical Returns</p>
                             <div className="grid grid-cols-2 gap-2">
