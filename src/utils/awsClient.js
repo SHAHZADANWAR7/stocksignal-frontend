@@ -7,14 +7,14 @@ const PROXY_CONFIG = {
   PROXY_ENDPOINT: "apiGatewayProxy"
 };
 
-// Get JWT token and user email from Cognito
+// Get JWT token and user_id (Cognito sub) from Cognito
 const getAuthHeaders = async () => {
   try {
     const session = await fetchAuthSession();
     const idToken = session.tokens?.idToken;
     
     const token = idToken?.toString();
-    const userEmail = idToken?.payload?.email;
+    const userId = idToken?.payload?.sub;
     
     const headers = {
       'Content-Type': 'application/json',
@@ -25,8 +25,8 @@ const getAuthHeaders = async () => {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    if (userEmail) {
-      headers['x-user-email'] = userEmail;
+    if (userId) {
+      headers['x-user-id'] = userId;
     }
     
     return headers;
