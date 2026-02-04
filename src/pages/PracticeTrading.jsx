@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { awsApi } from "@/utils/awsClient";
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,13 +21,19 @@ export default function PracticeTrading() {
   const [lastSync, setLastSync] = useState(null);
   const [recommendedAllocations, setRecommendedAllocations] = useState([]);
   const [isExecutingBatch, setIsExecutingBatch] = useState(false);
-  const [user, setUser] = useState(null);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     const initUser = async () => {
-      const currentUser = await awsApi.getUser();
-      setUser(currentUser.user);
+      try {
+        const session = await fetchAuthSession();
+        const currentUserId = session.tokens?.idToken?.payload?.sub;
+        setUserId(currentUserId);
+      } catch (error) {
+        console.error("Error getting user ID:", error);
+      }
     };
+
     initUser();
     loadData();
     
@@ -39,13 +46,20 @@ export default function PracticeTrading() {
   }, []);
 
   const loadData = async () => {
-    await Promise.all([loadPortfolio(), loadTrades()]);
+    if (userId) {
+      await Promise.all([loadPortfolio(), loadTrades()]);
+    }
   };
+
+  useEffect(() => {
+    if (userId) {
+      loadData();
+    }
+  }, [userId]);
 
   const loadPortfolio = async () => {
     try {
-      const userData = await awsApi.getUser();
-      const portfolios = await awsApi.getUserPortfolio(userData.user.id);
+      const portfolios = await awsApi.getUserPortfolio(userId);
       
       if (portfolios && portfolios.length > 0) {
         setPortfolio(portfolios[0]);
@@ -59,7 +73,7 @@ export default function PracticeTrading() {
   const loadTrades = async () => {
     setIsLoadingTrades(true);
     try {
-      const trades = await awsApi.getUserTrades();
+      const trades = await awsApi.getUserTrades(userId);
       setTrades(trades || []);
     } catch (error) {
       console.error("Error loading trades:", error);
@@ -173,8 +187,7 @@ export default function PracticeTrading() {
   const handleSyncPortfolio = async () => {
     setIsSyncing(true);
     try {
-      const currentUser = await awsApi.getUser();
-      const response = await awsApi.syncPortfolio({ userId: currentUser.user.id });
+      const response = await awsApi.syncPortfolio({ userId });
 
       console.log('📦 Sync response:', response);
 
