@@ -5,6 +5,9 @@ import { awsApi as awsClient } from './awsClient';
  * (cognito_sub and user_email are auto-extracted from JWT by awsClient)
  */
 export const awsApi = {
+  // Generic function call
+  callAwsFunction: (functionName, payload) => awsClient.callAwsFunction(functionName, payload),
+
   // Stock data
   getStockQuote: (symbol) => awsClient.getStockQuote(symbol),
   getStockAnalysis: (payload) => awsClient.getStockAnalysis(payload),
