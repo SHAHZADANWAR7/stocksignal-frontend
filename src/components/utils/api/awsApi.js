@@ -1,97 +1,113 @@
 import { awsApi as awsClient } from './awsClient';
-import { fetchAuthSession } from 'aws-amplify/auth';
 
 /**
- * Get current authenticated user's ID (Cognito sub) from Cognito
+ * AWS API wrapper - delegates to awsClient which handles all auth extraction
+ * (cognito_sub and user_email are auto-extracted from JWT by awsClient)
  */
-async function getCurrentUserId() {
-  try {
-    const session = await fetchAuthSession();
-    const idToken = session.tokens?.idToken;
-    return idToken?.payload?.sub || null;
-  } catch (error) {
-    console.warn('Could not get user ID:', error);
-    return null;
-  }
-}
-
-/**
- * Call AWS Lambda function via API Gateway
- * @param {string} functionName - Name of Lambda function
- * @param {Object} params - Parameters to pass
- * @returns {Promise} API response (auto-parses body if string)
- */
-export async function callAwsFunction(functionName, params) {
-  try {
-    const apiUrl = import.meta.env.VITE_AWS_API_GATEWAY_URL || import.meta.env.VITE_API_GATEWAY_URL || 'https://YOUR_API_GATEWAY_URL';
-    const apiKey = import.meta.env.VITE_AWS_API_KEY;
-    
-    // Get authenticated user's ID (Cognito sub) from Cognito
-    const userId = await getCurrentUserId();
-    
-    const response = await fetch(`${apiUrl}/${functionName}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(apiKey && { 'x-api-key': apiKey }),
-        ...(userId && { 'x-user-id': userId })
-      },
-      body: JSON.stringify(params)
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`API Error ${response.status}: ${errorText}`);
-    }
-    
-    const result = await response.json();
-    
-    // Auto-parse body if it's a JSON string (Lambda via API Gateway format)
-    if (result.body && typeof result.body === 'string') {
-      try {
-        return JSON.parse(result.body);
-      } catch (e) {
-        console.warn('Could not parse response body as JSON:', e);
-        return result;
-      }
-    }
-    
-    return result;
-  } catch (error) {
-    console.error(`Error calling ${functionName}:`, error);
-    throw error;
-  }
-}
-
 export const awsApi = {
   // Stock data
-  getStockQuote: async (symbol) => {
-    return awsClient.getStockQuote(symbol);
-  },
-
-  getStockAnalysis: async (symbol) => {
-    return awsClient.getStockAnalysis(symbol);
-  },
-
-  getStockBatch: async (symbols) => {
-    return awsClient.getStockBatch(symbols);
-  },
+  getStockQuote: (symbol) => awsClient.getStockQuote(symbol),
+  getStockAnalysis: (payload) => awsClient.getStockAnalysis(payload),
+  getStockBatch: (symbols, forceRefresh) => awsClient.getStockBatch(symbols, forceRefresh),
+  getVIXData: () => awsClient.getVIXData(),
+  calculateRealBeta: (symbol) => awsClient.calculateRealBeta(symbol),
 
   // Portfolio operations
-  syncPortfolio: async (data) => {
-    return awsClient.syncPortfolio(data);
-  },
+  getPortfolio: () => awsClient.getPortfolio(),
+  getUserPortfolio: () => awsClient.getUserPortfolio(),
+  syncPortfolio: (data) => awsClient.syncPortfolio(data),
+  syncPortfolioData: () => awsClient.syncPortfolioData(),
+  executePaperTrade: (data) => awsClient.executePaperTrade(data),
+  executeTrade: (data) => awsClient.executeTrade(data),
 
-  executePaperTrade: async (data) => {
-    return awsClient.executePaperTrade(data);
-  },
+  // Holdings
+  getHoldings: () => awsClient.getHoldings(),
+  createHolding: (data) => awsClient.createHolding(data),
+  updateHolding: (holdingId, data) => awsClient.updateHolding(holdingId, data),
+  deleteHolding: (holdingId) => awsClient.deleteHolding(holdingId),
 
-  // Market data
-  getVIXData: async () => {
-    return awsClient.getVIXData();
-  },
+  // Transactions
+  getTransactions: () => awsClient.getTransactions(),
+  createTransaction: (data) => awsClient.createTransaction(data),
 
-  calculateRealBeta: async (data) => {
-    return awsClient.calculateRealBeta(data);
-  }
+  // Investment Journal
+  getInvestmentJournals: () => awsClient.getInvestmentJournals(),
+  createInvestmentJournal: (data) => awsClient.createInvestmentJournal(data),
+  analyzeBehavioralPatterns: (prompt) => awsClient.analyzeBehavioralPatterns(prompt),
+
+  // Portfolio Analysis
+  getPortfolioAnalyses: () => awsClient.getPortfolioAnalyses(),
+  getAnalysis: (analysisId) => awsClient.getAnalysis(analysisId),
+  saveAnalysis: (data) => awsClient.saveAnalysis(data),
+  optimizePortfolio: (data) => awsClient.optimizePortfolio(data),
+  analyzeInvestmentBehavior: (data) => awsClient.analyzeInvestmentBehavior(data),
+
+  // Shadow Portfolios
+  getShadowPortfolios: () => awsClient.getShadowPortfolios(),
+
+  // Investor Score
+  saveInvestorScore: (data) => awsClient.saveInvestorScore(data),
+
+  // Companies
+  getCompanies: () => awsClient.getCompanies(),
+
+  // User management
+  getUser: () => awsClient.getUser(),
+  getUserByEmail: (email) => awsClient.getUserByEmail(email),
+  getCurrentUser: () => awsClient.getCurrentUser(),
+  updateUser: (data) => awsClient.updateUser(data),
+  deleteUser: () => awsClient.deleteUser(),
+
+  // Challenges
+  getChallenges: () => awsClient.getChallenges(),
+  createChallenge: (data) => awsClient.createChallenge(data),
+  joinChallenge: (challengeId) => awsClient.joinChallenge(challengeId),
+  getChallengeLeaderboard: (challengeId) => awsClient.getChallengeLeaderboard(challengeId),
+  inviteUserToChallenge: (challengeId, email) => awsClient.inviteUserToChallenge(challengeId, email),
+  enterChallengeWithPortfolio: (data) => awsClient.enterChallengeWithPortfolio(data),
+  syncChallengePortfolios: () => awsClient.syncChallengePortfolios(),
+  generateChallengeReports: () => awsClient.generateChallengeReports(),
+
+  // Simulation
+  createSimulationPortfolio: (data) => awsClient.createSimulationPortfolio(data),
+  updateSimulationPortfolio: (portfolioId, data) => awsClient.updateSimulationPortfolio(portfolioId, data),
+  deleteSimulationPortfolio: (portfolioId) => awsClient.deleteSimulationPortfolio(portfolioId),
+  createSimulationChallenge: (data) => awsClient.createSimulationChallenge(data),
+  getSimulationResults: (simulationId) => awsClient.getSimulationResults(simulationId),
+  runScenarioSimulation: (data) => awsClient.runScenarioSimulation(data),
+
+  // Portfolio Goals
+  createPortfolioGoal: (data) => awsClient.createPortfolioGoal(data),
+  updatePortfolioGoal: (goalId, data) => awsClient.updatePortfolioGoal(goalId, data),
+  deletePortfolioGoal: (goalId) => awsClient.deletePortfolioGoal(goalId),
+
+  // Black Swan Simulation
+  createBlackSwanSimulation: (data) => awsClient.createBlackSwanSimulation(data),
+  getBlackSwanSimulations: () => awsClient.getBlackSwanSimulations(),
+
+  // Subscriptions
+  getSubscriptions: () => awsClient.getSubscriptions(),
+  createSubscription: (data) => awsClient.createSubscription(data),
+  updateSubscription: (subscriptionId, data) => awsClient.updateSubscription(subscriptionId, data),
+  checkSubscription: () => awsClient.checkSubscription(),
+  createCheckoutSession: (data) => awsClient.createCheckoutSession(data),
+  createPortalSession: (customerId) => awsClient.createPortalSession(customerId),
+
+  // Email/Notifications
+  sendWeeklySummary: () => awsClient.sendWeeklySummary(),
+  sendDailyAlert: () => awsClient.sendDailyAlert(),
+  sendMonthlyReport: () => awsClient.sendMonthlyReport(),
+  sendNewsletter: () => awsClient.sendNewsletter(),
+  sendSupportEmail: (data) => awsClient.sendSupportEmail(data),
+  sendEmail: (data) => awsClient.sendEmail(data),
+
+  // Market Insights
+  generateMarketInsights: () => awsClient.generateMarketInsights(),
+  cacheMarketInsights: (data) => awsClient.cacheMarketInsights(data),
+
+  // Trades
+  getUserTrades: () => awsClient.getUserTrades(),
+
+  // LLM
+  invokeLLM: (prompt, context) => awsClient.invokeLLM(prompt, context),
 };
