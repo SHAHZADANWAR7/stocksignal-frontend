@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { callAwsFunction } from "@/components/utils/api/awsApi";
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LineChart, TrendingUp, Building2, Target } from "lucide-react";
@@ -18,6 +19,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [userId, setUserId] = useState(null);
 
   // Transform Lambda response fields from snake_case to camelCase
   const transformDashboardData = (data) => {
@@ -38,9 +40,25 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    loadDashboardData();
+    const initUser = async () => {
+      try {
+        const session = await fetchAuthSession();
+        const currentUserId = session.tokens?.idToken?.payload?.sub;
+        setUserId(currentUserId);
+      } catch (error) {
+        console.error("Error getting user ID:", error);
+      }
+    };
+
+    initUser();
     checkFirstVisit();
   }, []);
+
+  useEffect(() => {
+    if (userId) {
+      loadDashboardData();
+    }
+  }, [userId]);
 
   const checkFirstVisit = () => {
     const hasVisited = localStorage.getItem('stocksignal_tutorial_completed');
@@ -62,7 +80,7 @@ export default function Dashboard() {
   };
 
   const loadDashboardData = async () => {
-    if (isLoading) return;
+    if (isLoading || !userId) return;
     setIsLoading(true);
     try {
       const data = await callAwsFunction('getUserDashboardData', {});
