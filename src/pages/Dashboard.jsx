@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { callAwsFunction } from "@/components/utils/api/awsApi";
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { awsApi } from "@/components/utils/api/awsApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LineChart, TrendingUp, Building2, Target } from "lucide-react";
@@ -19,7 +18,6 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
-  const [userId, setUserId] = useState(null);
 
   // Transform Lambda response fields from snake_case to camelCase
   const transformDashboardData = (data) => {
@@ -40,25 +38,9 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    const initUser = async () => {
-      try {
-        const session = await fetchAuthSession();
-        const currentUserId = session.tokens?.idToken?.payload?.sub;
-        setUserId(currentUserId);
-      } catch (error) {
-        console.error("Error getting user ID:", error);
-      }
-    };
-
-    initUser();
     checkFirstVisit();
+    loadDashboardData();
   }, []);
-
-  useEffect(() => {
-    if (userId) {
-      loadDashboardData();
-    }
-  }, [userId]);
 
   const checkFirstVisit = () => {
     const hasVisited = localStorage.getItem('stocksignal_tutorial_completed');
@@ -80,13 +62,18 @@ export default function Dashboard() {
   };
 
   const loadDashboardData = async () => {
-    if (isLoading || !userId) return;
+    if (isLoading) return;
     setIsLoading(true);
     try {
-      const data = await callAwsFunction('getUserDashboardData', {});
+      // awsApi methods auto-extract cognito_sub and user_email from JWT
+      const portfolio = await awsApi.getPortfolio();
+      const analyses = await awsApi.getPortfolioAnalyses();
       
-      if (data) {
-        const transformed = transformDashboardData(data);
+      if (portfolio || analyses) {
+        const transformed = transformDashboardData({
+          portfolio_summary: portfolio?.summary || null,
+          recent_analyses: analyses || []
+        });
         setAnalyses(transformed.recentAnalyses || []);
         setPortfolioSummary(transformed.portfolioSummary || null);
       }
