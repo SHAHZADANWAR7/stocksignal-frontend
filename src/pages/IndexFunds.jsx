@@ -247,9 +247,9 @@ export default function IndexFunds() {
         </motion.div>
 
         <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg mb-6 rounded-2xl">
-          {/* Make the card vertically centered, keep content left-aligned, slightly reduce height */}
-          <CardContent className="p-6 flex items-center min-h-[140px]">
-            <div className="w-full">
+          {/* Slightly increased height, vertically-centered content (left aligned) */}
+          <CardContent className="p-6 flex items-center min-h-[192px]">
+            <div className="w-full flex flex-col justify-center items-start">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Building2 className="w-5 h-5 text-white" />
@@ -260,41 +260,46 @@ export default function IndexFunds() {
                 </div>
               </div>
 
-              {/* Search bar directly under the text, left-aligned (not horizontally centered). */}
-              <div className="mt-4 flex items-center gap-3 w-full md:w-1/2">
-                <Input
-                  type="text"
-                  placeholder="Enter any NASDAQ/NYSE symbol (e.g., SPY, QQQ, VTI)..."
-                  value={newSymbol}
-                  onChange={(e) => setNewSymbol(e.target.value.toUpperCase())}
-                  onKeyPress={(e) => e.key === 'Enter' && handleAddSymbol()}
-                  className="flex-1 h-12 text-base min-w-0"
-                />
-                <Button
-                  onClick={handleAddSymbol}
-                  disabled={isAddingSymbol || !newSymbol.trim()}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-4"
-                >
-                  {isAddingSymbol ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Symbol
-                    </>
-                  )}
-                </Button>
+              {/* Search row directly under the text, left-aligned.
+                  Make the input long so button sits to the right end of the card visually. */}
+              <div className="mt-4 w-full flex items-center gap-3">
+                <div className="w-full md:w-4/5">
+                  <Input
+                    type="text"
+                    placeholder="Enter any NASDAQ/NYSE symbol (e.g., SPY, QQQ, VTI)..."
+                    value={newSymbol}
+                    onChange={(e) => setNewSymbol(e.target.value.toUpperCase())}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddSymbol()}
+                    className="w-full h-12 text-base"
+                  />
+                </div>
+                <div className="w-auto">
+                  <Button
+                    onClick={handleAddSymbol}
+                    disabled={isAddingSymbol || !newSymbol.trim()}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-5 h-12"
+                  >
+                    {isAddingSymbol ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Symbol
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-2 border-slate-200 shadow-lg mb-8 bg-white/80 backdrop-blur-sm">
-          {/* Vertically center content in this card so search input and tabs align center */}
-          <CardContent className="p-6 flex items-center">
+          {/* Slightly increase height and vertically center children */}
+          <CardContent className="p-6 flex items-center min-h-[80px]">
             <div className="flex flex-col md:flex-row gap-4 items-center w-full">
               <div className="flex-1 relative w-full md:w-auto">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -306,7 +311,7 @@ export default function IndexFunds() {
                 />
               </div>
 
-              {/* Ensure the tabs are vertically centered */}
+              {/* Tabs aligned vertically centered */}
               <div className="flex items-center">
                 <Tabs value={selectedType} onValueChange={setSelectedType} className="w-full md:w-auto">
                   <TabsList className="grid grid-cols-3 md:grid-cols-6 h-12 items-center">
@@ -348,7 +353,7 @@ export default function IndexFunds() {
                   <Card className="border-2 border-slate-200 hover:shadow-xl transition-all duration-300 bg-white group h-full flex flex-col">
                     {indexData && indexName && (
                       <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-b-2 border-amber-200 px-4 md:px-6 py-3 md:py-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                        <div className="flex flex-col sm:flex-row items-start sm:items:center justify-between gap-2">
                           <div className="min-w-0">
                             <p className="text-[10px] md:text-xs font-semibold text-amber-900 mb-0.5 md:mb-1 truncate">{indexName}</p>
                             <p className="text-[9px] md:text-xs text-amber-700">(Index Level - Reference)</p>
