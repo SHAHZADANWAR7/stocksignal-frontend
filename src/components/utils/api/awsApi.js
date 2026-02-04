@@ -2,15 +2,15 @@ import { awsApi as awsClient } from './awsClient';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
 /**
- * Get current authenticated user's email from Cognito
+ * Get current authenticated user's ID (Cognito sub) from Cognito
  */
-async function getCurrentUserEmail() {
+async function getCurrentUserId() {
   try {
     const session = await fetchAuthSession();
     const idToken = session.tokens?.idToken;
-    return idToken?.payload?.email || null;
+    return idToken?.payload?.sub || null;
   } catch (error) {
-    console.warn('Could not get user email:', error);
+    console.warn('Could not get user ID:', error);
     return null;
   }
 }
@@ -26,15 +26,15 @@ export async function callAwsFunction(functionName, params) {
     const apiUrl = import.meta.env.VITE_AWS_API_GATEWAY_URL || import.meta.env.VITE_API_GATEWAY_URL || 'https://YOUR_API_GATEWAY_URL';
     const apiKey = import.meta.env.VITE_AWS_API_KEY;
     
-    // Get authenticated user's email from Cognito
-    const userEmail = await getCurrentUserEmail();
+    // Get authenticated user's ID (Cognito sub) from Cognito
+    const userId = await getCurrentUserId();
     
     const response = await fetch(`${apiUrl}/${functionName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(apiKey && { 'x-api-key': apiKey }),
-        ...(userEmail && { 'x-user-email': userEmail })
+        ...(userId && { 'x-user-id': userId })
       },
       body: JSON.stringify(params)
     });
