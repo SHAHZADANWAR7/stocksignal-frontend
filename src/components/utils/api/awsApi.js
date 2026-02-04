@@ -1,4 +1,4 @@
-import { awsApi as awsClient } from '../../awsClient';
+import { awsApi as awsClient } from '../../../utils/awsClient';
 
 /**
  * AWS API wrapper - delegates to awsClient which handles all auth extraction
