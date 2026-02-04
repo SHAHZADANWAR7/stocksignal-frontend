@@ -247,19 +247,20 @@ export default function IndexFunds() {
         </motion.div>
 
         <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 shadow-lg mb-6 rounded-2xl">
-          {/* Make the card content vertically centered */}
-          <CardContent className="p-6 flex flex-col md:flex-row items-center justify-center gap-6">
-            <div className="flex items-center gap-3 text-center md:text-left">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-white" />
+          {/* Increased min height, stacked layout with centered text and search bar below */}
+          <CardContent className="p-6 flex flex-col items-center justify-center gap-6 min-h-[160px]">
+            <div className="text-center max-w-2xl">
+              <div className="flex items-center justify-center mb-3">
+                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-white" />
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-slate-900">Can't Find Your Fund?</h3>
-                <p className="text-sm text-slate-600">Search any publicly traded ETF or index fund by ticker symbol - we'll fetch the data automatically</p>
-              </div>
+              <h3 className="font-bold text-slate-900 text-lg md:text-xl">Can't Find Your Fund?</h3>
+              <p className="text-sm text-slate-600 mt-2">Search any publicly traded ETF or index fund by ticker symbol - we'll fetch the data automatically</p>
             </div>
 
-            <div className="flex gap-3 w-full md:w-auto items-center">
+            {/* Search bar placed directly under the text and centered. Slightly wider on md+ screens */}
+            <div className="w-full md:w-3/4 lg:w-2/3 flex items-center gap-3">
               <Input
                 type="text"
                 placeholder="Enter any NASDAQ/NYSE symbol (e.g., SPY, QQQ, VTI)..."
@@ -271,7 +272,7 @@ export default function IndexFunds() {
               <Button
                 onClick={handleAddSymbol}
                 disabled={isAddingSymbol || !newSymbol.trim()}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-8"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-6"
               >
                 {isAddingSymbol ? (
                   <>
@@ -281,7 +282,7 @@ export default function IndexFunds() {
                 ) : (
                   <>
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Symbol
+                    Add
                   </>
                 )}
               </Button>
@@ -290,9 +291,10 @@ export default function IndexFunds() {
         </Card>
 
         <Card className="border-2 border-slate-200 shadow-lg mb-8 bg-white/80 backdrop-blur-sm">
-          <CardContent className="p-6">
+          {/* Make CardContent a flex container to vertically center its children */}
+          <CardContent className="p-6 flex items-center">
             {/* Center search bar and tabs vertically */}
-            <div className="flex flex-col md:flex-row gap-4 items-center">
+            <div className="flex flex-col md:flex-row gap-4 items-center w-full">
               <div className="flex-1 relative w-full md:w-auto">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <Input
