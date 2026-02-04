@@ -1,3 +1,5 @@
+import { fetchAuthSession } from 'aws-amplify/auth';
+
 // Proxy configuration - uses Base44 secrets
 const PROXY_CONFIG = {
   API_GATEWAY_URL: import.meta.env.VITE_AWS_API_GATEWAY_URL || "https://4ku664jsl7.execute-api.us-east-1.amazonaws.com/Production1",
@@ -5,15 +7,46 @@ const PROXY_CONFIG = {
   PROXY_ENDPOINT: "apiGatewayProxy"
 };
 
+// Get JWT token and user email from Cognito
+const getAuthHeaders = async () => {
+  try {
+    const session = await fetchAuthSession();
+    const idToken = session.tokens?.idToken;
+    
+    const token = idToken?.toString();
+    const userEmail = idToken?.payload?.email;
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'x-api-key': PROXY_CONFIG.API_KEY
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    if (userEmail) {
+      headers['x-user-email'] = userEmail;
+    }
+    
+    return headers;
+  } catch (error) {
+    console.warn('Could not get auth headers:', error);
+    return {
+      'Content-Type': 'application/json',
+      'x-api-key': PROXY_CONFIG.API_KEY
+    };
+  }
+};
+
 // Generic proxy invocation - calls through apiGatewayProxy
 const invokeProxy = async (functionName, payload) => {
   try {
+    const headers = await getAuthHeaders();
+    
     const response = await fetch(`${PROXY_CONFIG.API_GATEWAY_URL}/${PROXY_CONFIG.PROXY_ENDPOINT}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': PROXY_CONFIG.API_KEY
-      },
+      headers,
       body: JSON.stringify({
         functionName,
         payload
