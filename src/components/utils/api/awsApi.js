@@ -1,4 +1,19 @@
 import { awsApi as awsClient } from './awsClient';
+import { fetchAuthSession } from 'aws-amplify/auth';
+
+/**
+ * Get current authenticated user's email from Cognito
+ */
+async function getCurrentUserEmail() {
+  try {
+    const session = await fetchAuthSession();
+    const idToken = session.tokens?.idToken;
+    return idToken?.payload?.email || null;
+  } catch (error) {
+    console.warn('Could not get user email:', error);
+    return null;
+  }
+}
 
 /**
  * Call AWS Lambda function via API Gateway
@@ -11,11 +26,15 @@ export async function callAwsFunction(functionName, params) {
     const apiUrl = import.meta.env.VITE_AWS_API_GATEWAY_URL || import.meta.env.VITE_API_GATEWAY_URL || 'https://YOUR_API_GATEWAY_URL';
     const apiKey = import.meta.env.VITE_AWS_API_KEY;
     
+    // Get authenticated user's email from Cognito
+    const userEmail = await getCurrentUserEmail();
+    
     const response = await fetch(`${apiUrl}/${functionName}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(apiKey && { 'x-api-key': apiKey })
+        ...(apiKey && { 'x-api-key': apiKey }),
+        ...(userEmail && { 'x-user-email': userEmail })
       },
       body: JSON.stringify(params)
     });
