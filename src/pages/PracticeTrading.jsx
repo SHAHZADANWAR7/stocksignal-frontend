@@ -206,6 +206,11 @@ export default function PracticeTrading() {
     return format(date, 'MMM d, h:mm a');
   };
 
+  // Helper function to get trade field value (supports both camelCase and snake_case)
+  const getTradeField = (trade, camelCase, snakeCase) => {
+    return trade[camelCase] ?? trade[snakeCase] ?? 0;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -436,31 +441,34 @@ export default function PracticeTrading() {
                     </tr>
                   </thead>
                   <tbody>
-                    {trades.map((trade) => (
-                      <tr key={trade.id} className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="py-3 px-4 text-sm text-slate-600">
-                          {formatTradeDate(trade.timestamp)}
-                        </td>
-                        <td className="py-3 px-4 font-semibold text-slate-900">{trade.symbol}</td>
-                        <td className="py-3 px-4">
-                          <Badge className={trade.side === 'buy' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}>
-                            {trade.side.toUpperCase()}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4 text-right text-slate-700">{trade.quantity}</td>
-                        <td className="py-3 px-4 text-right text-slate-700">
-                          ${(trade.executedPrice || 0).toFixed(2)}
-                        </td>
-                        <td className="py-3 px-4 text-right font-semibold text-slate-900">
-                          ${((trade.executedPrice || 0) * trade.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <Badge className={`${getStatusBadge(trade.status)} border`}>
-                            {trade.status}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
+                    {trades.map((trade) => {
+                      const executedPrice = getTradeField(trade, 'executedPrice', 'executed_price');
+                      return (
+                        <tr key={trade.id || trade.timestamp} className="border-b border-slate-100 hover:bg-slate-50">
+                          <td className="py-3 px-4 text-sm text-slate-600">
+                            {formatTradeDate(trade.timestamp)}
+                          </td>
+                          <td className="py-3 px-4 font-semibold text-slate-900">{trade.symbol}</td>
+                          <td className="py-3 px-4">
+                            <Badge className={trade.side === 'buy' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}>
+                              {trade.side.toUpperCase()}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-right text-slate-700">{trade.quantity}</td>
+                          <td className="py-3 px-4 text-right text-slate-700">
+                            ${executedPrice.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4 text-right font-semibold text-slate-900">
+                            ${(executedPrice * trade.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <Badge className={`${getStatusBadge(trade.status)} border`}>
+                              {trade.status}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
