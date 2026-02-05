@@ -51,22 +51,22 @@ const LAMBDA_KEY_MAPPING = {
 const getAuthData = async () => {
   try {
     const session = await fetchAuthSession();
-    const accessToken = session.tokens?.accessToken;
+    const idToken = session.tokens?.idToken;
     
-    const token = accessToken?.toString();
-    const cognitoSub = accessToken?.payload?.sub;
-    const userEmail = accessToken?.payload?.email;
+    const token = idToken?.toString();
+    const cognitoSub = idToken?.payload?.sub;
+    const userEmail = idToken?.payload?.email;
     
     console.log('🔐 getAuthData - Session retrieved:', {
       sessionExists: !!session,
       tokensExist: !!session.tokens,
-      accessTokenExists: !!accessToken,
+      idTokenExists: !!idToken,
       tokenPresent: !!token,
       tokenLength: token?.length || 0,
       tokenPreview: token ? token.substring(0, 50) + '...' : 'NO TOKEN',
       cognitoSub: cognitoSub || 'MISSING',
       userEmail: userEmail || 'MISSING',
-      accessTokenPayload: accessToken?.payload || 'NO PAYLOAD'
+      idTokenPayload: idToken?.payload || 'NO PAYLOAD'
     });
     
     return {
