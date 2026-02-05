@@ -115,15 +115,16 @@ const invokeProxy = async (functionName, payload = {}) => {
     const headers = await getAuthHeaders();
     const { cognitoSub, userEmail } = await getAuthData();
     
-    // Determine which key this function needs and add to payload
+    // Determine which key this function needs
     const keyType = getKeyTypeForFunction(functionName);
     const enhancedPayload = { ...payload };
     
-    if (keyType === 'cognito_sub' && cognitoSub) {
-      enhancedPayload.cognitoSub = cognitoSub;
-    } else if (keyType === 'user_id' && cognitoSub) {
-      // user_id is the same as cognito_sub
+    // Add x-user-id header for functions that need user_id
+    if (keyType === 'user_id' && cognitoSub) {
+      headers['x-user-id'] = cognitoSub;
       enhancedPayload.userId = cognitoSub;
+    } else if (keyType === 'cognito_sub' && cognitoSub) {
+      enhancedPayload.cognitoSub = cognitoSub;
     } else if (keyType === 'user_email' && userEmail) {
       enhancedPayload.userEmail = userEmail;
     }
