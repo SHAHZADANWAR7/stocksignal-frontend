@@ -38,7 +38,7 @@ export default function PracticeTrading() {
 
   const loadPortfolio = async () => {
     try {
-      const portfolioData = await awsApi.getPortfolio();
+      const portfolioData = await awsApi.getUserPortfolio();
       
       if (portfolioData) {
         setPortfolio(portfolioData);
