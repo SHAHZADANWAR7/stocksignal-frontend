@@ -46,7 +46,8 @@ const LAMBDA_KEY_MAPPING = {
     "sendWeeklySummary",
     "sendDailyAlert",
     "sendMonthlyReport",
-    "sendNewsletter"
+    "sendNewsletter",
+    "getUserDashboardData"
   ]
 };
 
@@ -224,4 +225,5 @@ export const awsApi = {
   getUserTrades: () => invokeProxy("getUserTrades", {}),
   invokeLLM: (prompt, context) => invokeProxy("invokeLLM", { prompt, context }),
   sendEmail: (data) => invokeProxy("sendEmail", data),
+  getUserDashboardData: async () => { const response = await invokeProxy("getUserDashboardData", {}); return response; },
 };
