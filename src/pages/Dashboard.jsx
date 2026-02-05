@@ -19,24 +19,6 @@ export default function Dashboard() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
 
-  // Transform Lambda response fields from snake_case to camelCase
-  const transformDashboardData = (data) => {
-    return {
-      portfolioSummary: data.portfolio_summary ? {
-        totalValue: data.portfolio_summary.total_value,
-        totalGain: data.portfolio_summary.total_gain,
-        holdingsCount: data.portfolio_summary.holdings_count,
-        lastUpdated: data.portfolio_summary.last_updated
-      } : null,
-      recentAnalyses: (data.recent_analyses || []).map(analysis => ({
-        id: analysis.id,
-        selected_companies: analysis.selected_companies,
-        total_investment: analysis.total_investment,
-        analysis_date: analysis.analysis_date
-      }))
-    };
-  };
-
   useEffect(() => {
     checkFirstVisit();
     loadDashboardData();
@@ -65,17 +47,11 @@ export default function Dashboard() {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      // awsApi methods auto-extract cognito_sub and user_email from JWT
-      const portfolio = await awsApi.getPortfolio();
-      const analyses = await awsApi.getPortfolioAnalyses();
+      const response = await awsApi.getUserDashboardData();
       
-      if (portfolio || analyses) {
-        const transformed = transformDashboardData({
-          portfolio_summary: portfolio?.summary || null,
-          recent_analyses: analyses || []
-        });
-        setAnalyses(transformed.recentAnalyses || []);
-        setPortfolioSummary(transformed.portfolioSummary || null);
+      if (response?.success && response?.data) {
+        const dashboardData = response.data;
+        setAnalyses(dashboardData.recentAnalyses || []);
       }
     } catch (error) {
       console.error("Error loading dashboard data:", error);
@@ -253,11 +229,11 @@ export default function Dashboard() {
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-slate-900 mb-2 break-words">
-                              {(analysis.selected_companies || []).join(', ')}
+                              {(analysis.selectedCompanies || []).join(', ')}
                             </p>
                             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs md:text-sm text-slate-600">
-                              <span className="break-words">Investment: ${(analysis.total_investment || 0).toLocaleString()}</span>
-                              <span className="break-words">Date: {format(new Date(analysis.analysis_date), 'MMM d, yyyy')}</span>
+                              <span className="break-words">Investment: ${(analysis.totalInvestment || 0).toLocaleString()}</span>
+                              <span className="break-words">Date: {format(new Date(analysis.analysisDate), 'MMM d, yyyy')}</span>
                             </div>
                           </div>
                         </div>
