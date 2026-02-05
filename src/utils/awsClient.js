@@ -61,13 +61,19 @@ const getAuthData = async () => {
     const cognitoSub = idToken?.payload?.sub;
     const userEmail = idToken?.payload?.email;
     
+    console.log('🔐 getAuthData - Auth data retrieved:', {
+      tokenPresent: !!token,
+      cognitoSub: cognitoSub || 'MISSING',
+      userEmail: userEmail || 'MISSING'
+    });
+    
     return {
       token,
       cognitoSub,
       userEmail
     };
   } catch (error) {
-    console.warn('Could not get auth data:', error);
+    console.warn('❌ getAuthData - Could not get auth data:', error);
     return {
       token: null,
       cognitoSub: null,
@@ -106,12 +112,21 @@ const getAuthHeaders = async () => {
     headers['x-user-email'] = userEmail;
   }
   
+  console.log('🔐 getAuthHeaders - Headers prepared:', {
+    authorizationPresent: !!headers['Authorization'],
+    xCognitoSubPresent: !!headers['x-cognito-sub'],
+    xUserEmailPresent: !!headers['x-user-email'],
+    xApiKeyPresent: !!headers['x-api-key']
+  });
+  
   return headers;
 };
 
 // Generic proxy invocation - calls through apiGatewayProxy
 const invokeProxy = async (functionName, payload = {}) => {
   try {
+    console.log(`📡 invokeProxy - Starting invocation for: ${functionName}`, { payload });
+    
     const headers = await getAuthHeaders();
     const { cognitoSub, userEmail } = await getAuthData();
     
@@ -129,6 +144,13 @@ const invokeProxy = async (functionName, payload = {}) => {
       enhancedPayload.userEmail = userEmail;
     }
     
+    console.log(`📡 invokeProxy - Request details for ${functionName}:`, {
+      url: `${PROXY_CONFIG.API_GATEWAY_URL}/${PROXY_CONFIG.PROXY_ENDPOINT}`,
+      keyType,
+      headersKeys: Object.keys(headers),
+      payload: enhancedPayload
+    });
+    
     const response = await fetch(`${PROXY_CONFIG.API_GATEWAY_URL}/${PROXY_CONFIG.PROXY_ENDPOINT}`, {
       method: 'POST',
       headers,
@@ -138,11 +160,15 @@ const invokeProxy = async (functionName, payload = {}) => {
       })
     });
 
+    console.log(`📡 invokeProxy - Response status for ${functionName}: ${response.status} ${response.statusText}`);
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
     const data = await response.json();
+    
+    console.log(`✅ invokeProxy - Success for ${functionName}:`, data);
     
     if (data.errorMessage) {
       throw new Error(data.errorMessage);
@@ -150,7 +176,7 @@ const invokeProxy = async (functionName, payload = {}) => {
     
     return data;
   } catch (error) {
-    console.error(`Proxy invocation failed: ${functionName}`, error);
+    console.error(`❌ invokeProxy - Proxy invocation failed for ${functionName}:`, error);
     throw error;
   }
 };
