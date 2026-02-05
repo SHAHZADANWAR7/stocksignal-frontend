@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { awsApi } from "@/components/utils/api/awsApi";
+import { awsApi } from "@/components/utils/awsClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LineChart, TrendingUp, Building2, Target } from "lucide-react";
