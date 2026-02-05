@@ -61,10 +61,16 @@ const getAuthData = async () => {
     const cognitoSub = idToken?.payload?.sub;
     const userEmail = idToken?.payload?.email;
     
-    console.log('🔐 getAuthData - Auth data retrieved:', {
+    console.log('🔐 getAuthData - Session retrieved:', {
+      sessionExists: !!session,
+      tokensExist: !!session.tokens,
+      idTokenExists: !!idToken,
       tokenPresent: !!token,
+      tokenLength: token?.length || 0,
+      tokenPreview: token ? token.substring(0, 50) + '...' : 'NO TOKEN',
       cognitoSub: cognitoSub || 'MISSING',
-      userEmail: userEmail || 'MISSING'
+      userEmail: userEmail || 'MISSING',
+      idTokenPayload: idToken?.payload || 'NO PAYLOAD'
     });
     
     return {
