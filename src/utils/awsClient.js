@@ -8,16 +8,13 @@ const PROXY_CONFIG = {
 };
 
 // ========== KEY MAPPING CONFIGURATION ==========
-// Maps lambda functions to the correct key type they expect
 const LAMBDA_KEY_MAPPING = {
-  // functions using cognito_sub
   cognito_sub: [
     "getUser",
     "updateUser",
     "deleteUser",
     "getCurrentUser"
   ],
-  // functions using user_id (which is cognito_sub)
   user_id: [
     "getUserPortfolio",
     "getUserTrades",
@@ -35,7 +32,6 @@ const LAMBDA_KEY_MAPPING = {
     "executeTrade",
     "getPortfolio"
   ],
-  // functions using user_email
   user_email: [
     "getHoldings",
     "createHolding",
@@ -55,22 +51,22 @@ const LAMBDA_KEY_MAPPING = {
 const getAuthData = async () => {
   try {
     const session = await fetchAuthSession();
-    const idToken = session.tokens?.idToken;
+    const accessToken = session.tokens?.accessToken;
     
-    const token = idToken?.toString();
-    const cognitoSub = idToken?.payload?.sub;
-    const userEmail = idToken?.payload?.email;
+    const token = accessToken?.toString();
+    const cognitoSub = accessToken?.payload?.sub;
+    const userEmail = accessToken?.payload?.email;
     
     console.log('🔐 getAuthData - Session retrieved:', {
       sessionExists: !!session,
       tokensExist: !!session.tokens,
-      idTokenExists: !!idToken,
+      accessTokenExists: !!accessToken,
       tokenPresent: !!token,
       tokenLength: token?.length || 0,
       tokenPreview: token ? token.substring(0, 50) + '...' : 'NO TOKEN',
       cognitoSub: cognitoSub || 'MISSING',
       userEmail: userEmail || 'MISSING',
-      idTokenPayload: idToken?.payload || 'NO PAYLOAD'
+      accessTokenPayload: accessToken?.payload || 'NO PAYLOAD'
     });
     
     return {
@@ -93,7 +89,7 @@ const getKeyTypeForFunction = (functionName) => {
   if (LAMBDA_KEY_MAPPING.cognito_sub.includes(functionName)) return 'cognito_sub';
   if (LAMBDA_KEY_MAPPING.user_id.includes(functionName)) return 'user_id';
   if (LAMBDA_KEY_MAPPING.user_email.includes(functionName)) return 'user_email';
-  return 'cognito_sub'; // default fallback
+  return 'cognito_sub';
 };
 
 // Get auth headers with proper key mapping
@@ -109,7 +105,6 @@ const getAuthHeaders = async () => {
     headers['Authorization'] = `Bearer ${token}`;
   }
   
-  // Pass all identifiers; lambdas will use what they need
   if (cognitoSub) {
     headers['x-cognito-sub'] = cognitoSub;
   }
@@ -136,11 +131,9 @@ const invokeProxy = async (functionName, payload = {}) => {
     const headers = await getAuthHeaders();
     const { cognitoSub, userEmail } = await getAuthData();
     
-    // Determine which key this function needs
     const keyType = getKeyTypeForFunction(functionName);
     const enhancedPayload = { ...payload };
     
-    // Add x-user-id header for functions that need user_id
     if (keyType === 'user_id' && cognitoSub) {
       headers['x-user-id'] = cognitoSub;
       enhancedPayload.userId = cognitoSub;
