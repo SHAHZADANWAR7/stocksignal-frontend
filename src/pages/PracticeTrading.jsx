@@ -38,11 +38,13 @@ export default function PracticeTrading() {
 
   const loadPortfolio = async () => {
     try {
-      const portfolioData = await awsApi.getUserPortfolio();
+      const response = await awsApi.getUserPortfolio();
       
-      if (portfolioData) {
-        setPortfolio(portfolioData);
-        setLastSync(new Date(portfolioData.lastUpdated));
+      if (response && response.portfolio) {
+        setPortfolio(response.portfolio);
+        if (response.portfolio.lastUpdated) {
+          setLastSync(new Date(response.portfolio.lastUpdated));
+        }
       }
     } catch (error) {
       console.error("Error loading portfolio:", error);
@@ -52,10 +54,12 @@ export default function PracticeTrading() {
   const loadTrades = async () => {
     setIsLoadingTrades(true);
     try {
-      const tradesData = await awsApi.getUserTrades();
-      setTrades(tradesData || []);
+      const response = await awsApi.getUserTrades();
+      const tradesArray = response?.trades?.trades || response?.trades || [];
+      setTrades(Array.isArray(tradesArray) ? tradesArray : []);
     } catch (error) {
       console.error("Error loading trades:", error);
+      setTrades([]);
     }
     setIsLoadingTrades(false);
   };
@@ -193,6 +197,13 @@ export default function PracticeTrading() {
       rejected: "bg-rose-100 text-rose-700 border-rose-200"
     };
     return styles[status] || styles.pending;
+  };
+
+  const formatTradeDate = (timestamp) => {
+    if (!timestamp) return 'N/A';
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return 'N/A';
+    return format(date, 'MMM d, h:mm a');
   };
 
   return (
@@ -378,9 +389,11 @@ export default function PracticeTrading() {
           </Card>
         )}
 
-        <div className="mb-8">
-          <PortfolioChart portfolio={portfolio} trades={trades} />
-        </div>
+        {trades.length > 0 && portfolio && (
+          <div className="mb-8">
+            <PortfolioChart portfolio={portfolio} trades={trades} />
+          </div>
+        )}
 
         <Card className="border-2 border-slate-200 shadow-lg">
           <CardHeader>
@@ -390,7 +403,12 @@ export default function PracticeTrading() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {trades.length === 0 ? (
+            {isLoadingTrades ? (
+              <div className="text-center py-12">
+                <Loader2 className="w-12 h-12 mx-auto mb-4 text-blue-600 animate-spin" />
+                <p className="text-slate-500">Loading trades...</p>
+              </div>
+            ) : trades.length === 0 ? (
               <div className="text-center py-12">
                 <TrendingUp className="w-16 h-16 mx-auto mb-4 text-slate-300" />
                 <h3 className="text-xl font-semibold text-slate-900 mb-2">No trades yet</h3>
@@ -421,7 +439,7 @@ export default function PracticeTrading() {
                     {trades.map((trade) => (
                       <tr key={trade.id} className="border-b border-slate-100 hover:bg-slate-50">
                         <td className="py-3 px-4 text-sm text-slate-600">
-                          {format(new Date(trade.timestamp), 'MMM d, h:mm a')}
+                          {formatTradeDate(trade.timestamp)}
                         </td>
                         <td className="py-3 px-4 font-semibold text-slate-900">{trade.symbol}</td>
                         <td className="py-3 px-4">
