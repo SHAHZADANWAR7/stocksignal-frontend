@@ -9,7 +9,7 @@ import {
 import { Database, TrendingUp } from "lucide-react";
 
 /**
- * Data Source & Confidence Transparency Labels
+ * Data Source & Confidence Transparency Labels yes
  * Shows where values come from and confidence level
  */
 export default function DataSourceLabel({ 
