@@ -5,7 +5,7 @@ import { DollarSign, TrendingDown, AlertCircle } from "lucide-react";
 import DataSourceLabel from "@/components/analysis/DataSourceLabel";
 
 /**
- * Transaction Cost & Execution Analysis
+ * Transaction Cost & Execution Analysis yes
  * Uses real market data for accurate cost estimation
  */
 export default function TransactionCostCard({ allocations, companies, investmentAmount }) {
