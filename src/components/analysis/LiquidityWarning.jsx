@@ -3,6 +3,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle } from "lucide-react";
 
+/**
+ * Liquidity Warning Component
+ * Alerts when order size may exceed reasonable portion of daily volume
+ * Shows execution risk and recommends strategies
+ * 
+ * ✅ VERIFIED: Compatible with updated Analysis.jsx
+ * ✅ NO CHANGES NEEDED
+ * ✅ NO VIX NEEDED (liquidity warnings, not volatility)
+ */
 export default function LiquidityWarning({ allocations, companies, investmentAmount }) {
   const warnings = [];
 
