@@ -1,125 +1,113 @@
-/**
- * Portfolio Health Metrics
- * Calculates diversification, fragility, dependency, and overall health scores
- */
+// Precise calculations for Portfolio Health metrics
 
-/**
- * Calculate comprehensive portfolio health metrics
- * @param {Array} holdings - Array of holding objects with symbol, quantity, current_price
- * @returns {Object} Health metrics including scores and alerts
- */
-export function calculatePortfolioHealthMetrics(holdings) {
-  if (!holdings || holdings.length === 0) {
+export function calculatePortfolioHealth(portfolio, previousHealth = null) {
+  const assets = portfolio?.assets || [];
+  const totalValue = portfolio?.totalValue || 1;
+
+  if (assets.length === 0) {
     return {
-      diversificationScore: 0,
-      fragilityIndex: 0,
-      dependencyScore: 0,
-      riskLevel: 0,
-      correlationCoefficient: 0,
-      healthAlerts: [],
-      rawMetrics: {}
+      diversification_score: 0,
+      fragility_index: 100,
+      dependency_score: 100,
+      risk_level: 100,
+      correlation_coefficient: 0
     };
   }
 
-  // Calculate total portfolio value
-  const totalValue = holdings.reduce((sum, h) => {
-    const value = h.quantity * (h.current_price || h.average_cost || 0);
-    return sum + value;
-  }, 0);
-
-  if (totalValue === 0) {
-    return {
-      diversificationScore: 0,
-      fragilityIndex: 0,
-      dependencyScore: 0,
-      riskLevel: 0,
-      correlationCoefficient: 0,
-      healthAlerts: [],
-      rawMetrics: {}
-    };
-  }
-
-  // Calculate position weights
-  const weights = holdings.map(h => {
-    const value = h.quantity * (h.current_price || h.average_cost || 0);
-    return value / totalValue;
-  });
-
-  // Diversification Score (0-100): Based on Herfindahl-Hirschman Index (HHI)
-  // HHI = sum of squared weights
-  const hhi = weights.reduce((sum, w) => sum + w * w, 0);
+  // 1. Diversification Score (based on Herfindahl-Hirschman Index)
+  const assetValues = assets.map(a => a.quantity * a.currentPrice);
+  const concentrationRatios = assetValues.map(value => (value / totalValue) ** 2);
+  const hhi = concentrationRatios.reduce((sum, ratio) => sum + ratio, 0);
   
-  // Convert HHI to diversification score (inverse relationship)
-  // HHI ranges from 1/n (perfect diversification) to 1 (single asset)
-  // Score: 100 = highly diversified, 0 = concentrated
-  const maxHHI = 1;
-  const minHHI = 1 / holdings.length;
-  const diversificationScore = ((maxHHI - hhi) / (maxHHI - minHHI)) * 100;
+  // HHI ranges: 1.0 (monopoly) to 0 (perfect competition)
+  // Ideal portfolio: 5-15 stocks (HHI ~0.06-0.2)
+  const diversificationScore = hhi > 0.5 ? 30 :
+                                hhi > 0.3 ? 50 :
+                                hhi > 0.2 ? 70 :
+                                hhi > 0.1 ? 90 : 95;
 
-  // Fragility Index (0-100): Measure of single-asset risk
-  // Based on largest single position
-  const maxWeight = Math.max(...weights);
-  const fragilityIndex = maxWeight * 100;
+  // 2. Fragility Index (based on largest position concentration)
+  const maxConcentration = Math.max(...assetValues.map(v => v / totalValue)) * 100;
+  
+  // If one position is >30% of portfolio = fragile
+  const fragilityIndex = maxConcentration > 50 ? 80 :
+                          maxConcentration > 30 ? 60 :
+                          maxConcentration > 20 ? 40 :
+                          maxConcentration > 10 ? 20 : 10;
 
-  // Dependency Score (0-100): Number of unique assets
-  // More assets = lower dependency
-  const uniqueAssets = holdings.length;
-  const dependencyScore = Math.max(0, 100 - (uniqueAssets * 5));
+  // 3. Dependency Score (sector concentration - simplified)
+  // Count unique symbols (proxy for diversification across companies)
+  const uniqueAssets = new Set(assets.map(a => a.symbol)).size;
+  const dependencyScore = uniqueAssets < 3 ? 80 :
+                           uniqueAssets < 5 ? 60 :
+                           uniqueAssets < 8 ? 40 :
+                           uniqueAssets < 12 ? 25 : 15;
 
-  // Risk Level (0-100): Composite of concentration and count
-  const riskLevel = (hhi * 50 + (1 / uniqueAssets) * 50);
+  // 4. Risk Level (based on portfolio concentration + volatility proxy)
+  // Higher concentration = higher risk
+  const baseRisk = hhi * 100;
+  const sizeAdjustedRisk = assets.length < 5 ? baseRisk * 1.3 : 
+                            assets.length < 10 ? baseRisk * 1.1 : baseRisk;
+  const riskLevel = Math.min(100, Math.round(sizeAdjustedRisk));
 
-  // Correlation Coefficient (approximation based on diversification)
-  // Higher diversification typically means lower correlation
-  const correlationCoefficient = Math.max(0, Math.min(1, 1 - diversificationScore / 100));
+  // 5. Correlation Coefficient (simplified estimate)
+  // In reality, would need historical price data
+  // For now, approximate based on portfolio size and concentration
+  // More assets + lower concentration = lower correlation
+  const estimatedCorrelation = assets.length < 3 ? 0.85 :
+                                assets.length < 5 ? 0.65 :
+                                assets.length < 10 ? 0.45 :
+                                hhi > 0.3 ? 0.55 : 0.35;
 
-  // Generate health alerts
-  const healthAlerts = [];
-
-  if (maxWeight > 0.3) {
-    healthAlerts.push({
-      type: 'concentration_risk',
-      severity: maxWeight > 0.5 ? 'high' : 'medium',
-      message: `${(maxWeight * 100).toFixed(1)}% concentrated in single asset`
+  // 6. Health Alerts
+  const alerts = [];
+  
+  if (maxConcentration > 40) {
+    alerts.push({
+      type: "concentration_risk",
+      severity: "high",
+      message: `Your largest position represents ${maxConcentration.toFixed(1)}% of your portfolio. Consider rebalancing to reduce risk.`
     });
   }
 
-  if (diversificationScore < 40) {
-    healthAlerts.push({
-      type: 'risk_drift',
-      severity: 'medium',
-      message: 'Portfolio diversification below recommended level'
+  if (previousHealth && riskLevel > previousHealth.risk_level + 10) {
+    alerts.push({
+      type: "risk_drift",
+      severity: "medium",
+      message: `Portfolio risk has increased by ${Math.round(riskLevel - previousHealth.risk_level)}% since last check without you noticing.`
     });
   }
 
-  if (fragilityIndex > 50) {
-    healthAlerts.push({
-      type: 'fragility_increase',
-      severity: 'high',
-      message: 'High fragility - vulnerable to single-asset shocks'
+  if (fragilityIndex > 60) {
+    alerts.push({
+      type: "fragility_increase",
+      severity: "high",
+      message: "High fragility detected. Your portfolio is vulnerable to single asset failures."
     });
   }
 
-  if (correlationCoefficient > 0.7) {
-    healthAlerts.push({
-      type: 'correlation_creep',
-      severity: 'medium',
-      message: 'Assets may be highly correlated - diversification benefit reduced'
+  if (estimatedCorrelation > 0.7) {
+    alerts.push({
+      type: "correlation_creep",
+      severity: "medium",
+      message: "Assets are becoming highly correlated. Diversification benefits are reduced."
     });
   }
 
   return {
-    diversificationScore: Math.round(diversificationScore),
-    fragilityIndex: Math.round(fragilityIndex),
-    dependencyScore: Math.round(dependencyScore),
-    riskLevel: Math.round(riskLevel),
-    correlationCoefficient: Math.round(correlationCoefficient * 100) / 100,
-    healthAlerts,
-    rawMetrics: {
-      hhi: Math.round(hhi * 10000) / 10000,
-      maxConcentration: Math.round(maxWeight * 1000) / 10,
+    diversification_score: Math.round(diversificationScore),
+    fragility_index: Math.round(fragilityIndex),
+    dependency_score: Math.round(dependencyScore),
+    risk_level: Math.round(riskLevel),
+    correlation_coefficient: parseFloat(estimatedCorrelation.toFixed(3)),
+    health_alerts: alerts,
+    
+    // Raw metrics for display
+    metrics: {
+      hhi,
+      maxConcentration,
       uniqueAssets,
-      totalAssetCount: holdings.length
+      totalAssets: assets.length
     }
   };
 }
