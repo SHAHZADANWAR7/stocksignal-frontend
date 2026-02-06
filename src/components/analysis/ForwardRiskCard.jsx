@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,15 +9,11 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronRight,
-  Loader2,
   Info
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  blendVolatility,
-  adjustCorrelationForRegime,
-  adjustExpectedReturn,
-  calculateForwardLookingRisk
+  adjustExpectedReturn
 } from "@/components/utils/forwardLookingRisk";
 import {
   Tooltip as UITooltip,
@@ -36,74 +32,29 @@ import {
   Legend
 } from 'recharts';
 
-export default function ForwardRiskCard({ companies, weights, correlationMatrix, portfolioRisk, expectedReturn, getVIXData }) {
-  const [vixData, setVixData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+/**
+ * Forward-Looking Risk Analysis Card
+ * Displays VIX-adjusted portfolio risk metrics
+ * 
+ * ✅ UPDATED: Now receives VIX data as props from Analysis.jsx
+ * ✅ REMOVED: base44 import and local VIX fetching
+ * ✅ VIX INTEGRATION COMPLETE
+ */
+export default function ForwardRiskCard({ 
+  companies, 
+  weights, 
+  correlationMatrix, 
+  portfolioRisk, 
+  expectedReturn,
+  vixData,              // ✅ NEW: VIX data from Analysis.jsx
+  forwardRiskMetrics    // ✅ NEW: Forward risk calculations from Analysis.jsx
+}) {
   const [showDetails, setShowDetails] = useState(false);
-  const [forwardMetrics, setForwardMetrics] = useState(null);
   
-  useEffect(() => {
-    fetchVIXData();
-  }, []);
-  
-  useEffect(() => {
-    if (vixData && companies && weights && correlationMatrix) {
-      const metrics = calculateForwardLookingRisk(companies, weights, correlationMatrix, vixData);
-      setForwardMetrics(metrics);
-    }
-  }, [vixData, companies, weights, correlationMatrix]);
-  
-  const fetchVIXData = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getVIXData();
-      
-      console.log("📊 VIX Data Response (Jan 2026):", data);
-      
-      // Map API response to expected format
-      setVixData({
-        current: data.current || data.currentVIX || 16.5,
-        currentVIX: data.current || data.currentVIX || 16.5,
-        average1Year: data.average1Year || data.avgVIX || 17.8,
-        avgVIX: data.average1Year || data.avgVIX || 17.8,
-        minVIX: data.range52Week?.low || data.minVIX || 12.2,
-        maxVIX: data.range52Week?.high || data.maxVIX || 28.4,
-        range52Week: data.range52Week || { low: 12.2, high: 28.4 },
-        regime: data.regime || 'normal',
-        regimeDescription: data.regimeDescription || 'Normal market conditions (VIX 15-25)',
-        impliedAnnualVol: data.impliedAnnualVol || data.current || data.currentVIX || 16.5
-      });
-    } catch (error) {
-      console.warn('VIX fetch failed, using fallback:', error.message);
-      // Graceful fallback
-      setVixData({
-        current: 16.5,
-        currentVIX: 16.5,
-        average1Year: 17.8,
-        avgVIX: 17.8,
-        minVIX: 12.2,
-        maxVIX: 28.4,
-        range52Week: { low: 12.2, high: 28.4 },
-        regime: 'normal',
-        regimeDescription: 'Normal market conditions (VIX data fallback)',
-        impliedAnnualVol: 16.5
-      });
-    }
-    setIsLoading(false);
-  };
-  
-  if (isLoading) {
-    return (
-      <Card className="border-2 border-slate-200 rounded-xl">
-        <CardContent className="p-12 text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
-          <p className="text-slate-600">Fetching market volatility data...</p>
-        </CardContent>
-      </Card>
-    );
+  // ✅ If no VIX data provided, don't render
+  if (!vixData || !forwardRiskMetrics) {
+    return null;
   }
-  
-  if (!vixData || !forwardMetrics) return null;
   
   const regimeColors = {
     low: 'from-emerald-600 to-teal-600',
@@ -120,7 +71,7 @@ export default function ForwardRiskCard({ companies, weights, correlationMatrix,
   };
   
   // Build chart data
-  const chartData = forwardMetrics.assetAdjustments.map(adj => ({
+  const chartData = forwardRiskMetrics.assetAdjustments.map(adj => ({
     symbol: adj.symbol,
     historical: adj.historical,
     forwardLooking: adj.forwardLooking,
@@ -128,7 +79,7 @@ export default function ForwardRiskCard({ companies, weights, correlationMatrix,
   }));
   
   // Calculate return adjustment
-  const returnAdj = adjustExpectedReturn(expectedReturn, vixData.regime, vixData.currentVIX);
+  const returnAdj = adjustExpectedReturn(expectedReturn, vixData.regime, vixData.currentVIX || vixData.current);
   
   return (
     <Card className="border-2 border-slate-200 shadow-xl bg-white rounded-xl">
@@ -137,7 +88,7 @@ export default function ForwardRiskCard({ companies, weights, correlationMatrix,
           <div>
             <CardTitle className="flex items-center gap-3 text-2xl">
               <Activity className="w-7 h-7" />
-              Forward-Looking Risk Analysis (Jan 2026)
+              Forward-Looking Risk Analysis (VIX-Adjusted)
             </CardTitle>
             <p className="text-white/90 text-sm mt-2">
               Blending historical volatility (60%) with VIX-implied forward metrics (40%)
@@ -153,7 +104,7 @@ export default function ForwardRiskCard({ companies, weights, correlationMatrix,
               <TooltipContent className="max-w-md">
                 <p className="text-xs leading-relaxed">
                   <strong>Methodology:</strong><br/>
-                  • VIX: CBOE real-time ({vixData.current?.toFixed(1) || vixData.currentVIX}%, Jan 2026)<br/>
+                  • VIX: CBOE real-time ({(vixData.current || vixData.currentVIX).toFixed(1)}%)<br/>
                   • Beta: Yahoo Finance 5-year regression<br/>
                   • Blend: 60% historical + 40% (VIX × β)<br/>
                   • Correlation: Regime-adjusted ({vixData.regime})<br/><br/>
@@ -245,23 +196,23 @@ export default function ForwardRiskCard({ companies, weights, correlationMatrix,
                       <div className="p-3 md:p-4 bg-white rounded-xl border border-indigo-200">
                         <p className="text-xs md:text-sm text-slate-600 mb-1 truncate">Forward-Looking Risk (σ)</p>
                         <div className="flex items-center gap-2">
-                          <p className="text-xl md:text-2xl lg:text-3xl font-bold text-indigo-600 break-words tabular-nums">{forwardMetrics.forwardRisk}%</p>
-                          {forwardMetrics.forwardRisk > portfolioRisk && (
+                          <p className="text-xl md:text-2xl lg:text-3xl font-bold text-indigo-600 break-words tabular-nums">{forwardRiskMetrics.forwardRisk}%</p>
+                          {forwardRiskMetrics.forwardRisk > portfolioRisk && (
                             <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-rose-600 flex-shrink-0" />
                           )}
-                          {forwardMetrics.forwardRisk < portfolioRisk && (
+                          {forwardRiskMetrics.forwardRisk < portfolioRisk && (
                             <TrendingDown className="w-4 h-4 md:w-5 md:h-5 text-emerald-600 flex-shrink-0" />
                           )}
                         </div>
                         <p className="text-[10px] md:text-xs text-slate-500 mt-1">60% historical + 40% (VIX × β)</p>
-                        {Math.abs(forwardMetrics.forwardRisk - portfolioRisk) > 1 && (
+                        {Math.abs(forwardRiskMetrics.forwardRisk - portfolioRisk) > 1 && (
                           <Badge className={`mt-2 text-[10px] md:text-xs rounded-lg ${
-                            forwardMetrics.forwardRisk > portfolioRisk 
+                            forwardRiskMetrics.forwardRisk > portfolioRisk 
                               ? 'bg-rose-100 text-rose-800' 
                               : 'bg-emerald-100 text-emerald-800'
                           }`}>
-                            {forwardMetrics.forwardRisk > portfolioRisk ? '+' : ''}
-                            {(forwardMetrics.forwardRisk - portfolioRisk).toFixed(1)}% VIX adjustment
+                            {forwardRiskMetrics.forwardRisk > portfolioRisk ? '+' : ''}
+                            {(forwardRiskMetrics.forwardRisk - portfolioRisk).toFixed(1)}% VIX adjustment
                           </Badge>
                         )}
                       </div>
@@ -274,7 +225,7 @@ export default function ForwardRiskCard({ companies, weights, correlationMatrix,
                   <strong>Portfolio Volatility Blend:</strong><br/>
                   Historical: {portfolioRisk.toFixed(1)}% (weighted average of asset volatilities)<br/>
                   VIX-Implied: {(vixData.current || vixData.currentVIX).toFixed(1)}% × portfolio beta<br/>
-                  Forward: {forwardMetrics.forwardRisk}% = 0.6×{portfolioRisk.toFixed(1)}% + 0.4×VIX-implied<br/><br/>
+                  Forward: {forwardRiskMetrics.forwardRisk}% = 0.6×{portfolioRisk.toFixed(1)}% + 0.4×VIX-implied<br/><br/>
                   Regime: {vixData.regime} adds correlation surge factor
                 </p>
               </TooltipContent>
@@ -345,7 +296,7 @@ export default function ForwardRiskCard({ companies, weights, correlationMatrix,
                       <p className="text-xs leading-relaxed">
                         Each asset's forward volatility:<br/>
                         σ_forward = 0.6 × σ_historical + 0.4 × (VIX × β)<br/><br/>
-                        VIX: {(vixData.current || vixData.currentVIX).toFixed(1)}% (Jan 2026)<br/>
+                        VIX: {(vixData.current || vixData.currentVIX).toFixed(1)}%<br/>
                         β: Verified 5-year Yahoo Finance data
                       </p>
                     </TooltipContent>
@@ -422,7 +373,7 @@ export default function ForwardRiskCard({ companies, weights, correlationMatrix,
                   exit={{ opacity: 0, height: 0 }}
                   className="mt-4 space-y-2"
                 >
-                  {forwardMetrics.assetAdjustments.map(adj => {
+                  {forwardRiskMetrics.assetAdjustments.map(adj => {
                     const company = companies.find(c => c.symbol === adj.symbol);
                     return (
                       <TooltipProvider key={adj.symbol}>
@@ -521,7 +472,7 @@ export default function ForwardRiskCard({ companies, weights, correlationMatrix,
         {/* Methodology & Data Integrity */}
         <div className="p-4 bg-slate-50 rounded-xl border-2 border-slate-200">
           <p className="text-xs text-slate-600 leading-relaxed">
-            <strong>Methodology (Jan 2026, 100% Verified):</strong> Forward-looking risk blends historical volatility (60%) with VIX-implied volatility (40%) scaled by verified 5-year beta. 
+            <strong>Methodology (100% Verified):</strong> Forward-looking risk blends historical volatility (60%) with VIX-implied volatility (40%) scaled by verified 5-year beta. 
             VIX data from CBOE real-time market feed. Market regime thresholds: Low (&lt;15), Normal (15-25), Elevated (25-35), High (&gt;35). 
             Correlation adjustments based on empirical crisis behavior (Ang & Chen 2002, Longin & Solnik 2001). 
             Return adjustments reflect mean-reversion and VIX risk premium (Campbell & Shiller 1988, Bekaert & Hoerova 2014).<br/><br/>
