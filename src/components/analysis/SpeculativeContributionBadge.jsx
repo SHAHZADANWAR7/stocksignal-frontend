@@ -9,7 +9,7 @@ import {
 import { AlertTriangle } from "lucide-react";
 
 /**
- * Per-Stock Speculative Contribution Indicator
+ * Per-Stock Speculative Contribution Indicator yes
  * Shows which holdings drive speculative risk
  */
 export default function SpeculativeContributionBadge({ company }) {
