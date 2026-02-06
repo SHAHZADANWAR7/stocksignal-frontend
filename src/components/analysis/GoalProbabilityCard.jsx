@@ -11,7 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { monteCarloGoalProbability } from "@/components/utils/financialMath";
+import { monteCarloGoalProbability } from "@/components/utils/calculations/financialMath";
 
 /**
  * GOAL PROBABILITY TRANSPARENCY CARD

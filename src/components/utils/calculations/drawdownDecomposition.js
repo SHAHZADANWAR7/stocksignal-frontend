@@ -11,7 +11,7 @@
  * - Clearly distinguish between statistical models and extreme scenarios
  */
 
-import { sanitizeNumber, clamp } from '@/components/utils/financialMath';
+import { sanitizeNumber, clamp } from '@/components/utils/calculations/financialMath';
 
 /**
  * Calculate historical worst-case drawdown
