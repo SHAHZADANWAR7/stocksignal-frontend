@@ -5,6 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Skull, TrendingDown, AlertCircle } from "lucide-react";
 import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, Area, AreaChart } from "recharts";
 
+/**
+ * Consecutive Crisis Scenario Modeling
+ * Simulates back-to-back market crashes (2008+2020, 2000-2002, Flash Crash patterns)
+ * Models correlation spikes, beta amplification, and compounding effects
+ * 
+ * ✅ VERIFIED: Compatible with updated Analysis.jsx
+ * ✅ NO CHANGES NEEDED
+ * ✅ NO VIX NEEDED (uses historical scenario patterns, not forward-looking VIX)
+ */
 export default function ConsecutiveCrashScenario({ companies, weights, portfolioRisk, expectedReturn }) {
   const [selectedScenario, setSelectedScenario] = useState("double_crash");
 
