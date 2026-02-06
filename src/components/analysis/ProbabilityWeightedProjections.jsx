@@ -10,7 +10,7 @@ export default function ProbabilityWeightedProjections({
   principal, 
   monthlyContribution 
 }) {
-  // Calculate probability-weighted ranges
+  // Calculate probability-weighted ranges yes
   // Uses lognormal distribution assumptions
   const annualReturn = expectedValue / 100;
   const annualVolatility = volatility / 100;
