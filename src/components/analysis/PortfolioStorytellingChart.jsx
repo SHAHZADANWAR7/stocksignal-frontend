@@ -22,7 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { generateCrisisScenario } from "@/components/utils/enhancedScenarios";
 
 /**
- * Portfolio Storytelling: Visualize growth under normal and extreme scenarios
+ * Portfolio Storytelling: Visualize growth under normal and extreme scenarios --
  * Shows tail events, recovery times, and diversifier impacts
  */
 export default function PortfolioStorytellingChart({ 
