@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/tooltip";
 
 /**
- * Market Cap Tier Context Label
+ * Market Cap Tier Context Label Yes
  * Provides intuitive risk context through market capitalization
  */
 export default function MarketCapTierLabel({ marketCap, compact = true }) {
