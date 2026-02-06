@@ -21,7 +21,7 @@ import {
   compareDCAvsLumpSum,
   calculatePanicSellingImpact,
   calculateOptimalThreshold
-} from "@/components/utils/rebalancing";
+} from "@/components/utils/calculations/rebalancing";
 import {
   LineChart,
   Line,
