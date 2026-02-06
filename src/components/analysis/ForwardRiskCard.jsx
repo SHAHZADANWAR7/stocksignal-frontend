@@ -14,7 +14,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import {
   adjustExpectedReturn
-} from "@/components/utils/forwardLookingRisk";
+} from "@/components/utils/calculations/forwardLookingRisk";
 import {
   Tooltip as UITooltip,
   TooltipContent,
