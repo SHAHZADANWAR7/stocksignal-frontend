@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 
 /**
- * Sector mapping for accurate labeling
+ * Sector mapping for accurate labelingg
  */
 const SECTOR_MAPPINGS = {
   'GOOGL': 'Technology',
