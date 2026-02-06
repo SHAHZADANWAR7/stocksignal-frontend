@@ -1160,8 +1160,8 @@ If analyzing similar companies (same sector), focus on:
           
           // AWS Lambda call to update company
           return callAwsFunction('updateCompany', {
-            id: companyRecord.id,
-            data: updateData
+            symbol: companyRecord.symbol,
+            updateData: updateData
           });
         }
       }).filter(Boolean);
