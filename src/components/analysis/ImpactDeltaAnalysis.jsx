@@ -31,7 +31,7 @@ import {
   round,
   sanitizeNumber
 } from "@/components/utils/calculations/financialMath";
-import { calculateQualityScore } from "@/components/utils/portfolioOptimization";
+import { calculateQualityScore } from "@/components/utils/calculations/portfolioOptimization";
 
 export default function ImpactDeltaAnalysis({ 
   currentPortfolio, 
