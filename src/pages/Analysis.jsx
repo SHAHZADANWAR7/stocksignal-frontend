@@ -2840,6 +2840,7 @@ If analyzing similar companies (same sector), focus on:
                             baseVolatility={portfolioRisk}
                             goalAmount={goal}
                             months={monthsToGoal}
+                            vixData={analysisResult.vix_data}
                           />
                           <ModelLimitationsDisclosure modelType="monte_carlo" />
                         </>
