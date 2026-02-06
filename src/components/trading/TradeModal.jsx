@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -12,7 +11,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Loader2, TrendingUp, TrendingDown } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function TradeModal({ isOpen, onClose, onExecuteTrade, initialSymbol = "", initialQuantity = "" }) {
   const [tradeData, setTradeData] = useState({
@@ -64,7 +65,7 @@ export default function TradeModal({ isOpen, onClose, onExecuteTrade, initialSym
     setIsExecuting(true);
 
     try {
-      await onExecuteTrade({
+      const response = await onExecuteTrade({
         symbol: tradeData.symbol.toUpperCase(),
         quantity: parseFloat(tradeData.quantity),
         side: tradeData.side,
@@ -72,6 +73,7 @@ export default function TradeModal({ isOpen, onClose, onExecuteTrade, initialSym
         limitPrice: tradeData.limitPrice ? parseFloat(tradeData.limitPrice) : null
       });
 
+      // Reset form
       setTradeData({
         symbol: "",
         quantity: "",
@@ -108,7 +110,8 @@ export default function TradeModal({ isOpen, onClose, onExecuteTrade, initialSym
         <Alert className="border-amber-200 bg-amber-50">
           <AlertCircle className="w-4 h-4 text-amber-600" />
           <AlertDescription className="text-sm text-slate-700">
-            <strong>Sandbox Mode:</strong> All trades are simulated - no real money involved.
+            <strong>Sandbox Mode:</strong> This app provides portfolio analysis and decision-support tools. 
+            All trades are simulated in sandbox mode; no real money is involved.
           </AlertDescription>
         </Alert>
 
@@ -124,8 +127,18 @@ export default function TradeModal({ isOpen, onClose, onExecuteTrade, initialSym
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="buy">Buy</SelectItem>
-                  <SelectItem value="sell">Sell</SelectItem>
+                  <SelectItem value="buy">
+                    <span className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-emerald-600" />
+                      Buy
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="sell">
+                    <span className="flex items-center gap-2">
+                      <TrendingDown className="w-4 h-4 text-rose-600" />
+                      Sell
+                    </span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -200,7 +213,8 @@ export default function TradeModal({ isOpen, onClose, onExecuteTrade, initialSym
                 className="mt-1"
               />
               <label htmlFor="consent" className="text-sm text-slate-700 cursor-pointer">
-                I acknowledge this is a <strong>simulated paper trade</strong> for educational purposes only.
+                I acknowledge that this is a <strong>simulated paper trade</strong> for educational 
+                and testing purposes only. No real money or securities are involved.
               </label>
             </div>
           </div>
@@ -219,8 +233,8 @@ export default function TradeModal({ isOpen, onClose, onExecuteTrade, initialSym
               type="submit"
               className={`flex-1 ${
                 tradeData.side === 'buy' 
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600' 
-                  : 'bg-gradient-to-r from-rose-600 to-red-600'
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700' 
+                  : 'bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700'
               }`}
               disabled={isExecuting || !userConsent}
             >
@@ -230,7 +244,9 @@ export default function TradeModal({ isOpen, onClose, onExecuteTrade, initialSym
                   Executing...
                 </>
               ) : (
-                <>Execute {tradeData.side === 'buy' ? 'Buy' : 'Sell'}</>
+                <>
+                  Execute {tradeData.side === 'buy' ? 'Buy' : 'Sell'} Order
+                </>
               )}
             </Button>
           </div>
