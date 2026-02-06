@@ -3,6 +3,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Zap } from "lucide-react";
 
+/**
+ * Extreme Beta Warning Component
+ * Alerts when assets have β > 2.0 (2× market volatility)
+ * Shows beta interpretation and practical impact
+ * 
+ * ✅ VERIFIED: Compatible with updated Analysis.jsx
+ * ✅ NO CHANGES NEEDED
+ * ✅ NO VIX NEEDED (beta measures market sensitivity, not implied volatility)
+ */
 export default function ExtremeBetaWarning({ companies }) {
   const extremeBetaAssets = companies.filter(c => Math.abs(c.beta) > 2.0);
   
