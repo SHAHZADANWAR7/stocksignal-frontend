@@ -23,7 +23,7 @@ const classifyAssetRiskProfile = (company) => {
 
   // 1. PROFITABILITY (Evidence-based: TTM EPS, Net Income, Profit Margin)
   // PRIMARY: P/E ratio is the most reliable indicator
-  // P/E > 0 = company has positive earnings (profitable)
+  // P/E > 0 = company has positive earnings (profitable) yes
   // P/E < 0 = company has negative earnings (loss-making)
   // P/E = null/undefined = no earnings data or not applicable
   
