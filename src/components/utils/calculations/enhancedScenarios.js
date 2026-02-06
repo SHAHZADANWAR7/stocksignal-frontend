@@ -1,187 +1,174 @@
 /**
  * Enhanced Scenario Analysis
- * 
- * Enables realistic stress testing with compound shocks and regime-based correlations
- * 
- * Academic Foundation:
- * - Extreme Value Theory: Embrechts et al. (1997)
- * - Copula models for tail dependence: Joe (1997)
- * - Crisis correlation: Forbes & Rigobon (2002)
+ * Realistic stress testing with compound shocks and regime-based correlations
  */
 
-import { round } from "./financialMath";
+import { 
+  portfolioRisk, 
+  portfolioExpectedReturn,
+  expectedMaxDrawdown,
+  RISK_FREE_RATE 
+} from "./financialMath";
 
 /**
- * Adjust correlation matrix based on market stress (VIX level)
- * During crises, correlations surge toward 1.0
- * 
- * @param {Array} baseCorrelationMatrix - Base n×n correlation matrix
- * @param {number} vixLevel - Current VIX level (crisis indicator)
- * @returns {Array} Stress-adjusted correlation matrix
+ * Get regime-adjusted correlations based on VIX level
+ * During stress, correlations increase (diversification fails)
  */
-export function adjustCorrelationsForRegime(baseCorrelationMatrix, vixLevel) {
-  const stressFactor = Math.min(1.5, 1 + (vixLevel - 20) / 50);
+export function getRegimeAdjustedCorrelations(baseCorrelationMatrix, vixLevel = 20) {
+  const n = baseCorrelationMatrix.length;
+  const adjustedMatrix = Array(n).fill(0).map(() => Array(n).fill(0));
   
-  return baseCorrelationMatrix.map(row =>
-    row.map((corr, j) => {
-      if (corr === 1.0) return 1.0;
-      const adjusted = corr * stressFactor;
-      return Math.min(0.95, Math.max(-0.3, adjusted));
-    })
-  );
+  // Correlation multiplier based on VIX regime
+  let correlationMultiplier = 1.0;
+  if (vixLevel > 40) correlationMultiplier = 1.5; // High stress
+  else if (vixLevel > 30) correlationMultiplier = 1.3; // Elevated stress
+  else if (vixLevel > 20) correlationMultiplier = 1.15; // Moderate stress
+  
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      if (i === j) {
+        adjustedMatrix[i][j] = 1.0;
+      } else {
+        // Increase off-diagonal correlations during stress, cap at 0.95
+        const adjusted = Math.min(0.95, baseCorrelationMatrix[i][j] * correlationMultiplier);
+        adjustedMatrix[i][j] = adjusted;
+      }
+    }
+  }
+  
+  return adjustedMatrix;
 }
 
 /**
- * Calculate compound shock (market crash + sector collapse simultaneously)
- * Models realistic crisis scenarios where multiple risks materialize
- * 
- * @param {Array} companies - Company objects with sector, beta
- * @param {Array} weights - Portfolio weights
- * @param {number} marketShock - Broad market decline (e.g., -30%)
- * @param {string} vulnerableSector - Sector experiencing collapse
- * @param {number} sectorShock - Additional sector-specific decline (e.g., -40%)
- * @returns {Object} Compound shock impact analysis
+ * Calculate compound shock impact
+ * Models simultaneous market crash + sector collapse
  */
-export function calculateCompoundShock(companies, weights, marketShock, vulnerableSector, sectorShock) {
-  let totalImpact = 0;
-  const assetImpacts = [];
+export function calculateCompoundShock(companies, weights, baseReturn, baseRisk) {
+  // Scenario: Market crash (-35%) + Sector collapse (-20% additional)
+  const marketShock = -35;
+  const sectorShock = -20;
   
-  companies.forEach((company, i) => {
-    const weight = weights[i];
-    const beta = company.beta || 1.0;
-    const sector = company.sector || 'Unknown';
+  // Assets with high beta get hit harder in market crashes
+  const assetImpacts = companies.map((c, idx) => {
+    const beta = c.beta || 1.0;
+    const marketImpact = marketShock * Math.abs(beta);
     
-    // Market component (beta-adjusted)
-    const marketComponent = marketShock * Math.abs(beta);
+    // Check if asset is in a vulnerable sector
+    const vulnerableSectors = ['Technology', 'Consumer Discretionary', 'Communication Services'];
+    const isVulnerable = vulnerableSectors.includes(c.sector);
+    const totalImpact = marketImpact + (isVulnerable ? sectorShock : sectorShock * 0.3);
     
-    // Sector component (only affects vulnerable sector)
-    const sectorComponent = sector === vulnerableSector ? sectorShock : 0;
-    
-    // Total asset decline (compound effect)
-    const assetDrop = marketComponent + sectorComponent;
-    const cappedDrop = Math.max(-95, assetDrop);
-    
-    const contribution = weight * cappedDrop;
-    totalImpact += contribution;
-    
-    assetImpacts.push({
-      symbol: company.symbol,
-      name: company.name,
-      sector,
-      weight: round(weight * 100, 1),
-      marketComponent: round(marketComponent, 1),
-      sectorComponent: round(sectorComponent, 1),
-      totalDrop: round(cappedDrop, 1),
-      contribution: round(contribution, 1),
-      isVulnerable: sector === vulnerableSector
-    });
+    return {
+      symbol: c.symbol,
+      weight: weights[idx],
+      impact: totalImpact,
+      isSectorVulnerable: isVulnerable
+    };
   });
   
-  assetImpacts.sort((a, b) => a.totalDrop - b.totalDrop);
+  // Portfolio-level compound shock
+  const portfolioImpact = assetImpacts.reduce((sum, asset) => 
+    sum + (asset.weight * asset.impact), 0
+  );
   
-  // Estimate recovery time based on shock severity
-  const shockSeverity = Math.abs(totalImpact);
-  const baseRecovery = 24; // months
-  const recoveryTime = Math.round(baseRecovery * (shockSeverity / 40));
+  // Recovery time estimate (deeper crashes take longer)
+  const baseRecovery = 18; // months
+  const severityMultiplier = Math.abs(portfolioImpact) / 35;
+  const recoveryMonths = Math.round(baseRecovery * severityMultiplier);
   
   return {
-    portfolioImpact: round(totalImpact, 1),
-    marketShock,
-    sectorShock,
-    vulnerableSector,
-    recoveryTime,
-    assetImpacts
+    totalImpact: portfolioImpact,
+    assetImpacts,
+    recoveryMonths,
+    scenarioDescription: 'Market crash (-35%) + concentrated sector collapse (-20%)'
   };
 }
 
 /**
- * Calculate diversification benefit in stress scenarios
- * Measures correlation and tail risk reduction from adding diversifier
- * 
- * @param {Array} companies - Current portfolio companies
- * @param {Array} weights - Current weights
- * @param {Array} correlationMatrix - Current correlation matrix
- * @param {Object} diversifier - Asset to add (symbol, correlation, risk)
- * @param {number} diversifierAllocation - Allocation to diversifier (e.g., 0.2)
- * @returns {Object} Diversification benefit analysis
+ * Calculate diversification benefit under stress
+ * Shows how adding low-correlation assets improves tail-risk
  */
-export function calculateDiversificationBenefit(companies, weights, correlationMatrix, diversifier, diversifierAllocation = 0.2) {
-  // Current portfolio correlation (weighted average pairwise)
-  let currentCorrelation = 0;
-  let pairCount = 0;
+export function calculateDiversificationBenefit(companies, weights, diversifierSymbol, diversifierAllocation) {
+  // Define diversifier characteristics
+  const diversifiers = {
+    'SPY': { correlation: 0.15, tailProtection: 0.8, description: 'Broad market reduces idiosyncratic risk' },
+    'BND': { correlation: -0.10, tailProtection: 1.5, description: 'Bonds provide crisis hedge' },
+    'GLD': { correlation: 0.05, tailProtection: 1.2, description: 'Gold shows low equity correlation' },
+    'QQQ': { correlation: 0.25, tailProtection: 0.6, description: 'Tech diversification' },
+    'VNQ': { correlation: 0.20, tailProtection: 0.7, description: 'Real estate diversification' }
+  };
   
-  for (let i = 0; i < companies.length; i++) {
-    for (let j = i + 1; j < companies.length; j++) {
-      currentCorrelation += correlationMatrix[i][j] * weights[i] * weights[j];
-      pairCount++;
-    }
-  }
-  currentCorrelation = pairCount > 0 ? currentCorrelation / pairCount : 0;
+  const diversifier = diversifiers[diversifierSymbol] || diversifiers['SPY'];
+  const allocation = diversifierAllocation / 100;
   
-  // New portfolio with diversifier (scale down existing weights)
-  const adjustedWeights = weights.map(w => w * (1 - diversifierAllocation));
+  // Current average correlation
+  const currentCorrelation = weights.reduce((sum, wi, i) => {
+    return sum + weights.slice(i + 1).reduce((innerSum, wj, jOffset) => {
+      const j = i + 1 + jOffset;
+      // Estimate correlation (simplified)
+      const sameSector = companies[i].sector === companies[j].sector;
+      const baseCorr = sameSector ? 0.65 : 0.45;
+      return innerSum + (wi * wj * baseCorr);
+    }, 0);
+  }, 0);
   
   // New correlation with diversifier
-  let newCorrelation = 0;
-  let newPairCount = 0;
+  const newWeights = [...weights.map(w => w * (1 - allocation)), allocation];
+  const newCorrelation = currentCorrelation * (1 - allocation) + diversifier.correlation * allocation;
   
-  for (let i = 0; i < companies.length; i++) {
-    for (let j = i + 1; j < companies.length; j++) {
-      newCorrelation += correlationMatrix[i][j] * adjustedWeights[i] * adjustedWeights[j];
-      newPairCount++;
-    }
-    // Add diversifier correlation
-    newCorrelation += (diversifier.correlation || 0.3) * adjustedWeights[i] * diversifierAllocation;
-    newPairCount++;
-  }
-  newCorrelation = newPairCount > 0 ? newCorrelation / newPairCount : 0;
+  // Tail-risk reduction
+  const currentTailRisk = Math.abs(expectedMaxDrawdown(
+    companies.reduce((sum, c, i) => sum + weights[i] * c.risk, 0),
+    10,
+    companies.reduce((sum, c, i) => sum + weights[i] * c.expected_return, 0)
+  ));
   
-  // Tail risk estimate (simplified)
-  const currentTailRisk = currentCorrelation * 50; // Proxy: high correlation = high tail risk
-  const newTailRisk = newCorrelation * 50;
+  const tailRiskReduction = diversifier.tailProtection * allocation * 100;
+  const newTailRisk = Math.max(5, currentTailRisk - tailRiskReduction);
   
   return {
-    currentCorrelation: round(currentCorrelation, 3),
-    newCorrelation: round(newCorrelation, 3),
-    correlationReduction: round((currentCorrelation - newCorrelation) * 100, 1),
-    currentTailRisk: round(currentTailRisk, 1),
-    newTailRisk: round(newTailRisk, 1),
-    tailRiskReduction: round(currentTailRisk - newTailRisk, 1),
-    diversifier: {
-      symbol: diversifier.symbol,
-      allocation: round(diversifierAllocation * 100, 1)
-    }
+    correlationReduction: (currentCorrelation - newCorrelation) * 100,
+    tailRiskReduction,
+    newTailRisk,
+    newCorrelation,
+    explanation: diversifier.description
   };
 }
 
 /**
- * Generate crisis scenario path (time-series)
- * Models realistic market crash with asymmetric volatility
- * 
- * @param {number} initialValue - Starting portfolio value
- * @param {number} peakDecline - Maximum drawdown (e.g., -40%)
- * @param {number} recoveryMonths - Time to recover to breakeven
- * @returns {Array} Monthly portfolio values
+ * Generate scenario path with realistic crisis dynamics
+ * Uses asymmetric volatility (crashes faster than recoveries)
  */
-export function generateCrisisScenarioPath(initialValue, peakDecline, recoveryMonths) {
-  const path = [initialValue];
-  const crashMonths = Math.round(recoveryMonths * 0.25); // 25% of time is crash
-  const recoveryPhase = recoveryMonths - crashMonths;
+export function generateCrisisScenario(baseValue, crashPercent, crashMonths, recoveryMonths, totalMonths) {
+  const path = [];
+  const crashEnd = crashMonths;
+  const recoveryEnd = crashMonths + recoveryMonths;
   
-  // Phase 1: Crash (fast decline)
-  for (let month = 1; month <= crashMonths; month++) {
-    const progress = month / crashMonths;
-    const value = initialValue * (1 + peakDecline / 100 * Math.pow(progress, 1.5));
-    path.push(round(value, 0));
-  }
+  let currentValue = baseValue;
   
-  // Phase 2: Recovery (slower, with volatility)
-  const bottomValue = path[path.length - 1];
-  for (let month = 1; month <= recoveryPhase; month++) {
-    const progress = month / recoveryPhase;
-    const baseValue = bottomValue + (initialValue - bottomValue) * Math.pow(progress, 0.7);
-    const noise = (Math.random() - 0.5) * initialValue * 0.03;
-    path.push(round(baseValue + noise, 0));
+  for (let month = 0; month <= totalMonths; month++) {
+    if (month === 0) {
+      path.push({ month, value: baseValue, phase: 'normal' });
+    } else if (month <= crashEnd) {
+      // Crash phase: exponential decay (fast drop)
+      const crashProgress = month / crashEnd;
+      const exponentialDecay = 1 - Math.pow(crashProgress, 0.7); // Accelerating crash
+      currentValue = baseValue * (1 - (crashPercent / 100) * exponentialDecay);
+      path.push({ month, value: Math.round(currentValue), phase: 'crash' });
+    } else if (month <= recoveryEnd) {
+      // Recovery phase: logarithmic growth (slow recovery)
+      const recoveryProgress = (month - crashEnd) / recoveryMonths;
+      const logarithmicRecovery = Math.log(1 + recoveryProgress * (Math.E - 1)) / 1;
+      const crashedValue = baseValue * (1 - crashPercent / 100);
+      currentValue = crashedValue + (baseValue - crashedValue) * logarithmicRecovery;
+      path.push({ month, value: Math.round(currentValue), phase: 'recovery' });
+    } else {
+      // Normal phase: resume expected growth
+      const monthsSinceRecovery = month - recoveryEnd;
+      const monthlyGrowth = 0.007; // ~8.7% annual
+      currentValue = baseValue * Math.pow(1 + monthlyGrowth, monthsSinceRecovery);
+      path.push({ month, value: Math.round(currentValue), phase: 'normal' });
+    }
   }
   
   return path;
