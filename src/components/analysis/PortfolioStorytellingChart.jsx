@@ -19,7 +19,7 @@ import {
 } from 'recharts';
 import { TrendingUp, AlertTriangle, Shield, Info, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { generateCrisisScenario } from "@/components/utils/enhancedScenarios";
+import { generateCrisisScenario } from "@/components/utils/calculations/enhancedScenarios";
 
 /**
  * Portfolio Storytelling: Visualize growth under normal and extreme scenarios --
