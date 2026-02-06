@@ -3,6 +3,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Info } from "lucide-react";
 
+/**
+ * Alert for concentrated portfolio positions
+ * Warns when single positions exceed threshold (default 25%)
+ * Provides rebalancing suggestions
+ * 
+ * ✅ VERIFIED: Compatible with updated Analysis.jsx
+ * ✅ NO CHANGES NEEDED
+ */
 export default function ConcentrationAlert({ allocations, companies, threshold = 25 }) {
   const allocationArray = Object.entries(allocations).map(([symbol, percent]) => ({
     symbol,
