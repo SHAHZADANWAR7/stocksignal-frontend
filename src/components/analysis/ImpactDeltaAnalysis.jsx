@@ -30,7 +30,7 @@ import {
   monteCarloGoalProbability,
   round,
   sanitizeNumber
-} from "@/components/utils/financialMath";
+} from "@/components/utils/calculations/financialMath";
 import { calculateQualityScore } from "@/components/utils/portfolioOptimization";
 
 export default function ImpactDeltaAnalysis({ 
