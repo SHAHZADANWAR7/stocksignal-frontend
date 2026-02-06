@@ -9,12 +9,15 @@
  * - Shrinkage estimators: Ledoit & Wolf (2003)
  * 
  * Data Sources (Jan 2026):
- * - VIX: CBOE real-time market data
+ * - VIX: CBOE real-time market data (via getVIXData Lambda)
  * - Beta: Yahoo Finance 5-year regression
  * - Historical volatility: Trailing 252-day standard deviation
+ * 
+ * CONVERTED: No AWS dependencies - pure calculation functions
+ * VIX data must be provided by caller (fetched from getVIXData Lambda)
  */
 
-import { round } from "./financialMath";
+import { round, sanitizeNumber, clamp } from "./financialMath";
 
 /**
  * Blend historical and forward-looking volatility
@@ -26,19 +29,24 @@ import { round } from "./financialMath";
  * @returns {object} Blended volatility and adjustments
  */
 export function blendVolatility(historicalVol, vixLevel, beta = 1.0) {
+  // Data hygiene: sanitize inputs
+  const cleanHistVol = sanitizeNumber(historicalVol, 20);
+  const cleanVixLevel = sanitizeNumber(vixLevel, 18);
+  const cleanBeta = sanitizeNumber(beta, 1.0);
+  
   // VIX represents S&P 500 30-day implied volatility (annualized)
   // Scale to individual asset using verified beta
-  const impliedVol = vixLevel * Math.abs(beta);
+  const impliedVol = cleanVixLevel * Math.abs(cleanBeta);
   
   // Industry-standard blend: 60% historical + 40% forward-looking
   // References: J.P. Morgan RiskMetrics (1996), Bloomberg terminal methodology
-  const blendedVol = historicalVol * 0.6 + impliedVol * 0.4;
+  const blendedVol = cleanHistVol * 0.6 + impliedVol * 0.4;
   
   return {
-    historical: round(historicalVol, 1),
+    historical: round(cleanHistVol, 1),
     implied: round(impliedVol, 1),
     blended: round(blendedVol, 1),
-    adjustment: round(blendedVol - historicalVol, 1),
+    adjustment: round(blendedVol - cleanHistVol, 1),
     method: '60% historical + 40% VIX-implied'
   };
 }
@@ -52,24 +60,29 @@ export function blendVolatility(historicalVol, vixLevel, beta = 1.0) {
  * - Longin & Solnik (2001) "Extreme correlation in international equity markets"
  * 
  * @param {number} baseCorrelation - Base asset correlation
- * @param {string} vixRegime - Current VIX regime (low/normal/elevated/high)
+ * @param {string} vixRegime - Current VIX regime (low/normal/elevated/high/extreme)
  * @returns {number} Regime-adjusted correlation
  */
 export function adjustCorrelationForRegime(baseCorrelation, vixRegime) {
+  // Data hygiene
+  const cleanCorr = sanitizeNumber(baseCorrelation, 0.5);
+  const cleanRegime = (vixRegime || 'normal').toLowerCase();
+  
   // Regime factors calibrated to historical crisis data
   const regimeFactors = {
-    low: 0.9,      // VIX < 15: correlations slightly lower (complacency)
-    normal: 1.0,   // VIX 15-25: use base correlation
+    low: 0.9,       // VIX < 15: correlations slightly lower (complacency)
+    normal: 1.0,    // VIX 15-25: use base correlation
     elevated: 1.15, // VIX 25-35: correlations increase by 15%
-    high: 1.3      // VIX > 35: correlations surge by 30% (crisis mode)
+    high: 1.3,      // VIX 35-40: correlations surge by 30% (crisis mode)
+    extreme: 1.4    // VIX > 40: extreme correlation surge
   };
   
-  const factor = regimeFactors[vixRegime] || 1.0;
-  const adjusted = baseCorrelation * factor;
+  const factor = regimeFactors[cleanRegime] || 1.0;
+  const adjusted = cleanCorr * factor;
   
   // Cap at realistic bounds: max 95% correlation, min -30%
   // Even in crises, perfect correlation (1.0) is rare
-  return Math.min(0.95, Math.max(-0.3, adjusted));
+  return clamp(adjusted, -0.3, 0.95);
 }
 
 /**
@@ -86,6 +99,11 @@ export function adjustCorrelationForRegime(baseCorrelation, vixRegime) {
  * @returns {object} Adjusted return with reasoning
  */
 export function adjustExpectedReturn(baseReturn, vixRegime, currentVIX) {
+  // Data hygiene
+  const cleanBaseReturn = sanitizeNumber(baseReturn, 10);
+  const cleanVIX = sanitizeNumber(currentVIX, 18);
+  const cleanRegime = (vixRegime || 'normal').toLowerCase();
+  
   // VIX regime-based return adjustments
   // High VIX historically precedes higher forward returns (fear = opportunity)
   // Low VIX suggests complacency (potential mean reversion downward)
@@ -94,28 +112,37 @@ export function adjustExpectedReturn(baseReturn, vixRegime, currentVIX) {
     low: -1.0,      // VIX < 15: Complacency, lower forward returns
     normal: 0,      // VIX 15-25: No adjustment
     elevated: +0.5, // VIX 25-35: Slight risk premium
-    high: +2.0      // VIX > 35: Fear premium (contrarian indicator)
+    high: +2.0,     // VIX 35-40: Fear premium (contrarian indicator)
+    extreme: +3.0   // VIX > 40: Extreme fear premium
   };
   
-  const adjustment = regimeAdjustments[vixRegime] || 0;
+  const adjustment = regimeAdjustments[cleanRegime] || 0;
   
   return {
-    adjusted: round(baseReturn + adjustment, 2),
+    adjusted: round(cleanBaseReturn + adjustment, 2),
     adjustment: round(adjustment, 1),
-    reasoning: getReturnAdjustmentReasoning(vixRegime, currentVIX)
+    reasoning: getReturnAdjustmentReasoning(cleanRegime, cleanVIX)
   };
 }
 
+/**
+ * Generate reasoning text for return adjustments
+ * @private
+ */
 function getReturnAdjustmentReasoning(regime, vix) {
+  const vixFormatted = round(vix, 1);
+  
   switch(regime) {
     case 'low':
-      return `VIX ${vix.toFixed(1)} indicates market complacency. Mean reversion principles suggest modest forward returns and potential correction risk.`;
+      return `VIX ${vixFormatted} indicates market complacency. Mean reversion principles suggest modest forward returns and potential correction risk.`;
     case 'elevated':
-      return `VIX ${vix.toFixed(1)} shows elevated uncertainty. Modest risk premium added to base expectations.`;
+      return `VIX ${vixFormatted} shows elevated uncertainty. Modest risk premium added to base expectations.`;
     case 'high':
-      return `VIX ${vix.toFixed(1)} indicates market fear. Historical data shows high VIX periods precede above-average forward returns (contrarian signal).`;
+      return `VIX ${vixFormatted} indicates market fear. Historical data shows high VIX periods precede above-average forward returns (contrarian signal).`;
+    case 'extreme':
+      return `VIX ${vixFormatted} indicates extreme market panic. Historical data shows extreme fear periods often precede strong forward returns (contrarian opportunity).`;
     default:
-      return `VIX ${vix.toFixed(1)} in normal range (15-25). Using base CAPM and historical return expectations without adjustment.`;
+      return `VIX ${vixFormatted} in normal range (15-25). Using base CAPM and historical return expectations without adjustment.`;
   }
 }
 
@@ -127,33 +154,66 @@ function getReturnAdjustmentReasoning(regime, vix) {
  * - Regime-adjusted correlation matrix
  * - Verified 5-year beta coefficients
  * 
+ * CRITICAL: Caller must provide VIX data from getVIXData Lambda
+ * 
  * @param {Array} companies - Array of company objects with risk and beta
  * @param {Array} weights - Portfolio weights (must sum to ~1.0)
  * @param {Array} correlationMatrix - Base correlation matrix (n×n)
- * @param {Object} vixData - VIX market regime data
- * @returns {Object} Forward-looking risk metrics
+ * @param {Object} vixData - VIX market regime data from Lambda
+ * @param {number} vixData.currentVIX - Current VIX level
+ * @param {number} vixData.impliedAnnualVol - Annualized implied volatility
+ * @param {string} vixData.regime - Market regime (low/normal/elevated/high/extreme)
+ * @param {string} vixData.regimeDescription - Human-readable regime description
+ * @returns {Object} Forward-looking risk metrics or null if invalid inputs
  */
 export function calculateForwardLookingRisk(companies, weights, correlationMatrix, vixData) {
-  const n = companies.length;
-  
-  // Validate inputs
-  if (!companies || !weights || !correlationMatrix || !vixData) {
-    console.error("Missing required inputs for forward-looking risk calculation");
+  // Validate inputs with detailed logging
+  if (!companies || !Array.isArray(companies) || companies.length === 0) {
+    console.error("calculateForwardLookingRisk: Invalid companies array");
     return null;
   }
   
+  if (!weights || !Array.isArray(weights) || weights.length === 0) {
+    console.error("calculateForwardLookingRisk: Invalid weights array");
+    return null;
+  }
+  
+  if (companies.length !== weights.length) {
+    console.error("calculateForwardLookingRisk: Companies and weights length mismatch");
+    return null;
+  }
+  
+  if (!correlationMatrix || !Array.isArray(correlationMatrix)) {
+    console.error("calculateForwardLookingRisk: Invalid correlation matrix");
+    return null;
+  }
+  
+  if (!vixData || typeof vixData !== 'object') {
+    console.error("calculateForwardLookingRisk: Missing or invalid VIX data");
+    console.error("VIX data must be fetched from getVIXData Lambda and passed as parameter");
+    return null;
+  }
+  
+  const n = companies.length;
+  
+  // Extract VIX data with fallbacks
+  const impliedAnnualVol = sanitizeNumber(vixData.impliedAnnualVol || vixData.currentVIX, 18);
+  const regime = (vixData.regime || 'normal').toLowerCase();
+  const regimeDescription = vixData.regimeDescription || 'Normal volatility';
+  const currentVIX = sanitizeNumber(vixData.currentVIX || vixData.current, 18);
+  
   // Adjust each asset's volatility using VIX blend
   const adjustedRisks = companies.map((company, i) => {
-    const beta = company.beta || 1.0;
-    const historicalVol = company.risk || 20; // Fallback to 20% if missing
-    const blended = blendVolatility(historicalVol, vixData.impliedAnnualVol, beta);
+    const beta = sanitizeNumber(company.beta, 1.0);
+    const historicalVol = sanitizeNumber(company.risk, 20);
+    const blended = blendVolatility(historicalVol, impliedAnnualVol, beta);
     return blended.blended;
   });
   
   // Adjust correlation matrix for current market regime
   // High VIX → correlations surge (diversification breakdown)
   const adjustedCorrelations = correlationMatrix.map(row =>
-    row.map(corr => adjustCorrelationForRegime(corr, vixData.regime))
+    row.map(corr => adjustCorrelationForRegime(corr, regime))
   );
   
   // Calculate portfolio variance using standard MPT formula
@@ -161,48 +221,63 @@ export function calculateForwardLookingRisk(companies, weights, correlationMatri
   let variance = 0;
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
-      variance += weights[i] * weights[j] * 
-                  (adjustedRisks[i] / 100) * (adjustedRisks[j] / 100) * 
-                  adjustedCorrelations[i][j];
+      const w_i = sanitizeNumber(weights[i], 0);
+      const w_j = sanitizeNumber(weights[j], 0);
+      const sigma_i = sanitizeNumber(adjustedRisks[i], 20) / 100;
+      const sigma_j = sanitizeNumber(adjustedRisks[j], 20) / 100;
+      const rho_ij = sanitizeNumber(adjustedCorrelations[i]?.[j], 0.5);
+      
+      variance += w_i * w_j * sigma_i * sigma_j * rho_ij;
     }
   }
   
-  const forwardRisk = Math.sqrt(variance) * 100;
+  const forwardRisk = Math.sqrt(Math.max(0, variance)) * 100;
   
-  // Calculate regime impact on portfolio
+  // Calculate historical portfolio risk (for comparison)
   let historicalPortfolioRisk = 0;
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
-      const historicalVol_i = companies[i].risk || 20;
-      const historicalVol_j = companies[j].risk || 20;
-      historicalPortfolioRisk += weights[i] * weights[j] * 
-                                  (historicalVol_i / 100) * (historicalVol_j / 100) * 
-                                  correlationMatrix[i][j];
+      const w_i = sanitizeNumber(weights[i], 0);
+      const w_j = sanitizeNumber(weights[j], 0);
+      const historicalVol_i = sanitizeNumber(companies[i].risk, 20) / 100;
+      const historicalVol_j = sanitizeNumber(companies[j].risk, 20) / 100;
+      const baseCorr_ij = sanitizeNumber(correlationMatrix[i]?.[j], 0.5);
+      
+      historicalPortfolioRisk += w_i * w_j * historicalVol_i * historicalVol_j * baseCorr_ij;
     }
   }
-  const historicalRisk = Math.sqrt(historicalPortfolioRisk) * 100;
+  const historicalRisk = Math.sqrt(Math.max(0, historicalPortfolioRisk)) * 100;
+  
+  // Build asset-level adjustments
+  const assetAdjustments = companies.map((c, i) => {
+    const historicalVol = sanitizeNumber(c.risk, 20);
+    const forwardVol = sanitizeNumber(adjustedRisks[i], 20);
+    
+    return {
+      symbol: c.symbol || 'N/A',
+      name: c.name || 'Unknown',
+      sector: c.sector || 'Unknown',
+      beta: round(sanitizeNumber(c.beta, 1.0), 3),
+      historical: round(historicalVol, 1),
+      forwardLooking: round(forwardVol, 1),
+      delta: round(forwardVol - historicalVol, 1),
+      weight: round(sanitizeNumber(weights[i], 0) * 100, 1)
+    };
+  });
   
   return {
     forwardRisk: round(forwardRisk, 1),
     historicalRisk: round(historicalRisk, 1),
     regimeImpact: round(forwardRisk - historicalRisk, 1),
-    regime: vixData.regime,
-    regimeDescription: vixData.regimeDescription,
-    vixLevel: vixData.current,
-    assetAdjustments: companies.map((c, i) => ({
-      symbol: c.symbol,
-      name: c.name,
-      sector: c.sector,
-      beta: round(c.beta || 1.0, 3),
-      historical: round(c.risk, 1),
-      forwardLooking: round(adjustedRisks[i], 1),
-      delta: round(adjustedRisks[i] - c.risk, 1),
-      weight: round(weights[i] * 100, 1)
-    })),
+    regime: regime,
+    regimeDescription: regimeDescription,
+    vixLevel: round(currentVIX, 1),
+    assetAdjustments: assetAdjustments,
     methodology: {
       volatilityBlend: '60% historical + 40% VIX-implied',
-      correlationAdjustment: `${vixData.regime} regime factor applied`,
-      dataSource: 'VIX: CBOE, Beta: Yahoo Finance 5Y, Historical vol: 252-day σ'
-    }
+      correlationAdjustment: `${regime} regime factor applied`,
+      dataSource: 'VIX: CBOE (via Lambda), Beta: Yahoo Finance 5Y, Historical vol: 252-day σ'
+    },
+    vixDataSource: vixData.dataSource || 'unknown'
   };
 }
