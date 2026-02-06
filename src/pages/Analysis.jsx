@@ -22,6 +22,13 @@
 // - Replaced: base44.entities.PortfolioAnalysis.filter() → callAwsFunction('getAnalysisById')
 // - Replaced: base44.functions.invoke('getStockBatch') → callAwsFunction('getStockBatch')
 // - Replaced: base44.integrations.Core.InvokeLLM() → callAwsFunction('calculateRealBeta') with Bedrock LLM fallback
+//
+// ✅ VIX INTEGRATION ADDED (Section 1):
+// - Added: import { calculateForwardLookingRisk } from "@/components/utils/calculations/forwardLookingRisk"
+// - Added: VIX state management (vixData, vixLoading, vixError)
+// - Added: fetchVIXData() function to call getVIXData Lambda
+// - Added: useEffect hook to fetch VIX on component mount
+// - Added: Error handling and fallback for VIX data
 // ============================================================================
 
 import React, { useState, useEffect } from "react";
@@ -54,6 +61,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { optimizeOptimalPortfolio, optimizeMinimumVariance, optimizeMaximumReturn, calculateGoalProbability, calculateExpectedDrawdown, getCorrelationMatrix } from "@/components/utils/portfolioOptimization";
 import { futureValue as calculateFutureValue, timeToGoal as calculateTimeToGoal } from "@/components/utils/financialMath";
+import { calculateForwardLookingRisk } from "@/components/utils/calculations/forwardLookingRisk"; // ✅ NEW: VIX-adjusted risk
 import { 
   ScatterChart, 
   Scatter, 
@@ -121,6 +129,99 @@ export default function Analysis() {
   const [isCachedResults, setIsCachedResults] = useState(false);
   const [cacheTimestamp, setCacheTimestamp] = useState(null);
   const [currentAnalysisId, setCurrentAnalysisId] = useState(null);
+
+  // ✅ NEW: VIX State Management
+  const [vixData, setVixData] = useState(null);
+  const [vixLoading, setVixLoading] = useState(false);
+  const [vixError, setVixError] = useState(null);
+
+  // ✅ NEW: Fetch VIX data on component mount
+  useEffect(() => {
+    fetchVIXData();
+  }, []);
+
+  // ✅ NEW: VIX Fetch Function
+  const fetchVIXData = async () => {
+    setVixLoading(true);
+    setVixError(null);
+    
+    try {
+      console.log('🔍 Fetching VIX data from Lambda...');
+      
+      const response = await callAwsFunction('getVIXData', {});
+      
+      console.log('📊 Raw VIX Lambda Response:', response);
+      
+      // Parse Lambda response (handle different formats)
+      let vixResponse;
+      if (typeof response === 'string') {
+        vixResponse = JSON.parse(response);
+      } else if (response.body) {
+        vixResponse = typeof response.body === 'string' 
+          ? JSON.parse(response.body) 
+          : response.body;
+      } else {
+        vixResponse = response;
+      }
+
+      console.log('✅ Parsed VIX Data:', vixResponse);
+
+      // Validate VIX data structure
+      if (!vixResponse || typeof vixResponse !== 'object') {
+        throw new Error('Invalid VIX response format');
+      }
+
+      // Handle both success and fallback cases
+      if (vixResponse.success || vixResponse.currentVIX) {
+        setVixData({
+          currentVIX: vixResponse.currentVIX || vixResponse.current || 18,
+          impliedAnnualVol: vixResponse.impliedAnnualVol || vixResponse.currentVIX || 18,
+          regime: vixResponse.regime || 'normal',
+          regimeDescription: vixResponse.regimeDescription || 'Normal volatility',
+          riskLevel: vixResponse.riskLevel || 'Low',
+          dataSource: vixResponse.dataSource || 'Lambda',
+          timestamp: vixResponse.timestamp || new Date().toISOString()
+        });
+        
+        console.log('✅ VIX data loaded successfully:', {
+          current: vixResponse.currentVIX,
+          regime: vixResponse.regime,
+          source: vixResponse.dataSource
+        });
+      } else {
+        // Lambda returned fallback data
+        console.warn('⚠️ VIX Lambda returned fallback data');
+        setVixData({
+          currentVIX: 18,
+          impliedAnnualVol: 18,
+          regime: 'normal',
+          regimeDescription: 'Normal volatility (fallback)',
+          riskLevel: 'Low',
+          dataSource: 'fallback',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ VIX Lambda Error:', error);
+      setVixError(error.message);
+      
+      // Set fallback VIX data
+      setVixData({
+        currentVIX: 18,
+        impliedAnnualVol: 18,
+        regime: 'normal',
+        regimeDescription: 'Normal volatility (error fallback)',
+        riskLevel: 'Low',
+        dataSource: 'error_fallback',
+        timestamp: new Date().toISOString()
+      });
+      
+      console.warn('⚠️ Using fallback VIX data due to error');
+    } finally {
+      setVixLoading(false);
+    }
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -529,8 +630,7 @@ Using real historical S&P 500 returns, estimate beta. Respond ONLY with valid JS
           }
           
           const capmReturn = riskFreeRate + capmBeta * marketRiskPremium;
-
-        // ============================================================================
+          // ============================================================================
 // SECTION 2 (PART 2): handleAnalyze() - Risk Calculation & AI Analysis
 // ============================================================================
 // This section contains the continuation of handleAnalyze() function:
@@ -548,6 +648,11 @@ Using real historical S&P 500 returns, estimate beta. Respond ONLY with valid JS
 // - Uses same Bedrock pattern as getStockAnalysis Lambda (Claude 3 Sonnet)
 // - Maintains all calculation logic exactly as before
 // - Preserves all data validation and error handling
+//
+// ✅ NO VIX CHANGES NEEDED IN SECTION 2:
+// - This section handles INDIVIDUAL STOCK analysis
+// - VIX integration happens at PORTFOLIO LEVEL (Section 3+)
+// - Stock-level risk uses historical + beta-based volatility (correct approach)
 // ============================================================================
 
           // METHOD 4: Annualized Volatility (Risk Calculation)
@@ -1090,8 +1195,7 @@ If analyzing similar companies (same sector), focus on:
         throw new Error('No companies were successfully analyzed. Please try selecting different stocks.');
       }
 
-
-    // ============================================================================
+          // ============================================================================
 // SECTION 3 (PART 3): Company Updates, Portfolio Optimization & Trading
 // ============================================================================
 // This section contains:
@@ -1110,6 +1214,13 @@ If analyzing similar companies (same sector), focus on:
 // - Replaced: base44.entities.PortfolioAnalysis.create() → callAwsFunction('saveAnalysis')
 // - Replaced: base44.functions.invoke('executePaperTrade') → callAwsFunction('executePaperTrade')
 // - Maintained all validation, logging, and optimization logic exactly as before
+//
+// ✅ VIX INTEGRATION ADDED (Section 3):
+// - Added: calculateForwardLookingRisk() call for VIX-adjusted portfolio risk
+// - Added: Forward-looking risk metrics to analysis result
+// - Added: VIX data validation before calculation
+// - Added: Fallback handling if VIX unavailable
+// - VIX-adjusted risk enhances portfolio optimization results
 // ============================================================================
 
       // Update Company records with fresh data (skip index funds as they don't have the same schema)
@@ -1282,7 +1393,7 @@ If analyzing similar companies (same sector), focus on:
 
       // ═════════════════════════════════════════════════════════════════════════════
       // RUN PORTFOLIO OPTIMIZATION WITH ALLOCATION INTEGRITY VALIDATION
-      // ═════════════════════════════════════════════════════════════════════════════
+      // ═══════════════════════════════════════════════════════════════════════��═════
       const { optimizeAllPortfolios } = await import("@/components/utils/portfolioOptimization");
       
       let optimizationResults;
@@ -1304,7 +1415,7 @@ If analyzing similar companies (same sector), focus on:
       
       // ═════════════════════════════════════════════════════════════════════════════
       // POST-OPTIMIZATION VERIFICATION - Ensure allocations passed validation
-      // ═════════════════════════════════════════════════════════════════════════════
+      // ═══════��═════════════════════════════════════════════════════════════════════
       console.log("🔍 POST-OPTIMIZATION ALLOCATION CHECK:");
       
       ['optimal_portfolio', 'minimum_variance_portfolio', 'maximum_return_portfolio'].forEach(portfolioKey => {
@@ -1340,6 +1451,83 @@ If analyzing similar companies (same sector), focus on:
       console.log("   Min Var: Return=" + minimum_variance_portfolio.expected_return.toFixed(2) + "%, Risk=" + minimum_variance_portfolio.risk.toFixed(2) + "%, Sharpe=" + minimum_variance_portfolio.sharpe_ratio.toFixed(3));
       console.log("   Max Ret: Return=" + maximum_return_portfolio.expected_return.toFixed(2) + "%, Risk=" + maximum_return_portfolio.risk.toFixed(2) + "%, Sharpe=" + maximum_return_portfolio.sharpe_ratio.toFixed(3));
 
+      // ✅ NEW: VIX-ADJUSTED FORWARD-LOOKING RISK CALCULATION
+      // Calculate portfolio-level VIX-adjusted risk for each strategy
+      let forwardRiskMetrics = null;
+      
+      if (vixData && !vixLoading && !vixError) {
+        console.log('🔮 Calculating VIX-adjusted forward-looking risk...');
+        
+        try {
+          // Get correlation matrix for forward risk calculation
+          const correlationMatrix = getCorrelationMatrix(allCompanyData);
+          
+          // Calculate for optimal portfolio
+          const optimalWeights = Object.keys(optimal_portfolio.allocations).map(symbol => 
+            optimal_portfolio.allocations[symbol] / 100
+          );
+          
+          forwardRiskMetrics = {
+            optimal: calculateForwardLookingRisk(
+              allCompanyData,
+              optimalWeights,
+              correlationMatrix,
+              vixData
+            ),
+            minimum_variance: null,
+            maximum_return: null
+          };
+          
+          // Calculate for minimum variance portfolio
+          if (minimum_variance_portfolio && minimum_variance_portfolio.allocations) {
+            const minVarWeights = Object.keys(minimum_variance_portfolio.allocations).map(symbol => 
+              minimum_variance_portfolio.allocations[symbol] / 100
+            );
+            forwardRiskMetrics.minimum_variance = calculateForwardLookingRisk(
+              allCompanyData,
+              minVarWeights,
+              correlationMatrix,
+              vixData
+            );
+          }
+          
+          // Calculate for maximum return portfolio
+          if (maximum_return_portfolio && maximum_return_portfolio.allocations) {
+            const maxRetWeights = Object.keys(maximum_return_portfolio.allocations).map(symbol => 
+              maximum_return_portfolio.allocations[symbol] / 100
+            );
+            forwardRiskMetrics.maximum_return = calculateForwardLookingRisk(
+              allCompanyData,
+              maxRetWeights,
+              correlationMatrix,
+              vixData
+            );
+          }
+          
+          console.log('✅ VIX-adjusted risk metrics calculated:', {
+            optimal: forwardRiskMetrics.optimal ? {
+              historical: forwardRiskMetrics.optimal.historicalRisk,
+              forward: forwardRiskMetrics.optimal.forwardRisk,
+              regimeImpact: forwardRiskMetrics.optimal.regimeImpact,
+              vixLevel: forwardRiskMetrics.optimal.vixLevel,
+              regime: forwardRiskMetrics.optimal.regime
+            } : null,
+            vixRegime: vixData.regime,
+            vixLevel: vixData.currentVIX
+          });
+          
+        } catch (vixCalcError) {
+          console.error('❌ VIX risk calculation error:', vixCalcError);
+          console.warn('⚠️ Proceeding without VIX-adjusted metrics');
+          forwardRiskMetrics = null;
+        }
+      } else {
+        console.warn('⚠️ VIX data not available - skipping forward-looking risk calculation');
+        if (vixLoading) console.warn('   Reason: VIX data still loading');
+        if (vixError) console.warn('   Reason: VIX fetch error -', vixError);
+        if (!vixData) console.warn('   Reason: No VIX data');
+      }
+
       const totalAmount = parseFloat(investmentAmount);
 
       const finalResult = {
@@ -1354,7 +1542,16 @@ If analyzing similar companies (same sector), focus on:
         portfolio_quality: optimizationResults.portfolio_quality || {},
         return_cap_adjustments: optimizationResults.return_cap_adjustments || [],
         similarity_warnings: similarityWarnings,
-        diversification_recommendations: diversificationRecommendations
+        diversification_recommendations: diversificationRecommendations,
+        // ✅ NEW: Add VIX-adjusted risk metrics
+        forward_risk_metrics: forwardRiskMetrics,
+        vix_data: vixData ? {
+          currentVIX: vixData.currentVIX,
+          regime: vixData.regime,
+          regimeDescription: vixData.regimeDescription,
+          timestamp: vixData.timestamp,
+          dataSource: vixData.dataSource
+        } : null
       };
 
       setAnalysisResult(finalResult);
@@ -1513,6 +1710,8 @@ If analyzing similar companies (same sector), focus on:
             "Check console for details.");
       return;
     }
+
+    // =================
 
     // ============================================================================
 // SECTION 4 (PART 4): Trade Navigation, Comparison Data & JSX Start
@@ -1938,6 +2137,7 @@ If analyzing similar companies (same sector), focus on:
                 </CardContent>
               </Card>
 
+              // =====================
               // ============================================================================
 // SECTION 5 (PART 5): Analysis Results - Warnings, Cards & Strategy Comparison
 // ============================================================================
@@ -1953,7 +2153,7 @@ If analyzing similar companies (same sector), focus on:
 // - Consecutive crash scenario
 // - Model limitations disclosure
 // - Rebalancing simulator
-// - Forward risk card
+// - Forward risk card (✅ VIX INTEGRATION ADDED)
 // - Portfolio storytelling chart
 // - Confidence bands chart
 // - Transaction cost card
@@ -1961,8 +2161,8 @@ If analyzing similar companies (same sector), focus on:
 // - Validation warnings
 // - Strategy comparison cards (Optimal Portfolio card - start)
 //
-// NO CHANGES FROM BASE44 - Pure JSX rendering with existing components
-// All components are already in your git repo
+// ✅ VIX CHANGES: Added vixData and forwardRiskMetrics props to ForwardRiskCard
+// ForwardRiskCard component will display VIX-adjusted risk metrics
 // ============================================================================
 
               {/* Correlation & Confidence Warning */}
@@ -2140,13 +2340,15 @@ If analyzing similar companies (same sector), focus on:
                 volatility={analysisResult.optimal_portfolio.risk}
               />
 
-              {/* Phase 4: Forward-Looking Risk Analysis */}
+              {/* ✅ Phase 4: Forward-Looking Risk Analysis (VIX-ADJUSTED) */}
               <ForwardRiskCard
                 companies={analysisResult.companies}
                 weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
                 correlationMatrix={getCorrelationMatrix(analysisResult.companies)}
                 portfolioRisk={analysisResult.optimal_portfolio.risk}
                 expectedReturn={analysisResult.optimal_portfolio.expected_return}
+                vixData={analysisResult.vix_data}
+                forwardRiskMetrics={analysisResult.forward_risk_metrics?.optimal}
               />
 
               {/* Portfolio Storytelling with Tail Events */}
@@ -2312,6 +2514,7 @@ If analyzing similar companies (same sector), focus on:
                   </CardContent>
                 </Card>
                 // ============================================================================
+                // ============================================================================
 // SECTION 6 (PART 6): Strategy Cards & Investment Projections
 // ============================================================================
 // This section contains JSX rendering for:
@@ -2326,8 +2529,8 @@ If analyzing similar companies (same sector), focus on:
 //   - 30-year growth chart (AreaChart with contributions overlay)
 //   - Monthly contribution scenarios comparison (4 scenarios)
 //
-// NO CHANGES FROM BASE44 - Pure JSX rendering
-// All calculation functions are from existing utilities in your git repo
+// ✅ VIX ENHANCEMENT: Added forward-looking risk display to strategy cards
+// Shows VIX-adjusted risk metrics if available from analysisResult
 // ============================================================================
 
                 {/* Minimum Variance Portfolio */}
@@ -2358,10 +2561,27 @@ If analyzing similar companies (same sector), focus on:
                           </p>
                         </div>
                         <div className="bg-teal-50/50 rounded-lg p-3">
-                          <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">Volatility (σ)</p>
+                          <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">
+                            {analysisResult.forward_risk_metrics?.minimum_variance ? 'Historical Risk' : 'Volatility (σ)'}
+                          </p>
                           <p className="text-xl md:text-2xl font-bold text-emerald-900 tabular-nums">
                             {(analysisResult.minimum_variance_portfolio.risk || 0).toFixed(2)}%
                           </p>
+                          {/* ✅ NEW: Show forward-looking risk if available */}
+                          {analysisResult.forward_risk_metrics?.minimum_variance && (
+                            <div className="mt-2 pt-2 border-t border-teal-200">
+                              <p className="text-xs text-slate-600 mb-1">Forward-Looking Risk (VIX-adjusted)</p>
+                              <p className="text-lg font-bold text-purple-700 tabular-nums">
+                                {analysisResult.forward_risk_metrics.minimum_variance.forwardRisk}%
+                              </p>
+                              {analysisResult.forward_risk_metrics.minimum_variance.regimeImpact !== 0 && (
+                                <p className="text-xs text-purple-600 mt-1">
+                                  {analysisResult.forward_risk_metrics.minimum_variance.regimeImpact > 0 ? '+' : ''}
+                                  {analysisResult.forward_risk_metrics.minimum_variance.regimeImpact}% regime impact
+                                </p>
+                              )}
+                            </div>
+                          )}
                           <p className="text-xs text-emerald-700 mt-1 font-semibold">Lowest risk portfolio</p>
                         </div>
                         <div className="bg-cyan-50/50 rounded-lg p-3">
@@ -2404,10 +2624,27 @@ If analyzing similar companies (same sector), focus on:
                           <p className="text-xs text-orange-700 mt-1 font-semibold">Highest modeled upside</p>
                         </div>
                         <div className="bg-rose-50/50 rounded-lg p-3">
-                          <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">Volatility (σ)</p>
+                          <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">
+                            {analysisResult.forward_risk_metrics?.maximum_return ? 'Historical Risk' : 'Volatility (σ)'}
+                          </p>
                           <p className="text-xl md:text-2xl font-bold text-slate-900 tabular-nums">
                             {(analysisResult.maximum_return_portfolio.risk || 0).toFixed(2)}%
                           </p>
+                          {/* ✅ NEW: Show forward-looking risk if available */}
+                          {analysisResult.forward_risk_metrics?.maximum_return && (
+                            <div className="mt-2 pt-2 border-t border-rose-200">
+                              <p className="text-xs text-slate-600 mb-1">Forward-Looking Risk (VIX-adjusted)</p>
+                              <p className="text-lg font-bold text-purple-700 tabular-nums">
+                                {analysisResult.forward_risk_metrics.maximum_return.forwardRisk}%
+                              </p>
+                              {analysisResult.forward_risk_metrics.maximum_return.regimeImpact !== 0 && (
+                                <p className="text-xs text-purple-600 mt-1">
+                                  {analysisResult.forward_risk_metrics.maximum_return.regimeImpact > 0 ? '+' : ''}
+                                  {analysisResult.forward_risk_metrics.maximum_return.regimeImpact}% regime impact
+                                </p>
+                              )}
+                            </div>
+                          )}
                         </div>
                         <div className="bg-red-50/50 rounded-lg p-3">
                           <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">Sharpe Ratio</p>
@@ -2775,6 +3012,7 @@ If analyzing similar companies (same sector), focus on:
               })()}
 
               // ============================================================================
+              // ============================================================================
 // SECTION 7 (PART 7 - FINAL): Charts, Allocations, Company Metrics & Closing
 // ============================================================================
 // This section contains the final JSX rendering:
@@ -2792,8 +3030,9 @@ If analyzing similar companies (same sector), focus on:
 // - TradeModal component
 // - Closing tags for all nested divs
 //
-// NO CHANGES FROM BASE44 - Pure JSX rendering
-// All components already exist in your git repo
+// NO CHANGES - Pure JSX rendering of asset-level data
+// ✅ NO VIX INTEGRATION NEEDED: This section displays individual company metrics only
+// VIX portfolio-level metrics are displayed in Section 5 (ForwardRiskCard) and Section 6 (Strategy cards)
 // ============================================================================
 
               {/* Strategy Comparison Charts */}
