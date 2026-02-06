@@ -88,7 +88,7 @@ export default function ImpactDeltaAnalysis({
   ];
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // PRECISION ENGINE: Real-time calculation with exact mathematics
+  // PRECISION ENGINE: Real-time calculation with exact mathematics yes
   // ═══════════════════════════════════════════════════════════════════════════
   const calculateWhatIf = useCallback((diversifier, allocationPercent) => {
       if (!currentPortfolio || !companies || companies.length === 0) return null;
