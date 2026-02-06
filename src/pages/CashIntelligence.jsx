@@ -12,7 +12,8 @@ import {
   PlayCircle,
   Clock,
   Target,
-  AlertCircle
+  AlertCircle,
+  Activity
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { checkUsageLimit, incrementUsage, getRemainingUsage } from "@/components/utils/usageLimit";
@@ -26,6 +27,8 @@ export default function CashIntelligence() {
   const [idleCashAmount, setIdleCashAmount] = useState("");
   const [idleCashMonths, setIdleCashMonths] = useState("");
   const [remainingUsage, setRemainingUsage] = useState(null);
+  const [vixData, setVixData] = useState(null);
+  const [vixError, setVixError] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -55,7 +58,50 @@ export default function CashIntelligence() {
     }
   };
 
-  const generateStaticRecommendation = (calculatedCash, marketUncertainty) => {
+  /**
+   * Fetch real-time VIX data from Lambda function
+   * Provides graceful fallback if Lambda fails
+   */
+  const fetchVIXData = async () => {
+    try {
+      console.log('🔍 Fetching VIX data from Lambda...');
+      
+      const response = await awsApi.callAwsFunction('getVIXData', {});
+      
+      // Parse Lambda response
+      let vixResponse;
+      if (typeof response === 'string') {
+        vixResponse = JSON.parse(response);
+      } else if (response.body) {
+        vixResponse = typeof response.body === 'string' 
+          ? JSON.parse(response.body) 
+          : response.body;
+      } else {
+        vixResponse = response;
+      }
+
+      console.log('✅ VIX Lambda Response:', vixResponse);
+
+      if (vixResponse.success && vixResponse.currentVIX) {
+        setVixData(vixResponse);
+        setVixError(false);
+        return vixResponse.currentVIX;
+      } else {
+        // Lambda returned fallback data
+        console.warn('⚠️ VIX Lambda returned fallback data');
+        setVixData(vixResponse);
+        setVixError(true);
+        return vixResponse.currentVIX || null;
+      }
+    } catch (error) {
+      console.error('❌ VIX Lambda Error:', error);
+      setVixError(true);
+      setVixData(null);
+      return null;
+    }
+  };
+
+  const generateStaticRecommendation = (calculatedCash, marketUncertainty, vixInfo = null) => {
     let deployment_signal = "gradual_entry";
     let deployment_reasoning = "";
     const optimal_actions = [];
@@ -68,27 +114,32 @@ export default function CashIntelligence() {
 
     const portfolioGain = totalInvested > 0 ? ((currentValue - totalInvested) / totalInvested) * 100 : 0;
 
+    // Enhanced reasoning with VIX data if available
+    const vixContext = vixInfo && vixInfo.currentVIX 
+      ? ` Current VIX is ${vixInfo.currentVIX}, indicating ${vixInfo.regime || 'normal'} market volatility.`
+      : '';
+
     if (marketUncertainty > 70) {
       deployment_signal = "hold_cash";
-      deployment_reasoning = `Market uncertainty is elevated at ${marketUncertainty}%. Given high volatility and uncertain market conditions, it's prudent to hold cash and wait for clearer market signals. Your idle cash of $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} can be deployed when uncertainty decreases.`;
+      deployment_reasoning = `Market uncertainty is elevated at ${marketUncertainty}%.${vixContext} Given high volatility and uncertain market conditions, it's prudent to hold cash and wait for clearer market signals. Your idle cash of $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} can be deployed when uncertainty decreases.`;
       optimal_actions.push("Monitor VIX and market volatility indicators daily.");
       optimal_actions.push("Set price targets on key holdings for potential rebalancing.");
       optimal_actions.push("Keep cash reserves at current levels for opportunistic buying.");
     } else if (marketUncertainty > 50) {
       deployment_signal = "gradual_entry";
-      deployment_reasoning = `Market uncertainty is moderate at ${marketUncertainty}%. Implement a dollar-cost averaging strategy with your $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} idle cash over the next 3-6 months. This reduces timing risk while deploying capital systematically.`;
+      deployment_reasoning = `Market uncertainty is moderate at ${marketUncertainty}%.${vixContext} Implement a dollar-cost averaging strategy with your $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} idle cash over the next 3-6 months. This reduces timing risk while deploying capital systematically.`;
       optimal_actions.push(`Divide $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} into 6 equal monthly tranches of $${Math.round(calculatedCash.idle_cash_amount / 6).toLocaleString()}.`);
       optimal_actions.push("Start with equal-weight distribution across your top performers.");
       optimal_actions.push("Rebalance monthly based on market conditions and portfolio drift.");
     } else if (portfolioGain > 15) {
       deployment_signal = "pause_dca";
-      deployment_reasoning = `Your portfolio has gained ${portfolioGain.toFixed(1)}%, suggesting strong recent performance. With market uncertainty at ${marketUncertainty}%, consider pausing regular contributions temporarily. Your idle cash of $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} remains available if valuations become more attractive.`;
+      deployment_reasoning = `Your portfolio has gained ${portfolioGain.toFixed(1)}%, suggesting strong recent performance. With market uncertainty at ${marketUncertainty}%,${vixContext} consider pausing regular contributions temporarily. Your idle cash of $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} remains available if valuations become more attractive.`;
       optimal_actions.push("Pause regular monthly contributions for 1-2 months.");
       optimal_actions.push("Review profit-taking opportunities on top performers.");
       optimal_actions.push("Monitor for pullback opportunities to resume dollar-cost averaging.");
     } else {
       deployment_signal = "invest_now";
-      deployment_reasoning = `Current market conditions favor deployment with uncertainty at ${marketUncertainty}%. Your portfolio shows modest gains with room for growth. Deploy your $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} idle cash now to take advantage of current valuations and benefit from compound growth.`;
+      deployment_reasoning = `Current market conditions favor deployment with uncertainty at ${marketUncertainty}%.${vixContext} Your portfolio shows modest gains with room for growth. Deploy your $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} idle cash now to take advantage of current valuations and benefit from compound growth.`;
       optimal_actions.push(`Deploy full $${Math.round(calculatedCash.idle_cash_amount).toLocaleString()} across your diversified holdings.`);
       optimal_actions.push("Focus on your highest-conviction positions first.");
       optimal_actions.push("Complete deployment within 1-2 weeks before market conditions shift.");
@@ -109,31 +160,60 @@ export default function CashIntelligence() {
 
     setIsAnalyzing(true);
 
-    const calculatedCash = calculateCashOpportunityMetrics(idleCashAmount, idleCashMonths, holdings);
-    const marketUncertainty = estimateMarketUncertainty();
-
-    const totalInvested = holdings.reduce((sum, h) => 
-      sum + (h.quantity * h.average_cost), 0);
-    
-    const currentValue = holdings.reduce((sum, h) => 
-      sum + (h.quantity * (h.current_price || h.average_cost)), 0);
-
     try {
-      const recommendation = generateStaticRecommendation(calculatedCash, marketUncertainty);
+      // STEP 1: Fetch real-time VIX data from Lambda
+      console.log('📊 Step 1: Fetching VIX data...');
+      const vixLevel = await fetchVIXData();
+      
+      // STEP 2: Calculate cash opportunity metrics (with time adjustment)
+      console.log('💰 Step 2: Calculating cash opportunity...');
+      const calculatedCash = calculateCashOpportunityMetrics(
+        idleCashAmount, 
+        idleCashMonths, 
+        holdings,
+        10 // 10% default market return
+      );
 
+      // STEP 3: Estimate market uncertainty (with VIX if available)
+      console.log('📈 Step 3: Estimating market uncertainty...');
+      const marketUncertainty = estimateMarketUncertainty(vixLevel);
+
+      console.log('✅ Analysis complete:', {
+        vixLevel,
+        marketUncertainty,
+        cashCalculation: calculatedCash
+      });
+
+      // STEP 4: Generate recommendations
+      const recommendation = generateStaticRecommendation(
+        calculatedCash, 
+        marketUncertainty,
+        vixData
+      );
+
+      // STEP 5: Build analysis data
       const analysisData = {
         idle_cash_amount: calculatedCash.idle_cash_amount,
         missed_returns: calculatedCash.missed_returns,
         low_yield_assets: calculatedCash.low_yield_assets,
+        total_opportunity_cost: calculatedCash.total_opportunity_cost,
+        total_missed: calculatedCash.total_missed,
         deployment_signal: recommendation.deployment_signal,
         market_uncertainty_score: marketUncertainty,
         deployment_reasoning: recommendation.deployment_reasoning,
         optimal_actions: recommendation.optimal_actions,
-        analysis_date: format(new Date(), 'yyyy-MM-dd')
+        analysis_date: format(new Date(), 'yyyy-MM-dd'),
+        vix_data: vixData ? {
+          currentVIX: vixData.currentVIX,
+          regime: vixData.regime,
+          riskLevel: vixData.riskLevel,
+          dataSource: vixData.dataSource
+        } : null
       };
 
       localStorage.setItem('cash_intelligence_analysis', JSON.stringify(analysisData));
       setAnalysis(analysisData);
+      
     } catch (error) {
       console.error("Error analyzing:", error);
       alert("Error analyzing cash opportunity. Please try again.");
@@ -172,6 +252,14 @@ export default function CashIntelligence() {
     }
   };
 
+  const getVIXBadgeColor = (vixLevel) => {
+    if (vixLevel < 15) return "bg-emerald-100 text-emerald-700 border-emerald-300";
+    if (vixLevel < 20) return "bg-blue-100 text-blue-700 border-blue-300";
+    if (vixLevel < 30) return "bg-amber-100 text-amber-700 border-amber-300";
+    if (vixLevel < 40) return "bg-orange-100 text-orange-700 border-orange-300";
+    return "bg-rose-100 text-rose-700 border-rose-300";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -184,7 +272,7 @@ export default function CashIntelligence() {
             Cash & Opportunity Intelligence
           </h1>
           <p className="text-sm md:text-base lg:text-lg text-slate-600">
-            Track opportunity costs and optimize capital deployment timing
+            Track opportunity costs and optimize capital deployment timing with real-time market volatility analysis
           </p>
         </motion.div>
 
@@ -268,6 +356,49 @@ export default function CashIntelligence() {
           </Card>
         ) : (
           <div className="space-y-6">
+            {/* VIX Data Card (if available) */}
+            {analysis.vix_data && (
+              <Card className="border-2 border-purple-200 shadow-xl bg-gradient-to-br from-purple-50 to-indigo-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="w-6 h-6 text-purple-600" />
+                    Real-Time Market Volatility (VIX)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white rounded-xl p-4">
+                      <p className="text-xs text-slate-600 mb-2">Current VIX</p>
+                      <p className="text-3xl font-bold text-purple-600 mb-2">
+                        {analysis.vix_data.currentVIX}
+                      </p>
+                      <Badge className={`${getVIXBadgeColor(analysis.vix_data.currentVIX)} border text-sm`}>
+                        {analysis.vix_data.regime}
+                      </Badge>
+                    </div>
+                    <div className="bg-white rounded-xl p-4">
+                      <p className="text-xs text-slate-600 mb-2">Risk Level</p>
+                      <p className="text-2xl font-bold text-slate-900 mb-2">
+                        {analysis.vix_data.riskLevel}
+                      </p>
+                      <p className="text-xs text-slate-600">
+                        Market volatility assessment
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-xl p-4">
+                      <p className="text-xs text-slate-600 mb-2">Data Source</p>
+                      <p className="text-sm font-semibold text-slate-900 mb-2">
+                        {analysis.vix_data.dataSource.replace(/_/g, ' ').toUpperCase()}
+                      </p>
+                      <p className="text-xs text-slate-600">
+                        Live market data
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="border-2 border-rose-200 shadow-xl bg-gradient-to-br from-rose-50 to-orange-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -287,12 +418,12 @@ export default function CashIntelligence() {
                     </p>
                   </div>
                   <div className="bg-white rounded-xl p-4 md:p-6">
-                    <p className="text-xs md:text-sm text-slate-600 mb-2">Missed Returns This Year</p>
+                    <p className="text-xs md:text-sm text-slate-600 mb-2">Missed Returns (Time-Adjusted)</p>
                     <p className="text-3xl md:text-4xl font-bold text-amber-600 mb-2 break-words">
                       ~${Math.round(analysis.missed_returns || 0).toLocaleString()}
                     </p>
                     <p className="text-xs md:text-sm text-slate-700">
-                      Opportunity cost of idle capital
+                      Opportunity cost for {idleCashMonths} months idle
                     </p>
                   </div>
                 </div>
@@ -308,13 +439,13 @@ export default function CashIntelligence() {
                               <div>
                                 <p className="font-bold text-slate-900">{asset.symbol}</p>
                                 <p className="text-sm text-slate-600">
-                                  Current Yield: {asset.current_yield.toFixed(2)}%
+                                  Current Yield: {asset.current_yield?.toFixed(2) || 0}%
                                 </p>
                               </div>
                               <div className="text-right">
                                 <p className="text-sm text-slate-600">Opportunity Cost</p>
                                 <p className="text-lg font-bold text-amber-600">
-                                  ${Math.round(asset.opportunity_cost).toLocaleString()}
+                                  ${Math.round(asset.opportunity_cost || 0).toLocaleString()}
                                 </p>
                               </div>
                             </div>
@@ -348,6 +479,11 @@ export default function CashIntelligence() {
                       <p className="text-3xl font-bold text-slate-900">
                         {Math.round(analysis.market_uncertainty_score || 0)}%
                       </p>
+                      {analysis.vix_data && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          Based on VIX: {analysis.vix_data.currentVIX}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="pt-4 border-t border-slate-200">
