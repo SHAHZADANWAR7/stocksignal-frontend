@@ -98,7 +98,7 @@ import BehavioralNudge from "@/components/trust/BehavioralNudge";
 import AnalysisChangeLog from "@/components/trust/AnalysisChangeLog";
 import SessionChangeSummary from "@/components/trust/SessionChangeSummary";
 import ConsistencyAdjustmentBadge from "@/components/trust/ConsistencyAdjustmentBadge";
-import { enforceConsistency, classifyRiskLevel, classifyConfidenceTier } from "@/components/utils/globalConsistency";
+import { enforceConsistency, classifyRiskLevel, classifyConfidenceTier } from "@/components/utils/validation/globalConsistency";
 import ConcentrationAlert from "@/components/analysis/ConcentrationAlert";
 import QualityVsRiskVisualization from "@/components/analysis/QualityVsRiskVisualization";
 import ExtremeBetaWarning from "@/components/analysis/ExtremeBetaWarning";
