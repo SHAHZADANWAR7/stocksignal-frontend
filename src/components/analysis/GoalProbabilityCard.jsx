@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Target, Info, TrendingUp, AlertTriangle } from "lucide-react";
 import {
   Tooltip,
@@ -10,7 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { monteCarloGoalProbability } from "@/components/utils/calculations/financialMath";
+import { monteCarloGoalProbability } from "@/components/utils/financialMath";
 
 /**
  * GOAL PROBABILITY TRANSPARENCY CARD
@@ -18,6 +19,9 @@ import { monteCarloGoalProbability } from "@/components/utils/calculations/finan
  * Shows probability RANGES with confidence intervals
  * Allows volatility assumption toggling
  * Mandatory disclaimer tooltip
+ * 
+ * ✅ ENHANCED: Now uses real VIX data for VIX-adjusted mode
+ * ✅ NO CHANGES NEEDED if vixData not provided (backward compatible)
  */
 
 export default function GoalProbabilityCard({ 
@@ -26,7 +30,8 @@ export default function GoalProbabilityCard({
   expectedReturn, 
   baseVolatility,
   goalAmount, 
-  months 
+  months,
+  vixData = null  // ✅ NEW: Optional VIX data from Analysis.jsx
 }) {
   const [volatilityMode, setVolatilityMode] = useState('historical');
 
@@ -36,8 +41,14 @@ export default function GoalProbabilityCard({
       case 'historical':
         return baseVolatility;
       case 'vix_adjusted':
-        // VIX-blended forward-looking volatility
-        // Assume current VIX ~15-20, adjust base volatility
+        // ✅ ENHANCED: Use real VIX if available
+        if (vixData && vixData.currentVIX) {
+          // Calculate ratio of current VIX to historical volatility
+          const vixRatio = vixData.currentVIX / baseVolatility;
+          // Blend: 70% historical + 30% VIX-implied
+          return baseVolatility * (0.7 + 0.3 * vixRatio);
+        }
+        // Fallback to hardcoded if no VIX data
         return baseVolatility * 1.15;
       case 'conservative':
         // Stress-adjusted conservative estimate
@@ -125,10 +136,18 @@ export default function GoalProbabilityCard({
                 <RadioGroupItem value="vix_adjusted" id="vix" />
                 <Label htmlFor="vix" className="flex-1 cursor-pointer">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">VIX-Adjusted ({(baseVolatility * 1.15).toFixed(1)}%)</span>
-                    <Badge variant="outline" className="text-xs bg-blue-50">Forward-looking</Badge>
+                    <span className="text-sm">
+                      VIX-Adjusted ({(baseVolatility * (vixData ? (0.7 + 0.3 * (vixData.currentVIX / baseVolatility)) : 1.15)).toFixed(1)}%)
+                    </span>
+                    <Badge variant="outline" className="text-xs bg-blue-50">
+                      {vixData ? 'Live VIX' : 'Estimated'}
+                    </Badge>
                   </div>
-                  <p className="text-xs text-slate-500">Current market implied volatility</p>
+                  <p className="text-xs text-slate-500">
+                    {vixData 
+                      ? `Current market VIX: ${vixData.currentVIX.toFixed(1)}%` 
+                      : 'Current market implied volatility'}
+                  </p>
                 </Label>
               </div>
               <div className="flex items-center space-x-2 p-2 rounded hover:bg-slate-50">
@@ -157,7 +176,7 @@ export default function GoalProbabilityCard({
             </p>
             <Badge className={`mt-2 bg-${color}-100 text-${color}-700`}>
               {volatilityMode === 'historical' && 'Historical Vol'}
-              {volatilityMode === 'vix_adjusted' && 'VIX-Adjusted Vol'}
+              {volatilityMode === 'vix_adjusted' && (vixData ? 'Live VIX-Adjusted' : 'VIX-Adjusted Vol')}
               {volatilityMode === 'conservative' && 'Conservative Vol'}
             </Badge>
           </div>
@@ -185,7 +204,9 @@ export default function GoalProbabilityCard({
                 Higher volatility = wider range of possible outcomes = lower probability of hitting specific target.
                 <br/><br/>
                 • <strong>Historical:</strong> Assumes past volatility continues<br/>
-                • <strong>VIX-Adjusted:</strong> Uses current market expectations (VIX ~{(baseVolatility * 0.15).toFixed(0)}% higher)<br/>
+                • <strong>VIX-Adjusted:</strong> {vixData 
+                  ? `Uses live VIX (${vixData.currentVIX.toFixed(1)}%) blended with historical` 
+                  : `Uses current market expectations (~${(baseVolatility * 0.15).toFixed(0)}% higher)`}<br/>
                 • <strong>Conservative:</strong> Stress-tests with elevated uncertainty (+35%)
                 <br/><br/>
                 Toggle between modes to understand sensitivity to assumptions.
