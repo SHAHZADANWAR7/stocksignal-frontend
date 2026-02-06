@@ -101,7 +101,6 @@ import SpeculativeContributionBadge from "@/components/analysis/SpeculativeContr
 import DataSourceLabel from "@/components/analysis/DataSourceLabel";
 import MarketCapTierLabel from "@/components/analysis/MarketCapTierLabel";
 import PortfolioQualityCard from "@/components/analysis/PortfolioQualityCard";
-import { BedrockRuntimeClient, InvokeModelCommand } from '@aws-sdk/client-bedrock-runtime';
 
 export default function Analysis() {
   const navigate = useNavigate();
@@ -431,7 +430,6 @@ export default function Analysis() {
                   
                   try {
                     // Bedrock LLM estimation (Priority 8)
-                    const bedrockClient = new BedrockRuntimeClient({ region: process.env.REACT_APP_AWS_REGION || 'us-east-1' });
                     
                     const betaPrompt = `Estimate the 5-year beta for ${stock.symbol} (${stock.name}) vs S&P 500 based on:
 - Sector: ${stock.sector || 'Unknown'}
@@ -444,22 +442,12 @@ export default function Analysis() {
 Using real historical S&P 500 returns, estimate beta. Respond ONLY with valid JSON:
 {"estimated_beta": number, "confidence": "low", "reasoning": "string"}`;
 
-                    const input = {
-                      modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
-                      contentType: 'application/json',
-                      accept: 'application/json',
-                      body: JSON.stringify({
-                        anthropic_version: 'bedrock-2023-05-31',
-                        max_tokens: 500,
-                        messages: [{ role: 'user', content: betaPrompt }],
-                        temperature: 0.3
-                      })
-                    };
-
-                    const command = new InvokeModelCommand(input);
-                    const bedrockResponse = await bedrockClient.send(command);
-                    const responseBody = JSON.parse(new TextDecoder().decode(bedrockResponse.body));
-                    const content = responseBody.content[0].text;
+                    // Use invokeLLM Lambda instead of direct Bedrock call
+                    const llmResponse = await callAwsFunction('invokeLLM', {
+                      prompt: betaPrompt,
+                      context: { max_tokens: 500, temperature: 0.3 }
+                    });
+                    const content = llmResponse.response || llmResponse.content || llmResponse;
                     const jsonMatch = content.match(/\{[\s\S]*\}/);
                     
                     if (jsonMatch) {
@@ -727,26 +715,13 @@ If analyzing similar companies (same sector), focus on:
           // AWS BEDROCK LLM INVOCATION (replaces base44.integrations.Core.InvokeLLM)
           let aiAnalysis;
           try {
-            const bedrockClient = new BedrockRuntimeClient({ 
-              region: process.env.REACT_APP_AWS_REGION || 'us-east-1' 
+            // Use invokeLLM Lambda instead of direct Bedrock call
+            const llmResponse = await callAwsFunction('invokeLLM', {
+              prompt: prompt,
+              context: { max_tokens: 1500, temperature: 0.6 }
             });
             
-            const input = {
-              modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
-              contentType: 'application/json',
-              accept: 'application/json',
-              body: JSON.stringify({
-                anthropic_version: 'bedrock-2023-05-31',
-                max_tokens: 1500,
-                messages: [{ role: 'user', content: prompt }],
-                temperature: 0.6
-              })
-            };
-
-            const command = new InvokeModelCommand(input);
-            const response = await bedrockClient.send(command);
-            const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-            const content = responseBody.content[0].text;
+            const content = llmResponse.response || llmResponse.content || llmResponse;
             
             // Parse JSON from response
             const jsonMatch = content.match(/\{[\s\S]*\}/);
