@@ -1,232 +1,152 @@
 /**
- * Global Consistency Engine
- * Ensures all portfolio calculations remain consistent across analysis sessions
+ * GLOBAL CONSISTENCY REGISTRY
  * 
- * Problem: Same portfolio can yield different results due to:
- * - Floating point arithmetic
- * - Market data updates mid-session
- * - Optimization algorithm randomness
- * 
- * Solution: Lock calculations within a session, store snapshots for reproducibility
+ * Single source of truth for risk labels, confidence tags, and volatility classifications
+ * Ensures no page displays conflicting signals
  */
 
-import { round } from "./financialMath";
+// ============================================================================
+// RISK LEVEL CLASSIFICATION (SYSTEM-WIDE)
+// ============================================================================
 
-/**
- * Create session snapshot for reproducibility
- * @param {Object} portfolioData - Complete portfolio calculation inputs
- * @returns {Object} Session snapshot with hash
- */
-export function createSessionSnapshot(portfolioData) {
-  const { companies, weights, expectedReturns, risks, correlations, timestamp } = portfolioData;
+export function classifyRiskLevel(volatility) {
+  if (volatility < 12) return { level: 'Low', color: 'emerald', badge: 'bg-emerald-100 text-emerald-700' };
+  if (volatility < 18) return { level: 'Moderate', color: 'blue', badge: 'bg-blue-100 text-blue-700' };
+  if (volatility < 25) return { level: 'Elevated', color: 'amber', badge: 'bg-amber-100 text-amber-700' };
+  return { level: 'High', color: 'rose', badge: 'bg-rose-100 text-rose-700' };
+}
+
+// ============================================================================
+// CONFIDENCE TIER CLASSIFICATION (SYSTEM-WIDE)
+// ============================================================================
+
+export function classifyConfidenceTier(confidence) {
+  const normalized = typeof confidence === 'string' ? confidence.toLowerCase() : '';
   
-  const snapshot = {
-    sessionId: generateSessionId(),
-    timestamp: timestamp || new Date().toISOString(),
-    companies: companies.map(c => ({
-      symbol: c.symbol,
-      name: c.name,
-      sector: c.sector,
-      beta: c.beta,
-      expected_return: c.expected_return,
-      risk: c.risk
-    })),
-    weights: weights.map(w => round(w, 6)),
-    expectedReturns: expectedReturns.map(r => round(r, 4)),
-    risks: risks.map(r => round(r, 4)),
-    correlations: correlations.map(row => row.map(c => round(c, 4))),
-    hash: null // Will be calculated
+  if (normalized === 'high' || confidence >= 0.8) {
+    return { tier: 'high', label: 'High Confidence', badge: 'bg-emerald-100 text-emerald-700' };
+  }
+  if (normalized === 'medium' || confidence >= 0.5) {
+    return { tier: 'medium', label: 'Medium Confidence', badge: 'bg-blue-100 text-blue-700' };
+  }
+  return { tier: 'low', label: 'Low Confidence', badge: 'bg-amber-100 text-amber-700' };
+}
+
+// ============================================================================
+// VOLATILITY REGIME CLASSIFICATION (SYSTEM-WIDE)
+// ============================================================================
+
+export function classifyVolatilityRegime(vix) {
+  if (vix < 15) return { regime: 'low', label: 'Low Volatility', badge: 'bg-emerald-100 text-emerald-700' };
+  if (vix < 20) return { regime: 'normal', label: 'Normal Volatility', badge: 'bg-blue-100 text-blue-700' };
+  if (vix < 30) return { regime: 'elevated', label: 'Elevated Volatility', badge: 'bg-amber-100 text-amber-700' };
+  return { regime: 'high', label: 'High Volatility', badge: 'bg-rose-100 text-rose-700' };
+}
+
+// ============================================================================
+// CRASH EXPOSURE CLASSIFICATION (SYSTEM-WIDE)
+// ============================================================================
+
+export function classifyCrashExposure(portfolioBeta, avgCorrelation, aggressiveBetaPct) {
+  const score = (portfolioBeta * 0.4) + (avgCorrelation * 0.3) + (aggressiveBetaPct / 100 * 0.3);
+  
+  if (score > 1.2) return { level: 'High', badge: 'bg-rose-100 text-rose-700', description: 'Portfolio highly sensitive to market crashes' };
+  if (score > 0.9) return { level: 'Moderate-High', badge: 'bg-amber-100 text-amber-700', description: 'Above-average crash sensitivity' };
+  if (score > 0.7) return { level: 'Moderate', badge: 'bg-blue-100 text-blue-700', description: 'Average crash sensitivity' };
+  return { level: 'Low', badge: 'bg-emerald-100 text-emerald-700', description: 'Below-average crash sensitivity' };
+}
+
+// ============================================================================
+// CONSISTENCY REGISTRY (CACHED)
+// ============================================================================
+
+let consistencyRegistry = {};
+
+export function registerMetric(key, value, source = 'calculated') {
+  consistencyRegistry[key] = {
+    value,
+    source,
+    timestamp: Date.now(),
+    page: window.location.pathname
   };
-  
-  snapshot.hash = hashSnapshot(snapshot);
-  
-  return snapshot;
 }
 
-/**
- * Generate unique session ID
- * @returns {string} Session ID
- */
-function generateSessionId() {
-  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+export function getRegisteredMetric(key) {
+  return consistencyRegistry[key];
 }
 
-/**
- * Hash snapshot for integrity checking
- * @param {Object} snapshot - Session snapshot
- * @returns {string} Hash string
- */
-function hashSnapshot(snapshot) {
-  const stringified = JSON.stringify({
-    companies: snapshot.companies,
-    weights: snapshot.weights,
-    expectedReturns: snapshot.expectedReturns,
-    risks: snapshot.risks,
-    correlations: snapshot.correlations
-  });
+export function clearRegistry() {
+  consistencyRegistry = {};
+}
+
+// ============================================================================
+// CONSISTENCY ENFORCEMENT
+// ============================================================================
+
+export function enforceConsistency(metricType, rawValue, context = {}) {
+  const registryKey = `${metricType}_${context.symbol || 'portfolio'}`;
+  const existing = getRegisteredMetric(registryKey);
   
-  // Simple hash function (in production, use crypto.subtle.digest)
-  let hash = 0;
-  for (let i = 0; i < stringified.length; i++) {
-    const char = stringified.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
+  let adjustedValue = rawValue;
+  let wasAdjusted = false;
+  let adjustmentReason = null;
+  
+  // If metric exists in registry and differs significantly, normalize
+  if (existing && Math.abs(existing.value - rawValue) > 0.01) {
+    adjustedValue = existing.value;
+    wasAdjusted = true;
+    adjustmentReason = `Normalized to match ${existing.source} (calculated on ${existing.page})`;
+  } else {
+    // Register this as the canonical value
+    registerMetric(registryKey, rawValue, context.source || 'current');
   }
   
-  return hash.toString(16);
+  return {
+    original: rawValue,
+    adjusted: adjustedValue,
+    wasAdjusted,
+    adjustmentReason
+  };
 }
 
-/**
- * Verify calculation consistency with snapshot
- * @param {Object} newResults - Newly calculated results
- * @param {Object} snapshot - Original session snapshot
- * @param {number} tolerance - Acceptable deviation (default 0.01%)
- * @returns {Object} Consistency report
- */
-export function verifyConsistency(newResults, snapshot, tolerance = 0.01) {
+// ============================================================================
+// CROSS-PAGE VALIDATION
+// ============================================================================
+
+export function validateCrossPageConsistency(metrics) {
   const issues = [];
   
-  // Check weights sum
-  const weightSum = newResults.weights.reduce((a, b) => a + b, 0);
-  if (Math.abs(weightSum - 1.0) > 0.001) {
+  // Check for conflicting risk labels
+  const riskClassifications = new Set();
+  if (metrics.portfolioRisk) {
+    riskClassifications.add(classifyRiskLevel(metrics.portfolioRisk).level);
+  }
+  
+  // Check for conflicting confidence tiers
+  const confidenceTiers = new Set();
+  if (metrics.confidence) {
+    confidenceTiers.add(classifyConfidenceTier(metrics.confidence).tier);
+  }
+  
+  // Flag inconsistencies
+  if (riskClassifications.size > 1) {
     issues.push({
-      type: 'weights',
-      message: `Weights sum to ${round(weightSum * 100, 2)}% instead of 100%`,
+      type: 'risk_label_conflict',
+      message: 'Risk level classified differently across pages',
       severity: 'high'
     });
   }
   
-  // Compare portfolio return
-  const expectedReturn = snapshot.weights.reduce((sum, w, i) => 
-    sum + w * snapshot.expectedReturns[i], 0
-  );
-  const returnDeviation = Math.abs(newResults.portfolioReturn - expectedReturn);
-  
-  if (returnDeviation > tolerance) {
+  if (confidenceTiers.size > 1) {
     issues.push({
-      type: 'return',
-      message: `Portfolio return deviates by ${round(returnDeviation, 2)}%`,
-      expected: round(expectedReturn, 2),
-      actual: round(newResults.portfolioReturn, 2),
-      severity: 'medium'
-    });
-  }
-  
-  // Compare portfolio risk
-  let portfolioVariance = 0;
-  const n = snapshot.weights.length;
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < n; j++) {
-      const cov = (snapshot.risks[i] / 100) * (snapshot.risks[j] / 100) * snapshot.correlations[i][j];
-      portfolioVariance += snapshot.weights[i] * snapshot.weights[j] * cov;
-    }
-  }
-  const expectedRisk = Math.sqrt(portfolioVariance) * 100;
-  const riskDeviation = Math.abs(newResults.portfolioRisk - expectedRisk);
-  
-  if (riskDeviation > tolerance) {
-    issues.push({
-      type: 'risk',
-      message: `Portfolio risk deviates by ${round(riskDeviation, 2)}%`,
-      expected: round(expectedRisk, 2),
-      actual: round(newResults.portfolioRisk, 2),
+      type: 'confidence_conflict',
+      message: 'Confidence tier inconsistent across pages',
       severity: 'medium'
     });
   }
   
   return {
-    consistent: issues.length === 0,
-    issues,
-    snapshot: snapshot.hash,
-    timestamp: new Date().toISOString()
-  };
-}
-
-/**
- * Lock market data for session
- * Prevents mid-session data updates from causing inconsistencies
- * 
- * @param {Array} companies - Company data with prices, betas, etc.
- * @returns {Array} Frozen company data
- */
-export function lockMarketData(companies) {
-  return companies.map(c => ({
-    ...c,
-    _locked: true,
-    _lockTimestamp: new Date().toISOString()
-  }));
-}
-
-/**
- * Detect drift from original portfolio
- * Useful when user makes incremental changes
- * 
- * @param {Object} originalSnapshot - Original session snapshot
- * @param {Object} currentPortfolio - Current portfolio state
- * @returns {Object} Drift analysis
- */
-export function detectDrift(originalSnapshot, currentPortfolio) {
-  const weightChanges = [];
-  
-  originalSnapshot.weights.forEach((origWeight, i) => {
-    const currentWeight = currentPortfolio.weights[i];
-    const change = currentWeight - origWeight;
-    const changePercent = (change / origWeight) * 100;
-    
-    if (Math.abs(changePercent) > 5) {
-      weightChanges.push({
-        assetIndex: i,
-        symbol: originalSnapshot.companies[i].symbol,
-        originalWeight: round(origWeight * 100, 1),
-        currentWeight: round(currentWeight * 100, 1),
-        change: round(change * 100, 1),
-        changePercent: round(changePercent, 1)
-      });
-    }
-  });
-  
-  return {
-    hasDrift: weightChanges.length > 0,
-    changes: weightChanges,
-    driftMagnitude: weightChanges.reduce((sum, c) => sum + Math.abs(c.change), 0)
-  };
-}
-
-/**
- * Apply consistency adjustments
- * Corrects minor inconsistencies while preserving user intent
- * 
- * @param {Object} portfolioData - Portfolio data to adjust
- * @returns {Object} Adjusted portfolio data
- */
-export function applyConsistencyAdjustments(portfolioData) {
-  const { weights, expectedReturns, risks, correlations } = portfolioData;
-  
-  // Normalize weights to sum to exactly 1.0
-  const weightSum = weights.reduce((a, b) => a + b, 0);
-  const normalizedWeights = weights.map(w => w / weightSum);
-  
-  // Recalculate portfolio metrics with normalized weights
-  const portfolioReturn = normalizedWeights.reduce((sum, w, i) => 
-    sum + w * expectedReturns[i], 0
-  );
-  
-  let portfolioVariance = 0;
-  const n = normalizedWeights.length;
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < n; j++) {
-      const cov = (risks[i] / 100) * (risks[j] / 100) * correlations[i][j];
-      portfolioVariance += normalizedWeights[i] * normalizedWeights[j] * cov;
-    }
-  }
-  const portfolioRisk = Math.sqrt(portfolioVariance) * 100;
-  
-  return {
-    ...portfolioData,
-    weights: normalizedWeights.map(w => round(w, 6)),
-    portfolioReturn: round(portfolioReturn, 2),
-    portfolioRisk: round(portfolioRisk, 2),
-    _adjusted: true,
-    _adjustmentTimestamp: new Date().toISOString()
+    isConsistent: issues.length === 0,
+    issues
   };
 }
