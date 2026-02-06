@@ -59,8 +59,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import TradeModal from "@/components/trading/TradeModal";
 import { useNavigate, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { optimizeOptimalPortfolio, optimizeMinimumVariance, optimizeMaximumReturn, calculateGoalProbability, calculateExpectedDrawdown, getCorrelationMatrix } from "@/components/utils/portfolioOptimization";
-import { futureValue as calculateFutureValue, timeToGoal as calculateTimeToGoal } from "@/components/utils/financialMath";
+import { optimizeOptimalPortfolio, optimizeMinimumVariance, optimizeMaximumReturn, calculateGoalProbability, calculateExpectedDrawdown, getCorrelationMatrix } from "@/components/utils/calculations/portfolioOptimization";
+import { futureValue as calculateFutureValue, timeToGoal as calculateTimeToGoal } from "@/components/utils/calculations/financialMath";
 import { calculateForwardLookingRisk } from "@/components/utils/calculations/forwardLookingRisk"; // ✅ NEW: VIX-adjusted risk
 import { 
   ScatterChart, 
@@ -1394,7 +1394,7 @@ If analyzing similar companies (same sector), focus on:
       // ═════════════════════════════════════════════════════════════════════════════
       // RUN PORTFOLIO OPTIMIZATION WITH ALLOCATION INTEGRITY VALIDATION
       // ═══════════════════════════════════════════════════════════════════════��═════
-      const { optimizeAllPortfolios } = await import("@/components/utils/portfolioOptimization");
+      const { optimizeAllPortfolios } = await import("@/components/utils/calculations/portfolioOptimization");
       
       let optimizationResults;
       try {
