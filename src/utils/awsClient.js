@@ -202,7 +202,7 @@ export const awsApi = {
   getAnalysis: async (analysisId) => { const response = await invokeProxy("getAnalysis", { analysisId }); return response?.Item || response; },
   getAnalysisById: async (id) => { const response = await invokeProxy("getAnalysisById", { id }); return response?.analysis || response?.Item || response; },
   saveAnalysis: async (data) => invokeProxy("saveAnalysis", data),
-  updateCompany: async (id, data) => invokeProxy("updateCompany", { id, data }),
+  updateCompany: async (symbol, updateData) => invokeProxy("updateCompany", { symbol, updateData }),
   executeTrade: (tradeData) => invokeProxy("executeTrade", tradeData),
   getPortfolio: async () => { const response = await invokeProxy("getPortfolio", {}); return response?.Item || response; },
   syncPortfolioData: () => invokeProxy("syncPortfolio", {}),
