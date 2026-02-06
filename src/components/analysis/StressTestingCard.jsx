@@ -30,7 +30,7 @@ import {
   estimateRecoveryTime,
   analyzeSectorVulnerability,
   calculateDiversificationBenefit
-} from "@/components/utils/stressTesting";
+} from "@/components/utils/calculations/stressTesting";
 import {
   BarChart,
   Bar,
