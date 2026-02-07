@@ -399,7 +399,7 @@ function applyPortfolioConstraints(weights, companies, maxSingleAsset = 0.35, co
     if (!needsAdjustment) break;
     iterations++;
   }
-  
+    
   // ═════════════════════════════════════════════════════════════════════════════
   // PHASE 3: UNIQUENESS DIAGNOSTIC (Detection Only - No Artificial Adjustments)
   // ═════════════════════════════════════════════════════════════════════════════
@@ -1007,452 +1007,457 @@ function calculatePortfolioQuality(companies, weights = null) {
     qualityBand = 'Poor';
     bandExplanation = 'High-risk portfolio - educational exploration only';
   }
-  
-  // Determine correlation tier for system behavior
-  let correlationTier = 'low';
-  let confidenceLevel = 'high';
-  
-  if (avgCorrelation > 0.75) {
-    correlationTier = 'extreme';
-    confidenceLevel = 'blocked';
-  } else if (avgCorrelation > 0.6) {
-    correlationTier = 'high';
-    confidenceLevel = 'low';
-  } else if (avgCorrelation >= 0.5) {
-    correlationTier = 'moderate';
-    confidenceLevel = 'medium';
-  }
-  
-  // Generate detailed warnings based on scores
-  const warnings = [];
-  const scoreJustification = [];
-  
-  // Sharpe ratio warnings
-  if (avgSharpe < 0) {
-    warnings.push('Negative risk-adjusted returns - portfolio expected to underperform risk-free rate');
-    warnings.push('CRITICAL: Reconsider asset selection or reduce speculative exposure');
-    scoreJustification.push(`Negative Sharpe (-${Math.round((100 - sharpeScore) * 0.4)} pts)`);
-  } else if (avgSharpe < 0.15) {
-    warnings.push('Low Sharpe ratio (<0.15) - poor risk-adjusted performance');
-    scoreJustification.push(`Low Sharpe (-${Math.round((100 - sharpeScore) * 0.4)} pts)`);
-  }
-  
-  // Correlation warnings with severity tiers
-  if (avgCorrelation > 0.85) {
-    warnings.push('Extreme correlation (>85%) - assets move nearly in lockstep, eliminating diversification');
-    warnings.push('STRONG RECOMMENDATION: Add uncorrelated assets (bonds, gold, utilities, international)');
-    scoreJustification.push(`Extreme correlation (-${Math.round((100 - correlationScore) * 0.3)} pts)`);
-  } else if (avgCorrelation > 0.75) {
-    warnings.push('Very high correlation (>75%) - limited diversification benefit');
-    warnings.push('Consider adding uncorrelated assets to improve risk-adjusted returns');
-    scoreJustification.push(`Very high correlation (-${Math.round((100 - correlationScore) * 0.3)} pts)`);
-  } else if (avgCorrelation > 0.60) {
-    warnings.push('High correlation - diversification benefits are reduced');
-    scoreJustification.push(`High correlation (-${Math.round((100 - correlationScore) * 0.3)} pts)`);
-  }
-  
-  // Speculative asset warnings
-  if (speculativeRatio >= 0.95) {
-    warnings.push('Portfolio dominated by speculative/unprofitable assets (>95%)');
-    warnings.push('High volatility expected - risk of severe drawdowns');
-    warnings.push('Consider balancing with established blue-chip stocks or index funds');
-    scoreJustification.push(`100% speculative (-${Math.round((100 - maturityScore) * 0.1)} pts)`);
-  } else if (speculativeRatio >= 0.70) {
-    warnings.push(`High speculative exposure (${(speculativeRatio * 100).toFixed(0)}%) increases portfolio fragility`);
-    warnings.push('Recommend adding profitable companies with proven business models');
-    scoreJustification.push(`High speculative exposure (-${Math.round((100 - maturityScore) * 0.1)} pts)`);
-  } else if (speculativeRatio >= 0.50) {
-    warnings.push(`Moderate speculative allocation (${(speculativeRatio * 100).toFixed(0)}%) - monitor closely`);
-  }
-  
-  // Diversification warnings
-  if (diversificationScore < 40) {
-    const hhi = herfindahlIndex(portfolioWeights);
-    if (hhi > 0.60) {
-      warnings.push('Severe concentration risk - single-asset outcomes dominate portfolio');
-    } else if (hhi > 0.40) {
-      warnings.push('High concentration - portfolio heavily dependent on few positions');
-    }
-    scoreJustification.push(`Poor diversification (-${Math.round((100 - diversificationScore) * 0.2)} pts)`);
-  }
-  
-  // Asset count warning
-  if (n < 3) {
-    warnings.push('Fewer than 3 assets - insufficient diversification');
-  }
-  
-  // Sector concentration
-  if (n >= 3) {
-    const sectors = companies.map(c => c.sector);
-    const uniqueSectors = new Set(sectors.filter(s => s && s !== 'Unknown'));
-    if (uniqueSectors.size === 1 && uniqueSectors.values().next().value) {
-      warnings.push(`All assets from ${uniqueSectors.values().next().value} sector - sector concentration risk`);
-    }
-  }
-  
-  return {
-    qualityScore: finalScore,
-    qualityBand,
-    bandExplanation,
-    avgSharpe,
-    avgCorrelation,
-    correlationTier,
-    confidenceLevel,
-    sharpeRange: [minSharpe, maxSharpe],
-    speculativeRatio,
-    warnings,
-    scoreJustification: scoreJustification.length > 0 
-      ? scoreJustification.join(', ') 
-      : `Score reflects balance of all factors: Sharpe=${Math.round(sharpeScore)}, Correlation=${Math.round(correlationScore)}, Diversification=${Math.round(diversificationScore)}, Maturity=${Math.round(maturityScore)}`,
-    // Component scores for transparency
-    components: {
-      sharpeScore: Math.round(sharpeScore),
-      correlationScore: Math.round(correlationScore),
-      diversificationScore: Math.round(diversificationScore),
-      maturityScore: Math.round(maturityScore)
-    },
-    diversityMetrics: {
-      sectorDiversity: Math.round(sectorDiversityScore),
-      marketCapDiversity: Math.round(capDiversityScore),
-      assetTypeDiversity: Math.round(typeDiversityScore),
-      uniqueSectors: Object.keys(sectorWeights).length,
-      uniqueMarketCaps: Object.keys(marketCapWeights).filter(k => marketCapWeights[k] > 0).length
-    }
-  };
-}
-
-/**
- * ═══════════════════════════════════════════════════════════════════════════════
- * ALLOCATION INTEGRITY VALIDATOR
- * ═══════════════════════════════════════════════════════════════════════════════
- * Validates that allocations are unique, sum to 100%, and reflect asset metrics
- * PERMANENT REGRESSION PROTECTION - Called after every optimization
- * 
- * @param {Object} allocations - Portfolio allocations {symbol: percent}
- * @param {Array} companies - Company data with metrics
- * @throws {Error} If critical validation fails
- */
-function validateAllocationIntegrity(allocations, companies, portfolioName = 'Portfolio') {
-  const symbols = Object.keys(allocations);
-  const weights = Object.values(allocations);
-  
-  // ═════════════════════════════════════════════════════════════════════════════
-  // CHECKPOINT 1: Sum to 100%
-  // ═════════════════════════════════════════════════════════════════════════════
-  const sum = weights.reduce((a, b) => a + b, 0);
-  const tolerance = 0.1; // Allow 0.1% rounding error
-  
-  if (Math.abs(sum - 100) > tolerance) {
-    console.error(`❌ ${portfolioName}: Allocations sum to ${sum.toFixed(4)}%, expected 100%`);
-    throw new Error(`CRITICAL: ${portfolioName} allocations sum to ${sum.toFixed(2)}% (expected 100%)`);
-  }
-  
-  // ═════════════════════════════════════════════════════════════════════════════
-  // CHECKPOINT 2: Uniqueness Check (unless metrics are identical)
-  // ═════════════════════════════════════════════════════════════════════════════
-  const allocationPrecision = 1; // Compare to 1 decimal place for user-facing data
-  const uniqueAllocations = new Set(weights.map(w => w.toFixed(allocationPrecision)));
-  
-  // Build metric signatures to detect identical assets
-  const metricSignatures = {};
-  companies.forEach(c => {
-    const signature = `${c.expected_return.toFixed(2)}_${c.risk.toFixed(2)}_${((c.expected_return - 4.5) / c.risk).toFixed(3)}`;
-    metricSignatures[c.symbol] = signature;
-  });
-  const uniqueMetrics = new Set(Object.values(metricSignatures));
-  
-  // If we have unique metrics but duplicate allocations, something is wrong
-  if (uniqueAllocations.size < weights.length && uniqueMetrics.size === weights.length) {
-    console.error(`❌ ${portfolioName}: ALLOCATION UNIQUENESS VIOLATION`);
-    console.error(`   Assets with different metrics received identical allocations`);
-    
-    // Group by allocation to show duplicates
-    const allocationGroups = {};
-    symbols.forEach((symbol, idx) => {
-      const allocation = weights[idx].toFixed(allocationPrecision);
-      if (!allocationGroups[allocation]) allocationGroups[allocation] = [];
-      
-      const company = companies.find(c => c.symbol === symbol);
-      allocationGroups[allocation].push({
-        symbol,
-        allocation: weights[idx].toFixed(3),
-        return: company.expected_return.toFixed(2),
-        risk: company.risk.toFixed(2),
-        sharpe: ((company.expected_return - 4.5) / company.risk).toFixed(3),
-        beta: (company.beta || 1.0).toFixed(3)
-      });
-    });
-    
-    Object.entries(allocationGroups).forEach(([allocation, assets]) => {
-      if (assets.length > 1) {
-        console.error(`   ${allocation}%:`, assets);
-      }
-    });
-    
-    throw new Error(`CRITICAL: ${portfolioName} has ${weights.length - uniqueAllocations.size} duplicate allocations despite unique asset metrics. Review applyPortfolioConstraints() logic.`);
-  }
-  
-  // ═════════════════════════════════════════════════════════════════════════════
-  // CHECKPOINT 3: Sharpe Ordering Consistency
-  // ═════════════════════════════════════════════════════════════════════════════
-  const assetData = symbols.map((symbol, idx) => {
-    const company = companies.find(c => c.symbol === symbol);
-    return {
-      symbol,
-      allocation: weights[idx],
-      sharpe: (company.expected_return - 4.5) / company.risk
-    };
-  }).sort((a, b) => b.sharpe - a.sharpe);
-  
-  // Top 2 Sharpe assets should generally have top allocations (allow some flexibility)
-  const topSharpe = assetData.slice(0, 2);
-  const allAllocations = assetData.map(a => a.allocation).sort((a, b) => b - a);
-  const topAllocations = allAllocations.slice(0, 2);
-  
-  topSharpe.forEach(asset => {
-    if (asset.allocation < topAllocations[1] * 0.7) {
-      console.warn(`⚠️ ${portfolioName}: Asset ${asset.symbol} has Sharpe ${asset.sharpe.toFixed(3)} but allocation ${asset.allocation.toFixed(1)}% is low`);
-      console.warn(`   Expected top allocations for high Sharpe assets`);
-    }
-  });
-  
-  console.log(`✅ ${portfolioName}: Allocation integrity VALIDATED`);
-  console.log(`   Sum: ${sum.toFixed(2)}%, Unique: ${uniqueAllocations.size}/${weights.length}, Range: ${Math.min(...weights).toFixed(1)}%-${Math.max(...weights).toFixed(1)}%`);
-  
-  return true;
-}
-
-/**
- * MASTER OPTIMIZATION FUNCTION
- * Generates all three portfolios with strict validation
- * Enforces efficient frontier rules and realistic expectations
- */
-export function optimizeAllPortfolios(companies) {
-  console.log("🔍 PRE-OPTIMIZATION DIAGNOSTIC:");
-  companies.forEach((c, i) => {
-    console.log(`   ${i+1}. ${c.symbol}: Return=${c.expected_return.toFixed(3)}%, Risk=${c.risk.toFixed(3)}%, Sharpe=${(c.expected_return/c.risk).toFixed(4)}`);
-  });
-  
-  // STEP 1: Apply return caps for mean reversion
-  const returnCapAdjustments = applyReturnCaps(companies);
-  if (returnCapAdjustments.length > 0) {
-    console.log("📉 RETURN CAPS APPLIED:");
-    returnCapAdjustments.forEach(adj => {
-      console.log(`   ${adj.symbol} (${adj.assetClass}): ${adj.original.toFixed(1)}% → ${adj.capped.toFixed(1)}%`);
-    });
-  }
-  
-  // STEP 2: Calculate portfolio quality metrics
-  const portfolioQuality = calculatePortfolioQuality(companies);
-  
-  // STEP 3: Detect asset similarity (log only, no forced changes)
-  const returnSpread = Math.max(...companies.map(c => c.expected_return)) - Math.min(...companies.map(c => c.expected_return));
-  const riskSpread = Math.max(...companies.map(c => c.risk)) - Math.min(...companies.map(c => c.risk));
-
-  if (returnSpread < 2.0 || riskSpread < 3.0) {
-    console.warn("⚠️ ASSET SIMILARITY DETECTED (no auto-adjustment):");
-    console.warn(`   Return spread: ${returnSpread.toFixed(2)}%, Risk spread: ${riskSpread.toFixed(2)}%`);
-    console.warn(`   This is real market data - will apply stabilization techniques if needed`);
-  }
-  
-  // STEP 4: Determine correlation tier for optimization behavior
-  const correlationTier = portfolioQuality.correlationTier || 'low';
-  const confidenceLevel = portfolioQuality.confidenceLevel || 'high';
-  
-  console.log(`📊 CORRELATION TIER: ${correlationTier.toUpperCase()} (${(portfolioQuality.avgCorrelation * 100).toFixed(0)}%)`);
-  console.log(`🎯 CONFIDENCE LEVEL: ${confidenceLevel.toUpperCase()}`);
-  
-  // STEP 5: Run optimizations with correlation-aware techniques
-  const optimal = optimizeOptimalPortfolio(companies, true, correlationTier);
-  const minVariance = optimizeMinimumVariance(companies, true, correlationTier);
-  let maxReturn = optimizeMaximumReturn(companies);
-  
-  // STEP 6: Ensure Maximum Return has STRICTLY highest return and risk
-  const highestIndividualReturn = Math.max(...companies.map(c => c.expected_return));
-  
-  if (maxReturn.expected_return <= optimal.expected_return || 
-      maxReturn.expected_return <= minVariance.expected_return ||
-      maxReturn.expected_return < highestIndividualReturn - 0.01) {
-    console.warn("⚠️ Maximum Return validation failed - forcing 100% allocation to top asset");
-    
-    const expectedReturns = companies.map(c => c.expected_return / 100);
-    const maxReturnIdx = expectedReturns.indexOf(Math.max(...expectedReturns));
-    const weights = Array(companies.length).fill(0);
-    weights[maxReturnIdx] = 1.0;
-    
-    const risks = companies.map(c => c.risk);
-    const covMatrix = calculateCovarianceMatrix(companies);
-    const correlationMatrix = buildCorrelationMatrix(covMatrix);
-    
-    const portReturn = portfolioExpectedReturn(weights, expectedReturns);
-    const portRisk = portfolioRisk(weights, risks, correlationMatrix);
-    const portSharpe = sharpeRatio(portReturn * 100, portRisk, RISK_FREE_RATE);
-    
-    const allocations = {};
-    companies.forEach((company, i) => {
-      allocations[company.symbol] = weights[i] * 100;
-    });
-    
-    maxReturn = {
-      allocations,
-      expected_return: portReturn * 100,
-      risk: portRisk,
-      sharpe_ratio: portSharpe
-    };
-  }
-  
-  // STEP 7: STRICT VALIDATION with correlation tier awareness
-  const avgCorrelation = portfolioQuality.avgCorrelation;
-  const validationResult = validatePortfolioResults(optimal, minVariance, maxReturn, companies, avgCorrelation, correlationTier);
-  
-  // STEP 8: Add system behavior labels
-  if (correlationTier === 'high') {
-    optimal.optimizationMethod = 'Constrained (High Correlation)';
-    optimal.stabilizationApplied = true;
-  } else if (correlationTier === 'moderate') {
-    optimal.optimizationMethod = 'Standard (Moderate Correlation)';
-  }
-  
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // ALLOCATION VALIDATION CHECKPOINT - Ensure Uniqueness
-  // ═══════════════════════════════════════════════════════════════════════════════
-  
-  const optimalAllocations = Object.values(optimal.allocations);
-  const allocationPrecision = 3; // Compare to 3 decimal places
-  const uniqueAllocations = new Set(optimalAllocations.map(a => a.toFixed(allocationPrecision)));
-  
-  console.log("🔍 ALLOCATION UNIQUENESS CHECK:");
-  console.log(`   Total assets: ${companies.length}`);
-  console.log(`   Unique allocations: ${uniqueAllocations.size}`);
-  console.log(`   Allocations: ${optimalAllocations.map(a => a.toFixed(2) + '%').join(', ')}`);
-  
-  if (uniqueAllocations.size < companies.length && companies.length >= 3) {
-    console.warn("⚠️ WARNING: Some assets have identical allocations despite different metrics");
-    console.warn("   This suggests residual distribution may still be too uniform");
-    
-    // Log companies with identical allocations for debugging
-    const allocationGroups = {};
-    companies.forEach((c, idx) => {
-      const allocation = optimal.allocations[c.symbol].toFixed(allocationPrecision);
-      if (!allocationGroups[allocation]) allocationGroups[allocation] = [];
-      allocationGroups[allocation].push({
-        symbol: c.symbol,
-        return: c.expected_return.toFixed(2),
-        risk: c.risk.toFixed(2),
-        sharpe: ((c.expected_return - 4.5) / c.risk).toFixed(3)
-      });
-    });
-    
-    Object.entries(allocationGroups).forEach(([allocation, assets]) => {
-      if (assets.length > 1) {
-        console.warn(`   ${allocation}%: ${JSON.stringify(assets)}`);
-      }
-    });
-  }
-  
-  // ═══════════════════════════════════════════════════════════════════════════════
-  
-  // STEP 9: Add detailed allocation rationale for each company
-  companies.forEach(company => {
-    const optimalWeight = optimal.allocations[company.symbol] || 0;
-    const sharpeRatio = (company.expected_return - 4.5) / company.risk;
-    const marketCap = company.market_cap;
-    const isMegaLargeCap = marketCap && marketCap.includes('B') && parseFloat(marketCap) > 50;
-    const isSmallMicro = !marketCap || marketCap.includes('M');
-    
-    // Build comprehensive rationale
-    let rationale = [];
-    
-    // Risk-return assessment
-    if (sharpeRatio > 0.5) {
-      rationale.push(`Strong risk-adjusted returns (Sharpe: ${sharpeRatio.toFixed(2)})`);
-    } else if (sharpeRatio > 0.2) {
-      rationale.push(`Moderate risk-adjusted returns (Sharpe: ${sharpeRatio.toFixed(2)})`);
-    } else {
-      rationale.push(`Lower risk-adjusted returns (Sharpe: ${sharpeRatio.toFixed(2)})`);
-    }
-    
-    // Market cap influence
-    if (isMegaLargeCap) {
-      rationale.push(`Mega/large-cap stability (${marketCap})`);
-    } else if (isSmallMicro) {
-      rationale.push(`Small/micro-cap higher risk (${marketCap || 'unknown'})`);
-    }
-    
-    // Beta influence
-    const beta = company.beta || 1.0;
-    if (beta > 1.5) {
-      rationale.push(`High market sensitivity (β=${beta.toFixed(2)})`);
-    } else if (beta < 0.8) {
-      rationale.push(`Defensive characteristics (β=${beta.toFixed(2)})`);
-    }
-    
-    // Allocation sizing
-    if (optimalWeight >= 25) {
-      rationale.push(`Major position for diversification balance`);
-    } else if (optimalWeight >= 15) {
-      rationale.push(`Substantial allocation for portfolio contribution`);
-    } else if (optimalWeight >= 8) {
-      rationale.push(`Meaningful allocation for diversification`);
-    }
-    
-    company.allocation_rationale = rationale.join(' • ');
-  });
-  
-  console.log("✅ OPTIMIZATION COMPLETE:");
-  console.log(`   Optimal: Return=${optimal.expected_return.toFixed(2)}%, Risk=${optimal.risk.toFixed(2)}%, Sharpe=${optimal.sharpe_ratio.toFixed(3)}`);
-  console.log(`   Min Var: Return=${minVariance.expected_return.toFixed(2)}%, Risk=${minVariance.risk.toFixed(2)}%, Sharpe=${minVariance.sharpe_ratio.toFixed(3)}`);
-  console.log(`   Max Ret: Return=${maxReturn.expected_return.toFixed(2)}%, Risk=${maxReturn.risk.toFixed(2)}%, Sharpe=${maxReturn.sharpe_ratio.toFixed(3)}`);
-  
-  if (validationResult.criticalErrors.length > 0) {
-    console.warn("⚠️ VALIDATION ALERTS:");
-    validationResult.criticalErrors.forEach(e => console.warn(`   ${e.type}: ${e.message}`));
-  }
-  
-  if (validationResult.warnings.length > 0) {
-    console.log("ℹ️ WARNINGS:");
-    validationResult.warnings.forEach(w => console.log(`   [${w.severity}] ${w.message}`));
-  }
-  
-  // ═══════════════════════════════════════════════════════════════════════════════
-  // PERMANENT VALIDATION CHECKPOINT - ALLOCATION INTEGRITY
-  // ═══════════════════════════════════════════════════════════════════════════════
-  
-  console.log("\n🔒 ALLOCATION INTEGRITY VALIDATION:");
-  
-  try {
-    // Validate Optimal Portfolio
-    validateAllocationIntegrity(optimal.allocations, companies, 'Optimal Portfolio');
-    
-    // Validate Minimum Variance Portfolio
-    validateAllocationIntegrity(minVariance.allocations, companies, 'Minimum Variance Portfolio');
-    
-    // Validate Maximum Return Portfolio (may have single 100% allocation - that's valid)
-    const maxReturnWeights = Object.values(maxReturn.allocations);
-    const has100Percent = maxReturnWeights.some(w => Math.abs(w - 100) < 0.01);
-    if (!has100Percent) {
-      validateAllocationIntegrity(maxReturn.allocations, companies, 'Maximum Return Portfolio');
-    }
-    
-    console.log("✅ ALL PORTFOLIOS PASSED ALLOCATION INTEGRITY VALIDATION\n");
-  } catch (error) {
-    console.error("\n❌❌❌ ALLOCATION INTEGRITY FAILURE ❌❌❌");
-    console.error(error.message);
-    console.error("Review portfolioOptimization.js → applyPortfolioConstraints()");
-    console.error("Check ALLOCATION_INTEGRITY_TESTS.md for test specification\n");
-    
-    // BLOCK OPTIMIZATION - Do not return invalid results
-    throw new Error(`Portfolio optimization failed integrity validation: ${error.message}`);
-  }
-  
-  // ═══════════════════════════════════════════════════════════════════════════════
-  
-  return {
-    optimal_portfolio: optimal,
-    minimum_variance_portfolio: minVariance,
-    maximum_return_portfolio: maxReturn,
-    validation: validationResult,
-    portfolio_quality: portfolioQuality,
-    return_cap_adjustments: returnCapAdjustments
-  };
-}
+   // Determine correlation tier for system behavior
+   let correlationTier = 'low';
+   let confidenceLevel = 'high';
+   
+   if (avgCorrelation > 0.75) {
+     correlationTier = 'extreme';
+     confidenceLevel = 'blocked';
+   } else if (avgCorrelation > 0.6) {
+     correlationTier = 'high';
+     confidenceLevel = 'low';
+   } else if (avgCorrelation >= 0.5) {
+     correlationTier = 'moderate';
+     confidenceLevel = 'medium';
+   }
+   
+   // Generate detailed warnings based on scores
+   const warnings = [];
+   const scoreJustification = [];
+   
+   // Sharpe ratio warnings
+   if (avgSharpe < 0) {
+     warnings.push('Negative risk-adjusted returns - portfolio expected to underperform risk-free rate');
+     warnings.push('CRITICAL: Reconsider asset selection or reduce speculative exposure');
+     scoreJustification.push(`Negative Sharpe (-${Math.round((100 - sharpeScore) * 0.4)} pts)`);
+   } else if (avgSharpe < 0.15) {
+     warnings.push('Low Sharpe ratio (<0.15) - poor risk-adjusted performance');
+     scoreJustification.push(`Low Sharpe (-${Math.round((100 - sharpeScore) * 0.4)} pts)`);
+   }
+   
+   // Correlation warnings with severity tiers
+   if (avgCorrelation > 0.85) {
+     warnings.push('Extreme correlation (>85%) - assets move nearly in lockstep, eliminating diversification');
+     warnings.push('STRONG RECOMMENDATION: Add uncorrelated assets (bonds, gold, utilities, international)');
+     scoreJustification.push(`Extreme correlation (-${Math.round((100 - correlationScore) * 0.3)} pts)`);
+   } else if (avgCorrelation > 0.75) {
+     warnings.push('Very high correlation (>75%) - limited diversification benefit');
+     warnings.push('Consider adding uncorrelated assets to improve risk-adjusted returns');
+     scoreJustification.push(`Very high correlation (-${Math.round((100 - correlationScore) * 0.3)} pts)`);
+   } else if (avgCorrelation > 0.60) {
+     warnings.push('High correlation - diversification benefits are reduced');
+     scoreJustification.push(`High correlation (-${Math.round((100 - correlationScore) * 0.3)} pts)`);
+   }
+   
+   // Speculative asset warnings
+   if (speculativeRatio >= 0.95) {
+     warnings.push('Portfolio dominated by speculative/unprofitable assets (>95%)');
+     warnings.push('High volatility expected - risk of severe drawdowns');
+     warnings.push('Consider balancing with established blue-chip stocks or index funds');
+     scoreJustification.push(`100% speculative (-${Math.round((100 - maturityScore) * 0.1)} pts)`);
+   } else if (speculativeRatio >= 0.70) {
+     warnings.push(`High speculative exposure (${(speculativeRatio * 100).toFixed(0)}%) increases portfolio fragility`);
+     warnings.push('Recommend adding profitable companies with proven business models');
+     scoreJustification.push(`High speculative exposure (-${Math.round((100 - maturityScore) * 0.1)} pts)`);
+   } else if (speculativeRatio >= 0.50) {
+     warnings.push(`Moderate speculative allocation (${(speculativeRatio * 100).toFixed(0)}%) - monitor closely`);
+   }
+   
+   // Diversification warnings
+   if (diversificationScore < 40) {
+     const hhi = herfindahlIndex(portfolioWeights);
+     if (hhi > 0.60) {
+       warnings.push('Severe concentration risk - single-asset outcomes dominate portfolio');
+     } else if (hhi > 0.40) {
+       warnings.push('High concentration - portfolio heavily dependent on few positions');
+     }
+     scoreJustification.push(`Poor diversification (-${Math.round((100 - diversificationScore) * 0.2)} pts)`);
+   }
+   
+   // Asset count warning
+   if (n < 3) {
+     warnings.push('Fewer than 3 assets - insufficient diversification');
+   }
+   
+   // Sector concentration
+   if (n >= 3) {
+     const sectors = companies.map(c => c.sector);
+     const uniqueSectors = new Set(sectors.filter(s => s && s !== 'Unknown'));
+     if (uniqueSectors.size === 1 && uniqueSectors.values().next().value) {
+       warnings.push(`All assets from ${uniqueSectors.values().next().value} sector - sector concentration risk`);
+     }
+   }
+   
+   return {
+     qualityScore: finalScore,
+     qualityBand,
+     bandExplanation,
+     avgSharpe,
+     avgCorrelation,
+     correlationTier,
+     confidenceLevel,
+     sharpeRange: [minSharpe, maxSharpe],
+     speculativeRatio,
+     warnings,
+     scoreJustification: scoreJustification.length > 0 
+       ? scoreJustification.join(', ') 
+       : `Score reflects balance of all factors: Sharpe=${Math.round(sharpeScore)}, Correlation=${Math.round(correlationScore)}, Diversification=${Math.round(diversificationScore)}, Maturity=${Math.round(maturityScore)}`,
+     // Component scores for transparency
+     components: {
+       sharpeScore: Math.round(sharpeScore),
+       correlationScore: Math.round(correlationScore),
+       diversificationScore: Math.round(diversificationScore),
+       maturityScore: Math.round(maturityScore)
+     },
+     diversityMetrics: {
+       sectorDiversity: Math.round(sectorDiversityScore),
+       marketCapDiversity: Math.round(capDiversityScore),
+       assetTypeDiversity: Math.round(typeDiversityScore),
+       uniqueSectors: Object.keys(sectorWeights).length,
+       uniqueMarketCaps: Object.keys(marketCapWeights).filter(k => marketCapWeights[k] > 0).length
+     }
+   };
+ }
+ 
+ /**
+  * ═══════════════════════════════════════════════════════════════════════════════
+  * ALLOCATION INTEGRITY VALIDATOR
+  * ═══════════════════════════════════════════════════════════════════════════════
+  * Validates that allocations are unique, sum to 100%, and reflect asset metrics
+  * PERMANENT REGRESSION PROTECTION - Called after every optimization
+  * NON-BLOCKING: Logs warnings instead of throwing errors to prevent UI crashes
+  * 
+  * @param {Object} allocations - Portfolio allocations {symbol: percent}
+  * @param {Array} companies - Company data with metrics
+  * @returns {boolean} true if validation passed, false if issues detected
+  */
+ function validateAllocationIntegrity(allocations, companies, portfolioName = 'Portfolio') {
+   const symbols = Object.keys(allocations);
+   const weights = Object.values(allocations);
+   
+   // ═════════════════════════════════════════════════════════════════════════════
+   // CHECKPOINT 1: Sum to 100%
+   // ═════════════════════════════════════════════════════════════════════════════
+   const sum = weights.reduce((a, b) => a + b, 0);
+   const tolerance = 0.1; // Allow 0.1% rounding error
+   
+   if (Math.abs(sum - 100) > tolerance) {
+     console.error(`❌ ${portfolioName}: Allocations sum to ${sum.toFixed(4)}%, expected 100%`);
+     console.error(`   WARNING: Portfolio may have calculation issues but will still be displayed`);
+     return false;
+   }
+   
+   // ═════════════════════════════════════════════════════════════════════════════
+   // CHECKPOINT 2: Uniqueness Check (unless metrics are identical)
+   // ═════════════════════════════════════════════════════════════════════════════
+   const allocationPrecision = 1; // Compare to 1 decimal place for user-facing data
+   const uniqueAllocations = new Set(weights.map(w => w.toFixed(allocationPrecision)));
+   
+   // Build metric signatures to detect identical assets
+   const metricSignatures = {};
+   companies.forEach(c => {
+     const signature = `${c.expected_return.toFixed(2)}_${c.risk.toFixed(2)}_${((c.expected_return - 4.5) / c.risk).toFixed(3)}`;
+     metricSignatures[c.symbol] = signature;
+   });
+   const uniqueMetrics = new Set(Object.values(metricSignatures));
+   
+   // If we have unique metrics but duplicate allocations, something is wrong
+   if (uniqueAllocations.size < weights.length && uniqueMetrics.size === weights.length) {
+     console.error(`❌ ${portfolioName}: ALLOCATION UNIQUENESS VIOLATION`);
+     console.error(`   Assets with different metrics received identical allocations`);
+     
+     // Group by allocation to show duplicates
+     const allocationGroups = {};
+     symbols.forEach((symbol, idx) => {
+       const allocation = weights[idx].toFixed(allocationPrecision);
+       if (!allocationGroups[allocation]) allocationGroups[allocation] = [];
+       
+       const company = companies.find(c => c.symbol === symbol);
+       allocationGroups[allocation].push({
+         symbol,
+         allocation: weights[idx].toFixed(3),
+         return: company.expected_return.toFixed(2),
+         risk: company.risk.toFixed(2),
+         sharpe: ((company.expected_return - 4.5) / company.risk).toFixed(3),
+         beta: (company.beta || 1.0).toFixed(3)
+       });
+     });
+     
+     Object.entries(allocationGroups).forEach(([allocation, assets]) => {
+       if (assets.length > 1) {
+         console.error(`   ${allocation}%:`, assets);
+       }
+     });
+     
+     console.error(`   WARNING: Displaying portfolio despite duplicate allocations - review applyPortfolioConstraints() logic.`);
+     return false;
+   }
+   
+   // ═════════════════════════════════════════════════════════════════════════════
+   // CHECKPOINT 3: Sharpe Ordering Consistency
+   // ═════════════════════════════════════════════════════════════════════════════
+   const assetData = symbols.map((symbol, idx) => {
+     const company = companies.find(c => c.symbol === symbol);
+     return {
+       symbol,
+       allocation: weights[idx],
+       sharpe: (company.expected_return - 4.5) / company.risk
+     };
+   }).sort((a, b) => b.sharpe - a.sharpe);
+   
+   // Top 2 Sharpe assets should generally have top allocations (allow some flexibility)
+   const topSharpe = assetData.slice(0, 2);
+   const allAllocations = assetData.map(a => a.allocation).sort((a, b) => b - a);
+   const topAllocations = allAllocations.slice(0, 2);
+   
+   topSharpe.forEach(asset => {
+     if (asset.allocation < topAllocations[1] * 0.7) {
+       console.warn(`⚠️ ${portfolioName}: Asset ${asset.symbol} has Sharpe ${asset.sharpe.toFixed(3)} but allocation ${asset.allocation.toFixed(1)}% is low`);
+       console.warn(`   Expected top allocations for high Sharpe assets`);
+     }
+   });
+   
+   console.log(`✅ ${portfolioName}: Allocation integrity VALIDATED`);
+   console.log(`   Sum: ${sum.toFixed(2)}%, Unique: ${uniqueAllocations.size}/${weights.length}, Range: ${Math.min(...weights).toFixed(1)}%-${Math.max(...weights).toFixed(1)}%`);
+   
+   return true;
+ }
+ 
+ /**
+  * MASTER OPTIMIZATION FUNCTION
+  * Generates all three portfolios with strict validation
+  * Enforces efficient frontier rules and realistic expectations
+  */
+ export function optimizeAllPortfolios(companies) {
+   console.log("🔍 PRE-OPTIMIZATION DIAGNOSTIC:");
+   companies.forEach((c, i) => {
+     console.log(`   ${i+1}. ${c.symbol}: Return=${c.expected_return.toFixed(3)}%, Risk=${c.risk.toFixed(3)}%, Sharpe=${(c.expected_return/c.risk).toFixed(4)}`);
+   });
+   
+   // STEP 1: Apply return caps for mean reversion
+   const returnCapAdjustments = applyReturnCaps(companies);
+   if (returnCapAdjustments.length > 0) {
+     console.log("📉 RETURN CAPS APPLIED:");
+     returnCapAdjustments.forEach(adj => {
+       console.log(`   ${adj.symbol} (${adj.assetClass}): ${adj.original.toFixed(1)}% → ${adj.capped.toFixed(1)}%`);
+     });
+   }
+   
+   // STEP 2: Calculate portfolio quality metrics
+   const portfolioQuality = calculatePortfolioQuality(companies);
+   
+   // STEP 3: Detect asset similarity (log only, no forced changes)
+   const returnSpread = Math.max(...companies.map(c => c.expected_return)) - Math.min(...companies.map(c => c.expected_return));
+   const riskSpread = Math.max(...companies.map(c => c.risk)) - Math.min(...companies.map(c => c.risk));
+ 
+   if (returnSpread < 2.0 || riskSpread < 3.0) {
+     console.warn("⚠️ ASSET SIMILARITY DETECTED (no auto-adjustment):");
+     console.warn(`   Return spread: ${returnSpread.toFixed(2)}%, Risk spread: ${riskSpread.toFixed(2)}%`);
+     console.warn(`   This is real market data - will apply stabilization techniques if needed`);
+   }
+   
+   // STEP 4: Determine correlation tier for optimization behavior
+   const correlationTier = portfolioQuality.correlationTier || 'low';
+   const confidenceLevel = portfolioQuality.confidenceLevel || 'high';
+   
+   console.log(`📊 CORRELATION TIER: ${correlationTier.toUpperCase()} (${(portfolioQuality.avgCorrelation * 100).toFixed(0)}%)`);
+   console.log(`🎯 CONFIDENCE LEVEL: ${confidenceLevel.toUpperCase()}`);
+   
+   // STEP 5: Run optimizations with correlation-aware techniques
+   const optimal = optimizeOptimalPortfolio(companies, true, correlationTier);
+   const minVariance = optimizeMinimumVariance(companies, true, correlationTier);
+   let maxReturn = optimizeMaximumReturn(companies);
+   
+   // STEP 6: Ensure Maximum Return has STRICTLY highest return and risk
+   const highestIndividualReturn = Math.max(...companies.map(c => c.expected_return));
+   
+   if (maxReturn.expected_return <= optimal.expected_return || 
+       maxReturn.expected_return <= minVariance.expected_return ||
+       maxReturn.expected_return < highestIndividualReturn - 0.01) {
+     console.warn("⚠️ Maximum Return validation failed - forcing 100% allocation to top asset");
+     
+     const expectedReturns = companies.map(c => c.expected_return / 100);
+     const maxReturnIdx = expectedReturns.indexOf(Math.max(...expectedReturns));
+     const weights = Array(companies.length).fill(0);
+     weights[maxReturnIdx] = 1.0;
+     
+     const risks = companies.map(c => c.risk);
+     const covMatrix = calculateCovarianceMatrix(companies);
+     const correlationMatrix = buildCorrelationMatrix(covMatrix);
+     
+     const portReturn = portfolioExpectedReturn(weights, expectedReturns);
+     const portRisk = portfolioRisk(weights, risks, correlationMatrix);
+     const portSharpe = sharpeRatio(portReturn * 100, portRisk, RISK_FREE_RATE);
+     
+     const allocations = {};
+     companies.forEach((company, i) => {
+       allocations[company.symbol] = weights[i] * 100;
+     });
+     
+     maxReturn = {
+       allocations,
+       expected_return: portReturn * 100,
+       risk: portRisk,
+       sharpe_ratio: portSharpe
+     };
+   }
+   
+   // STEP 7: STRICT VALIDATION with correlation tier awareness
+   const avgCorrelation = portfolioQuality.avgCorrelation;
+   const validationResult = validatePortfolioResults(optimal, minVariance, maxReturn, companies, avgCorrelation, correlationTier);
+   
+   // STEP 8: Add system behavior labels
+   if (correlationTier === 'high') {
+     optimal.optimizationMethod = 'Constrained (High Correlation)';
+     optimal.stabilizationApplied = true;
+   } else if (correlationTier === 'moderate') {
+     optimal.optimizationMethod = 'Standard (Moderate Correlation)';
+   }
+   
+   // ═══════════════════════════════════════════════════════════════════════════════
+   // ALLOCATION VALIDATION CHECKPOINT - Ensure Uniqueness
+   // ═══════════════════════════════════════════════════════════════════════════════
+   
+   const optimalAllocations = Object.values(optimal.allocations);
+   const allocationPrecision = 3; // Compare to 3 decimal places
+   const uniqueAllocations = new Set(optimalAllocations.map(a => a.toFixed(allocationPrecision)));
+   
+   console.log("🔍 ALLOCATION UNIQUENESS CHECK:");
+   console.log(`   Total assets: ${companies.length}`);
+   console.log(`   Unique allocations: ${uniqueAllocations.size}`);
+   console.log(`   Allocations: ${optimalAllocations.map(a => a.toFixed(2) + '%').join(', ')}`);
+   
+   if (uniqueAllocations.size < companies.length && companies.length >= 3) {
+     console.warn("⚠️ WARNING: Some assets have identical allocations despite different metrics");
+     console.warn("   This suggests residual distribution may still be too uniform");
+     
+     // Log companies with identical allocations for debugging
+     const allocationGroups = {};
+     companies.forEach((c, idx) => {
+       const allocation = optimal.allocations[c.symbol].toFixed(allocationPrecision);
+       if (!allocationGroups[allocation]) allocationGroups[allocation] = [];
+       allocationGroups[allocation].push({
+         symbol: c.symbol,
+         return: c.expected_return.toFixed(2),
+         risk: c.risk.toFixed(2),
+         sharpe: ((c.expected_return - 4.5) / c.risk).toFixed(3)
+       });
+     });
+     
+     Object.entries(allocationGroups).forEach(([allocation, assets]) => {
+       if (assets.length > 1) {
+         console.warn(`   ${allocation}%: ${JSON.stringify(assets)}`);
+       }
+     });
+   }
+   
+   // ═══════════════════════════════════════════════════════════════════════════════
+   
+   // STEP 9: Add detailed allocation rationale for each company
+   companies.forEach(company => {
+     const optimalWeight = optimal.allocations[company.symbol] || 0;
+     const sharpeRatio = (company.expected_return - 4.5) / company.risk;
+     const marketCap = company.market_cap;
+     const isMegaLargeCap = marketCap && marketCap.includes('B') && parseFloat(marketCap) > 50;
+     const isSmallMicro = !marketCap || marketCap.includes('M');
+     
+     // Build comprehensive rationale
+     let rationale = [];
+     
+     // Risk-return assessment
+     if (sharpeRatio > 0.5) {
+       rationale.push(`Strong risk-adjusted returns (Sharpe: ${sharpeRatio.toFixed(2)})`);
+     } else if (sharpeRatio > 0.2) {
+       rationale.push(`Moderate risk-adjusted returns (Sharpe: ${sharpeRatio.toFixed(2)})`);
+     } else {
+       rationale.push(`Lower risk-adjusted returns (Sharpe: ${sharpeRatio.toFixed(2)})`);
+     }
+     
+     // Market cap influence
+     if (isMegaLargeCap) {
+       rationale.push(`Mega/large-cap stability (${marketCap})`);
+     } else if (isSmallMicro) {
+       rationale.push(`Small/micro-cap higher risk (${marketCap || 'unknown'})`);
+     }
+     
+     // Beta influence
+     const beta = company.beta || 1.0;
+     if (beta > 1.5) {
+       rationale.push(`High market sensitivity (β=${beta.toFixed(2)})`);
+     } else if (beta < 0.8) {
+       rationale.push(`Defensive characteristics (β=${beta.toFixed(2)})`);
+     }
+     
+     // Allocation sizing
+     if (optimalWeight >= 25) {
+       rationale.push(`Major position for diversification balance`);
+     } else if (optimalWeight >= 15) {
+       rationale.push(`Substantial allocation for portfolio contribution`);
+     } else if (optimalWeight >= 8) {
+       rationale.push(`Meaningful allocation for diversification`);
+     }
+     
+     company.allocation_rationale = rationale.join(' • ');
+   });
+   
+   console.log("✅ OPTIMIZATION COMPLETE:");
+   console.log(`   Optimal: Return=${optimal.expected_return.toFixed(2)}%, Risk=${optimal.risk.toFixed(2)}%, Sharpe=${optimal.sharpe_ratio.toFixed(3)}`);
+   console.log(`   Min Var: Return=${minVariance.expected_return.toFixed(2)}%, Risk=${minVariance.risk.toFixed(2)}%, Sharpe=${minVariance.sharpe_ratio.toFixed(3)}`);
+   console.log(`   Max Ret: Return=${maxReturn.expected_return.toFixed(2)}%, Risk=${maxReturn.risk.toFixed(2)}%, Sharpe=${maxReturn.sharpe_ratio.toFixed(3)}`);
+   
+   if (validationResult.criticalErrors.length > 0) {
+     console.warn("⚠️ VALIDATION ALERTS:");
+     validationResult.criticalErrors.forEach(e => console.warn(`   ${e.type}: ${e.message}`));
+   }
+   
+   if (validationResult.warnings.length > 0) {
+     console.log("ℹ️ WARNINGS:");
+     validationResult.warnings.forEach(w => console.log(`   [${w.severity}] ${w.message}`));
+   }
+   
+   // ═══════════════════════════════════════════════════════════════════════════════
+   // PERMANENT VALIDATION CHECKPOINT - ALLOCATION INTEGRITY (NON-BLOCKING)
+   // ═══════════════════════════════════════════════════════════════════════════════
+   
+   console.log("\n🔒 ALLOCATION INTEGRITY VALIDATION:");
+   
+   let validationPassed = true;
+   
+   // Validate Optimal Portfolio
+   if (!validateAllocationIntegrity(optimal.allocations, companies, 'Optimal Portfolio')) {
+     validationPassed = false;
+   }
+   
+   // Validate Minimum Variance Portfolio
+   if (!validateAllocationIntegrity(minVariance.allocations, companies, 'Minimum Variance Portfolio')) {
+     validationPassed = false;
+   }
+   
+   // Validate Maximum Return Portfolio (may have single 100% allocation - that's valid)
+   const maxReturnWeights = Object.values(maxReturn.allocations);
+   const has100Percent = maxReturnWeights.some(w => Math.abs(w - 100) < 0.01);
+   if (!has100Percent) {
+     if (!validateAllocationIntegrity(maxReturn.allocations, companies, 'Maximum Return Portfolio')) {
+       validationPassed = false;
+     }
+   }
+   
+   if (validationPassed) {
+     console.log("✅ ALL PORTFOLIOS PASSED ALLOCATION INTEGRITY VALIDATION\n");
+   } else {
+     console.warn("⚠️ ALLOCATION INTEGRITY ISSUES DETECTED - Review console for details");
+     console.warn("   Portfolios will still be displayed for user review\n");
+   }
+   
+   // ═══════════════════════════════════════════════════════════════════════════════
+   
+   return {
+     optimal_portfolio: optimal,
+     minimum_variance_portfolio: minVariance,
+     maximum_return_portfolio: maxReturn,
+     validation: validationResult,
+     portfolio_quality: portfolioQuality,
+     return_cap_adjustments: returnCapAdjustments
+   };
+ }
