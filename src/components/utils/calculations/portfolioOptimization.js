@@ -189,6 +189,10 @@ export {
  * Validate portfolio results for consistency
  * INDUSTRY-STANDARD: Detect violations, apply fixes, only block on extreme cases
  */
+/**
+ * Validate portfolio results for consistency
+ * INDUSTRY-STANDARD: Detect violations, apply fixes, only block on extreme cases
+ */
 function validatePortfolioResults(optimal, minVariance, maxReturn, companies, avgCorrelation, correlationTier) {
   const warnings = [];
   const criticalErrors = [];
@@ -376,12 +380,10 @@ function applyPortfolioConstraints(weights, companies, maxSingleAsset = 0.35, co
           
           const totalMerit = meritScores.reduce((sum, item) => sum + item.compound, 0);
           
-          // Distribute excess by compound merit with minimum differentiation
-          meritScores.forEach((item, idx) => {
+          // Distribute excess by compound merit (merit-based distribution ensures uniqueness)
+          meritScores.forEach((item) => {
             const proportion = item.compound / totalMerit;
-            // Add index-based micro-offset to ensure uniqueness after distribution
-            const microOffset = idx * 0.0005; // 0.05% per position
-            weights[item.index] += (excess * proportion) + microOffset;
+            weights[item.index] += (excess * proportion);
           });
           
           // Normalize to maintain sum = 1.0
@@ -399,10 +401,10 @@ function applyPortfolioConstraints(weights, companies, maxSingleAsset = 0.35, co
   }
   
   // ═════════════════════════════════════════════════════════════════════════════
-  // PHASE 3: UNIQUENESS ENFORCEMENT (Fallback Safety Net)
+  // PHASE 3: UNIQUENESS DIAGNOSTIC (Detection Only - No Artificial Adjustments)
   // ═════════════════════════════════════════════════════════════════════════════
-  // After compound merit distribution, duplicates should be impossible
-  // This is a defensive check only - should never trigger if Phase 2 works correctly
+  // Log if duplicates exist, but DO NOT apply artificial offsets
+  // Normalization step already ensures sum = 1.0 mathematically
   
   const allocationPrecision = 0.0001; // Track to 0.01% precision
   const roundedWeights = weights.map(w => Math.round(w * 10000) / 10000);
@@ -415,7 +417,7 @@ function applyPortfolioConstraints(weights, companies, maxSingleAsset = 0.35, co
   const duplicates = Object.entries(weightCounts).filter(([_, count]) => count > 1);
   
   if (duplicates.length > 0) {
-    console.warn(`⚠️ DEFENSIVE TRIGGER: Applying micro-adjustments (this should not happen with compound merit)`);
+    console.warn(`⚠️ DIAGNOSTIC: Detected ${duplicates.length} duplicate allocation(s) after merit-based distribution`);
     
     duplicates.forEach(([dupWeight, count]) => {
       const dupValue = parseFloat(dupWeight);
@@ -425,32 +427,14 @@ function applyPortfolioConstraints(weights, companies, maxSingleAsset = 0.35, co
       });
       
       if (indices.length > 1) {
-        // Sort by compound merit score (Sharpe + Return + Index)
-        indices.sort((a, b) => {
-          const scoreA = ((companies[a].expected_return - 4.5) / companies[a].risk * 1000) + 
-                        (companies[a].expected_return * 10) + (a * 0.001);
-          const scoreB = ((companies[b].expected_return - 4.5) / companies[b].risk * 1000) + 
-                        (companies[b].expected_return * 10) + (b * 0.001);
-          return scoreB - scoreA;
-        });
-        
-        // Apply staggered micro-adjustments with LARGER magnitude for visibility
-        indices.forEach((idx, position) => {
-          const adjustment = 0.001 * (position + 1); // 0.1%, 0.2%, 0.3%... (10x larger)
-          if (position % 2 === 0) {
-            weights[idx] += adjustment;
-          } else {
-            weights[idx] -= adjustment;
-          }
+        console.warn(`   Allocation ${dupWeight}: ${indices.length} assets`);
+        indices.forEach(idx => {
+          console.warn(`      ${companies[idx].symbol}: Sharpe=${((companies[idx].expected_return - 4.5) / companies[idx].risk).toFixed(3)}, Return=${companies[idx].expected_return.toFixed(2)}%, Risk=${companies[idx].risk.toFixed(2)}%`);
         });
       }
     });
     
-    // Renormalize after micro-adjustments
-    sum = weights.reduce((a, b) => a + b, 0);
-    weights = weights.map(w => w / sum);
-    
-    console.log(`✅ Defensive uniqueness enforcement applied`);
+    console.warn(`   Note: Duplicates may occur if assets have identical or very similar risk/return profiles`);
   }
   
   // ═════════════════════════════════════════════════════════════════════════════
@@ -660,7 +644,7 @@ export function optimizeMinimumVariance(companies, applyConstraints = true, corr
     const inverseRisks = risks.map(r => 1 / r);
     const totalInverseRisk = inverseRisks.reduce((a, b) => a + b, 0);
     let weights = inverseRisks.map(ir => ir / totalInverseRisk);
-    
+       
     // Apply constraints even to fallback method
     let constraintsApplied = false;
     if (applyConstraints && n >= 2) {
