@@ -2306,7 +2306,7 @@ If analyzing similar companies (same sector), focus on:
               {analysisResult.portfolio_quality && analysisResult.optimal_portfolio && (
                 <QualityVsRiskVisualization
                   qualityScore={analysisResult.portfolio_quality.qualityScore}
-                  portfolioRisk={analysisResult.optimal_portfolio.risk}
+                  portfolioRisk={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
                   expectedDrawdown={analysisResult.optimal_portfolio.expectedDrawdown || -85}
                   avgSharpe={analysisResult.portfolio_quality.avgSharpe}
                   avgCorrelation={analysisResult.portfolio_quality.avgCorrelation}
@@ -2319,16 +2319,16 @@ If analyzing similar companies (same sector), focus on:
               <StressTestingCard
                 companies={analysisResult.companies}
                 weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
-                portfolioRisk={analysisResult.optimal_portfolio.risk}
-                expectedReturn={analysisResult.optimal_portfolio.expected_return}
+                portfolioRisk={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
+                expectedReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
               />
 
               {/* Consecutive Crisis Scenarios */}
               <ConsecutiveCrashScenario
                 companies={analysisResult.companies}
                 weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
-                portfolioRisk={analysisResult.optimal_portfolio.risk}
-                expectedReturn={analysisResult.optimal_portfolio.expected_return}
+                portfolioRisk={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
+                expectedReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
               />
               
               <ModelLimitationsDisclosure modelType="stress_testing" />
@@ -2337,8 +2337,8 @@ If analyzing similar companies (same sector), focus on:
               <RebalancingSimulator
                 companies={analysisResult.companies}
                 initialWeights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
-                expectedReturn={analysisResult.optimal_portfolio.expected_return}
-                volatility={analysisResult.optimal_portfolio.risk}
+                expectedReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
+                volatility={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
               />
 
               {/* ✅ Phase 4: Forward-Looking Risk Analysis (VIX-ADJUSTED) */}
@@ -2346,16 +2346,16 @@ If analyzing similar companies (same sector), focus on:
                 companies={analysisResult.companies}
                 weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
                 correlationMatrix={getCorrelationMatrix(analysisResult.companies)}
-                portfolioRisk={analysisResult.optimal_portfolio.risk}
-                expectedReturn={analysisResult.optimal_portfolio.expected_return}
+                portfolioRisk={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
+                expectedReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
                 vixData={analysisResult.vix_data}
                 forwardRiskMetrics={analysisResult.forward_risk_metrics?.optimal}
               />
 
               {/* Portfolio Storytelling with Tail Events */}
               <PortfolioStorytellingChart
-                portfolioReturn={analysisResult.optimal_portfolio.expected_return}
-                portfolioRisk={analysisResult.optimal_portfolio.risk}
+                portfolioReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
+                portfolioRisk={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
                 companies={analysisResult.companies}
                 maxDrawdown={analysisResult.optimal_portfolio.expectedDrawdown}
                 recoveryMonths={36}
@@ -2364,8 +2364,8 @@ If analyzing similar companies (same sector), focus on:
 
               {/* Confidence Bands */}
               <ConfidenceBandsChart
-                portfolioReturn={analysisResult.optimal_portfolio.expected_return}
-                portfolioRisk={analysisResult.optimal_portfolio.risk}
+                portfolioReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
+                portfolioRisk={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
                 investmentAmount={parseFloat(investmentAmount)}
                 monthlyContribution={parseFloat(monthlyContribution)}
               />
@@ -2490,7 +2490,7 @@ If analyzing similar companies (same sector), focus on:
                     ? 'text-blue-600' 
                     : 'text-rose-600'
                     }`}>
-                    {(analysisResult.optimal_portfolio.expected_return || 0).toFixed(2)}%
+                    {typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%
                     </p>
                       {(analysisResult.optimal_portfolio.expected_return || 0) < 0 && (
                         <p className="text-xs text-rose-600 mt-1 font-semibold">
@@ -2501,7 +2501,7 @@ If analyzing similar companies (same sector), focus on:
                     <div className="bg-amber-50/50 rounded-lg p-3">
                       <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">Volatility (σ)</p>
                       <p className="text-xl md:text-2xl font-bold text-slate-900 tabular-nums">
-                        {(analysisResult.optimal_portfolio.risk || 0).toFixed(2)}%
+                        {typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}%
                       </p>
                     </div>
                     <div className="bg-indigo-50/50 rounded-lg p-3">
@@ -2558,7 +2558,7 @@ If analyzing similar companies (same sector), focus on:
                         <div className="bg-emerald-50/50 rounded-lg p-3">
                           <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">Modeled Base-Case Return</p>
                           <p className="text-2xl md:text-3xl font-bold text-emerald-600 tabular-nums">
-                            {(analysisResult.minimum_variance_portfolio.expected_return || 0).toFixed(2)}%
+                            {typeof analysisResult.minimum_variance_portfolio.expected_return === "number" && isFinite(analysisResult.minimum_variance_portfolio.expected_return) ? analysisResult.minimum_variance_portfolio.expected_return.toFixed(2) : "Not Available"}%
                           </p>
                         </div>
                         <div className="bg-teal-50/50 rounded-lg p-3">
@@ -2566,7 +2566,7 @@ If analyzing similar companies (same sector), focus on:
                             {analysisResult.forward_risk_metrics?.minimum_variance ? 'Historical Risk' : 'Volatility (σ)'}
                           </p>
                           <p className="text-xl md:text-2xl font-bold text-emerald-900 tabular-nums">
-                            {(analysisResult.minimum_variance_portfolio.risk || 0).toFixed(2)}%
+                            {typeof analysisResult.minimum_variance_portfolio.risk === "number" && isFinite(analysisResult.minimum_variance_portfolio.risk) ? analysisResult.minimum_variance_portfolio.risk.toFixed(2) : "Not Available"}%
                           </p>
                           {/* ✅ NEW: Show forward-looking risk if available */}
                           {analysisResult.forward_risk_metrics?.minimum_variance && (
@@ -2588,7 +2588,7 @@ If analyzing similar companies (same sector), focus on:
                         <div className="bg-cyan-50/50 rounded-lg p-3">
                           <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">Sharpe Ratio</p>
                           <p className="text-2xl md:text-3xl font-bold text-teal-600 tabular-nums">
-                            {(analysisResult.minimum_variance_portfolio.sharpe_ratio || 0).toFixed(3)}
+                            {typeof analysisResult.minimum_variance_portfolio.sharpe_ratio === "number" && isFinite(analysisResult.minimum_variance_portfolio.sharpe_ratio) ? analysisResult.minimum_variance_portfolio.sharpe_ratio.toFixed(3) : "Not Available"}
                           </p>
                         </div>
                       </div>
@@ -2620,7 +2620,7 @@ If analyzing similar companies (same sector), focus on:
                         <div className="bg-orange-50/50 rounded-lg p-3">
                           <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">Modeled Base-Case Return</p>
                           <p className="text-2xl md:text-3xl font-bold text-orange-600 tabular-nums">
-                            {(analysisResult.maximum_return_portfolio.expected_return || 0).toFixed(2)}%
+                            {typeof analysisResult.maximum_return_portfolio.expected_return === "number" && isFinite(analysisResult.maximum_return_portfolio.expected_return) ? analysisResult.maximum_return_portfolio.expected_return.toFixed(2) : "Not Available"}%
                           </p>
                           <p className="text-xs text-orange-700 mt-1 font-semibold">Highest modeled upside</p>
                         </div>
@@ -2629,7 +2629,7 @@ If analyzing similar companies (same sector), focus on:
                             {analysisResult.forward_risk_metrics?.maximum_return ? 'Historical Risk' : 'Volatility (σ)'}
                           </p>
                           <p className="text-xl md:text-2xl font-bold text-slate-900 tabular-nums">
-                            {(analysisResult.maximum_return_portfolio.risk || 0).toFixed(2)}%
+                            {typeof analysisResult.maximum_return_portfolio.risk === "number" && isFinite(analysisResult.maximum_return_portfolio.risk) ? analysisResult.maximum_return_portfolio.risk.toFixed(2) : "Not Available"}%
                           </p>
                           {/* ✅ NEW: Show forward-looking risk if available */}
                           {analysisResult.forward_risk_metrics?.maximum_return && (
@@ -2650,7 +2650,7 @@ If analyzing similar companies (same sector), focus on:
                         <div className="bg-red-50/50 rounded-lg p-3">
                           <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">Sharpe Ratio</p>
                           <p className="text-2xl md:text-3xl font-bold text-red-600 tabular-nums">
-                            {(analysisResult.maximum_return_portfolio.sharpe_ratio || 0).toFixed(3)}
+                            {typeof analysisResult.maximum_return_portfolio.sharpe_ratio === "number" && isFinite(analysisResult.maximum_return_portfolio.sharpe_ratio) ? analysisResult.maximum_return_portfolio.sharpe_ratio.toFixed(3) : "Not Available"}
                           </p>
                           <p className="text-xs text-slate-500 mt-1">Higher risk accepted</p>
                         </div>
@@ -3220,9 +3220,9 @@ If analyzing similar companies (same sector), focus on:
                                      <div className="text-slate-600 mb-1">
                                        <span>Price: ${(company.current_price || 0).toFixed(2)}</span>
                                        <span className="mx-2">•</span>
-                                       <span>Return: {company.expected_return.toFixed(1)}%</span>
+                                       <span>Return: {typeof company.expected_return === "number" && isFinite(company.expected_return) ? company.expected_return.toFixed(2) : "Not Available"}%</span>
                                        <span className="mx-2">•</span>
-                                       <span>Risk: {company.risk.toFixed(1)}%</span>
+                                       <span>Risk: {typeof company.risk === "number" && isFinite(company.risk) ? company.risk.toFixed(2) : "Not Available"}%</span>
                                      </div>
                                      <div className="text-xs text-slate-500 mt-1">
                                        <strong>Method:</strong> {company.return_methodology}
@@ -3296,7 +3296,7 @@ If analyzing similar companies (same sector), focus on:
                                  {/* Market Cap Tier Context */}
                                  {company.market_cap && (
                                    <div className="mt-2">
-                                     <MarketCapTierLabel marketCap={company.market_cap} compact={true} />
+                                     <MarketCapTierLabel marketCap={typeof company.market_cap === "number" && isFinite(company.market_cap) ? company.market_cap.toFixed(0) : "Not Available"} compact={true} />
                                    </div>
                                  )}
 
@@ -3318,7 +3318,7 @@ If analyzing similar companies (same sector), focus on:
                                 {(company.pe_ratio !== undefined && company.pe_ratio !== null && typeof company.pe_ratio === 'number' && !isNaN(company.pe_ratio)) && (
                                   <div className="flex justify-between text-sm">
                                     <span className="text-slate-600">P/E Ratio:</span>
-                                    <span className="font-semibold">{company.pe_ratio.toFixed(2)}</span>
+                                    <span className="font-semibold">{typeof company.pe_ratio === "number" && isFinite(company.pe_ratio) ? company.pe_ratio.toFixed(2) : "Not Available"}</span>
                                   </div>
                                 )}
 
@@ -3356,7 +3356,7 @@ If analyzing similar companies (same sector), focus on:
                                     <div className="flex justify-between items-center text-sm bg-blue-50 p-2 rounded">
                                       <span className="text-slate-700">Expected Return:</span>
                                       <div className="flex items-center gap-2">
-                                        <span className="font-bold text-blue-700 text-base">{(company.expected_return || 0).toFixed(2)}%</span>
+                                        <span className="font-bold text-blue-700 text-base">{typeof company.expected_return === "number" && isFinite(company.expected_return) ? company.expected_return.toFixed(2) : "Not Available"}%</span>
                                         {company.return_confidence && (
                                           <Badge className={`text-xs ${
                                             company.return_confidence === 'high' ? 'bg-emerald-100 text-emerald-800' :
@@ -3378,13 +3378,13 @@ If analyzing similar companies (same sector), focus on:
                                     
                                     <div className="flex justify-between items-center text-sm bg-rose-50 p-2 rounded">
                                       <span className="text-slate-700">Volatility (σ):</span>
-                                      <span className="font-bold text-rose-700 text-base">{(company.risk || 0).toFixed(2)}%</span>
+                                      <span className="font-bold text-rose-700 text-base">{typeof company.risk === "number" && isFinite(company.risk) ? company.risk.toFixed(2) : "Not Available"}%</span>
                                     </div>
                                     
                                     <div className="flex justify-between items-center text-sm bg-emerald-50 p-2 rounded">
                                       <span className="text-slate-700">Sharpe Ratio:</span>
                                       <span className="font-bold text-emerald-700 text-base">
-                                        {company.risk ? ((company.expected_return - 4.5) / company.risk).toFixed(3) : 'N/A'}
+                                        {typeof company.expected_return === "number" && isFinite(company.expected_return) ? company.expected_return.toFixed(2) : "Not Available"}
                                       </span>
                                     </div>
                                   </div>
@@ -3398,11 +3398,11 @@ If analyzing similar companies (same sector), focus on:
                                     <div className="flex justify-between items-center text-sm bg-blue-50 p-2 rounded">
                                      <span className="text-slate-700">5-Year Beta:</span>
                                      <div className="flex items-center gap-2">
-                                       <span className="font-bold text-blue-700 text-base">{(company.beta || 1.0).toFixed(3)}</span>
+                                       <span className="font-bold text-blue-700 text-base">{typeof company.beta === "number" && isFinite(company.beta) ? company.beta.toFixed(3) : "Not Available"}</span>
                                        <DataSourceLabel
                                          metricName="5-Year Beta"
-                                         source={company.beta_source || company.beta_method}
-                                         confidence={company.beta_confidence}
+                                         source={typeof company.beta === "number" && isFinite(company.beta) ? company.beta.toFixed(3) : "Not Available"}
+                                         confidence={typeof company.beta === "number" && isFinite(company.beta) ? company.beta.toFixed(3) : "Not Available"}
                                          details={
                                            company.beta_source === 'yahoo_finance_5yr' ? 'Yahoo Finance 5-year monthly regression vs S&P 500' :
                                            company.beta_source === 'calculated_5yr_daily' ? 'Calculated from 5-year daily returns (RapidAPI data)' :
@@ -3419,7 +3419,7 @@ If analyzing similar companies (same sector), focus on:
                                       <div className="flex justify-between items-center text-sm bg-indigo-50 p-2 rounded">
                                         <span className="text-slate-700">1-Year Beta:</span>
                                         <div className="flex items-center gap-2">
-                                          <span className="font-semibold text-indigo-700">{company.beta_1year.toFixed(3)}</span>
+                                          <span className="font-semibold text-indigo-700">{typeof company.beta === "number" && isFinite(company.beta) ? company.beta.toFixed(3) : "Not Available"}</span>
                                           <Badge className="text-xs bg-indigo-100 text-indigo-800">
                                             Recent
                                           </Badge>
@@ -3477,7 +3477,7 @@ If analyzing similar companies (same sector), focus on:
                                   {company.adjustments && company.adjustments.length > 0 && (
                                    <>
                                      <div className="text-xs text-blue-700 bg-blue-50 p-2 rounded border border-blue-200">
-                                       <strong>AI Forward-Looking Adjustments:</strong> Expected return ({company.expected_return?.toFixed(1)}%) and volatility ({company.risk?.toFixed(1)}%) include AI-informed adjustments 
+                                       <strong>AI Forward-Looking Adjustments:</strong> Expected return ({typeof company.expected_return === "number" && isFinite(company.expected_return) ? company.expected_return.toFixed(2) : "Not Available"}%) and volatility ({typeof company.risk === "number" && isFinite(company.risk) ? company.risk.toFixed(2) : "Not Available"}%) include AI-informed adjustments 
                                        based on recent fundamentals, catalysts, and market positioning. 
                                        <strong> These are model inputs, not guaranteed outcomes.</strong>
                                      </div>
