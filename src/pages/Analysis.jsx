@@ -540,21 +540,27 @@ Using real historical S&P 500 returns, estimate beta. Respond ONLY with valid JS
                     // Use invokeLLM Lambda instead of direct Bedrock call
                     const llmResponse = await callAwsFunction('invokeLLM', {
                       prompt: betaPrompt,
+                      use_schema: true,
+                      json_schema: {
+                        type: "object",
+                        properties: {
+                          estimated_beta: { type: "number" },
+                          confidence: { type: "string" },
+                          reasoning: { type: "string" }
+                        },
+                        required: ["estimated_beta", "confidence", "reasoning"]
+                      },
                       context: { max_tokens: 500, temperature: 0.3 }
                     });
                     const content = llmResponse.response || llmResponse.content || llmResponse;
-                    const jsonMatch = content.match(/\{[\s\S]*\}/);
+                    const llmBeta = typeof content === 'object' ? content : JSON.parse(content);
                     
-                    if (jsonMatch) {
-                      const llmBeta = JSON.parse(jsonMatch[0]);
-                      
-                      if (llmBeta.estimated_beta && !isNaN(llmBeta.estimated_beta)) {
-                        beta = Math.max(-1.0, Math.min(3.0, llmBeta.estimated_beta));
-                        betaMethod = 'bedrock_llm_estimate';
-                        betaConfidence = 'low';
-                        betaWarnings = [`Beta estimated by Bedrock AI (Priority 8): ${llmBeta.reasoning}`];
-                        console.log(`${stock.symbol}: ✅ Bedrock LLM beta: ${safeToFixed(beta, 3) /* fix */}`);
-                      }
+                    if (llmBeta && llmBeta.estimated_beta && !isNaN(llmBeta.estimated_beta)) {
+                      beta = Math.max(-1.0, Math.min(3.0, llmBeta.estimated_beta));
+                      betaMethod = 'bedrock_llm_estimate';
+                      betaConfidence = 'low';
+                      betaWarnings = [`Beta estimated by Bedrock AI (Priority 8): ${llmBeta.reasoning}`];
+                      console.log(`${stock.symbol}: ✅ Bedrock LLM beta: ${safeToFixed(beta, 3) /* fix */}`);
                     }
                   } catch (llmError) {
                     console.warn(`${stock.symbol}: Bedrock LLM failed, keeping sector estimate`);
