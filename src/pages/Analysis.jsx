@@ -10,25 +10,7 @@
 // - loadExistingAnalysis() - Loads cached analysis by ID from AWS Lambda
 // - generateGrowthProjection() - Helper function for investment growth calculations
 // - handleAnalyze() - PART 1: Stock data fetching, beta calculation with fallback chain
-//
-// CHANGES FROM BASE44:
-// - Removed: import { Company } from "@/entities/Company"
-// - Removed: import { PortfolioAnalysis } from "@/entities/PortfolioAnalysis"
-// - Removed: import { InvokeLLM } from "@/integrations/Core"
-// - Removed: import { base44 } from "@/api/base44Client"
-// - Added: import { callAwsFunction } from "@/components/utils/api/awsApi"
-// - Replaced: Company.list() → callAwsFunction('getCompanies')
-// - Replaced: base44.entities.IndexFund.list() → merged into getCompanies response
-// - Replaced: base44.entities.PortfolioAnalysis.filter() → callAwsFunction('getAnalysisById')
-// - Replaced: base44.functions.invoke('getStockBatch') → callAwsFunction('getStockBatch')
-// - Replaced: base44.integrations.Core.InvokeLLM() → callAwsFunction('calculateRealBeta') with Bedrock LLM fallback
-//
-// ✅ VIX INTEGRATION ADDED (Section 1):
-// - Added: import { calculateForwardLookingRisk } from "@/components/utils/calculations/forwardLookingRisk"
-// - Added: VIX state management (vixData, vixLoading, vixError)
-// - Added: fetchVIXData() function to call getVIXData Lambda
-// - Added: useEffect hook to fetch VIX on component mount
-// - Added: Error handling and fallback for VIX data
+
 // ============================================================================
 
 import React, { useState, useEffect } from "react";
@@ -109,6 +91,7 @@ import SpeculativeContributionBadge from "@/components/analysis/SpeculativeContr
 import DataSourceLabel from "@/components/analysis/DataSourceLabel";
 import MarketCapTierLabel from "@/components/analysis/MarketCapTierLabel";
 import PortfolioQualityCard from "@/components/analysis/PortfolioQualityCard";
+import { safeToFixed } from "@/components/utils/safeToFixed";
 
 export default function Analysis() {
   const navigate = useNavigate();
@@ -523,7 +506,7 @@ export default function Analysis() {
                 betaConfidence = betaResult.confidence || 'medium';
                 betaWarnings = betaResult.warnings || [];
                 
-                console.log(`${stock.symbol}: ✅ calculateRealBeta returned: ${beta.toFixed(3)} (${betaMethod}, ${betaConfidence})`);
+                console.log(`${stock.symbol}: ✅ calculateRealBeta returned: ${safeToFixed(beta, 3) /* <-- fix, used instead of .toFixed(3) */} (${betaMethod}, ${betaConfidence})`);
                 
                 // PRIORITY 8: If sector estimate returned (low confidence), try LLM fallback
                 if (betaConfidence === 'low' && betaMethod.includes('Sector Average')) {
@@ -531,13 +514,24 @@ export default function Analysis() {
                   
                   try {
                     // Bedrock LLM estimation (Priority 8)
-                    
                     const betaPrompt = `Estimate the 5-year beta for ${stock.symbol} (${stock.name}) vs S&P 500 based on:
 - Sector: ${stock.sector || 'Unknown'}
-- YTD Return: ${stock.ytd_return?.toFixed(1) || 'N/A'}%
-- 1Y Return: ${stock.return_1y?.toFixed(1) || 'N/A'}%
-- 3Y Return: ${stock.return_3y_annualized?.toFixed(1) || 'N/A'}%
-- 52W Range: ${stock.fifty_two_week_range || 'N/A'}
+- YTD Return: ${
+  typeof stock.ytd_return === "number" && Number.isFinite(stock.ytd_return)
+    ? stock.ytd_return.toFixed(1)
+    : "Not Available"
+}%
+- 1Y Return: ${
+  typeof stock.return_1y === "number" && Number.isFinite(stock.return_1y)
+    ? stock.return_1y.toFixed(1)
+    : "Not Available"
+}%
+- 3Y Return: ${
+  typeof stock.return_3y_annualized === "number" && Number.isFinite(stock.return_3y_annualized)
+    ? stock.return_3y_annualized.toFixed(1)
+    : "Not Available"
+}%
+- 52W Range: ${stock.fifty_two_week_range || 'Not Available'}
 - Market Cap: ${stock.market_cap || 'Unknown'}
 
 Using real historical S&P 500 returns, estimate beta. Respond ONLY with valid JSON:
@@ -559,7 +553,7 @@ Using real historical S&P 500 returns, estimate beta. Respond ONLY with valid JS
                         betaMethod = 'bedrock_llm_estimate';
                         betaConfidence = 'low';
                         betaWarnings = [`Beta estimated by Bedrock AI (Priority 8): ${llmBeta.reasoning}`];
-                        console.log(`${stock.symbol}: ✅ Bedrock LLM beta: ${beta.toFixed(3)}`);
+                        console.log(`${stock.symbol}: ✅ Bedrock LLM beta: ${safeToFixed(beta, 3) /* fix */}`);
                       }
                     }
                   } catch (llmError) {
@@ -585,26 +579,44 @@ Using real historical S&P 500 returns, estimate beta. Respond ONLY with valid JS
           }
           
           // Process beta value with standardized precision
-          beta = parseFloat(beta.toFixed(3)); // Standardize to 3 decimal places
+          beta = typeof beta === "number" && Number.isFinite(beta) ? parseFloat(beta.toFixed(3)) : beta; // No actual fix needed here; parseFloat ok.
           
           if (Math.abs(beta) > 3.0) {
             // Extreme beta - cap for stability
-            betaWarnings.push(`Extreme 5Y beta (${beta.toFixed(3)}) - capped at ±2.5 for model stability`);
+            betaWarnings.push(`Extreme 5Y beta (${
+              typeof beta === "number" && Number.isFinite(beta) ? beta.toFixed(3) : "Not Available"
+            }) - capped at ±2.5 for model stability`);
             beta = Math.sign(beta) * Math.min(Math.abs(beta), 2.5);
             betaMethod = `${betaMethod}_capped`;
           } else if (Math.abs(beta) > 2.0) {
-            betaWarnings.push(`High 5Y beta (${beta.toFixed(3)}) - ${((Math.abs(beta) - 1) * 100).toFixed(0)}% more volatile than market`);
+            betaWarnings.push(`High 5Y beta (${
+              typeof beta === "number" && Number.isFinite(beta) ? beta.toFixed(3) : "Not Available"
+            }) - ${
+              typeof beta === "number" && Number.isFinite(beta)
+                ? ((Math.abs(beta) - 1) * 100).toFixed(0)
+                : "Not Available"
+            }% more volatile than market`);
           }
 
           // Negative beta warning
           if (beta < -0.3) {
-            betaWarnings.push(`Negative beta (${beta.toFixed(3)}) - inverse market correlation (defensive asset or data anomaly)`);
+            betaWarnings.push(`Negative beta (${
+              typeof beta === "number" && Number.isFinite(beta) ? beta.toFixed(3) : "Not Available"
+            }) - inverse market correlation (defensive asset or data anomaly)`);
             if (betaConfidence === 'high') betaConfidence = 'medium';
           }
 
           // Dual-horizon divergence warning
           if (beta1Year && Math.abs(beta1Year - beta) > 0.5) {
-            betaWarnings.push(`Beta shift detected: 1Y=${beta1Year.toFixed(3)} vs 5Y=${beta.toFixed(3)} (${Math.abs(beta1Year - beta).toFixed(2)} divergence)`);
+            betaWarnings.push(`Beta shift detected: 1Y=${
+              typeof beta1Year === "number" && Number.isFinite(beta1Year) ? beta1Year.toFixed(3) : "Not Available"
+            } vs 5Y=${
+              typeof beta === "number" && Number.isFinite(beta) ? beta.toFixed(3) : "Not Available"
+            } (${
+              typeof beta1Year === "number" && typeof beta === "number" && Number.isFinite(beta1Year) && Number.isFinite(beta)
+                ? Math.abs(beta1Year - beta).toFixed(2)
+                : "Not Available"
+            } divergence)`);
           }
 
           // Store beta analysis
@@ -613,7 +625,9 @@ Using real historical S&P 500 returns, estimate beta. Respond ONLY with valid JS
           stock.beta_1year = beta1Year;
           stock.beta_method = betaMethod;
           
-          console.log(`${stock.symbol}: ✅ Final beta: ${beta.toFixed(3)} (${betaMethod}, ${betaConfidence} confidence)`);
+          console.log(`${stock.symbol}: ✅ Final beta: ${
+            typeof beta === "number" && Number.isFinite(beta) ? beta.toFixed(3) : "Not Available"
+          } (${betaMethod}, ${betaConfidence} confidence)`);
 
           // METHOD 3: CAPM (Capital Asset Pricing Model)
           // Formula: E(R) = Rf + β × (E(Rm) - Rf)
@@ -626,12 +640,16 @@ Using real historical S&P 500 returns, estimate beta. Respond ONLY with valid JS
           if (Math.abs(beta) > 2.0) {
             // Apply logarithmic smoothing for extreme betas
             capmBeta = Math.sign(beta) * (2.0 + Math.log(Math.abs(beta) - 1.0));
-            betaWarnings.push(`CAPM uses smoothed beta (${capmBeta.toFixed(3)}) to prevent unrealistic return expectations from extreme β=${beta.toFixed(3)}`);
+            betaWarnings.push(`CAPM uses smoothed beta (${
+              typeof capmBeta === "number" && Number.isFinite(capmBeta) ? capmBeta.toFixed(3) : "Not Available"
+            }) to prevent unrealistic return expectations from extreme β=${
+              typeof beta === "number" && Number.isFinite(beta) ? beta.toFixed(3) : "Not Available"
+            }`);
           }
           
           const capmReturn = riskFreeRate + capmBeta * marketRiskPremium;
-          // ============================================================================
-// SECTION 2 (PART 2): handleAnalyze() - Risk Calculation & AI Analysis
+          // =========================================
+          // SECTION 2 (PART 2): handleAnalyze() - Risk Calculation & AI Analysis
 // ============================================================================
 // This section contains the continuation of handleAnalyze() function:
 // - METHOD 4: Annualized Volatility Calculation (historical + beta-based)
@@ -642,17 +660,7 @@ Using real historical S&P 500 returns, estimate beta. Respond ONLY with valid JS
 // - Data validation and hygiene checks
 // - Plain-English adjustment explanations
 // - Company analysis loop completion
-//
-// CHANGES FROM BASE44:
-// - Replaced: base44.integrations.Core.InvokeLLM() → AWS Bedrock Runtime Client
-// - Uses same Bedrock pattern as getStockAnalysis Lambda (Claude 3 Sonnet)
-// - Maintains all calculation logic exactly as before
-// - Preserves all data validation and error handling
-//
-// ✅ NO VIX CHANGES NEEDED IN SECTION 2:
-// - This section handles INDIVIDUAL STOCK analysis
-// - VIX integration happens at PORTFOLIO LEVEL (Section 3+)
-// - Stock-level risk uses historical + beta-based volatility (correct approach)
+
 // ============================================================================
 
           // METHOD 4: Annualized Volatility (Risk Calculation)
@@ -754,16 +762,16 @@ Using real historical S&P 500 returns, estimate beta. Respond ONLY with valid JS
           const prompt = `You are a strict fundamental analyst evaluating ${stock.symbol} (${stock.name}).
 
 **Market Data:**
-- Price: $${stock.current_price || 'N/A'}
-- Market Cap: ${stock.market_cap || 'N/A'}
-- P/E Ratio: ${stock.pe_ratio || 'N/A'}
-- Beta: ${beta.toFixed(3)}${betaConfidence !== 'high' ? ' (LOW CONFIDENCE)' : ''}
-- YTD Return: ${stock.ytd_return?.toFixed(1) || 'N/A'}%
-- 1Y Return: ${stock.one_year_return?.toFixed(1) || 'N/A'}%
-- 3Y Return: ${stock.three_year_return?.toFixed(1) || 'N/A'}%
-- 52W Range: ${stock.fifty_two_week_range || 'N/A'}
+- Price: $${typeof stock.current_price === "number" && Number.isFinite(stock.current_price) ? stock.current_price.toFixed(2) : "Not Available"}
+- Market Cap: ${stock.market_cap || 'Not Available'}
+- P/E Ratio: ${typeof stock.pe_ratio === "number" && Number.isFinite(stock.pe_ratio) ? stock.pe_ratio.toFixed(2) : "Not Available"}
+- Beta: ${typeof beta === "number" && Number.isFinite(beta) ? beta.toFixed(3) : "Not Available"}${betaConfidence !== 'high' ? ' (LOW CONFIDENCE)' : ''}
+- YTD Return: ${typeof stock.ytd_return === "number" && Number.isFinite(stock.ytd_return) ? stock.ytd_return.toFixed(1) : "Not Available"}%
+- 1Y Return: ${typeof stock.one_year_return === "number" && Number.isFinite(stock.one_year_return) ? stock.one_year_return.toFixed(1) : "Not Available"}%
+- 3Y Return: ${typeof stock.three_year_return === "number" && Number.isFinite(stock.three_year_return) ? stock.three_year_return.toFixed(1) : "Not Available"}%
+- 52W Range: ${stock.fifty_two_week_range || 'Not Available'}
 - Sector: ${stock.sector || 'Unknown'}
-- Dividend Yield: ${stock.dividend_yield?.toFixed(2) || 'N/A'}%
+- Dividend Yield: ${typeof stock.dividend_yield === "number" && Number.isFinite(stock.dividend_yield) ? stock.dividend_yield.toFixed(2) : "Not Available"}%
 
 **Classification:** ${isSpeculative ? 'SPECULATIVE/PRE-REVENUE' : 'ESTABLISHED'}
 
@@ -984,10 +992,10 @@ If analyzing similar companies (same sector), focus on:
           let baseReturn;
           if (hasReliableHistory) {
             baseReturn = (historicalReturn * historicalWeight) + (capmReturn * capmWeight);
-            returnMethodology = `${(historicalWeight*100).toFixed(0)}% Hist(${historicalReturn.toFixed(2)}%) + ${(capmWeight*100).toFixed(0)}% CAPM(${capmReturn.toFixed(2)}%), AI: ${cappedReturnAdj >= 0 ? '+' : ''}${cappedReturnAdj.toFixed(1)}%`;
+            returnMethodology = `${(typeof historicalWeight === "number" && Number.isFinite(historicalWeight) ? historicalWeight*100 : 0).toFixed(0)}% Hist(${typeof historicalReturn === "number" && Number.isFinite(historicalReturn) ? historicalReturn.toFixed(2) : "Not Available"}%) + ${(typeof capmWeight === "number" && Number.isFinite(capmWeight) ? capmWeight*100 : 0).toFixed(0)}% CAPM(${typeof capmReturn === "number" && Number.isFinite(capmReturn) ? capmReturn.toFixed(2) : "Not Available"}%), AI: ${(cappedReturnAdj >= 0 ? '+' : '')}${typeof cappedReturnAdj === "number" && Number.isFinite(cappedReturnAdj) ? cappedReturnAdj.toFixed(1) : "Not Available"}%`;
           } else {
             baseReturn = capmReturn;
-            returnMethodology = `100% CAPM: ${riskFreeRate.toFixed(1)}% + ${beta.toFixed(4)}×${marketRiskPremium.toFixed(1)}%, AI: ${cappedReturnAdj >= 0 ? '+' : ''}${cappedReturnAdj.toFixed(1)}%`;
+            returnMethodology = `100% CAPM: ${typeof riskFreeRate === "number" && Number.isFinite(riskFreeRate) ? riskFreeRate.toFixed(1) : "Not Available"}% + ${typeof beta === "number" && Number.isFinite(beta) ? beta.toFixed(4) : "Not Available"}×${typeof marketRiskPremium === "number" && Number.isFinite(marketRiskPremium) ? marketRiskPremium.toFixed(1) : "Not Available"}%, AI: ${(cappedReturnAdj >= 0 ? '+' : '')}${typeof cappedReturnAdj === "number" && Number.isFinite(cappedReturnAdj) ? cappedReturnAdj.toFixed(1) : "Not Available"}%`;
           }
 
           // Apply AI adjustment
@@ -1065,10 +1073,10 @@ If analyzing similar companies (same sector), focus on:
               metric: 'Risk',
               delta: cappedRiskAdj,
               unit: '%',
-              explanation: `Added ${cappedRiskAdj.toFixed(1)}% volatility due to ${
+              explanation: `Added ${typeof cappedRiskAdj === "number" && Number.isFinite(cappedRiskAdj) ? cappedRiskAdj.toFixed(1) : "Not Available"}% volatility due to ${
                 !stock.pe_ratio || stock.pe_ratio < 0 ? 'unprofitable status' : 
                 stock.market_cap?.includes('M') ? 'micro-cap classification' : 
-                'high beta (' + beta.toFixed(2) + ')'
+                typeof beta === "number" && Number.isFinite(beta) ? 'high beta (' + beta.toFixed(2) + ')' : 'high beta (Not Available)'
               }`
             });
           }
@@ -1084,7 +1092,7 @@ If analyzing similar companies (same sector), focus on:
               metric: 'Expected Return',
               delta: cappedReturnAdj,
               unit: '%',
-              explanation: `${direction.charAt(0).toUpperCase() + direction.slice(1)} ${Math.abs(cappedReturnAdj).toFixed(1)}% - ${reasoningText}`
+              explanation: `${direction.charAt(0).toUpperCase() + direction.slice(1)} ${typeof cappedReturnAdj === "number" && Number.isFinite(cappedReturnAdj) ? Math.abs(cappedReturnAdj).toFixed(1) : "Not Available"}% - ${reasoningText}`
             });
           }
           
@@ -1096,7 +1104,7 @@ If analyzing similar companies (same sector), focus on:
               metric: 'Market Sensitivity',
               delta: beta - 1.0,
               unit: '',
-              explanation: `Beta ${beta.toFixed(2)} indicates ${impact} (${beta > 1 ? 'more' : 'less'} volatile than S&P 500)`
+              explanation: `Beta ${typeof beta === "number" && Number.isFinite(beta) ? beta.toFixed(2) : "Not Available"} indicates ${impact} (${beta > 1 ? 'more' : 'less'} volatile than S&P 500)`
             });
           }
           
@@ -1108,7 +1116,7 @@ If analyzing similar companies (same sector), focus on:
               metric: 'Idiosyncratic Risk',
               delta: baseIdiosyncraticRisk,
               unit: '%',
-              explanation: `Small-cap classification (${stockMktCap}) adds ${baseIdiosyncraticRisk.toFixed(0)}% company-specific volatility`
+              explanation: `Small-cap classification (${stockMktCap}) adds ${typeof baseIdiosyncraticRisk === "number" && Number.isFinite(baseIdiosyncraticRisk) ? baseIdiosyncraticRisk.toFixed(0) : "Not Available"}% company-specific volatility`
             });
           }
 
@@ -1161,7 +1169,7 @@ If analyzing similar companies (same sector), focus on:
           result.companies.push(analyzedStock);
 
           // Log each analysis as it completes
-          console.log(`✓ Completed ${companyIndex + 1}/${batchData.stocks.length}: ${stock.symbol} - Return: ${expectedReturn.toFixed(3)}%, Risk: ${boundedRisk.toFixed(3)}%`);
+          console.log(`✓ Completed ${companyIndex + 1}/${batchData.stocks.length}: ${stock.symbol} - Return: ${typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(3) : "Not Available"}%, Risk: ${typeof boundedRisk === "number" && Number.isFinite(boundedRisk) ? boundedRisk.toFixed(3) : "Not Available"}%`);
 
         } catch (error) {
           console.error(`❌ Critical error analyzing ${stock.symbol}:`, error);
@@ -1197,6 +1205,7 @@ If analyzing similar companies (same sector), focus on:
       }
 
           // ============================================================================
+          // ============================================================================
 // SECTION 3 (PART 3): Company Updates, Portfolio Optimization & Trading
 // ============================================================================
 // This section contains:
@@ -1209,19 +1218,7 @@ If analyzing similar companies (same sector), focus on:
 // - Analysis caching to AWS Lambda (saveAnalysis)
 // - Helper functions: getValuationColor, getValuationIcon, getCurrentPortfolio, getStrategyIcon, getStrategyColor
 // - Trading functions: handleOpenTrade, handleExecuteTrade, handleTradeAllAllocations
-//
-// CHANGES FROM BASE44:
-// - Replaced: base44.entities.Company.update() → callAwsFunction('updateCompany')
-// - Replaced: base44.entities.PortfolioAnalysis.create() → callAwsFunction('saveAnalysis')
-// - Replaced: base44.functions.invoke('executePaperTrade') → callAwsFunction('executePaperTrade')
-// - Maintained all validation, logging, and optimization logic exactly as before
-//
-// ✅ VIX INTEGRATION ADDED (Section 3):
-// - Added: calculateForwardLookingRisk() call for VIX-adjusted portfolio risk
-// - Added: Forward-looking risk metrics to analysis result
-// - Added: VIX data validation before calculation
-// - Added: Fallback handling if VIX unavailable
-// - VIX-adjusted risk enhances portfolio optimization results
+
 // ============================================================================
 
       // Update Company records with fresh data (skip index funds as they don't have the same schema)
@@ -1261,27 +1258,27 @@ If analyzing similar companies (same sector), focus on:
       console.log("📊 INDUSTRY-STANDARD METHODOLOGY:");
       allCompanyData.forEach(c => {
         console.log(`${c.symbol}:`);
-        console.log(`   Beta: ${c.beta?.toFixed(3) || 'N/A'} (${c.beta_method || 'unknown'})`);
-        console.log(`   Expected Return: ${c.expected_return?.toFixed(2) || 'N/A'}% | Risk: ${c.risk?.toFixed(2) || 'N/A'}%`);
-        console.log(`   Method: ${c.return_methodology || 'N/A'}`);
-        console.log(`   Risk: Base=${c.base_volatility?.toFixed(1)}% (${c.volatility_source}), Idiosyncratic=${c.base_idiosyncratic_risk?.toFixed(1)}%, AI-adjusted=${c.ai_risk_adjustment?.toFixed(1)}%`);
+        console.log(`   Beta: ${typeof c.beta === "number" && Number.isFinite(c.beta) ? c.beta.toFixed(3) : "Not Available"} (${c.beta_method || 'unknown'})`);
+        console.log(`   Expected Return: ${typeof c.expected_return === "number" && Number.isFinite(c.expected_return) ? c.expected_return.toFixed(2) : "Not Available"}% | Risk: ${typeof c.risk === "number" && Number.isFinite(c.risk) ? c.risk.toFixed(2) : "Not Available"}%`);
+        console.log(`   Method: ${c.return_methodology || 'Not Available'}`);
+        console.log(`   Risk: Base=${typeof c.base_volatility === "number" && Number.isFinite(c.base_volatility) ? c.base_volatility.toFixed(1) : "Not Available"}% (${c.volatility_source}), Idiosyncratic=${typeof c.base_idiosyncratic_risk === "number" && Number.isFinite(c.base_idiosyncratic_risk) ? c.base_idiosyncratic_risk.toFixed(1) : "Not Available"}%, AI-adjusted=${typeof c.ai_risk_adjustment === "number" && Number.isFinite(c.ai_risk_adjustment) ? c.ai_risk_adjustment.toFixed(1) : "Not Available"}%`);
       });
 
       // CRITICAL: Check if all companies are identical (optimization killer)
       // Use higher precision for detection
-      const uniqueReturns = new Set(allCompanyData.map(c => c.expected_return.toFixed(2)));
-      const uniqueRisks = new Set(allCompanyData.map(c => c.risk.toFixed(2)));
+      const uniqueReturns = new Set(allCompanyData.map(c => typeof c.expected_return === "number" && Number.isFinite(c.expected_return) ? c.expected_return.toFixed(2) : "Not Available"));
+      const uniqueRisks = new Set(allCompanyData.map(c => typeof c.risk === "number" && Number.isFinite(c.risk) ? c.risk.toFixed(2) : "Not Available"));
 
       if (uniqueReturns.size === 1 && uniqueRisks.size === 1) {
         console.error("🚨 FATAL: All assets have IDENTICAL return and risk profiles");
-        console.error("   Details:", allCompanyData.map(c => `${c.symbol}: ${c.expected_return.toFixed(3)}% return, ${c.risk.toFixed(3)}% risk`));
-        throw new Error(`Portfolio optimization failed: All ${allCompanyData.length} assets have identical risk/return profiles (${allCompanyData[0].expected_return.toFixed(2)}% return, ${allCompanyData[0].risk.toFixed(2)}% risk). This makes optimization impossible.\n\nPlease select assets from different:\n• Sectors (tech, healthcare, finance, etc.)\n• Market caps (large, mid, small)\n• Growth stages (mature, growth, speculative)\n\nCurrent selections: ${allCompanyData.map(c => `${c.symbol} (${c.sector})`).join(', ')}`);
+        console.error("   Details:", allCompanyData.map(c => `${c.symbol}: ${typeof c.expected_return === "number" && Number.isFinite(c.expected_return) ? c.expected_return.toFixed(3) : "Not Available"}% return, ${typeof c.risk === "number" && Number.isFinite(c.risk) ? c.risk.toFixed(3) : "Not Available"}% risk`));
+        throw new Error(`Portfolio optimization failed: All ${allCompanyData.length} assets have identical risk/return profiles (${typeof allCompanyData[0].expected_return === "number" && Number.isFinite(allCompanyData[0].expected_return) ? allCompanyData[0].expected_return.toFixed(2) : "Not Available"}% return, ${typeof allCompanyData[0].risk === "number" && Number.isFinite(allCompanyData[0].risk) ? allCompanyData[0].risk.toFixed(2) : "Not Available"}% risk). This makes optimization impossible.\n\nPlease select assets from different:\n• Sectors (tech, healthcare, finance, etc.)\n• Market caps (large, mid, small)\n• Growth stages (mature, growth, speculative)\n\nCurrent selections: ${allCompanyData.map(c => `${c.symbol} (${c.sector})`).join(', ')}`);
       }
 
       if (uniqueReturns.size === 1) {
         console.error("🚨 CRITICAL: All assets have IDENTICAL expected returns");
-        console.log("   AI adjustments:", allCompanyData.map(c => `${c.symbol}: ${c.ai_return_adjustment?.toFixed(1)}%`).join(', '));
-        throw new Error(`Portfolio optimization failed: All assets have identical expected returns (${allCompanyData[0].expected_return.toFixed(2)}%).\n\nThe AI analysis produced insufficient differentiation. Please:\n• Select more diverse assets from different sectors\n• Ensure assets have different risk profiles and growth prospects\n• Try different combinations\n\nCurrent selections: ${allCompanyData.map(c => c.symbol).join(', ')}`);
+        console.log("   AI adjustments:", allCompanyData.map(c => `${c.symbol}: ${typeof c.ai_return_adjustment === "number" && Number.isFinite(c.ai_return_adjustment) ? c.ai_return_adjustment.toFixed(1) : "Not Available"}%`).join(', '));
+        throw new Error(`Portfolio optimization failed: All assets have identical expected returns (${typeof allCompanyData[0].expected_return === "number" && Number.isFinite(allCompanyData[0].expected_return) ? allCompanyData[0].expected_return.toFixed(2) : "Not Available"}%).\n\nThe AI analysis produced insufficient differentiation. Please:\n• Select more diverse assets from different sectors\n• Ensure assets have different risk profiles and growth prospects\n• Try different combinations\n\nCurrent selections: ${allCompanyData.map(c => c.symbol).join(', ')}`);
       }
 
       // CRITICAL VALIDATION: Verify expected returns are properly differentiated
@@ -1299,15 +1296,15 @@ If analyzing similar companies (same sector), focus on:
       const riskSpread = maxRisk - minRisk;
 
       console.log("📊 Asset Differentiation (Real Market Data):");
-      console.log(`   Returns: ${minReturn.toFixed(2)}% to ${maxReturn.toFixed(2)}% (spread: ${returnSpread.toFixed(2)}%)`);
-      console.log(`   Risk: ${minRisk.toFixed(2)}% to ${maxRisk.toFixed(2)}% (spread: ${riskSpread.toFixed(2)}%)`);
-      console.log(`   Sharpe Ratios: ${allCompanyData.map(c => c.risk ? ((c.expected_return - 4.5) / c.risk).toFixed(3) : 'N/A').join(', ')}`);
+      console.log(`   Returns: ${typeof minReturn === "number" && Number.isFinite(minReturn) ? minReturn.toFixed(2) : "Not Available"}% to ${typeof maxReturn === "number" && Number.isFinite(maxReturn) ? maxReturn.toFixed(2) : "Not Available"}% (spread: ${typeof returnSpread === "number" && Number.isFinite(returnSpread) ? returnSpread.toFixed(2) : "Not Available"}%)`);
+      console.log(`   Risk: ${typeof minRisk === "number" && Number.isFinite(minRisk) ? minRisk.toFixed(2) : "Not Available"}% to ${typeof maxRisk === "number" && Number.isFinite(maxRisk) ? maxRisk.toFixed(2) : "Not Available"}% (spread: ${typeof riskSpread === "number" && Number.isFinite(riskSpread) ? riskSpread.toFixed(2) : "Not Available"}%)`);
+      console.log(`   Sharpe Ratios: ${allCompanyData.map(c => c.risk ? ((c.expected_return - 4.5) / c.risk).toFixed(3) : 'Not Available').join(', ')}`);
       
       // Log similarity without forcing changes
-      if (returnSpread < 3.0) {
+      if (typeof returnSpread === "number" && Number.isFinite(returnSpread) && returnSpread < 3.0) {
         console.warn(`⚠️ Low return differentiation detected. This reflects real market conditions for similar assets.`);
       }
-      if (riskSpread < 5.0) {
+      if (typeof riskSpread === "number" && Number.isFinite(riskSpread) && riskSpread < 5.0) {
         console.warn(`⚠️ Low risk differentiation detected. Assets have similar volatility profiles.`);
       }
 
@@ -1366,10 +1363,10 @@ If analyzing similar companies (same sector), focus on:
       }
       
       // Correlation and differentiation
-      if (returnSpread < 3.0) {
+      if (typeof returnSpread === "number" && Number.isFinite(returnSpread) && returnSpread < 3.0) {
         similarityWarnings.push(`Limited return differentiation (${returnSpread.toFixed(1)}% spread)`);
       }
-      if (riskSpread < 5.0) {
+      if (typeof riskSpread === "number" && Number.isFinite(riskSpread) && riskSpread < 5.0) {
         similarityWarnings.push(`Limited risk differentiation (${riskSpread.toFixed(1)}% spread)`);
       }
       
@@ -1387,9 +1384,9 @@ If analyzing similar companies (same sector), focus on:
       // Input data for optimization
       console.log("📊 Optimization inputs:", allCompanyData.map(c => ({ 
         symbol: c.symbol, 
-        return: c.expected_return?.toFixed(2) + '%' || 'N/A',
-        risk: c.risk?.toFixed(2) + '%' || 'N/A',
-        sharpe: (c.risk ? (c.expected_return / c.risk).toFixed(3) : 'N/A')
+        return: typeof c.expected_return === "number" && Number.isFinite(c.expected_return) ? c.expected_return.toFixed(2) + '%' : 'Not Available',
+        risk: typeof c.risk === "number" && Number.isFinite(c.risk) ? c.risk.toFixed(2) + '%' : 'Not Available',
+        sharpe: c.risk ? ((c.expected_return / c.risk).toFixed(3)) : 'Not Available'
       })));
 
       // ═════════════════════════════════════════════════════════════════════════════
@@ -1424,12 +1421,12 @@ If analyzing similar companies (same sector), focus on:
         if (portfolio && portfolio.allocations) {
           const weights = Object.values(portfolio.allocations);
           const sum = weights.reduce((a, b) => a + b, 0);
-          const unique = new Set(weights.map(w => w.toFixed(1))).size;
+          const unique = new Set(weights.map(w => typeof w === "number" && Number.isFinite(w) ? w.toFixed(1) : "Not Available")).size;
           
-          console.log(`   ${portfolioKey}: Sum=${sum.toFixed(2)}%, Unique=${unique}/${weights.length}`);
+          console.log(`   ${portfolioKey}: Sum=${typeof sum === "number" && Number.isFinite(sum) ? sum.toFixed(2) : "Not Available"}%, Unique=${unique}/${weights.length}`);
           
           // Critical error if sum is off
-          if (Math.abs(sum - 100) > 0.1) {
+          if (typeof sum === "number" && Number.isFinite(sum) && Math.abs(sum - 100) > 0.1) {
             throw new Error(`CRITICAL: ${portfolioKey} allocations sum to ${sum.toFixed(2)}% instead of 100%`);
           }
         }
@@ -1448,9 +1445,9 @@ If analyzing similar companies (same sector), focus on:
       }
 
       console.log("✅ Optimization Results:");
-      console.log("   Optimal: Return=" + optimal_portfolio.expected_return.toFixed(2) + "%, Risk=" + optimal_portfolio.risk.toFixed(2) + "%, Sharpe=" + optimal_portfolio.sharpe_ratio.toFixed(3));
-      console.log("   Min Var: Return=" + minimum_variance_portfolio.expected_return.toFixed(2) + "%, Risk=" + minimum_variance_portfolio.risk.toFixed(2) + "%, Sharpe=" + minimum_variance_portfolio.sharpe_ratio.toFixed(3));
-      console.log("   Max Ret: Return=" + maximum_return_portfolio.expected_return.toFixed(2) + "%, Risk=" + maximum_return_portfolio.risk.toFixed(2) + "%, Sharpe=" + maximum_return_portfolio.sharpe_ratio.toFixed(3));
+      console.log("   Optimal: Return=" + (typeof optimal_portfolio.expected_return === "number" && Number.isFinite(optimal_portfolio.expected_return) ? optimal_portfolio.expected_return.toFixed(2) : "Not Available") + "%, Risk=" + (typeof optimal_portfolio.risk === "number" && Number.isFinite(optimal_portfolio.risk) ? optimal_portfolio.risk.toFixed(2) : "Not Available") + "%, Sharpe=" + (typeof optimal_portfolio.sharpe_ratio === "number" && Number.isFinite(optimal_portfolio.sharpe_ratio) ? optimal_portfolio.sharpe_ratio.toFixed(3) : "Not Available"));
+      console.log("   Min Var: Return=" + (typeof minimum_variance_portfolio.expected_return === "number" && Number.isFinite(minimum_variance_portfolio.expected_return) ? minimum_variance_portfolio.expected_return.toFixed(2) : "Not Available") + "%, Risk=" + (typeof minimum_variance_portfolio.risk === "number" && Number.isFinite(minimum_variance_portfolio.risk) ? minimum_variance_portfolio.risk.toFixed(2) : "Not Available") + "%, Sharpe=" + (typeof minimum_variance_portfolio.sharpe_ratio === "number" && Number.isFinite(minimum_variance_portfolio.sharpe_ratio) ? minimum_variance_portfolio.sharpe_ratio.toFixed(3) : "Not Available"));
+      console.log("   Max Ret: Return=" + (typeof maximum_return_portfolio.expected_return === "number" && Number.isFinite(maximum_return_portfolio.expected_return) ? maximum_return_portfolio.expected_return.toFixed(2) : "Not Available") + "%, Risk=" + (typeof maximum_return_portfolio.risk === "number" && Number.isFinite(maximum_return_portfolio.risk) ? maximum_return_portfolio.risk.toFixed(2) : "Not Available") + "%, Sharpe=" + (typeof maximum_return_portfolio.sharpe_ratio === "number" && Number.isFinite(maximum_return_portfolio.sharpe_ratio) ? maximum_return_portfolio.sharpe_ratio.toFixed(3) : "Not Available"));
 
       // ✅ NEW: VIX-ADJUSTED FORWARD-LOOKING RISK CALCULATION
       // Calculate portfolio-level VIX-adjusted risk for each strategy
@@ -1713,7 +1710,6 @@ If analyzing similar companies (same sector), focus on:
     }
 
     // =================
-
     // ============================================================================
 // SECTION 4 (PART 4): Trade Navigation, Comparison Data & JSX Start
 // ============================================================================
@@ -1733,8 +1729,7 @@ If analyzing similar companies (same sector), focus on:
 //   - Session change summary, analysis change log, behavioral nudge
 //   - Platform positioning
 //   - Methodology & transparency card (collapsible)
-//
-// NO CHANGES FROM BASE44 - Pure JSX rendering with existing components
+
 // ============================================================================
 
     // Store allocation data in sessionStorage to pass to PracticeTrading page
@@ -1752,21 +1747,21 @@ If analyzing similar companies (same sector), focus on:
     analysisResult.maximum_return_portfolio) ? [
     { 
       name: "Optimal", 
-      return: analysisResult.optimal_portfolio.expected_return || 0,
-      risk: analysisResult.optimal_portfolio.risk || 0,
-      sharpe: analysisResult.optimal_portfolio.sharpe_ratio || 0
+      return: typeof analysisResult.optimal_portfolio.expected_return === "number" && Number.isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available",
+      risk: typeof analysisResult.optimal_portfolio.risk === "number" && Number.isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available",
+      sharpe: typeof analysisResult.optimal_portfolio.sharpe_ratio === "number" && Number.isFinite(analysisResult.optimal_portfolio.sharpe_ratio) ? analysisResult.optimal_portfolio.sharpe_ratio.toFixed(3) : "Not Available"
     },
     { 
       name: "Min Variance", 
-      return: analysisResult.minimum_variance_portfolio.expected_return || 0,
-      risk: analysisResult.minimum_variance_portfolio.risk || 0,
-      sharpe: analysisResult.minimum_variance_portfolio.sharpe_ratio || 0
+      return: typeof analysisResult.minimum_variance_portfolio.expected_return === "number" && Number.isFinite(analysisResult.minimum_variance_portfolio.expected_return) ? analysisResult.minimum_variance_portfolio.expected_return.toFixed(2) : "Not Available",
+      risk: typeof analysisResult.minimum_variance_portfolio.risk === "number" && Number.isFinite(analysisResult.minimum_variance_portfolio.risk) ? analysisResult.minimum_variance_portfolio.risk.toFixed(2) : "Not Available",
+      sharpe: typeof analysisResult.minimum_variance_portfolio.sharpe_ratio === "number" && Number.isFinite(analysisResult.minimum_variance_portfolio.sharpe_ratio) ? analysisResult.minimum_variance_portfolio.sharpe_ratio.toFixed(3) : "Not Available"
     },
     { 
       name: "Max Return", 
-      return: analysisResult.maximum_return_portfolio.expected_return || 0,
-      risk: analysisResult.maximum_return_portfolio.risk || 0,
-      sharpe: analysisResult.maximum_return_portfolio.sharpe_ratio || 0
+      return: typeof analysisResult.maximum_return_portfolio.expected_return === "number" && Number.isFinite(analysisResult.maximum_return_portfolio.expected_return) ? analysisResult.maximum_return_portfolio.expected_return.toFixed(2) : "Not Available",
+      risk: typeof analysisResult.maximum_return_portfolio.risk === "number" && Number.isFinite(analysisResult.maximum_return_portfolio.risk) ? analysisResult.maximum_return_portfolio.risk.toFixed(2) : "Not Available",
+      sharpe: typeof analysisResult.maximum_return_portfolio.sharpe_ratio === "number" && Number.isFinite(analysisResult.maximum_return_portfolio.sharpe_ratio) ? analysisResult.maximum_return_portfolio.sharpe_ratio.toFixed(3) : "Not Available"
     }
   ] : [];
 
@@ -2139,8 +2134,7 @@ If analyzing similar companies (same sector), focus on:
               </Card>
 
               // =====================
-              // ============================================================================
-// SECTION 5 (PART 5): Analysis Results - Warnings, Cards & Strategy Comparison
+              // SECTION 5 (PART 5): Analysis Results - Warnings, Cards & Strategy Comparison
 // ============================================================================
 // This section contains JSX rendering for analysis results:
 // - Correlation & confidence warning (extreme/high/moderate tiers)
@@ -2201,7 +2195,7 @@ If analyzing similar companies (same sector), focus on:
                           'text-blue-800'
                         }`}>
                           <p className="mb-2">
-                            <strong>Average Correlation: {(analysisResult.portfolio_quality.avgCorrelation * 100).toFixed(0)}%</strong>
+                            <strong>Average Correlation: {typeof analysisResult.portfolio_quality.avgCorrelation === "number" && Number.isFinite(analysisResult.portfolio_quality.avgCorrelation) ? (analysisResult.portfolio_quality.avgCorrelation * 100).toFixed(0) : "Not Available"}%</strong>
                             {' '}• Confidence: <strong>{analysisResult.portfolio_quality.confidenceLevel}</strong>
                           </p>
 
@@ -2419,7 +2413,7 @@ If analyzing similar companies (same sector), focus on:
                               {analysisResult.return_cap_adjustments.map((adj, idx) => (
                                 <li key={idx}>
                                   <strong>{adj.symbol}</strong> ({adj.assetClass}): 
-                                  {adj.original.toFixed(1)}% → {adj.capped.toFixed(1)}% 
+                                  {typeof adj.original === "number" && Number.isFinite(adj.original) ? adj.original.toFixed(1) : "Not Available"}% → {typeof adj.capped === "number" && Number.isFinite(adj.capped) ? adj.capped.toFixed(1) : "Not Available"}% 
                                   (max for asset class)
                                 </li>
                               ))}
@@ -2490,7 +2484,7 @@ If analyzing similar companies (same sector), focus on:
                     ? 'text-blue-600' 
                     : 'text-rose-600'
                     }`}>
-                    {typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%
+                    {typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%
                     </p>
                       {(analysisResult.optimal_portfolio.expected_return || 0) < 0 && (
                         <p className="text-xs text-rose-600 mt-1 font-semibold">
@@ -2501,13 +2495,13 @@ If analyzing similar companies (same sector), focus on:
                     <div className="bg-amber-50/50 rounded-lg p-3">
                       <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">Volatility (σ)</p>
                       <p className="text-xl md:text-2xl font-bold text-slate-900 tabular-nums">
-                        {typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}%{typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}% isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}%
+                        {typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}%
                       </p>
                     </div>
                     <div className="bg-indigo-50/50 rounded-lg p-3">
                       <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">Sharpe Ratio</p>
                       <p className="text-2xl md:text-3xl font-bold text-indigo-600 tabular-nums">
-                        {(analysisResult.optimal_portfolio.sharpe_ratio || 0).toFixed(3)}
+                        {typeof analysisResult.optimal_portfolio.sharpe_ratio === "number" && isFinite(analysisResult.optimal_portfolio.sharpe_ratio) ? analysisResult.optimal_portfolio.sharpe_ratio.toFixed(3) : "Not Available"}
                       </p>
                       <p className="text-xs text-slate-500 mt-1">Highest risk-adjusted return</p>
                     </div>
@@ -2516,7 +2510,7 @@ If analyzing similar companies (same sector), focus on:
                 </Card>
                 // ============================================================================
                 // ============================================================================
-// SECTION 6 (PART 6): Strategy Cards & Investment Projections
+                // SECTION 6 (PART 6): Strategy Cards & Investment Projections
 // ============================================================================
 // This section contains JSX rendering for:
 // - Minimum Variance Portfolio card (conservative/defensive strategy)
@@ -2573,12 +2567,12 @@ If analyzing similar companies (same sector), focus on:
                             <div className="mt-2 pt-2 border-t border-teal-200">
                               <p className="text-xs text-slate-600 mb-1">Forward-Looking Risk (VIX-adjusted)</p>
                               <p className="text-lg font-bold text-purple-700 tabular-nums">
-                                {analysisResult.forward_risk_metrics.minimum_variance.forwardRisk}%
+                                {typeof analysisResult.forward_risk_metrics.minimum_variance.forwardRisk === "number" && isFinite(analysisResult.forward_risk_metrics.minimum_variance.forwardRisk) ? analysisResult.forward_risk_metrics.minimum_variance.forwardRisk.toFixed(2) : "Not Available"}%
                               </p>
                               {analysisResult.forward_risk_metrics.minimum_variance.regimeImpact !== 0 && (
                                 <p className="text-xs text-purple-600 mt-1">
                                   {analysisResult.forward_risk_metrics.minimum_variance.regimeImpact > 0 ? '+' : ''}
-                                  {analysisResult.forward_risk_metrics.minimum_variance.regimeImpact}% regime impact
+                                  {typeof analysisResult.forward_risk_metrics.minimum_variance.regimeImpact === "number" && isFinite(analysisResult.forward_risk_metrics.minimum_variance.regimeImpact) ? analysisResult.forward_risk_metrics.minimum_variance.regimeImpact.toFixed(2) : "Not Available"}% regime impact
                                 </p>
                               )}
                             </div>
@@ -2636,12 +2630,12 @@ If analyzing similar companies (same sector), focus on:
                             <div className="mt-2 pt-2 border-t border-rose-200">
                               <p className="text-xs text-slate-600 mb-1">Forward-Looking Risk (VIX-adjusted)</p>
                               <p className="text-lg font-bold text-purple-700 tabular-nums">
-                                {analysisResult.forward_risk_metrics.maximum_return.forwardRisk}%
+                                {typeof analysisResult.forward_risk_metrics.maximum_return.forwardRisk === "number" && isFinite(analysisResult.forward_risk_metrics.maximum_return.forwardRisk) ? analysisResult.forward_risk_metrics.maximum_return.forwardRisk.toFixed(2) : "Not Available"}%
                               </p>
                               {analysisResult.forward_risk_metrics.maximum_return.regimeImpact !== 0 && (
                                 <p className="text-xs text-purple-600 mt-1">
                                   {analysisResult.forward_risk_metrics.maximum_return.regimeImpact > 0 ? '+' : ''}
-                                  {analysisResult.forward_risk_metrics.maximum_return.regimeImpact}% regime impact
+                                  {typeof analysisResult.forward_risk_metrics.maximum_return.regimeImpact === "number" && isFinite(analysisResult.forward_risk_metrics.maximum_return.regimeImpact) ? analysisResult.forward_risk_metrics.maximum_return.regimeImpact.toFixed(2) : "Not Available"}% regime impact
                                 </p>
                               )}
                             </div>
@@ -2679,7 +2673,7 @@ If analyzing similar companies (same sector), focus on:
                             ⚠️ Negative Expected Return Portfolio
                           </h3>
                           <p className="text-sm text-rose-800 mb-3">
-                            The selected portfolio has a <strong>negative {expectedReturn.toFixed(2)}% expected annual return</strong>. 
+                            The selected portfolio has a <strong>negative {typeof expectedReturn === "number" && isFinite(expectedReturn) ? expectedReturn.toFixed(2) : "Not Available"}% expected annual return</strong>. 
                             Despite regular contributions, this portfolio is projected to <strong>erode capital over time</strong>.
                           </p>
                           <div className="bg-white/50 p-4 rounded-xl border-2 border-rose-300 shadow-sm">
@@ -2762,7 +2756,7 @@ If analyzing similar companies (same sector), focus on:
                         Investment Growth Projections
                       </CardTitle>
                       <div className="text-white/90 text-sm mt-2 space-y-1">
-                        <p><strong>Portfolio Metrics:</strong> {expectedReturn.toFixed(2)}% expected annual return • {portfolioRisk.toFixed(2)}% volatility (annualized σ)</p>
+                        <p><strong>Portfolio Metrics:</strong> {typeof expectedReturn === "number" && isFinite(expectedReturn) ? expectedReturn.toFixed(2) : "Not Available"}% expected annual return • {typeof portfolioRisk === "number" && isFinite(portfolioRisk) ? portfolioRisk.toFixed(2) : "Not Available"}% volatility (annualized σ)</p>
                         <p><strong>Calculation Method:</strong> Monthly compounding with {monthly > 0 ? 'regular contributions' : 'lump sum investment'}</p>
                         <p><strong>Risk-Free Rate:</strong> 4.5% (current 3-month US T-Bill) • <strong>Optimization:</strong> Markowitz Mean-Variance (MPT)</p>
                       </div>
@@ -2778,8 +2772,8 @@ If analyzing similar companies (same sector), focus on:
                            ${value5Years.toLocaleString('en-US', { maximumFractionDigits: 0 })}
                          </p>
                          <div className="text-[10px] md:text-xs text-slate-600 mt-1 md:mt-2 space-y-1">
-                           <p className="truncate">Contrib: ${(totalContributions5yr/1000).toFixed(0)}k</p>
-                           <p className="text-emerald-700 font-semibold truncate">Growth: ${(investmentGrowth5yr/1000).toFixed(0)}k</p>
+                           <p className="truncate">Contrib: {(totalContributions5yr/1000).toFixed(0)}k</p>
+                           <p className="text-emerald-700 font-semibold truncate">Growth: {(investmentGrowth5yr/1000).toFixed(0)}k</p>
                          </div>
                        </CardContent>
                       </Card>
@@ -2792,8 +2786,8 @@ If analyzing similar companies (same sector), focus on:
                               ${value10Years.toLocaleString('en-US', { maximumFractionDigits: 0 })}
                             </p>
                             <div className="text-[10px] md:text-xs text-slate-600 mt-1 md:mt-2 space-y-1">
-                              <p className="truncate">Contrib: ${(totalContributions10yr/1000).toFixed(0)}k</p>
-                              <p className="text-emerald-700 font-semibold truncate">Growth: ${(investmentGrowth10yr/1000).toFixed(0)}k</p>
+                              <p className="truncate">Contrib: {(totalContributions10yr/1000).toFixed(0)}k</p>
+                              <p className="text-emerald-700 font-semibold truncate">Growth: {(investmentGrowth10yr/1000).toFixed(0)}k</p>
                             </div>
                           </CardContent>
                         </Card>
@@ -2806,8 +2800,8 @@ If analyzing similar companies (same sector), focus on:
                               ${value20Years.toLocaleString('en-US', { maximumFractionDigits: 0 })}
                             </p>
                             <div className="text-[10px] md:text-xs text-slate-600 mt-1 md:mt-2 space-y-1">
-                              <p className="truncate">Contrib: ${(totalContributions20yr/1000).toFixed(0)}k</p>
-                              <p className="text-emerald-700 font-semibold truncate">Growth: ${(investmentGrowth20yr/1000).toFixed(0)}k</p>
+                              <p className="truncate">Contrib: {(totalContributions20yr/1000).toFixed(0)}k</p>
+                              <p className="text-emerald-700 font-semibold truncate">Growth: {(investmentGrowth20yr/1000).toFixed(0)}k</p>
                             </div>
                           </CardContent>
                         </Card>
@@ -2820,8 +2814,8 @@ If analyzing similar companies (same sector), focus on:
                               ${value30Years.toLocaleString('en-US', { maximumFractionDigits: 0 })}
                             </p>
                             <div className="text-[10px] md:text-xs text-slate-600 mt-1 md:mt-2 space-y-1">
-                              <p className="truncate">Contrib: ${(totalContributions30yr/1000).toFixed(0)}k</p>
-                              <p className="text-emerald-700 font-semibold truncate">Growth: ${(investmentGrowth30yr/1000).toFixed(0)}k</p>
+                              <p className="truncate">Contrib: {(totalContributions30yr/1000).toFixed(0)}k</p>
+                              <p className="text-emerald-700 font-semibold truncate">Growth: {(investmentGrowth30yr/1000).toFixed(0)}k</p>
                             </div>
                           </CardContent>
                         </Card>
@@ -2857,7 +2851,7 @@ If analyzing similar companies (same sector), focus on:
                               </div>
                               <div>
                                 <h4 className="text-xl md:text-2xl font-bold text-slate-900">
-                                  {yearsToGoal.toFixed(1)} Years
+                                  {typeof yearsToGoal === "number" && isFinite(yearsToGoal) ? yearsToGoal.toFixed(1) : "Not Available"} Years
                                 </h4>
                                 <p className="text-sm md:text-base text-slate-600 break-words">
                                   to reach your ${goal.toLocaleString()} goal
@@ -2869,7 +2863,7 @@ If analyzing similar companies (same sector), focus on:
                                       goalProbability >= 0.3 ? 'bg-amber-100 text-amber-700' :
                                       'bg-rose-100 text-rose-700'
                                     }`}>
-                                      {(goalProbability * 100).toFixed(0)}% Probability of Success
+                                      {typeof goalProbability === "number" && isFinite(goalProbability) ? (goalProbability * 100).toFixed(0) : "Not Available"}% Probability of Success
                                     </Badge>
                                   </div>
                                 </div>
@@ -2885,12 +2879,12 @@ If analyzing similar companies (same sector), focus on:
                                   </p>
                                 )}
                                 <p className="text-xs md:text-sm text-slate-600 mt-1 break-words">
-                                  @ {expectedReturn.toFixed(1)}% return ({portfolioRisk.toFixed(1)}% risk)
+                                  @ {typeof expectedReturn === "number" && isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}% return ({typeof portfolioRisk === "number" && isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% risk)
                                 </p>
                                 <p className="text-xs text-amber-700 mt-2 font-semibold break-words">
-                                  Expected Max Drawdown: {sanitizedDrawdown.toFixed(0)}%
+                                  Expected Max Drawdown: {typeof sanitizedDrawdown === "number" && isFinite(sanitizedDrawdown) ? sanitizedDrawdown.toFixed(0) : "Not Available"}%
                                 </p>
-                                {sanitizedDrawdown <= -80 && (
+                                {typeof sanitizedDrawdown === "number" && isFinite(sanitizedDrawdown) && sanitizedDrawdown <= -80 && (
                                   <p className="text-xs text-rose-600 mt-1">
                                     ⚠️ High-risk portfolio
                                   </p>
@@ -2920,7 +2914,7 @@ If analyzing similar companies (same sector), focus on:
                         </div>
                         <div className="mb-4 p-3 md:p-4 bg-amber-50 rounded-xl border-2 border-amber-300 shadow-sm">
                           <p className="text-xs text-amber-900 leading-relaxed">
-                            <strong>⚠️ Projection Assumptions:</strong> This assumes {expectedReturn.toFixed(1)}% consistent annual returns 
+                            <strong>⚠️ Projection Assumptions:</strong> This assumes {typeof expectedReturn === "number" && isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}% consistent annual returns 
                             {monthly > 0 && ` with ${monthly.toLocaleString()} monthly contributions`} and <strong>does NOT account for:</strong>
                             <br/>• Sequence-of-returns risk (market crashes early vs. late reduce final outcomes)
                             <br/>• Major economic crises, recessions, or black swan events
@@ -2950,7 +2944,7 @@ If analyzing similar companies (same sector), focus on:
                             />
                             <YAxis 
                               label={{ value: 'Value ($)', angle: -90, position: 'insideLeft', offset: 0, style: { fontSize: 11 } }}
-                              tickFormatter={(value) => `$${(value/1000).toFixed(0)}k`}
+                              tickFormatter={(value) => `${typeof value === "number" && isFinite(value) ? (value/1000).toFixed(0) : "Not Available"}k`}
                               tick={{ fontSize: 10 }}
                               width={55}
                             />
@@ -2994,12 +2988,12 @@ If analyzing similar companies (same sector), focus on:
                                     {monthlyAmount === 0 ? "No contrib" : `$${monthlyAmount}/mo`}
                                   </p>
                                   <p className="text-lg md:text-2xl font-bold text-slate-900 mb-1 break-words">
-                                    ${(value/1000).toFixed(0)}k
+                                    {(value/1000).toFixed(0)}k
                                   </p>
                                   <p className="text-[10px] md:text-xs text-slate-500">after 30 years</p>
                                   {yearsToReach && yearsToReach <= 50 && (
                                     <p className="text-[10px] md:text-xs text-emerald-600 mt-1 md:mt-2 font-semibold">
-                                      Goal in {yearsToReach.toFixed(1)}y
+                                      {typeof yearsToReach === "number" && isFinite(yearsToReach) ? yearsToReach.toFixed(1) : "Not Available"}y
                                     </p>
                                   )}
                                 </CardContent>
@@ -3015,7 +3009,7 @@ If analyzing similar companies (same sector), focus on:
 
               // ============================================================================
               // ============================================================================
-// SECTION 7 (PART 7 - FINAL): Charts, Allocations, Company Metrics & Closing
+              // SECTION 7 (PART 7 - FINAL): Charts, Allocations, Company Metrics & Closing
 // ============================================================================
 // This section contains the final JSX rendering:
 // - Strategy Comparison Charts (BarChart & ScatterChart for risk-return positioning)
@@ -3093,9 +3087,9 @@ If analyzing similar companies (same sector), focus on:
                                 return (
                                   <div className="bg-white p-4 border-2 border-slate-200 rounded-lg shadow-lg">
                                     <p className="font-bold text-slate-900">{data.name}</p>
-                                    <p className="text-sm mt-2">Return: <span className="font-semibold text-blue-600">{data.return.toFixed(2)}%</span></p>
-                                    <p className="text-sm">Risk: <span className="font-semibold text-rose-600">{data.risk.toFixed(2)}%</span></p>
-                                    <p className="text-sm">Sharpe: <span className="font-semibold text-emerald-600">{data.sharpe.toFixed(3)}</span></p>
+                                    <p className="text-sm mt-2">Return: <span className="font-semibold text-blue-600">{typeof data.return === "number" && Number.isFinite(data.return) ? data.return.toFixed(2) : "Not Available"}%</span></p>
+                                    <p className="text-sm">Risk: <span className="font-semibold text-rose-600">{typeof data.risk === "number" && Number.isFinite(data.risk) ? data.risk.toFixed(2) : "Not Available"}%</span></p>
+                                    <p className="text-sm">Sharpe: <span className="font-semibold text-emerald-600">{typeof data.sharpe === "number" && Number.isFinite(data.sharpe) ? data.sharpe.toFixed(3) : "Not Available"}</span></p>
                                   </div>
                                 );
                               }
@@ -3193,7 +3187,7 @@ If analyzing similar companies (same sector), focus on:
                                    </div>
                                    <div className="flex items-center gap-2">
                                      <Badge className="text-lg px-3 py-1" style={{ backgroundColor: COLORS[index % COLORS.length] }}>
-                                       {item.percent.toFixed(1)}%
+                                       {typeof item.percent === "number" && Number.isFinite(item.percent) ? item.percent.toFixed(1) : "Not Available"}%
                                      </Badge>
                                      <Button
                                        size="sm"
@@ -3211,18 +3205,18 @@ If analyzing similar companies (same sector), focus on:
                                    </p>
                                    {company && company.current_price > 0 && shares > 0 && (
                                      <p className="text-xs md:text-sm text-slate-500">
-                                       ≈ {shares} shares @ ${company.current_price.toFixed(2)}
+                                       ≈ {shares} shares @ {typeof company.current_price === "number" && Number.isFinite(company.current_price) ? company.current_price.toFixed(2) : "Not Available"}
                                      </p>
                                    )}
                                  </div>
                                  {company && company.expected_return !== undefined && company.risk !== undefined && (
                                    <div className="mt-2 pt-2 border-t border-slate-200 text-sm">
                                      <div className="text-slate-600 mb-1">
-                                       <span>Price: ${(company.current_price || 0).toFixed(2)}</span>
+                                       <span>Price: {typeof company.current_price === "number" && Number.isFinite(company.current_price) ? company.current_price.toFixed(2) : "Not Available"}</span>
                                        <span className="mx-2">•</span>
-                                       <span>Return: {typeof company.expected_return === "number" && isFinite(company.expected_return) ? company.expected_return.toFixed(2) : "Not Available"}%</span>
+                                       <span>Return: {typeof company.expected_return === "number" && Number.isFinite(company.expected_return) ? company.expected_return.toFixed(2) : "Not Available"}%</span>
                                        <span className="mx-2">•</span>
-                                       <span>Risk: {typeof company.risk === "number" && isFinite(company.risk) ? company.risk.toFixed(2) : "Not Available"}%</span>
+                                       <span>Risk: {typeof company.risk === "number" && Number.isFinite(company.risk) ? company.risk.toFixed(2) : "Not Available"}%</span>
                                      </div>
                                      <div className="text-xs text-slate-500 mt-1">
                                        <strong>Method:</strong> {company.return_methodology}
@@ -3258,10 +3252,10 @@ If analyzing similar companies (same sector), focus on:
                               <XAxis type="number" hide />
                               <YAxis dataKey="symbol" type="category" width={60} tick={{ fontSize: 12 }} />
                               <Tooltip 
-                                formatter={(value) => `${value.toFixed(1)}%`}
+                                formatter={(value) => typeof value === "number" && Number.isFinite(value) ? value.toFixed(1) : "Not Available"}
                                 contentStyle={{ fontSize: 12 }}
                               />
-                              <Bar dataKey="percent" radius={[0, 8, 8, 0]} label={{ position: 'right', formatter: (value) => `${value.toFixed(1)}%`, fontSize: 12 }}>
+                              <Bar dataKey="percent" radius={[0, 8, 8, 0]} label={{ position: 'right', formatter: (value) => typeof value === "number" && Number.isFinite(value) ? value.toFixed(1) : "Not Available", fontSize: 12 }}>
                                 {allocationData.map((entry, index) => (
                                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
@@ -3296,7 +3290,7 @@ If analyzing similar companies (same sector), focus on:
                                  {/* Market Cap Tier Context */}
                                  {company.market_cap && (
                                    <div className="mt-2">
-                                     <MarketCapTierLabel marketCap={typeof company.market_cap === "number" && isFinite(company.market_cap) ? company.market_cap.toFixed(0) : "Not Available"} compact={true} />
+                                     <MarketCapTierLabel marketCap={typeof company.market_cap === "number" && Number.isFinite(company.market_cap) ? company.market_cap.toFixed(0) : "Not Available"} compact={true} />
                                    </div>
                                  )}
 
@@ -3313,12 +3307,12 @@ If analyzing similar companies (same sector), focus on:
                               <div className="space-y-2">
                                 <div className="flex justify-between text-xs md:text-sm">
                                   <span className="text-slate-600">Current Price:</span>
-                                  <span className="font-semibold text-base md:text-lg break-words">${(company.current_price || 0).toFixed(2)}</span>
+                                  <span className="font-semibold text-base md:text-lg break-words">{typeof company.current_price === "number" && Number.isFinite(company.current_price) ? `$${company.current_price.toFixed(2)}` : "Not Available"}</span>
                                 </div>
                                 {(company.pe_ratio !== undefined && company.pe_ratio !== null && typeof company.pe_ratio === 'number' && !isNaN(company.pe_ratio)) && (
                                   <div className="flex justify-between text-sm">
                                     <span className="text-slate-600">P/E Ratio:</span>
-                                    <span className="font-semibold">{typeof company.pe_ratio === "number" && isFinite(company.pe_ratio) ? company.pe_ratio.toFixed(2) : "Not Available"}</span>
+                                    <span className="font-semibold">{typeof company.pe_ratio === "number" && Number.isFinite(company.pe_ratio) ? company.pe_ratio.toFixed(2) : "Not Available"}</span>
                                   </div>
                                 )}
 
@@ -3327,7 +3321,7 @@ If analyzing similar companies (same sector), focus on:
                                   <div className="flex justify-between text-sm">
                                     <span className="text-slate-600">YTD Return:</span>
                                     <span className={`font-semibold ${company.ytd_return >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                      {company.ytd_return.toFixed(1)}%
+                                      {typeof company.ytd_return === "number" && Number.isFinite(company.ytd_return) ? company.ytd_return.toFixed(1) : "Not Available"}%
                                     </span>
                                   </div>
                                 )}
@@ -3335,7 +3329,7 @@ If analyzing similar companies (same sector), focus on:
                                   <div className="flex justify-between text-sm">
                                     <span className="text-slate-600">1Y Return:</span>
                                     <span className={`font-semibold ${company.one_year_return >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                      {company.one_year_return.toFixed(1)}%
+                                      {typeof company.one_year_return === "number" && Number.isFinite(company.one_year_return) ? company.one_year_return.toFixed(1) : "Not Available"}%
                                     </span>
                                   </div>
                                 )}
@@ -3343,7 +3337,7 @@ If analyzing similar companies (same sector), focus on:
                                   <div className="flex justify-between text-sm">
                                     <span className="text-slate-600">3Y CAGR:</span>
                                     <span className={`font-semibold ${company.three_year_return >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                      {company.three_year_return.toFixed(1)}%
+                                      {typeof company.three_year_return === "number" && Number.isFinite(company.three_year_return) ? company.three_year_return.toFixed(1) : "Not Available"}%
                                     </span>
                                   </div>
                                 )}
@@ -3356,7 +3350,7 @@ If analyzing similar companies (same sector), focus on:
                                     <div className="flex justify-between items-center text-sm bg-blue-50 p-2 rounded">
                                       <span className="text-slate-700">Expected Return:</span>
                                       <div className="flex items-center gap-2">
-                                        <span className="font-bold text-blue-700 text-base">{typeof company.expected_return === "number" && isFinite(company.expected_return) ? company.expected_return.toFixed(2) : "Not Available"}%</span>
+                                        <span className="font-bold text-blue-700 text-base">{typeof company.expected_return === "number" && Number.isFinite(company.expected_return) ? company.expected_return.toFixed(2) : "Not Available"}%</span>
                                         {company.return_confidence && (
                                           <Badge className={`text-xs ${
                                             company.return_confidence === 'high' ? 'bg-emerald-100 text-emerald-800' :
@@ -3371,20 +3365,20 @@ If analyzing similar companies (same sector), focus on:
                                     
                                     {company.return_range && (
                                       <div className="text-xs text-slate-600 px-2">
-                                        Range: {company.return_range.low.toFixed(1)}% to {company.return_range.high.toFixed(1)}% 
-                                        (±{company.return_range.uncertainty.toFixed(1)}%)
+                                        Range: {typeof company.return_range.low === "number" && Number.isFinite(company.return_range.low) ? company.return_range.low.toFixed(1) : "Not Available"}% to {typeof company.return_range.high === "number" && Number.isFinite(company.return_range.high) ? company.return_range.high.toFixed(1) : "Not Available"}%
+                                        (±{typeof company.return_range.uncertainty === "number" && Number.isFinite(company.return_range.uncertainty) ? company.return_range.uncertainty.toFixed(1) : "Not Available"}%)
                                       </div>
                                     )}
                                     
                                     <div className="flex justify-between items-center text-sm bg-rose-50 p-2 rounded">
                                       <span className="text-slate-700">Volatility (σ):</span>
-                                      <span className="font-bold text-rose-700 text-base">{typeof company.risk === "number" && isFinite(company.risk) ? company.risk.toFixed(2) : "Not Available"}%</span>
+                                      <span className="font-bold text-rose-700 text-base">{typeof company.risk === "number" && Number.isFinite(company.risk) ? company.risk.toFixed(2) : "Not Available"}%</span>
                                     </div>
                                     
                                     <div className="flex justify-between items-center text-sm bg-emerald-50 p-2 rounded">
                                       <span className="text-slate-700">Sharpe Ratio:</span>
                                       <span className="font-bold text-emerald-700 text-base">
-                                        {typeof company.expected_return === "number" && isFinite(company.expected_return) ? company.expected_return.toFixed(2) : "Not Available"}
+                                        {typeof company.expected_return === "number" && Number.isFinite(company.expected_return) ? company.expected_return.toFixed(2) : "Not Available"}
                                       </span>
                                     </div>
                                   </div>
@@ -3398,11 +3392,11 @@ If analyzing similar companies (same sector), focus on:
                                     <div className="flex justify-between items-center text-sm bg-blue-50 p-2 rounded">
                                      <span className="text-slate-700">5-Year Beta:</span>
                                      <div className="flex items-center gap-2">
-                                       <span className="font-bold text-blue-700 text-base">{typeof company.beta === "number" && isFinite(company.beta) ? company.beta.toFixed(3) : "Not Available"}</span>
+                                       <span className="font-bold text-blue-700 text-base">{typeof company.beta === "number" && Number.isFinite(company.beta) ? company.beta.toFixed(3) : "Not Available"}</span>
                                        <DataSourceLabel
                                          metricName="5-Year Beta"
-                                         source={typeof company.beta === "number" && isFinite(company.beta) ? company.beta.toFixed(3) : "Not Available"}
-                                         confidence={typeof company.beta === "number" && isFinite(company.beta) ? company.beta.toFixed(3) : "Not Available"}
+                                         source={typeof company.beta === "number" && Number.isFinite(company.beta) ? company.beta.toFixed(3) : "Not Available"}
+                                         confidence={typeof company.beta === "number" && Number.isFinite(company.beta) ? company.beta.toFixed(3) : "Not Available"}
                                          details={
                                            company.beta_source === 'yahoo_finance_5yr' ? 'Yahoo Finance 5-year monthly regression vs S&P 500' :
                                            company.beta_source === 'calculated_5yr_daily' ? 'Calculated from 5-year daily returns (RapidAPI data)' :
@@ -3419,7 +3413,7 @@ If analyzing similar companies (same sector), focus on:
                                       <div className="flex justify-between items-center text-sm bg-indigo-50 p-2 rounded">
                                         <span className="text-slate-700">1-Year Beta:</span>
                                         <div className="flex items-center gap-2">
-                                          <span className="font-semibold text-indigo-700">{typeof company.beta === "number" && isFinite(company.beta) ? company.beta.toFixed(3) : "Not Available"}</span>
+                                          <span className="font-semibold text-indigo-700">{typeof company.beta === "number" && Number.isFinite(company.beta) ? company.beta.toFixed(3) : "Not Available"}</span>
                                           <Badge className="text-xs bg-indigo-100 text-indigo-800">
                                             Recent
                                           </Badge>
@@ -3463,10 +3457,10 @@ If analyzing similar companies (same sector), focus on:
                                       {company.capm_weight !== undefined && company.historical_weight !== undefined && (
                                         <div className="flex gap-2 text-xs">
                                           <Badge variant="outline" className="text-xs">
-                                            {(company.historical_weight * 100).toFixed(0)}% Historical CAGR
+                                            {typeof company.historical_weight === "number" && Number.isFinite(company.historical_weight) ? (company.historical_weight * 100).toFixed(0) : "Not Available"}% Historical CAGR
                                           </Badge>
                                           <Badge variant="outline" className="text-xs">
-                                            {(company.capm_weight * 100).toFixed(0)}% CAPM (β-based)
+                                            {typeof company.capm_weight === "number" && Number.isFinite(company.capm_weight) ? (company.capm_weight * 100).toFixed(0) : "Not Available"}% CAPM (β-based)
                                           </Badge>
                                         </div>
                                       )}
@@ -3477,7 +3471,7 @@ If analyzing similar companies (same sector), focus on:
                                   {company.adjustments && company.adjustments.length > 0 && (
                                    <>
                                      <div className="text-xs text-blue-700 bg-blue-50 p-2 rounded border border-blue-200">
-                                       <strong>AI Forward-Looking Adjustments:</strong> Expected return ({typeof company.expected_return === "number" && isFinite(company.expected_return) ? company.expected_return.toFixed(2) : "Not Available"}%) and volatility ({typeof company.risk === "number" && isFinite(company.risk) ? company.risk.toFixed(2) : "Not Available"}%) include AI-informed adjustments 
+                                       <strong>AI Forward-Looking Adjustments:</strong> Expected return ({typeof company.expected_return === "number" && Number.isFinite(company.expected_return) ? company.expected_return.toFixed(2) : "Not Available"}%) and volatility ({typeof company.risk === "number" && Number.isFinite(company.risk) ? company.risk.toFixed(2) : "Not Available"}%) include AI-informed adjustments 
                                        based on recent fundamentals, catalysts, and market positioning. 
                                        <strong> These are model inputs, not guaranteed outcomes.</strong>
                                      </div>
