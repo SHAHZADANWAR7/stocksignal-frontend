@@ -830,7 +830,7 @@ If analyzing similar companies (same sector), focus on:
           try {
             // Use invokeLLM Lambda instead of direct Bedrock call
             const llmResponse = await callAwsFunction('invokeLLM', {
-                      analysis_type: "portfolio_analysis",
+                      analysis_type: "company_analysis",
               prompt: prompt,
               context: { max_tokens: 1500, temperature: 0.6 }
             });
