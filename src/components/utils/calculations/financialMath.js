@@ -295,8 +295,6 @@ export function expectedMaxDrawdown(volatility, timeHorizon, expectedReturn) {
   return clamp(maxDD, -85, -8);
 }
 
-
-
 /**
  * Calculate drawdown improvement (delta)
  * Returns absolute percentage point improvement
@@ -482,6 +480,8 @@ export function herfindahlIndex(weights) {
 // ROUNDING & FORMATTING UTILITIES
 // ============================================================================
 
+import { safeToFixed } from "@/components/utils/safeToFixed";
+
 /**
  * Round to specified decimal places
  */
@@ -494,7 +494,7 @@ export function round(value, decimals = 2) {
  * Format percentage with consistent rounding
  */
 export function formatPercent(value, decimals = 1) {
-  return round(value, decimals).toFixed(decimals) + '%';
+  return safeToFixed(round(value, decimals), decimals) + '%';
 }
 
 /**
@@ -502,14 +502,14 @@ export function formatPercent(value, decimals = 1) {
  */
 export function formatDelta(delta, unit = 'pts', decimals = 1) {
   const sign = delta >= 0 ? '+' : '';
-  return `${sign}${round(delta, decimals).toFixed(decimals)} ${unit}`;
+  return `${sign}${safeToFixed(round(delta, decimals), decimals)} ${unit}`;
 }
 
 /**
  * Format Sharpe ratio
  */
 export function formatSharpe(value, decimals = 3) {
-  return round(value, decimals).toFixed(decimals);
+  return safeToFixed(round(value, decimals), decimals);
 }
 
 // ============================================================================
