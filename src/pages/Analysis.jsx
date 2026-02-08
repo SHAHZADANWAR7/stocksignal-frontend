@@ -836,20 +836,24 @@ If analyzing similar companies (same sector), focus on:
           try {
             // Use invokeLLM Lambda instead of direct Bedrock call
             const llmResponse = await callAwsFunction('invokeLLM', {
-                      analysis_type: "company_analysis",
+              analysis_type: "company_analysis",
               prompt: prompt,
+              use_schema: true,
+              json_schema: {
+                type: "object",
+                properties: {
+                  valuation: { type: "string", enum: ["overvalued", "fairly valued", "undervalued"] },
+                  forward_return_adjustment: { type: "number" },
+                  idiosyncratic_risk_adjustment: { type: "number" },
+                  valuation_reasoning: { type: "string" }
+                },
+                required: ["valuation", "forward_return_adjustment", "idiosyncratic_risk_adjustment", "valuation_reasoning"]
+              },
               context: { max_tokens: 1500, temperature: 0.6 }
             });
             
             const content = llmResponse.response || llmResponse.content || llmResponse;
-            
-            // Parse JSON from response
-            const jsonMatch = content.match(/\{[\s\S]*\}/);
-            if (!jsonMatch) {
-              throw new Error('Invalid AI response format - no JSON found');
-            }
-            
-            aiAnalysis = JSON.parse(jsonMatch[0]);
+            aiAnalysis = typeof content === 'object' ? content : JSON.parse(content);
             
             console.log(`${stock.symbol}: ✅ Bedrock AI analysis complete`);
           } catch (aiError) {
