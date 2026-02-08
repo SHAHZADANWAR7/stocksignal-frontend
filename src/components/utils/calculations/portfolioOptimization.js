@@ -836,7 +836,6 @@ function applyReturnCaps(companies) {
   
   return adjustments;
 }
-
 /**
  * EXPORTED: Calculate quality score for any portfolio composition
  * Used by Impact Deltas™ for real-time quality assessment
@@ -1034,126 +1033,126 @@ function calculatePortfolioQuality(companies, weights = null) {
     qualityBand = 'Poor';
     bandExplanation = 'High-risk portfolio - educational exploration only';
   }
-   // Determine correlation tier for system behavior
-   let correlationTier = 'low';
-   let confidenceLevel = 'high';
-   
-   if (avgCorrelation > 0.75) {
-     correlationTier = 'extreme';
-     confidenceLevel = 'blocked';
-   } else if (avgCorrelation > 0.6) {
-     correlationTier = 'high';
-     confidenceLevel = 'low';
-   } else if (avgCorrelation >= 0.5) {
-     correlationTier = 'moderate';
-     confidenceLevel = 'medium';
-   }
-}
+
+  // Determine correlation tier for system behavior
+  let correlationTier = 'low';
+  let confidenceLevel = 'high';
+  if (avgCorrelation > 0.75) {
+    correlationTier = 'extreme';
+    confidenceLevel = 'blocked';
+  } else if (avgCorrelation > 0.6) {
+    correlationTier = 'high';
+    confidenceLevel = 'low';
+  } else if (avgCorrelation >= 0.5) {
+    correlationTier = 'moderate';
+    confidenceLevel = 'medium';
+  }
+
   // Generate detailed warnings based on scores
-const warnings = [];
-const scoreJustification = [];
+  const warnings = [];
+  const scoreJustification = [];
 
-// Sharpe ratio warnings
-if (avgSharpe < 0) {
-  warnings.push('Negative risk-adjusted returns - portfolio expected to underperform risk-free rate');
-  warnings.push('CRITICAL: Reconsider asset selection or reduce speculative exposure');
-  scoreJustification.push(`Negative Sharpe (-${Math.round((100 - sharpeScore) * 0.4)} pts)`);
-} else if (avgSharpe < 0.15) {
-  warnings.push('Low Sharpe ratio (<0.15) - poor risk-adjusted performance');
-  scoreJustification.push(`Low Sharpe (-${Math.round((100 - sharpeScore) * 0.4)} pts)`);
-}
-
-// Correlation warnings with severity tiers
-if (avgCorrelation > 0.85) {
-  warnings.push('Extreme correlation (>85%) - assets move nearly in lockstep, eliminating diversification');
-  warnings.push('STRONG RECOMMENDATION: Add uncorrelated assets (bonds, gold, utilities, international)');
-  scoreJustification.push(`Extreme correlation (-${Math.round((100 - correlationScore) * 0.3)} pts)`);
-} else if (avgCorrelation > 0.75) {
-  warnings.push('Very high correlation (>75%) - limited diversification benefit');
-  warnings.push('Consider adding uncorrelated assets to improve risk-adjusted returns');
-  scoreJustification.push(`Very high correlation (-${Math.round((100 - correlationScore) * 0.3)} pts)`);
-} else if (avgCorrelation > 0.60) {
-  warnings.push('High correlation - diversification benefits are reduced');
-  scoreJustification.push(`High correlation (-${Math.round((100 - correlationScore) * 0.3)} pts)`);
-}
-
-// Speculative asset warnings
-if (speculativeRatio >= 0.95) {
-  warnings.push('Portfolio dominated by speculative/unprofitable assets (>95%)');
-  warnings.push('High volatility expected - risk of severe drawdowns');
-  warnings.push('Consider balancing with established blue-chip stocks or index funds');
-  scoreJustification.push(`100% speculative (-${Math.round((100 - maturityScore) * 0.1)} pts)`);
-} else if (speculativeRatio >= 0.70) {
-  warnings.push(
-    `High speculative exposure (${
-      safeToFixed(speculativeRatio * 100, 0)
-    }%) increases portfolio fragility`
-  );
-  warnings.push('Recommend adding profitable companies with proven business models');
-  scoreJustification.push(`High speculative exposure (-${Math.round((100 - maturityScore) * 0.1)} pts)`);
-} else if (speculativeRatio >= 0.50) {
-  warnings.push(
-    `Moderate speculative allocation (${
-      safeToFixed(speculativeRatio * 100, 0)
-    }%) - monitor closely`
-  );
-}
-
-// Diversification warnings
-if (diversificationScore < 40) {
-  const hhi = herfindahlIndex(portfolioWeights);
-  if (hhi > 0.60) {
-    warnings.push('Severe concentration risk - single-asset outcomes dominate portfolio');
-  } else if (hhi > 0.40) {
-    warnings.push('High concentration - portfolio heavily dependent on few positions');
+  // Sharpe ratio warnings
+  if (avgSharpe < 0) {
+    warnings.push('Negative risk-adjusted returns - portfolio expected to underperform risk-free rate');
+    warnings.push('CRITICAL: Reconsider asset selection or reduce speculative exposure');
+    scoreJustification.push(`Negative Sharpe (-${Math.round((100 - sharpeScore) * 0.4)} pts)`);
+  } else if (avgSharpe < 0.15) {
+    warnings.push('Low Sharpe ratio (<0.15) - poor risk-adjusted performance');
+    scoreJustification.push(`Low Sharpe (-${Math.round((100 - sharpeScore) * 0.4)} pts)`);
   }
-  scoreJustification.push(`Poor diversification (-${Math.round((100 - diversificationScore) * 0.2)} pts)`);
-}
 
-// Asset count warning
-if (n < 3) {
-  warnings.push('Fewer than 3 assets - insufficient diversification');
-}
-
-// Sector concentration
-if (n >= 3) {
-  const sectors = companies.map(c => c.sector);
-  const uniqueSectors = new Set(sectors.filter(s => s && s !== 'Unknown'));
-  if (uniqueSectors.size === 1 && uniqueSectors.values().next().value) {
-    warnings.push(`All assets from ${uniqueSectors.values().next().value} sector - sector concentration risk`);
+  // Correlation warnings with severity tiers
+  if (avgCorrelation > 0.85) {
+    warnings.push('Extreme correlation (>85%) - assets move nearly in lockstep, eliminating diversification');
+    warnings.push('STRONG RECOMMENDATION: Add uncorrelated assets (bonds, gold, utilities, international)');
+    scoreJustification.push(`Extreme correlation (-${Math.round((100 - correlationScore) * 0.3)} pts)`);
+  } else if (avgCorrelation > 0.75) {
+    warnings.push('Very high correlation (>75%) - limited diversification benefit');
+    warnings.push('Consider adding uncorrelated assets to improve risk-adjusted returns');
+    scoreJustification.push(`Very high correlation (-${Math.round((100 - correlationScore) * 0.3)} pts)`);
+  } else if (avgCorrelation > 0.60) {
+    warnings.push('High correlation - diversification benefits are reduced');
+    scoreJustification.push(`High correlation (-${Math.round((100 - correlationScore) * 0.3)} pts)`);
   }
-}
 
-return {
-  qualityScore: finalScore,
-  qualityBand,
-  bandExplanation,
-  avgSharpe,
-  avgCorrelation,
-  correlationTier,
-  confidenceLevel,
-  sharpeRange: [minSharpe, maxSharpe],
-  speculativeRatio,
-  warnings,
-  scoreJustification: scoreJustification.length > 0 
-    ? scoreJustification.join(', ') 
-    : `Score reflects balance of all factors: Sharpe=${Math.round(sharpeScore)}, Correlation=${Math.round(correlationScore)}, Diversification=${Math.round(diversificationScore)}, Maturity=${Math.round(maturityScore)}`,
-  // Component scores for transparency
-  components: {
-    sharpeScore: Math.round(sharpeScore),
-    correlationScore: Math.round(correlationScore),
-    diversificationScore: Math.round(diversificationScore),
-    maturityScore: Math.round(maturityScore)
-  },
-  diversityMetrics: {
-    sectorDiversity: Math.round(sectorDiversityScore),
-    marketCapDiversity: Math.round(capDiversityScore),
-    assetTypeDiversity: Math.round(typeDiversityScore),
-    uniqueSectors: Object.keys(sectorWeights).length,
-    uniqueMarketCaps: Object.keys(marketCapWeights).filter(k => marketCapWeights[k] > 0).length
+  // Speculative asset warnings
+  if (speculativeRatio >= 0.95) {
+    warnings.push('Portfolio dominated by speculative/unprofitable assets (>95%)');
+    warnings.push('High volatility expected - risk of severe drawdowns');
+    warnings.push('Consider balancing with established blue-chip stocks or index funds');
+    scoreJustification.push(`100% speculative (-${Math.round((100 - maturityScore) * 0.1)} pts)`);
+  } else if (speculativeRatio >= 0.70) {
+    warnings.push(
+      `High speculative exposure (${
+        safeToFixed(speculativeRatio * 100, 0)
+      }%) increases portfolio fragility`
+    );
+    warnings.push('Recommend adding profitable companies with proven business models');
+    scoreJustification.push(`High speculative exposure (-${Math.round((100 - maturityScore) * 0.1)} pts)`);
+  } else if (speculativeRatio >= 0.50) {
+    warnings.push(
+      `Moderate speculative allocation (${
+        safeToFixed(speculativeRatio * 100, 0)
+      }%) - monitor closely`
+    );
   }
-};
 
+  // Diversification warnings
+  if (diversificationScore < 40) {
+    const hhi = herfindahlIndex(portfolioWeights);
+    if (hhi > 0.60) {
+      warnings.push('Severe concentration risk - single-asset outcomes dominate portfolio');
+    } else if (hhi > 0.40) {
+      warnings.push('High concentration - portfolio heavily dependent on few positions');
+    }
+    scoreJustification.push(`Poor diversification (-${Math.round((100 - diversificationScore) * 0.2)} pts)`);
+  }
+
+  // Asset count warning
+  if (n < 3) {
+    warnings.push('Fewer than 3 assets - insufficient diversification');
+  }
+
+  // Sector concentration
+  if (n >= 3) {
+    const sectors = companies.map(c => c.sector);
+    const uniqueSectors = new Set(sectors.filter(s => s && s !== 'Unknown'));
+    if (uniqueSectors.size === 1 && uniqueSectors.values().next().value) {
+      warnings.push(`All assets from ${uniqueSectors.values().next().value} sector - sector concentration risk`);
+    }
+  }
+
+  return {
+    qualityScore: finalScore,
+    qualityBand,
+    bandExplanation,
+    avgSharpe,
+    avgCorrelation,
+    correlationTier,
+    confidenceLevel,
+    sharpeRange: [minSharpe, maxSharpe],
+    speculativeRatio,
+    warnings,
+    scoreJustification: scoreJustification.length > 0 
+      ? scoreJustification.join(', ') 
+      : `Score reflects balance of all factors: Sharpe=${Math.round(sharpeScore)}, Correlation=${Math.round(correlationScore)}, Diversification=${Math.round(diversificationScore)}, Maturity=${Math.round(maturityScore)}`,
+    // Component scores for transparency
+    components: {
+      sharpeScore: Math.round(sharpeScore),
+      correlationScore: Math.round(correlationScore),
+      diversificationScore: Math.round(diversificationScore),
+      maturityScore: Math.round(maturityScore)
+    },
+    diversityMetrics: {
+      sectorDiversity: Math.round(sectorDiversityScore),
+      marketCapDiversity: Math.round(capDiversityScore),
+      assetTypeDiversity: Math.round(typeDiversityScore),
+      uniqueSectors: Object.keys(sectorWeights).length,
+      uniqueMarketCaps: Object.keys(marketCapWeights).filter(k => marketCapWeights[k] > 0).length
+    }
+  };
+}
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
  * ALLOCATION INTEGRITY VALIDATOR
