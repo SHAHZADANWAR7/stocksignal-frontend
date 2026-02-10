@@ -65,7 +65,7 @@ export default function MarketCapTierLabel({ marketCap, compact = true }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <Badge className={`${getTierColor(tier)} border text-xs cursor-help`}>
-              {marketCap} • {tier}-cap
+              {typeof marketCap === "string" && marketCap ? marketCap : "Not Available"} • {tier}-cap
             </Badge>
           </TooltipTrigger>
           <TooltipContent className="max-w-xs p-3">
@@ -79,7 +79,7 @@ export default function MarketCapTierLabel({ marketCap, compact = true }) {
 
   return (
     <div className={`text-xs p-2 rounded border ${getTierColor(tier)}`}>
-      <span className="font-semibold">{tier}-Cap:</span> {marketCap}
+      <span className="font-semibold">{tier}-Cap:</span> {typeof marketCap === "string" && marketCap ? marketCap : "Not Available"}
       <p className="text-xs mt-1 opacity-80">{getTierContext(tier)}</p>
     </div>
   );
