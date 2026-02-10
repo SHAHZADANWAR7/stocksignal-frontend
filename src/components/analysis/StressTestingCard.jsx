@@ -49,39 +49,39 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
   const [selectedScenario, setSelectedScenario] = useState('marketCrash');
   const [showDetails, setShowDetails] = useState(false);
   const [scenarioChanges, setScenarioChanges] = useState(0);
-  
+
   // Track scenario changes for behavioral nudge
   React.useEffect(() => {
     setScenarioChanges(prev => prev + 1);
   }, [selectedScenario]);
-  
+
   if (!companies || companies.length === 0 || !weights) return null;
-  
+
   // Calculate stress impacts for all scenarios
   const stressResults = {
     marketCrash: calculateStressImpact(companies, weights, 'marketCrash'),
     sectorCollapse: calculateStressImpact(companies, weights, 'sectorCollapse'),
     blackSwan: calculateStressImpact(companies, weights, 'blackSwan')
   };
-  
+
   const currentResult = stressResults[selectedScenario];
-  
+
   // Enhanced drawdown metrics
   const drawdownMetrics = calculateEnhancedDrawdown(portfolioRisk, 10, expectedReturn);
-  
+
   // Crash probabilities
   const crashProbs = calculateCrashProbability(portfolioRisk, expectedReturn);
-  
+
   // Recovery time estimation
   const recoveryEstimate = estimateRecoveryTime(
     currentResult.portfolioImpact, 
     expectedReturn, 
     portfolioRisk
   );
-  
+
   // Sector vulnerability
   const vulnerability = analyzeSectorVulnerability(companies, weights);
-  
+
   // Diversification benefit
   const diversificationBenefit = calculateDiversificationBenefit(
     companies, 
@@ -89,13 +89,13 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
     selectedScenario,
     { symbol: 'SPY', allocation: 0.20 }
   );
-  
+
   const scenarioColors = {
     marketCrash: 'from-amber-600 to-orange-600',
     sectorCollapse: 'from-orange-600 to-red-600',
     blackSwan: 'from-red-600 to-rose-700'
   };
-  
+
   return (
     <>
       {scenarioChanges > 3 && <BehavioralNudge trigger="stress_test_overuse" />}
@@ -176,7 +176,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                     <div className="flex-1 w-full">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                         <h4 className="text-xl md:text-2xl font-bold text-rose-900">
-                          {currentResult.portfolioImpact}% Portfolio Decline
+                          {typeof currentResult.portfolioImpact === "number" && Number.isFinite(currentResult.portfolioImpact) ? currentResult.portfolioImpact : "Not Available"}% Portfolio Decline
                         </h4>
                         <Badge className="bg-purple-200 text-purple-900 text-xs px-2 py-1 w-fit">
                           {currentResult.probability} likelihood
@@ -283,9 +283,9 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                                 <p className="font-bold text-slate-900 mb-1">{data.symbol}</p>
                                 <p className="text-xs text-slate-600 mb-2">{data.sector}</p>
                                 <div className="space-y-1 text-xs">
-                                  <p><span className="text-slate-600">Decline:</span> <span className="font-bold text-rose-700">{data.drop}%</span></p>
-                                  <p><span className="text-slate-600">Contribution:</span> <span className="font-semibold">{data.contribution}%</span></p>
-                                  <p><span className="text-slate-600">Beta:</span> {data.beta}</p>
+                                  <p><span className="text-slate-600">Decline:</span> <span className="font-bold text-rose-700">{typeof data.drop === "number" && Number.isFinite(data.drop) ? data.drop.toFixed(1) : "Not Available"}%</span></p>
+                                  <p><span className="text-slate-600">Contribution:</span> <span className="font-semibold">{typeof data.contribution === "number" && Number.isFinite(data.contribution) ? data.contribution.toFixed(1) : "Not Available"}%</span></p>
+                                  <p><span className="text-slate-600">Beta:</span> {typeof data.beta === "number" && Number.isFinite(data.beta) ? data.beta.toFixed(2) : "Not Available"}</p>
                                   <p><span className="text-slate-600">Market Cap:</span> {data.marketCap}</p>
                                   <p><span className="text-slate-600">Status:</span> {data.isProfitable ? 'Profitable' : 'Pre-profit'}</p>
                                 </div>
@@ -336,7 +336,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                                     <p className="text-xs text-slate-600 mb-2 leading-relaxed">
                                       <span className="font-medium">{asset.sector}</span>
                                       {asset.marketCap && asset.marketCap !== 'N/A' && ` • ${asset.marketCap}`}
-                                      {` • β=${asset.beta}`}
+                                      {` • β=${typeof asset.beta === "number" && Number.isFinite(asset.beta) ? asset.beta.toFixed(2) : "Not Available"}`}
                                     </p>
                                     <div className="flex items-center gap-3 text-xs">
                                       <div className="flex items-center gap-1">
@@ -346,11 +346,11 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                                             style={{ width: `${Math.min(100, asset.weight * 2)}%` }}
                                           />
                                         </div>
-                                        <span className="font-semibold text-slate-700">{asset.weight.toFixed(1)}%</span>
+                                        <span className="font-semibold text-slate-700">{typeof asset.weight === "number" && Number.isFinite(asset.weight) ? asset.weight.toFixed(1) : "Not Available"}%</span>
                                       </div>
                                       <div className="text-rose-700">
                                         <span className="text-slate-600">Impact:</span>
-                                        <span className="font-bold ml-1">{asset.contribution.toFixed(1)}%</span>
+                                        <span className="font-bold ml-1">{typeof asset.contribution === "number" && Number.isFinite(asset.contribution) ? asset.contribution.toFixed(1) : "Not Available"}%</span>
                                       </div>
                                     </div>
                                   </div>
@@ -360,7 +360,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                                     asset.drop < -25 ? 'bg-amber-200 text-amber-900 border-2 border-amber-400' :
                                     'bg-emerald-200 text-emerald-900 border-2 border-emerald-400'
                                   }`}>
-                                    {asset.drop.toFixed(1)}%
+                                    {typeof asset.drop === "number" && Number.isFinite(asset.drop) ? asset.drop.toFixed(1) : "Not Available"}%
                                   </Badge>
                                 </div>
                               </TooltipTrigger>
@@ -368,13 +368,13 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                                 <div className="text-xs space-y-1">
                                   <p className="font-semibold text-slate-900">{asset.name}</p>
                                   <p className="text-slate-600">
-                                    <strong>Tail-Risk Projection:</strong> This {asset.drop.toFixed(1)}% decline represents 
+                                    <strong>Tail-Risk Projection:</strong> This {typeof asset.drop === "number" && Number.isFinite(asset.drop) ? asset.drop.toFixed(1) : "Not Available"}% decline represents 
                                     an extreme scenario simulation based on historical crisis data, beta exposure, 
                                     market cap tier, and profitability status.
                                   </p>
                                   <p className="text-slate-600">
-                                    <strong>Portfolio Impact:</strong> With {asset.weight.toFixed(1)}% allocation, 
-                                    this asset contributes {asset.contribution.toFixed(1)}% to total portfolio decline 
+                                    <strong>Portfolio Impact:</strong> With {typeof asset.weight === "number" && Number.isFinite(asset.weight) ? asset.weight.toFixed(1) : "Not Available"}% allocation, 
+                                    this asset contributes {typeof asset.contribution === "number" && Number.isFinite(asset.contribution) ? asset.contribution.toFixed(1) : "Not Available"}% to total portfolio decline 
                                     in this scenario.
                                   </p>
                                   <p className="text-slate-500 text-[10px] mt-2">
@@ -424,7 +424,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                   <Badge className="bg-indigo-100 text-indigo-700 text-[10px] md:text-xs">Statistical (95%)</Badge>
                 </div>
                 <p className="text-xs md:text-sm text-slate-600 mb-1">Probability-Based</p>
-                <p className="text-2xl md:text-3xl font-bold text-indigo-600 break-words">{drawdownMetrics.standard}%</p>
+                <p className="text-2xl md:text-3xl font-bold text-indigo-600 break-words">{typeof drawdownMetrics.standard === "number" && Number.isFinite(drawdownMetrics.standard) ? drawdownMetrics.standard : "Not Available"}%</p>
                 <p className="text-[10px] md:text-xs text-slate-500 mt-1 md:mt-2">
                   Expected worst-case using beta-weighted historical crises
                 </p>
@@ -434,7 +434,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                   <Badge className="bg-rose-100 text-rose-700 text-[10px] md:text-xs">Tail Risk (99%)</Badge>
                 </div>
                 <p className="text-xs md:text-sm text-slate-600 mb-1">Fat-Tailed Model</p>
-                <p className="text-2xl md:text-3xl font-bold text-rose-600 break-words">{drawdownMetrics.tailRisk}%</p>
+                <p className="text-2xl md:text-3xl font-bold text-rose-600 break-words">{typeof drawdownMetrics.tailRisk === "number" && Number.isFinite(drawdownMetrics.tailRisk) ? drawdownMetrics.tailRisk : "Not Available"}%</p>
                 <p className="text-[10px] md:text-xs text-slate-500 mt-1 md:mt-2">
                   Cornish-Fisher VaR extreme scenario
                 </p>
@@ -445,7 +445,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                 </div>
                 <p className="text-xs md:text-sm text-slate-600 mb-1">Educational Only</p>
                 <p className="text-2xl md:text-3xl font-bold text-slate-600 break-words">
-                  {Math.min(-15, drawdownMetrics.tailRisk - 10)}%
+                  {typeof drawdownMetrics.tailRisk === "number" && Number.isFinite(drawdownMetrics.tailRisk) ? Math.min(-15, drawdownMetrics.tailRisk - 10) : "Not Available"}%
                 </p>
                 <p className="text-[10px] md:text-xs text-slate-500 mt-1 md:mt-2">
                   <em>Mathematical boundary</em>
@@ -464,19 +464,19 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
               <div className="mt-4 p-4 bg-white rounded-lg border border-slate-200">
                 <p className="text-sm font-semibold text-slate-900 mb-3">
                   <Clock className="w-4 h-4 inline mr-1" />
-                  Recovery Time Estimates (from {currentResult.portfolioImpact}% decline)
+                  Recovery Time Estimates (from {typeof currentResult.portfolioImpact === "number" && Number.isFinite(currentResult.portfolioImpact) ? currentResult.portfolioImpact : "Not Available"}% decline)
                 </p>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <p className="text-lg font-bold text-emerald-600">{recoveryEstimate.median}y</p>
+                    <p className="text-lg font-bold text-emerald-600">{typeof recoveryEstimate.median === "number" && Number.isFinite(recoveryEstimate.median) ? recoveryEstimate.median : "Not Available"}y</p>
                     <p className="text-xs text-slate-600">Median (50%)</p>
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-amber-600">{recoveryEstimate.p75}y</p>
+                    <p className="text-lg font-bold text-amber-600">{typeof recoveryEstimate.p75 === "number" && Number.isFinite(recoveryEstimate.p75) ? recoveryEstimate.p75 : "Not Available"}y</p>
                     <p className="text-xs text-slate-600">Conservative (75%)</p>
                   </div>
                   <div>
-                    <p className="text-lg font-bold text-rose-600">{recoveryEstimate.p90}y</p>
+                    <p className="text-lg font-bold text-rose-600">{typeof recoveryEstimate.p90 === "number" && Number.isFinite(recoveryEstimate.p90) ? recoveryEstimate.p90 : "Not Available"}y</p>
                     <p className="text-xs text-slate-600">Pessimistic (90%)</p>
                   </div>
                 </div>
@@ -494,7 +494,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                   Crash Probability Analysis
                 </CardTitle>
                 <p className="text-sm text-purple-700 mt-1">
-                  Based on portfolio volatility ({portfolioRisk.toFixed(1)}%), beta, and fat-tailed distribution
+                  Based on portfolio volatility ({typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}%), beta, and fat-tailed distribution
                 </p>
               </div>
               <TooltipProvider>
@@ -505,7 +505,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                   <TooltipContent className="max-w-md">
                     <p className="text-xs leading-relaxed">
                       <strong>Calculation Methodology:</strong><br/>
-                      Uses portfolio annualized volatility ({portfolioRisk.toFixed(1)}%), expected return ({expectedReturn.toFixed(1)}%), 
+                      Uses portfolio annualized volatility ({typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}%), expected return ({typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}%), 
                       and fat-tailed distribution adjustments to estimate probability of specific decline thresholds.<br/><br/>
                       10-year probability calculated as: 1 - (1 - annual_prob)^10<br/><br/>
                       These are statistical estimates, not predictions. Actual outcomes vary.
@@ -531,7 +531,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="text-xs">Probability of portfolio declining ≥20% in any given year based on {portfolioRisk.toFixed(1)}% volatility</p>
+                        <p className="text-xs">Probability of portfolio declining ≥20% in any given year based on {typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% volatility</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -595,7 +595,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
             <div className="mt-4 p-3 bg-white/60 rounded-lg border border-purple-200">
               <p className="text-xs text-purple-900">
                 <strong>Note:</strong> Probabilities calculated using z-scores and fat-tailed distribution adjustments. 
-                Portfolio volatility: {portfolioRisk.toFixed(1)}%, Expected return: {expectedReturn.toFixed(1)}%. 
+                Portfolio volatility: {typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}%, Expected return: {typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}%. 
                 These are statistical estimates for stress testing, not predictions of actual outcomes.
               </p>
             </div>
@@ -647,7 +647,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                       outerRadius={70}
                       fill="#8884d8"
                       dataKey="value"
-                      label={(entry) => `${entry.value.toFixed(0)}%`}
+                      label={(entry) => `${typeof entry.value === "number" && Number.isFinite(entry.value) ? entry.value.toFixed(0) : "Not Available"}%`}
                       labelLine={true}
                       style={{ fontSize: '14px', fontWeight: 600 }}
                     >
@@ -682,7 +682,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                                 style={{ width: `${Math.min(100, vulnerability.concentrationRisk)}%` }}
                               />
                             </div>
-                            <span className="text-sm font-bold">{vulnerability.concentrationRisk}/100</span>
+                            <span className="text-sm font-bold">{typeof vulnerability.concentrationRisk === "number" && Number.isFinite(vulnerability.concentrationRisk) ? vulnerability.concentrationRisk : "Not Available"}/100</span>
                           </div>
                         </div>
                       </TooltipTrigger>
@@ -702,7 +702,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                     </p>
                     <p className="text-xs text-slate-600 mt-1">
                       {vulnerability.dominantSector && vulnerability.sectorExposure[vulnerability.dominantSector]
-                        ? `${vulnerability.sectorExposure[vulnerability.dominantSector].allocation.toFixed(1)}% allocation`
+                        ? `${typeof vulnerability.sectorExposure[vulnerability.dominantSector].allocation === "number" && Number.isFinite(vulnerability.sectorExposure[vulnerability.dominantSector].allocation) ? vulnerability.sectorExposure[vulnerability.dominantSector].allocation.toFixed(1) : "Not Available"}% allocation`
                         : 'Sector data unavailable'}
                     </p>
                   </div>
@@ -713,11 +713,13 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                       Crash Exposure
                     </p>
                     <p className="text-sm text-amber-800 mt-1">
-                      {vulnerability.betaExposure.aggressive > 50 
+                      {typeof vulnerability.betaExposure.aggressive === "number" && Number.isFinite(vulnerability.betaExposure.aggressive) && vulnerability.betaExposure.aggressive > 50
                         ? `High exposure (${vulnerability.betaExposure.aggressive.toFixed(0)}% aggressive beta) - expect amplified losses during market crashes`
-                        : vulnerability.betaExposure.aggressive > 30
+                        : typeof vulnerability.betaExposure.aggressive === "number" && Number.isFinite(vulnerability.betaExposure.aggressive) && vulnerability.betaExposure.aggressive > 30
                         ? `Moderate exposure (${vulnerability.betaExposure.aggressive.toFixed(0)}% aggressive beta) - above-average crash sensitivity`
-                        : `Low exposure (${vulnerability.betaExposure.aggressive.toFixed(0)}% aggressive beta) - relative crash protection`}
+                        : typeof vulnerability.betaExposure.aggressive === "number" && Number.isFinite(vulnerability.betaExposure.aggressive)
+                        ? `Low exposure (${vulnerability.betaExposure.aggressive.toFixed(0)}% aggressive beta) - relative crash protection`
+                        : "Not Available"}
                     </p>
                   </div>
                 </div>
@@ -763,13 +765,13 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               <div className="p-3 md:p-4 bg-white rounded-lg border-2 border-rose-300">
                 <p className="text-xs md:text-sm text-slate-600 mb-1">Current Portfolio</p>
-                <p className="text-xl md:text-2xl font-bold text-rose-600 break-words">{diversificationBenefit.currentImpact}%</p>
+                <p className="text-xl md:text-2xl font-bold text-rose-600 break-words">{typeof diversificationBenefit.currentImpact === "number" && Number.isFinite(diversificationBenefit.currentImpact) ? diversificationBenefit.currentImpact : "Not Available"}%</p>
                 <p className="text-[10px] md:text-xs text-slate-500 mt-1">100% current allocation</p>
               </div>
               <div className={`p-3 md:p-4 bg-white rounded-lg border-2 ${diversificationBenefit.isImprovement ? 'border-emerald-300' : 'border-rose-300'}`}>
                 <p className="text-xs md:text-sm text-slate-600 mb-1">With {diversificationBenefit.diversifier.symbol}</p>
                 <p className={`text-xl md:text-2xl font-bold ${diversificationBenefit.isImprovement ? 'text-emerald-600' : 'text-rose-600'} break-words`}>
-                  {diversificationBenefit.withDiversifier}%
+                  {typeof diversificationBenefit.withDiversifier === "number" && Number.isFinite(diversificationBenefit.withDiversifier) ? diversificationBenefit.withDiversifier : "Not Available"}%
                 </p>
                 <p className="text-[10px] md:text-xs text-slate-500 mt-1">80% current + 20% SPY</p>
               </div>
@@ -778,14 +780,14 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                   {diversificationBenefit.isImprovement ? 'Improvement' : 'Change'}
                 </p>
                 <p className={`text-xl md:text-2xl font-bold ${diversificationBenefit.isImprovement ? 'text-teal-600' : 'text-amber-600'} break-words`}>
-                  {diversificationBenefit.change > 0 ? '+' : ''}{diversificationBenefit.change}%
+                  {typeof diversificationBenefit.change === "number" && Number.isFinite(diversificationBenefit.change) && diversificationBenefit.change > 0 ? '+' : ''}{typeof diversificationBenefit.change === "number" && Number.isFinite(diversificationBenefit.change) ? diversificationBenefit.change : "Not Available"}%
                 </p>
                 <p className="text-[10px] md:text-xs text-slate-600 mt-1 break-words">
                   {diversificationBenefit.isImprovement 
-                    ? `${diversificationBenefit.changePercent > 0 ? '+' : ''}${diversificationBenefit.changePercent}% less severe` 
-                    : Math.abs(diversificationBenefit.change) < 1 
+                    ? `${typeof diversificationBenefit.changePercent === "number" && Number.isFinite(diversificationBenefit.changePercent) && diversificationBenefit.changePercent > 0 ? '+' : ''}${typeof diversificationBenefit.changePercent === "number" && Number.isFinite(diversificationBenefit.changePercent) ? diversificationBenefit.changePercent : "Not Available"}% less severe` 
+                    : typeof diversificationBenefit.changePercent === "number" && Number.isFinite(diversificationBenefit.changePercent) && Math.abs(diversificationBenefit.changePercent) < 1 
                       ? 'Minimal impact' 
-                      : `${Math.abs(diversificationBenefit.changePercent)}% more severe`}
+                      : `${typeof diversificationBenefit.changePercent === "number" && Number.isFinite(diversificationBenefit.changePercent) ? Math.abs(diversificationBenefit.changePercent) : "Not Available"}% more severe`}
                 </p>
               </div>
             </div>
