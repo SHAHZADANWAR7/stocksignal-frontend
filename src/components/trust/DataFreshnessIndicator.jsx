@@ -40,10 +40,11 @@ export default function DataFreshnessIndicator({
   };
 
   const getFreshnessText = () => {
-    if (hoursSince < 1) return "Updated <1hr ago";
-    if (hoursSince < 24) return `Updated ${Math.floor(hoursSince)}hr ago`;
-    if (daysSince < 7) return `Updated ${Math.floor(daysSince)}d ago`;
-    return `Updated ${Math.floor(daysSince)}d ago`;
+    if (typeof hoursSince === "number" && Number.isFinite(hoursSince) && hoursSince < 1) return "Updated <1hr ago";
+    if (typeof hoursSince === "number" && Number.isFinite(hoursSince) && hoursSince < 24) return `Updated ${Math.floor(hoursSince)}hr ago`;
+    if (typeof daysSince === "number" && Number.isFinite(daysSince) && daysSince < 7) return `Updated ${Math.floor(daysSince)}d ago`;
+    if (typeof daysSince === "number" && Number.isFinite(daysSince)) return `Updated ${Math.floor(daysSince)}d ago`;
+    return "Updated: Not Available";
   };
 
   const color = getFreshnessColor();
@@ -70,7 +71,7 @@ export default function DataFreshnessIndicator({
             </p>
             {isStale && (
               <p className="text-xs text-amber-700 mt-2">
-                ⚠️ Data is {Math.floor(daysSince)} days old. Consider refreshing.
+                ⚠️ Data is {typeof daysSince === "number" && Number.isFinite(daysSince) ? Math.floor(daysSince) : "Not Available"} days old. Consider refreshing.
               </p>
             )}
           </TooltipContent>
