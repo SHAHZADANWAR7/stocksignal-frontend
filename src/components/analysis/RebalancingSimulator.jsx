@@ -111,7 +111,7 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" label={{ value: 'Months', position: 'insideBottom', offset: -5 }} />
                 <YAxis label={{ value: 'Allocation %', angle: -90, position: 'insideLeft' }} />
-                <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
+                <Tooltip formatter={(value) => typeof value === "number" && Number.isFinite(value) ? `${value.toFixed(1)}%` : "Not Available"} />
                 <Legend />
                 {companies.map((company, idx) => (
                   <Area
@@ -133,7 +133,7 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
                   {companies.map((company, i) => (
                     <div key={company.symbol} className="flex justify-between text-sm mb-1">
                       <span className="text-slate-700">{company.symbol}</span>
-                      <span className="font-semibold">{(initialWeights[i] * 100).toFixed(1)}%</span>
+                      <span className="font-semibold">{typeof initialWeights[i] === "number" && Number.isFinite(initialWeights[i]) ? (initialWeights[i] * 100).toFixed(1) : "Not Available"}%</span>
                     </div>
                   ))}
                 </CardContent>
@@ -149,13 +149,15 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
                       <div key={company.symbol} className="flex justify-between text-sm mb-1">
                         <span className="text-slate-700">{company.symbol}</span>
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold">{drifted.toFixed(1)}%</span>
+                          <span className="font-semibold">{typeof drifted === "number" && Number.isFinite(drifted) ? drifted.toFixed(1) : "Not Available"}%</span>
                           <Badge className={`text-xs ${
-                            drift > 5 ? 'bg-rose-100 text-rose-700' :
-                            drift < -5 ? 'bg-blue-100 text-blue-700' :
-                            'bg-slate-100 text-slate-700'
+                            typeof drift === "number" && Number.isFinite(drift)
+                              ? drift > 5 ? 'bg-rose-100 text-rose-700'
+                              : drift < -5 ? 'bg-blue-100 text-blue-700'
+                              : 'bg-slate-100 text-slate-700'
+                              : 'bg-slate-100 text-slate-700'
                           }`}>
-                            {drift >= 0 ? '+' : ''}{drift.toFixed(1)}%
+                            {typeof drift === "number" && Number.isFinite(drift) ? (drift >= 0 ? '+' : '') + drift.toFixed(1) : "Not Available"}%
                           </Badge>
                         </div>
                       </div>
@@ -199,13 +201,13 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
                         <div>
                           <p className="text-xs text-slate-600">Median Return (10y)</p>
                           <p className="text-2xl font-bold text-amber-700">
-                            {rebalancingResults.noRebalance.returns.median.toFixed(1)}%
+                            {typeof rebalancingResults.noRebalance.returns.median === "number" && Number.isFinite(rebalancingResults.noRebalance.returns.median) ? rebalancingResults.noRebalance.returns.median.toFixed(1) : "Not Available"}%
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-slate-600">Sharpe Ratio</p>
                           <p className="text-lg font-semibold text-slate-900">
-                            {rebalancingResults.noRebalance.sharpe.median.toFixed(3)}
+                            {typeof rebalancingResults.noRebalance.sharpe.median === "number" && Number.isFinite(rebalancingResults.noRebalance.sharpe.median) ? rebalancingResults.noRebalance.sharpe.median.toFixed(3) : "Not Available"}
                           </p>
                         </div>
                         <div>
@@ -231,19 +233,19 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
                         <div>
                           <p className="text-xs text-slate-600">Median Return (10y)</p>
                           <p className="text-2xl font-bold text-blue-700">
-                            {rebalancingResults.monthly.returns.median.toFixed(1)}%
+                            {typeof rebalancingResults.monthly.returns.median === "number" && Number.isFinite(rebalancingResults.monthly.returns.median) ? rebalancingResults.monthly.returns.median.toFixed(1) : "Not Available"}%
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-slate-600">Sharpe Ratio</p>
                           <p className="text-lg font-semibold text-slate-900">
-                            {rebalancingResults.monthly.sharpe.median.toFixed(3)}
+                            {typeof rebalancingResults.monthly.sharpe.median === "number" && Number.isFinite(rebalancingResults.monthly.sharpe.median) ? rebalancingResults.monthly.sharpe.median.toFixed(3) : "Not Available"}
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-slate-600">Transaction Costs</p>
                           <p className="text-sm font-semibold text-rose-600">
-                            ${rebalancingResults.monthly.costs.median.toLocaleString()}
+                            ${typeof rebalancingResults.monthly.costs.median === "number" && Number.isFinite(rebalancingResults.monthly.costs.median) ? rebalancingResults.monthly.costs.median.toLocaleString() : "Not Available"}
                           </p>
                         </div>
                       </div>
@@ -265,19 +267,19 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
                         <div>
                           <p className="text-xs text-slate-600">Median Return (10y)</p>
                           <p className="text-2xl font-bold text-emerald-700">
-                            {rebalancingResults.yearly.returns.median.toFixed(1)}%
+                            {typeof rebalancingResults.yearly.returns.median === "number" && Number.isFinite(rebalancingResults.yearly.returns.median) ? rebalancingResults.yearly.returns.median.toFixed(1) : "Not Available"}%
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-slate-600">Sharpe Ratio</p>
                           <p className="text-lg font-semibold text-slate-900">
-                            {rebalancingResults.yearly.sharpe.median.toFixed(3)}
+                            {typeof rebalancingResults.yearly.sharpe.median === "number" && Number.isFinite(rebalancingResults.yearly.sharpe.median) ? rebalancingResults.yearly.sharpe.median.toFixed(3) : "Not Available"}
                           </p>
                         </div>
                         <div>
                           <p className="text-xs text-slate-600">Transaction Costs</p>
                           <p className="text-sm font-semibold text-amber-600">
-                            ${rebalancingResults.yearly.costs.median.toLocaleString()}
+                            ${typeof rebalancingResults.yearly.costs.median === "number" && Number.isFinite(rebalancingResults.yearly.costs.median) ? rebalancingResults.yearly.costs.median.toLocaleString() : "Not Available"}
                           </p>
                         </div>
                       </div>
@@ -302,11 +304,11 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
                             const best = Math.max(yearly, monthly, none);
                             
                             if (best === yearly) {
-                              return `📅 Yearly rebalancing offers the best balance (${yearly.toFixed(1)}% net return). Lower costs than monthly ($${rebalancingResults.yearly.costs.median.toLocaleString()} vs $${rebalancingResults.monthly.costs.median.toLocaleString()}) while maintaining disciplined allocation.`;
+                              return `📅 Yearly rebalancing offers the best balance (${typeof yearly === "number" && Number.isFinite(yearly) ? yearly.toFixed(1) : "Not Available"}% net return). Lower costs than monthly ($${typeof rebalancingResults.yearly.costs.median === "number" && Number.isFinite(rebalancingResults.yearly.costs.median) ? rebalancingResults.yearly.costs.median.toLocaleString() : "Not Available"} vs $${typeof rebalancingResults.monthly.costs.median === "number" && Number.isFinite(rebalancingResults.monthly.costs.median) ? rebalancingResults.monthly.costs.median.toLocaleString() : "Not Available"}) while maintaining disciplined allocation.`;
                             } else if (best === monthly) {
-                              return `📆 Monthly rebalancing provides best risk management (${monthly.toFixed(1)}% net return) despite higher costs ($${rebalancingResults.monthly.costs.median.toLocaleString()}). Ideal for volatile portfolios.`;
+                              return `📆 Monthly rebalancing provides best risk management (${typeof monthly === "number" && Number.isFinite(monthly) ? monthly.toFixed(1) : "Not Available"}% net return) despite higher costs ($${typeof rebalancingResults.monthly.costs.median === "number" && Number.isFinite(rebalancingResults.monthly.costs.median) ? rebalancingResults.monthly.costs.median.toLocaleString() : "Not Available"}). Ideal for volatile portfolios.`;
                             } else {
-                              return `💼 Buy-and-hold outperforms (${none.toFixed(1)}% return) due to transaction costs. However, this results in significant drift - monitor allocations quarterly.`;
+                              return `💼 Buy-and-hold outperforms (${typeof none === "number" && Number.isFinite(none) ? none.toFixed(1) : "Not Available"}% return) due to transaction costs. However, this results in significant drift - monitor allocations quarterly.`;
                             }
                           })()}
                         </p>
@@ -314,7 +316,7 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
                         <div className="mt-3 p-3 bg-white/50 rounded-lg border border-teal-200">
                           <p className="text-xs font-semibold text-teal-900 mb-1">Optimal Rebalancing Threshold</p>
                           <p className="text-sm text-teal-800">
-                            Rebalance when any asset drifts <strong>{optimalThreshold.optimalThreshold}%</strong> from target. 
+                            Rebalance when any asset drifts <strong>{typeof optimalThreshold.optimalThreshold === "number" && Number.isFinite(optimalThreshold.optimalThreshold) ? optimalThreshold.optimalThreshold : "Not Available"}%</strong> from target. 
                             This balances drift costs vs transaction fees.
                           </p>
                         </div>
@@ -364,7 +366,7 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
               </h4>
               <p className="text-sm text-purple-800">
                 Should you invest all at once or spread contributions over time? 
-                Simulation assumes {expectedReturn.toFixed(1)}% return, {volatility.toFixed(1)}% volatility.
+                Simulation assumes {typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}% return, {typeof volatility === "number" && Number.isFinite(volatility) ? volatility.toFixed(1) : "Not Available"}% volatility.
               </p>
             </div>
             
@@ -382,17 +384,17 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
                     <div>
                       <p className="text-sm text-slate-600">Median Outcome</p>
                       <p className="text-3xl font-bold text-blue-700">
-                        ${dcaComparison.dca.median.toLocaleString()}
+                        ${typeof dcaComparison.dca.median === "number" && Number.isFinite(dcaComparison.dca.median) ? dcaComparison.dca.median.toLocaleString() : "Not Available"}
                       </p>
                     </div>
                     <div className="text-sm">
                       <p className="text-slate-600">Range (25th-75th %ile)</p>
                       <p className="font-semibold">
-                        ${dcaComparison.dca.p25.toLocaleString()} - ${dcaComparison.dca.p75.toLocaleString()}
+                        ${typeof dcaComparison.dca.p25 === "number" && Number.isFinite(dcaComparison.dca.p25) ? dcaComparison.dca.p25.toLocaleString() : "Not Available"} - ${typeof dcaComparison.dca.p75 === "number" && Number.isFinite(dcaComparison.dca.p75) ? dcaComparison.dca.p75.toLocaleString() : "Not Available"}
                       </p>
                     </div>
                     <Badge className="bg-blue-100 text-blue-800">
-                      {dcaComparison.dca.winRate}% win rate vs lump sum
+                      {typeof dcaComparison.dca.winRate === "number" && Number.isFinite(dcaComparison.dca.winRate) ? dcaComparison.dca.winRate : "Not Available"}% win rate vs lump sum
                     </Badge>
                   </div>
                 </CardContent>
@@ -411,17 +413,17 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
                     <div>
                       <p className="text-sm text-slate-600">Median Outcome</p>
                       <p className="text-3xl font-bold text-purple-700">
-                        ${dcaComparison.lumpSum.median.toLocaleString()}
+                        ${typeof dcaComparison.lumpSum.median === "number" && Number.isFinite(dcaComparison.lumpSum.median) ? dcaComparison.lumpSum.median.toLocaleString() : "Not Available"}
                       </p>
                     </div>
                     <div className="text-sm">
                       <p className="text-slate-600">Range (25th-75th %ile)</p>
                       <p className="font-semibold">
-                        ${dcaComparison.lumpSum.p25.toLocaleString()} - ${dcaComparison.lumpSum.p75.toLocaleString()}
+                        ${typeof dcaComparison.lumpSum.p25 === "number" && Number.isFinite(dcaComparison.lumpSum.p25) ? dcaComparison.lumpSum.p25.toLocaleString() : "Not Available"} - ${typeof dcaComparison.lumpSum.p75 === "number" && Number.isFinite(dcaComparison.lumpSum.p75) ? dcaComparison.lumpSum.p75.toLocaleString() : "Not Available"}
                       </p>
                     </div>
                     <Badge className="bg-purple-100 text-purple-800">
-                      {100 - dcaComparison.dca.winRate}% win rate vs DCA
+                      {typeof dcaComparison.dca.winRate === "number" && Number.isFinite(dcaComparison.dca.winRate) ? (100 - dcaComparison.dca.winRate) : "Not Available"}% win rate vs DCA
                     </Badge>
                   </div>
                 </CardContent>
@@ -432,7 +434,7 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
               <CardContent className="p-4">
                 <p className="text-sm text-slate-700">
                   <strong>📚 Research Insight:</strong> {dcaComparison.recommendation}. 
-                  {dcaComparison.lumpSum.median > dcaComparison.dca.median 
+                  {typeof dcaComparison.lumpSum.median === "number" && Number.isFinite(dcaComparison.lumpSum.median) && typeof dcaComparison.dca.median === "number" && Number.isFinite(dcaComparison.dca.median) && dcaComparison.lumpSum.median > dcaComparison.dca.median
                     ? ' Lump sum typically outperforms in rising markets, but DCA reduces timing risk and emotional stress.'
                     : ' DCA provides smoother entry and reduces regret from market timing, despite potentially lower returns.'}
                 </p>
@@ -465,7 +467,7 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
                     </div>
                     <p className="text-sm text-slate-600 mb-2">Ride out volatility</p>
                     <p className="text-4xl font-bold text-emerald-600">
-                      ${panicImpact.stayInvested.toLocaleString()}
+                      ${typeof panicImpact.stayInvested === "number" && Number.isFinite(panicImpact.stayInvested) ? panicImpact.stayInvested.toLocaleString() : "Not Available"}
                     </p>
                     <p className="text-xs text-slate-500 mt-2">Median 10-year outcome</p>
                   </div>
@@ -477,7 +479,7 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
                     </div>
                     <p className="text-sm text-slate-600 mb-2">Sell at -20%, wait 6 months</p>
                     <p className="text-4xl font-bold text-rose-600">
-                      ${panicImpact.panicSell.toLocaleString()}
+                      ${typeof panicImpact.panicSell === "number" && Number.isFinite(panicImpact.panicSell) ? panicImpact.panicSell.toLocaleString() : "Not Available"}
                     </p>
                     <p className="text-xs text-slate-500 mt-2">Median 10-year outcome</p>
                   </div>
@@ -487,10 +489,10 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
                   <div className="text-center">
                     <p className="text-sm text-rose-900 mb-2">Opportunity Cost of Panic Selling</p>
                     <p className="text-5xl font-bold text-rose-700 mb-2">
-                      ${panicImpact.opportunityCost.toLocaleString()}
+                      ${typeof panicImpact.opportunityCost === "number" && Number.isFinite(panicImpact.opportunityCost) ? panicImpact.opportunityCost.toLocaleString() : "Not Available"}
                     </p>
                     <p className="text-lg font-semibold text-rose-800">
-                      ({panicImpact.opportunityCostPercent}% lower final value)
+                      ({typeof panicImpact.opportunityCostPercent === "number" && Number.isFinite(panicImpact.opportunityCostPercent) ? panicImpact.opportunityCostPercent : "Not Available"}% lower final value)
                     </p>
                     <p className="text-xs text-slate-700 mt-3">
                       Based on 1,000 simulations over 10 years. Assumes selling at -20% drawdown and staying in cash for 6 months.
