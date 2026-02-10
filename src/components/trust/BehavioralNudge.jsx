@@ -13,7 +13,7 @@ export default function BehavioralNudge({ trigger = "multi_analysis" }) {
     const lastNudge = localStorage.getItem(cooldownKey);
     if (lastNudge) {
       const minutesSinceLastNudge = (Date.now() - parseInt(lastNudge)) / (1000 * 60);
-      if (minutesSinceLastNudge < 30) return;
+      if (typeof minutesSinceLastNudge === "number" && Number.isFinite(minutesSinceLastNudge) && minutesSinceLastNudge < 30) return;
     }
 
     if (trigger === "multi_analysis") {
