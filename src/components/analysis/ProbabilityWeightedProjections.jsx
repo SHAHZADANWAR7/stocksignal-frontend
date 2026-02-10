@@ -100,7 +100,7 @@ export default function ProbabilityWeightedProjections({
           Probability-Weighted Growth Ranges ({years} Years)
         </CardTitle>
         <p className="text-sm text-slate-600 mt-2">
-          Accounting for volatility ({volatility.toFixed(1)}%), expected outcomes span a wide range
+          Accounting for volatility ({typeof volatility === "number" && Number.isFinite(volatility) ? volatility.toFixed(1) : "Not Available"}%), expected outcomes span a wide range
         </p>
       </CardHeader>
       <CardContent className="space-y-4 px-3 md:px-6">
@@ -113,7 +113,9 @@ export default function ProbabilityWeightedProjections({
                 {range.isCapped && <span className="ml-1 text-slate-600 block md:inline">(capped)</span>}
               </p>
               <p className="text-lg md:text-2xl lg:text-3xl font-bold mb-1 md:mb-2 leading-none break-all">
-                ${range.value.toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                {typeof range.value === "number" && Number.isFinite(range.value)
+                  ? `$${range.value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+                  : "Not Available"}
               </p>
               <p className="text-[9px] md:text-xs opacity-80 leading-tight">
                 {range.probability}% of outcomes
@@ -135,13 +137,13 @@ export default function ProbabilityWeightedProjections({
         {/* Contribution Breakdown */}
         <div className="p-3 bg-white/70 rounded-lg border border-slate-300">
           <p className="text-sm text-slate-700">
-            <strong>Total Contributions:</strong> ${totalContributions.toLocaleString()} 
+            <strong>Total Contributions:</strong> {typeof totalContributions === "number" && Number.isFinite(totalContributions) ? `$${totalContributions.toLocaleString()}` : "Not Available"} 
             ({principal > 0 ? `$${principal.toLocaleString()} initial` : ''}
             {monthlyContribution > 0 ? ` + $${monthlyContribution.toLocaleString()}/mo × ${years} years` : ''})
           </p>
           <p className="text-xs text-slate-600 mt-1">
-            Expected growth: ${(expectedBalance - totalContributions).toLocaleString()} 
-            ({((expectedBalance / totalContributions - 1) * 100).toFixed(0)}% gain on contributions)
+            Expected growth: {typeof expectedBalance === "number" && Number.isFinite(expectedBalance) && typeof totalContributions === "number" && Number.isFinite(totalContributions) ? `$${(expectedBalance - totalContributions).toLocaleString()}` : "Not Available"} 
+            ({typeof expectedBalance === "number" && Number.isFinite(expectedBalance) && typeof totalContributions === "number" && Number.isFinite(totalContributions) && totalContributions !== 0 ? `${((expectedBalance / totalContributions - 1) * 100).toFixed(0)}` : "Not Available"}% gain on contributions)
           </p>
         </div>
 
@@ -153,7 +155,7 @@ export default function ProbabilityWeightedProjections({
               <div className="text-sm text-amber-900">
                 <p className="font-semibold mb-1">⚠️ Educational Projection Warning</p>
                 <p className="text-xs text-amber-800">
-                  {years}-year projection of ${(expectedBalance/1000000).toFixed(1)}M is <strong>illustrative only</strong>. 
+                  {years}-year projection of {typeof expectedBalance === "number" && Number.isFinite(expectedBalance) ? `$${(expectedBalance/1000000).toFixed(1)}M` : "Not Available"} is <strong>illustrative only</strong>. 
                   Actual results may differ significantly due to:
                 </p>
                 <ul className="text-xs text-amber-800 mt-2 space-y-0.5 list-disc list-inside">
@@ -175,7 +177,7 @@ export default function ProbabilityWeightedProjections({
         <div className="p-3 bg-slate-50 rounded-lg border border-slate-300">
           <p className="text-xs text-slate-700">
             <strong>Calculation Method:</strong> Percentiles calculated using lognormal distribution 
-            assumptions with annualized return ({expectedValue.toFixed(1)}%) and volatility ({volatility.toFixed(1)}%). 
+            assumptions with annualized return ({typeof expectedValue === "number" && Number.isFinite(expectedValue) ? expectedValue.toFixed(1) : "Not Available"}%) and volatility ({typeof volatility === "number" && Number.isFinite(volatility) ? volatility.toFixed(1) : "Not Available"}%). 
             Does not account for sequence risk, correlation breakdown during crises, or tail events beyond ±2 standard deviations.
           </p>
         </div>
