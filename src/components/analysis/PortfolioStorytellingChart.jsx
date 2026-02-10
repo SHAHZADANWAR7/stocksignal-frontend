@@ -165,8 +165,8 @@ export default function PortfolioStorytellingChart({
   };
   
   const diversifierBenefits = {
-    correlationReduction: currentCorrelation ? ((currentCorrelation - 0.35) * 100).toFixed(0) : 35,
-    riskReduction: ((portfolioRisk * 0.3).toFixed(1)),
+    correlationReduction: typeof currentCorrelation === "number" && Number.isFinite(currentCorrelation) ? ((currentCorrelation - 0.35) * 100).toFixed(0) : "Not Available",
+    riskReduction: typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? (portfolioRisk * 0.3).toFixed(1) : "Not Available",
     drawdownImprovement: Math.abs(maxDrawdown || -85) > 50 ? 33 : 15
   };
   
@@ -247,11 +247,11 @@ export default function PortfolioStorytellingChart({
             />
             <YAxis 
               label={{ value: 'Portfolio Value ($)', angle: -90, position: 'insideLeft' }}
-              tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+              tickFormatter={(value) => typeof value === "number" && Number.isFinite(value) ? `$${(value / 1000).toFixed(0)}k` : "Not Available"}
             />
             <Tooltip 
-              formatter={(value) => [`$${value.toLocaleString()}`, '']}
-              labelFormatter={(month) => `Month ${month} (Year ${(month / 12).toFixed(1)})`}
+              formatter={(value) => typeof value === "number" && Number.isFinite(value) ? [`$${value.toLocaleString()}`, ''] : ["Not Available", ""]}
+              labelFormatter={(month) => `Month ${month} (Year ${typeof month === "number" && Number.isFinite(month) ? (month / 12).toFixed(1) : "Not Available"})`}
             />
             <Legend />
             
@@ -374,7 +374,7 @@ export default function PortfolioStorytellingChart({
                             -{diversifierBenefits.correlationReduction} pts
                           </p>
                           <p className="text-[10px] md:text-xs text-slate-500 mt-1">
-                            {(currentCorrelation * 100).toFixed(0)}% → 35%
+                            {typeof currentCorrelation === "number" && Number.isFinite(currentCorrelation) ? (currentCorrelation * 100).toFixed(0) : "Not Available"}% → 35%
                           </p>
                         </div>
                         
