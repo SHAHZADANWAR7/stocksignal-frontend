@@ -10,9 +10,10 @@
 // ============================================================================
 
 export function classifyRiskLevel(volatility) {
-  if (volatility < 12) return { level: 'Low', color: 'emerald', badge: 'bg-emerald-100 text-emerald-700' };
-  if (volatility < 18) return { level: 'Moderate', color: 'blue', badge: 'bg-blue-100 text-blue-700' };
-  if (volatility < 25) return { level: 'Elevated', color: 'amber', badge: 'bg-amber-100 text-amber-700' };
+  const safeVol = typeof volatility === "number" && Number.isFinite(volatility) ? volatility : NaN;
+  if (safeVol < 12) return { level: 'Low', color: 'emerald', badge: 'bg-emerald-100 text-emerald-700' };
+  if (safeVol < 18) return { level: 'Moderate', color: 'blue', badge: 'bg-blue-100 text-blue-700' };
+  if (safeVol < 25) return { level: 'Elevated', color: 'amber', badge: 'bg-amber-100 text-amber-700' };
   return { level: 'High', color: 'rose', badge: 'bg-rose-100 text-rose-700' };
 }
 
@@ -23,10 +24,10 @@ export function classifyRiskLevel(volatility) {
 export function classifyConfidenceTier(confidence) {
   const normalized = typeof confidence === 'string' ? confidence.toLowerCase() : '';
   
-  if (normalized === 'high' || confidence >= 0.8) {
+  if (normalized === 'high' || (typeof confidence === "number" && Number.isFinite(confidence) && confidence >= 0.8)) {
     return { tier: 'high', label: 'High Confidence', badge: 'bg-emerald-100 text-emerald-700' };
   }
-  if (normalized === 'medium' || confidence >= 0.5) {
+  if (normalized === 'medium' || (typeof confidence === "number" && Number.isFinite(confidence) && confidence >= 0.5)) {
     return { tier: 'medium', label: 'Medium Confidence', badge: 'bg-blue-100 text-blue-700' };
   }
   return { tier: 'low', label: 'Low Confidence', badge: 'bg-amber-100 text-amber-700' };
@@ -37,9 +38,10 @@ export function classifyConfidenceTier(confidence) {
 // ============================================================================
 
 export function classifyVolatilityRegime(vix) {
-  if (vix < 15) return { regime: 'low', label: 'Low Volatility', badge: 'bg-emerald-100 text-emerald-700' };
-  if (vix < 20) return { regime: 'normal', label: 'Normal Volatility', badge: 'bg-blue-100 text-blue-700' };
-  if (vix < 30) return { regime: 'elevated', label: 'Elevated Volatility', badge: 'bg-amber-100 text-amber-700' };
+  const safeVix = typeof vix === "number" && Number.isFinite(vix) ? vix : NaN;
+  if (safeVix < 15) return { regime: 'low', label: 'Low Volatility', badge: 'bg-emerald-100 text-emerald-700' };
+  if (safeVix < 20) return { regime: 'normal', label: 'Normal Volatility', badge: 'bg-blue-100 text-blue-700' };
+  if (safeVix < 30) return { regime: 'elevated', label: 'Elevated Volatility', badge: 'bg-amber-100 text-amber-700' };
   return { regime: 'high', label: 'High Volatility', badge: 'bg-rose-100 text-rose-700' };
 }
 
@@ -48,7 +50,10 @@ export function classifyVolatilityRegime(vix) {
 // ============================================================================
 
 export function classifyCrashExposure(portfolioBeta, avgCorrelation, aggressiveBetaPct) {
-  const score = (portfolioBeta * 0.4) + (avgCorrelation * 0.3) + (aggressiveBetaPct / 100 * 0.3);
+  const safePortfolioBeta = typeof portfolioBeta === "number" && Number.isFinite(portfolioBeta) ? portfolioBeta : 0;
+  const safeAvgCorrelation = typeof avgCorrelation === "number" && Number.isFinite(avgCorrelation) ? avgCorrelation : 0;
+  const safeAggressiveBetaPct = typeof aggressiveBetaPct === "number" && Number.isFinite(aggressiveBetaPct) ? aggressiveBetaPct : 0;
+  const score = (safePortfolioBeta * 0.4) + (safeAvgCorrelation * 0.3) + (safeAggressiveBetaPct / 100 * 0.3);
   
   if (score > 1.2) return { level: 'High', badge: 'bg-rose-100 text-rose-700', description: 'Portfolio highly sensitive to market crashes' };
   if (score > 0.9) return { level: 'Moderate-High', badge: 'bg-amber-100 text-amber-700', description: 'Above-average crash sensitivity' };
@@ -92,7 +97,7 @@ export function enforceConsistency(metricType, rawValue, context = {}) {
   let adjustmentReason = null;
   
   // If metric exists in registry and differs significantly, normalize
-  if (existing && Math.abs(existing.value - rawValue) > 0.01) {
+  if (existing && typeof existing.value === "number" && typeof rawValue === "number" && Number.isFinite(existing.value) && Number.isFinite(rawValue) && Math.abs(existing.value - rawValue) > 0.01) {
     adjustedValue = existing.value;
     wasAdjusted = true;
     adjustmentReason = `Normalized to match ${existing.source} (calculated on ${existing.page})`;
@@ -118,13 +123,13 @@ export function validateCrossPageConsistency(metrics) {
   
   // Check for conflicting risk labels
   const riskClassifications = new Set();
-  if (metrics.portfolioRisk) {
+  if (typeof metrics.portfolioRisk === "number" && Number.isFinite(metrics.portfolioRisk)) {
     riskClassifications.add(classifyRiskLevel(metrics.portfolioRisk).level);
   }
   
   // Check for conflicting confidence tiers
   const confidenceTiers = new Set();
-  if (metrics.confidence) {
+  if (typeof metrics.confidence === "string" || (typeof metrics.confidence === "number" && Number.isFinite(metrics.confidence))) {
     confidenceTiers.add(classifyConfidenceTier(metrics.confidence).tier);
   }
   
