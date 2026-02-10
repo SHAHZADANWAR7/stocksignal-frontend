@@ -72,7 +72,7 @@ export default function ConcentrationAlert({ allocations, companies, threshold =
                       {item.company && <p className="text-sm text-slate-600">{item.company.name}</p>}
                     </div>
                     <Badge className="text-lg px-3 py-1 bg-amber-200 text-amber-900">
-                      {item.percent.toFixed(1)}%
+                      {typeof item.percent === "number" && Number.isFinite(item.percent) ? item.percent.toFixed(1) : "Not Available"}%
                     </Badge>
                   </div>
                   <p className="text-xs text-amber-800">
@@ -98,13 +98,13 @@ export default function ConcentrationAlert({ allocations, companies, threshold =
               {suggestions.map(suggestion => (
                 <div key={suggestion.symbol} className="text-xs text-blue-800 mb-2 last:mb-0">
                   <p className="font-semibold">
-                    {suggestion.symbol}: {suggestion.current.toFixed(1)}% → {suggestion.suggested.toFixed(1)}% 
-                    <span className="text-blue-700"> (reduce by {suggestion.reduce.toFixed(1)}%)</span>
+                    {suggestion.symbol}: {typeof suggestion.current === "number" && Number.isFinite(suggestion.current) ? suggestion.current.toFixed(1) : "Not Available"}% → {typeof suggestion.suggested === "number" && Number.isFinite(suggestion.suggested) ? suggestion.suggested.toFixed(1) : "Not Available"}% 
+                    <span className="text-blue-700"> (reduce by {typeof suggestion.reduce === "number" && Number.isFinite(suggestion.reduce) ? suggestion.reduce.toFixed(1) : "Not Available"}%)</span>
                   </p>
                   <ul className="ml-4 mt-1 space-y-0.5">
                     {suggestion.redistribution.slice(0, 3).map((redist, idx) => (
                       <li key={idx}>
-                        • Add {redist.amount.toFixed(1)}% to {redist.to}
+                        • Add {typeof redist.amount === "number" && Number.isFinite(redist.amount) ? redist.amount.toFixed(1) : "Not Available"}% to {redist.to}
                       </li>
                     ))}
                   </ul>
