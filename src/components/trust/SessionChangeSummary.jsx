@@ -35,7 +35,8 @@ export default function SessionChangeSummary({ currentMetrics }) {
       if (betaChange > 0.1) {
         detectedChanges.push({
           message: 'Portfolio beta updated',
-          details: `${lastSession.portfolioBeta.toFixed(2)} → ${currentMetrics.portfolioBeta.toFixed(2)}`
+          details:
+            `${typeof lastSession.portfolioBeta === "number" && Number.isFinite(lastSession.portfolioBeta) ? lastSession.portfolioBeta.toFixed(2) : "Not Available"} → ${typeof currentMetrics.portfolioBeta === "number" && Number.isFinite(currentMetrics.portfolioBeta) ? currentMetrics.portfolioBeta.toFixed(2) : "Not Available"}`
         });
       }
     }
