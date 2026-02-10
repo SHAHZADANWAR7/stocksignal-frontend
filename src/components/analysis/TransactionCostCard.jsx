@@ -145,7 +145,7 @@ export default function TransactionCostCard({ allocations, companies, investment
       symbol,
       name: company.name,
       sector: company.sector,
-      shares: supportsFractional ? shares.toFixed(4) : Math.floor(shares),
+      shares: supportsFractional && typeof shares === "number" && Number.isFinite(shares) ? shares.toFixed(4) : Math.floor(shares),
       allocatedAmount,
       actualInvested,
       percentAllocation: percentValue,
@@ -161,8 +161,8 @@ export default function TransactionCostCard({ allocations, companies, investment
       uninvestedCash,
       supportsFractional,
       // Cost breakdown in basis points for professional presentation
-      bidAskSpreadBps: ((bidAskSpreadCost / actualInvested) * 10000) || 0,
-      slippageBps: ((slippageCost / actualInvested) * 10000) || 0
+      bidAskSpreadBps: (typeof bidAskSpreadCost === "number" && Number.isFinite(bidAskSpreadCost) && typeof actualInvested === "number" && Number.isFinite(actualInvested) && actualInvested !== 0) ? ((bidAskSpreadCost / actualInvested) * 10000) : 0,
+      slippageBps: (typeof slippageCost === "number" && Number.isFinite(slippageCost) && typeof actualInvested === "number" && Number.isFinite(actualInvested) && actualInvested !== 0) ? ((slippageCost / actualInvested) * 10000) : 0
     };
   }).filter(Boolean);
   
@@ -188,14 +188,14 @@ export default function TransactionCostCard({ allocations, companies, investment
           <div className="p-4 bg-blue-50 rounded-xl border-2 border-blue-300">
             <p className="text-sm text-slate-600 mb-1 font-semibold">Total Execution Cost</p>
             <p className="text-3xl font-bold text-blue-700">
-              ${totalCost.toFixed(2)}
+              {typeof totalCost === "number" && Number.isFinite(totalCost) ? `$${totalCost.toFixed(2)}` : "Not Available"}
             </p>
             <div className="flex items-center gap-2 mt-2">
               <Badge className="bg-blue-200 text-blue-800 text-xs">
-                {avgCostPercent.toFixed(2)}% impact
+                {typeof avgCostPercent === "number" && Number.isFinite(avgCostPercent) ? avgCostPercent.toFixed(2) : "Not Available"}% impact
               </Badge>
               <Badge variant="outline" className="text-xs">
-                {(avgCostPercent * 10000 / 100).toFixed(0)} bps
+                {typeof avgCostPercent === "number" && Number.isFinite(avgCostPercent) ? (avgCostPercent * 10000 / 100).toFixed(0) : "Not Available"} bps
               </Badge>
             </div>
           </div>
@@ -203,7 +203,7 @@ export default function TransactionCostCard({ allocations, companies, investment
           <div className="p-4 bg-amber-50 rounded-xl border-2 border-amber-300">
             <p className="text-sm text-slate-600 mb-1 font-semibold">Uninvested Cash</p>
             <p className="text-3xl font-bold text-amber-700">
-              ${totalUninvested.toFixed(2)}
+              {typeof totalUninvested === "number" && Number.isFinite(totalUninvested) ? `$${totalUninvested.toFixed(2)}` : "Not Available"}
             </p>
             <p className="text-xs text-slate-500 mt-2">
               {totalUninvested === 0 ? 'Fractional shares enabled' : 'Whole shares only'}
@@ -213,17 +213,17 @@ export default function TransactionCostCard({ allocations, companies, investment
           <div className="p-4 bg-emerald-50 rounded-xl border-2 border-emerald-300">
             <p className="text-sm text-slate-600 mb-1 font-semibold">Net Invested</p>
             <p className="text-3xl font-bold text-emerald-700">
-              ${totalActuallyInvested.toFixed(2)}
+              {typeof totalActuallyInvested === "number" && Number.isFinite(totalActuallyInvested) ? `$${totalActuallyInvested.toFixed(2)}` : "Not Available"}
             </p>
             <p className="text-xs text-slate-500 mt-2">
-              {((totalActuallyInvested / investmentAmount) * 100).toFixed(1)}% deployed
+              {typeof totalActuallyInvested === "number" && Number.isFinite(totalActuallyInvested) && typeof investmentAmount === "number" && Number.isFinite(investmentAmount) && investmentAmount !== 0 ? ((totalActuallyInvested / investmentAmount) * 100).toFixed(1) : "Not Available"}% deployed
             </p>
           </div>
           
           <div className="p-4 bg-slate-50 rounded-xl border-2 border-slate-300">
             <p className="text-sm text-slate-600 mb-1 font-semibold">Portfolio Value</p>
             <p className="text-3xl font-bold text-slate-800">
-              ${investmentAmount.toLocaleString()}
+              {typeof investmentAmount === "number" && Number.isFinite(investmentAmount) ? `$${investmentAmount.toLocaleString()}` : "Not Available"}
             </p>
             <p className="text-xs text-slate-500 mt-2">
               {costs.length} positions
@@ -264,56 +264,58 @@ export default function TransactionCostCard({ allocations, companies, investment
                     <Badge className="bg-slate-700 text-white text-sm px-3 py-1">
                       {cost.shares} shares
                     </Badge>
-                    <p className="text-xs text-slate-500 mt-1">{cost.percentAllocation.toFixed(1)}% allocation</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      {typeof cost.percentAllocation === "number" && Number.isFinite(cost.percentAllocation) ? cost.percentAllocation.toFixed(1) : "Not Available"}% allocation
+                    </p>
                   </div>
                 </div>
                 
                 <div className="grid md:grid-cols-4 gap-3 text-sm mb-2">
                   <div className="bg-blue-50 p-2 rounded">
                     <p className="text-xs text-slate-600">Bid-Ask Spread</p>
-                    <p className="font-semibold text-blue-700">${cost.bidAskCost.toFixed(2)}</p>
-                    <p className="text-xs text-slate-500">{cost.bidAskSpreadBps.toFixed(0)} bps</p>
+                    <p className="font-semibold text-blue-700">{typeof cost.bidAskCost === "number" && Number.isFinite(cost.bidAskCost) ? `$${cost.bidAskCost.toFixed(2)}` : "Not Available"}</p>
+                    <p className="text-xs text-slate-500">{typeof cost.bidAskSpreadBps === "number" && Number.isFinite(cost.bidAskSpreadBps) ? cost.bidAskSpreadBps.toFixed(0) : "Not Available"} bps</p>
                   </div>
                   <div className="bg-orange-50 p-2 rounded">
                     <p className="text-xs text-slate-600">Market Impact</p>
-                    <p className="font-semibold text-orange-700">${cost.slippageCost.toFixed(2)}</p>
-                    <p className="text-xs text-slate-500">{cost.slippageBps.toFixed(0)} bps</p>
+                    <p className="font-semibold text-orange-700">{typeof cost.slippageCost === "number" && Number.isFinite(cost.slippageCost) ? `$${cost.slippageCost.toFixed(2)}` : "Not Available"}</p>
+                    <p className="text-xs text-slate-500">{typeof cost.slippageBps === "number" && Number.isFinite(cost.slippageBps) ? cost.slippageBps.toFixed(0) : "Not Available"} bps</p>
                   </div>
                   <div className="bg-amber-50 p-2 rounded">
                     <p className="text-xs text-slate-600">Cash Drag</p>
-                    <p className="font-semibold text-amber-700">${cost.uninvestedCash.toFixed(2)}</p>
+                    <p className="font-semibold text-amber-700">{typeof cost.uninvestedCash === "number" && Number.isFinite(cost.uninvestedCash) ? `$${cost.uninvestedCash.toFixed(2)}` : "Not Available"}</p>
                     <p className="text-xs text-slate-500">
                       {cost.uninvestedCash === 0 ? 'None' : 'Fractional residual'}
                     </p>
                   </div>
                   <div className="bg-rose-50 p-2 rounded border border-rose-200">
                     <p className="text-xs text-slate-600">Total Cost</p>
-                    <p className="font-bold text-rose-700">${cost.totalCost.toFixed(2)}</p>
-                    <p className="text-xs text-slate-500">{cost.costPercent.toFixed(2)}%</p>
+                    <p className="font-bold text-rose-700">{typeof cost.totalCost === "number" && Number.isFinite(cost.totalCost) ? `$${cost.totalCost.toFixed(2)}` : "Not Available"}</p>
+                    <p className="text-xs text-slate-500">{typeof cost.costPercent === "number" && Number.isFinite(cost.costPercent) ? cost.costPercent.toFixed(2) : "Not Available"}%</p>
                   </div>
                 </div>
                 
                 <div className="text-xs text-slate-500 bg-slate-50 p-2 rounded space-y-2">
                   <div className="flex items-center gap-4 flex-wrap">
-                    <span><strong>Allocated:</strong> ${cost.allocatedAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                    <span><strong>Allocated:</strong> {typeof cost.allocatedAmount === "number" && Number.isFinite(cost.allocatedAmount) ? `$${cost.allocatedAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}` : "Not Available"}</span>
                     <span>•</span>
-                    <span><strong>Invested:</strong> ${cost.actualInvested.toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                    <span><strong>Invested:</strong> {typeof cost.actualInvested === "number" && Number.isFinite(cost.actualInvested) ? `$${cost.actualInvested.toLocaleString('en-US', {minimumFractionDigits: 2})}` : "Not Available"}</span>
                     {cost.volume > 0 && (
                       <>
                         <span>•</span>
-                        <span><strong>Daily Volume:</strong> {(cost.volume / 1e6).toFixed(1)}M shares</span>
+                        <span><strong>Daily Volume:</strong> {typeof cost.volume === "number" && Number.isFinite(cost.volume) ? (cost.volume / 1e6).toFixed(1) : "Not Available"}M shares</span>
                       </>
                     )}
                     {cost.beta && (
                       <>
                         <span>•</span>
-                        <span><strong>Beta:</strong> {cost.beta.toFixed(3)}</span>
+                        <span><strong>Beta:</strong> {typeof cost.beta === "number" && Number.isFinite(cost.beta) ? cost.beta.toFixed(3) : "Not Available"}</span>
                       </>
                     )}
                     {cost.volatility && (
                       <>
                         <span>•</span>
-                        <span><strong>Volatility:</strong> {cost.volatility.toFixed(1)}%</span>
+                        <span><strong>Volatility:</strong> {typeof cost.volatility === "number" && Number.isFinite(cost.volatility) ? cost.volatility.toFixed(1) : "Not Available"}%</span>
                       </>
                     )}
                   </div>
@@ -324,7 +326,7 @@ export default function TransactionCostCard({ allocations, companies, investment
                       {cost.supportsFractional ? "Fractional shares: Yes" : "Fractional shares: No"}
                     </Badge>
                     <span className="text-xs">
-                      Cash drag: <strong>${cost.uninvestedCash.toFixed(2)}</strong>
+                      Cash drag: <strong>{typeof cost.uninvestedCash === "number" && Number.isFinite(cost.uninvestedCash) ? `$${cost.uninvestedCash.toFixed(2)}` : "Not Available"}</strong>
                       {cost.uninvestedCash === 0 && " (Fractional shares enabled — no uninvested cash)"}
                     </span>
                   </div>
@@ -335,7 +337,7 @@ export default function TransactionCostCard({ allocations, companies, investment
                       metricName="Bid-Ask Spread"
                       source="market_cap_model"
                       confidence="medium"
-                      details={`${cost.marketCapTier}-cap tier (${cost.marketCap}) with ${cost.volume > 0 ? 'real volume' : 'estimated volume'} and ${cost.volatility.toFixed(1)}% volatility adjustments`}
+                      details={`${cost.marketCapTier}-cap tier (${cost.marketCap}) with ${cost.volume > 0 ? 'real volume' : 'estimated volume'} and ${typeof cost.volatility === "number" && Number.isFinite(cost.volatility) ? cost.volatility.toFixed(1) : "Not Available"}% volatility adjustments`}
                       compact={true}
                     />
                     <DataSourceLabel
@@ -401,14 +403,14 @@ export default function TransactionCostCard({ allocations, companies, investment
             </p>
             <p>
               <strong>Fractional Shares:</strong> Enabled (Fidelity, Schwab, Robinhood, Interactive Brokers, M1 Finance support as of Jan 2026). 
-              Total uninvested cash: ${totalUninvested.toFixed(2)} (effectively zero with fractional).
+              Total uninvested cash: {typeof totalUninvested === "number" && Number.isFinite(totalUninvested) ? `$${totalUninvested.toFixed(2)}` : "Not Available"} (effectively zero with fractional).
             </p>
             <p>
               <strong>Commission:</strong> $0 assumed (zero-commission standard: Robinhood, Fidelity, Schwab, TD Ameritrade, E-Trade).
             </p>
             <p>
-              <strong>Allocation Integrity:</strong> Sum of allocations = {costs.reduce((sum, c) => sum + c.percentAllocation, 0).toFixed(1)}% 
-              {Math.abs(costs.reduce((sum, c) => sum + c.percentAllocation, 0) - 100) > 0.1 && ' ⚠️ (rounding residual)'}
+              <strong>Allocation Integrity:</strong> Sum of allocations = {typeof costs.reduce((sum, c) => sum + c.percentAllocation, 0) === "number" && Number.isFinite(costs.reduce((sum, c) => sum + c.percentAllocation, 0)) ? costs.reduce((sum, c) => sum + c.percentAllocation, 0).toFixed(1) : "Not Available"}% 
+              {typeof costs.reduce((sum, c) => sum + c.percentAllocation, 0) === "number" && Number.isFinite(costs.reduce((sum, c) => sum + c.percentAllocation, 0)) && Math.abs(costs.reduce((sum, c) => sum + c.percentAllocation, 0) - 100) > 0.1 && ' ⚠️ (rounding residual)'}
             </p>
             <p className="pt-2 border-t border-slate-300 mt-2 italic text-slate-700">
               <strong>⚠️ Data Confidence:</strong> Spreads and slippage are model-based estimates using verified volume, market cap, and volatility data. 
