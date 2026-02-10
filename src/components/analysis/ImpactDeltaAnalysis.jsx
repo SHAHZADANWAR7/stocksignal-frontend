@@ -100,7 +100,7 @@ export default function ImpactDeltaAnalysis({
       const currentRisk = sanitizeNumber(currentPortfolio.risk || 20);
       const currentSharpe = sanitizeNumber(currentPortfolio.sharpe_ratio || 0);
 
-      // ═══════════════════════════════════════════════════════════════════════
+      // ══════════════════════════════════════════════��════════════════════════
       // CORRELATION NORMALIZATION - CRITICAL PATH
       // ═══════════════════════════════════════════════════════════════════════
       let rawCorrelation = currentPortfolio.avgCorrelation;
@@ -152,6 +152,12 @@ export default function ImpactDeltaAnalysis({
       
       // CHECKPOINT 4: Validate calculation bounds
       if (newCorrelation < 0 || newCorrelation > 1) {
+        const safeWeight1 = typeof weight1 === "number" && Number.isFinite(weight1) ? weight1.toFixed(3) : "Not Available";
+        const safeCurrentCorrelation = typeof currentCorrelation === "number" && Number.isFinite(currentCorrelation) ? currentCorrelation.toFixed(3) : "Not Available";
+        const safeWeight2 = typeof weight2 === "number" && Number.isFinite(weight2) ? weight2.toFixed(3) : "Not Available";
+        const safeDiversifierCorrelation = typeof diversifier.correlation === "number" && Number.isFinite(diversifier.correlation) ? diversifier.correlation.toFixed(3) : "Not Available";
+        const safeNewCorrelation = typeof newCorrelation === "number" && Number.isFinite(newCorrelation) ? newCorrelation.toFixed(3) : "Not Available";
+
         console.error(`🚨 NEW CORRELATION OUT OF BOUNDS:`, {
           newCorrelation,
           weight1,
@@ -160,7 +166,7 @@ export default function ImpactDeltaAnalysis({
           diversifierCorr: diversifier.correlation,
           term1,
           term2,
-          formula: `${weight1.toFixed(3)} × ${currentCorrelation.toFixed(3)} + ${weight2.toFixed(3)} × ${diversifier.correlation.toFixed(3)} = ${newCorrelation.toFixed(3)}`
+          formula: `${safeWeight1} × ${safeCurrentCorrelation} + ${safeWeight2} × ${safeDiversifierCorrelation} = ${safeNewCorrelation}`
         });
         return null;
       }
@@ -169,7 +175,11 @@ export default function ImpactDeltaAnalysis({
       const minExpected = Math.min(currentCorrelation, diversifier.correlation);
       const maxExpected = Math.max(currentCorrelation, diversifier.correlation);
       if (newCorrelation < minExpected - 0.01 || newCorrelation > maxExpected + 0.01) {
-        console.warn(`⚠️ Correlation outside expected range [${minExpected.toFixed(3)}, ${maxExpected.toFixed(3)}]: ${newCorrelation.toFixed(3)}`);
+        const safeMinExpected = typeof minExpected === "number" && Number.isFinite(minExpected) ? minExpected.toFixed(3) : "Not Available";
+        const safeMaxExpected = typeof maxExpected === "number" && Number.isFinite(maxExpected) ? maxExpected.toFixed(3) : "Not Available";
+        const safeNewCorrelation = typeof newCorrelation === "number" && Number.isFinite(newCorrelation) ? newCorrelation.toFixed(3) : "Not Available";
+
+        console.warn(`⚠️ Correlation outside expected range [${safeMinExpected}, ${safeMaxExpected}]: ${safeNewCorrelation}`);
       }
       
       const hypotheticalCompanies = [
@@ -243,25 +253,42 @@ export default function ImpactDeltaAnalysis({
       const newPercent = newCorrelation * 100;
       const expectedDelta = newPercent - currentPercent;
       const deltaError = Math.abs(correlationDelta - expectedDelta);
+
+      const safeCurrentPercent = typeof currentPercent === "number" && Number.isFinite(currentPercent) ? currentPercent.toFixed(2) : "Not Available";
+      const safeNewPercent = typeof newPercent === "number" && Number.isFinite(newPercent) ? newPercent.toFixed(2) : "Not Available";
+      const safeCorrelationDelta = typeof correlationDelta === "number" && Number.isFinite(correlationDelta) ? correlationDelta.toFixed(2) : "Not Available";
+      const safeExpectedDelta = typeof expectedDelta === "number" && Number.isFinite(expectedDelta) ? expectedDelta.toFixed(2) : "Not Available";
+      const safeDeltaError = typeof deltaError === "number" && Number.isFinite(deltaError) ? deltaError.toFixed(2) : "Not Available";
       
       if (deltaError > 0.1) {
         console.error(`🚨 DELTA CALCULATION ERROR:`, {
-          currentPercent: currentPercent.toFixed(2),
-          newPercent: newPercent.toFixed(2),
-          calculatedDelta: correlationDelta.toFixed(2),
-          expectedDelta: expectedDelta.toFixed(2),
-          error: deltaError.toFixed(2)
+          currentPercent: safeCurrentPercent,
+          newPercent: safeNewPercent,
+          calculatedDelta: safeCorrelationDelta,
+          expectedDelta: safeExpectedDelta,
+          error: safeDeltaError
         });
       }
       
       // CHECKPOINT 7: Full audit trail for debugging
+      const safeCurrentCorrelation = typeof currentCorrelation === "number" && Number.isFinite(currentCorrelation) ? currentCorrelation.toFixed(4) : "Not Available";
+      const safeWeight1 = typeof weight1 === "number" && Number.isFinite(weight1) ? weight1.toFixed(3) : "Not Available";
+      const safeCurrentCorr = typeof currentCorrelation === "number" && Number.isFinite(currentCorrelation) ? currentCorrelation.toFixed(3) : "Not Available";
+      const safeWeight2 = typeof weight2 === "number" && Number.isFinite(weight2) ? weight2.toFixed(3) : "Not Available";
+      const safeDiversifierCorr = typeof diversifier.correlation === "number" && Number.isFinite(diversifier.correlation) ? diversifier.correlation.toFixed(3) : "Not Available";
+      const safeStep4 = typeof newCorrelation === "number" && Number.isFinite(newCorrelation) ? newCorrelation.toFixed(4) : "Not Available";
+      const safeStep5a = typeof newPercent === "number" && Number.isFinite(newPercent) ? newPercent.toFixed(1) : "Not Available";
+      const safeStep5b = typeof currentPercent === "number" && Number.isFinite(currentPercent) ? currentPercent.toFixed(1) : "Not Available";
+      const safeStep5c = typeof correlationDelta === "number" && Number.isFinite(correlationDelta) ? correlationDelta.toFixed(1) : "Not Available";
+      const safeStep6 = deltaError < 0.1 ? '✅ PASS' : '❌ FAIL';
+
       console.log(`✅ CORRELATION VALIDATED [${diversifier.symbol} @ ${allocationPercent}%]:`, {
         step1_rawInput: currentPortfolio.avgCorrelation,
-        step2_normalized: currentCorrelation.toFixed(4),
-        step3_calculation: `(${weight1.toFixed(3)} × ${currentCorrelation.toFixed(3)}) + (${weight2.toFixed(3)} × ${diversifier.correlation.toFixed(3)})`,
-        step4_newValue: newCorrelation.toFixed(4),
-        step5_deltaCalc: `${newPercent.toFixed(1)}% - ${currentPercent.toFixed(1)}% = ${correlationDelta.toFixed(1)} pts`,
-        step6_verification: deltaError < 0.1 ? '✅ PASS' : '❌ FAIL'
+        step2_normalized: safeCurrentCorrelation,
+        step3_calculation: `(${safeWeight1} × ${safeCurrentCorr}) + (${safeWeight2} × ${safeDiversifierCorr})`,
+        step4_newValue: safeStep4,
+        step5_deltaCalc: `${safeStep5a}% - ${safeStep5b}% = ${safeStep5c} pts`,
+        step6_verification: safeStep6
       });
       
       const ddDelta = drawdownImprovement;
@@ -478,14 +505,14 @@ export default function ImpactDeltaAnalysis({
                               <div className="flex items-start justify-between">
                                 <div>
                                   <p className="text-[9px] md:text-[10px] text-slate-500 tabular-nums leading-none">
-                                    {(result._currentCorrelation * 100).toFixed(1)}%
+                                    {typeof result._currentCorrelation === "number" && Number.isFinite(result._currentCorrelation) ? (result._currentCorrelation * 100).toFixed(1) : "Not Available"}%
                                   </p>
                                   <p className="text-2xl md:text-2xl font-bold text-blue-600 tabular-nums leading-none mt-0.5">
-                                    {(result._newCorrelation * 100).toFixed(1)}%
+                                    {typeof result._newCorrelation === "number" && Number.isFinite(result._newCorrelation) ? (result._newCorrelation * 100).toFixed(1) : "Not Available"}%
                                   </p>
                                 </div>
                                   <p className={`text-xs md:text-xs font-bold ${result.deltas.correlation < -0.05 ? 'text-emerald-600' : result.deltas.correlation > 0.05 ? 'text-rose-600' : 'text-slate-600'} tabular-nums self-center`}>
-                                   {Math.abs(result.deltas.correlation) < 0.05 ? '~' : `${result.deltas.correlation >= 0 ? '+' : ''}${result.deltas.correlation.toFixed(1)}`}
+                                   {Math.abs(result.deltas.correlation) < 0.05 ? '~' : `${typeof result.deltas.correlation === "number" && Number.isFinite(result.deltas.correlation) ? (result.deltas.correlation >= 0 ? '+' : '') + result.deltas.correlation.toFixed(1) : "Not Available"}`}
                                  </p>
                               </div>
                              </div>
@@ -496,14 +523,14 @@ export default function ImpactDeltaAnalysis({
                                <div className="flex items-start justify-between">
                                  <div>
                                    <p className="text-[9px] md:text-[10px] text-slate-500 tabular-nums leading-none">
-                                     {currentPortfolio.sharpe_ratio?.toFixed(2) || '0.24'}
+                                     {typeof currentPortfolio.sharpe_ratio === "number" && Number.isFinite(currentPortfolio.sharpe_ratio) ? currentPortfolio.sharpe_ratio.toFixed(2) : '0.24'}
                                    </p>
                                    <p className={`text-2xl md:text-2xl font-bold tabular-nums leading-none mt-0.5 ${getDeltaColor(result.deltas.sharpe)}`}>
-                                     {result.newSharpe.toFixed(2)}
+                                     {typeof result.newSharpe === "number" && Number.isFinite(result.newSharpe) ? result.newSharpe.toFixed(2) : "Not Available"}
                                    </p>
                                  </div>
                                  <p className={`text-xs md:text-xs font-bold ${result.deltas.sharpe > 0.005 ? 'text-emerald-600' : result.deltas.sharpe < -0.005 ? 'text-rose-600' : 'text-slate-600'} tabular-nums self-center`}>
-                                   {Math.abs(result.deltas.sharpe) < 0.005 ? '~' : `${result.deltas.sharpe >= 0 ? '+' : ''}${result.deltas.sharpe.toFixed(2)}`}
+                                   {Math.abs(result.deltas.sharpe) < 0.005 ? '~' : `${typeof result.deltas.sharpe === "number" && Number.isFinite(result.deltas.sharpe) ? (result.deltas.sharpe >= 0 ? '+' : '') + result.deltas.sharpe.toFixed(2) : "Not Available"}`}
                                  </p>
                                </div>
                              </div>
@@ -514,14 +541,14 @@ export default function ImpactDeltaAnalysis({
                                <div className="flex items-start justify-between">
                                  <div>
                                    <p className="text-[9px] md:text-[10px] text-slate-500 tabular-nums leading-none">
-                                     {result._currentRisk?.toFixed(1) || '39.0'}%
+                                     {typeof result._currentRisk === "number" && Number.isFinite(result._currentRisk) ? result._currentRisk.toFixed(1) : '39.0'}%
                                    </p>
                                    <p className={`text-2xl md:text-2xl font-bold tabular-nums leading-none mt-0.5 ${getDeltaColor(result.deltas.risk, true)}`}>
-                                     {result._newRisk.toFixed(1)}%
+                                     {typeof result._newRisk === "number" && Number.isFinite(result._newRisk) ? result._newRisk.toFixed(1) : "Not Available"}%
                                    </p>
                                  </div>
                                  <p className={`text-xs md:text-xs font-bold ${result.deltas.risk < -0.05 ? 'text-emerald-600' : result.deltas.risk > 0.05 ? 'text-rose-600' : 'text-slate-600'} tabular-nums self-center`}>
-                                   {Math.abs(result.deltas.risk) < 0.05 ? '~' : `${result.deltas.risk >= 0 ? '+' : ''}${result.deltas.risk.toFixed(1)}`}
+                                   {Math.abs(result.deltas.risk) < 0.05 ? '~' : `${typeof result.deltas.risk === "number" && Number.isFinite(result.deltas.risk) ? (result.deltas.risk >= 0 ? '+' : '') + result.deltas.risk.toFixed(1) : "Not Available"}`}
                                  </p>
                                </div>
                              </div>
@@ -532,14 +559,14 @@ export default function ImpactDeltaAnalysis({
                                <div className="flex items-start justify-between">
                                  <div>
                                    <p className="text-[9px] md:text-[10px] text-slate-500 tabular-nums leading-none">
-                                     {result.currentDrawdown?.toFixed(0) || '-85'}%
+                                     {typeof result.currentDrawdown === "number" && Number.isFinite(result.currentDrawdown) ? result.currentDrawdown.toFixed(0) : '-85'}%
                                    </p>
                                    <p className={`text-2xl md:text-2xl font-bold tabular-nums leading-none mt-0.5 ${getDeltaColor(result.deltas.drawdown, true)}`}>
-                                     {result.newDrawdown.toFixed(0)}%
+                                     {typeof result.newDrawdown === "number" && Number.isFinite(result.newDrawdown) ? result.newDrawdown.toFixed(0) : "Not Available"}%
                                    </p>
                                  </div>
                                  <p className={`text-xs md:text-xs font-bold ${result.deltas.drawdown > 0.5 ? 'text-emerald-600' : result.deltas.drawdown < -0.5 ? 'text-rose-600' : 'text-slate-600'} tabular-nums self-center`}>
-                                   {Math.abs(result.deltas.drawdown) < 0.5 ? '~' : `${result.deltas.drawdown > 0 ? '+' : ''}${Math.round(result.deltas.drawdown)}`}
+                                   {Math.abs(result.deltas.drawdown) < 0.5 ? '~' : `${typeof result.deltas.drawdown === "number" && Number.isFinite(result.deltas.drawdown) ? (result.deltas.drawdown > 0 ? '+' : '') + Math.round(result.deltas.drawdown) : "Not Available"}`}
                                  </p>
                                </div>
                              </div>
@@ -550,14 +577,14 @@ export default function ImpactDeltaAnalysis({
                                <div className="flex items-start justify-between">
                                  <div>
                                    <p className="text-[9px] md:text-[10px] text-slate-500 tabular-nums leading-none">
-                                     {result._currentReturn?.toFixed(1) || '0.0'}%
+                                     {typeof result._currentReturn === "number" && Number.isFinite(result._currentReturn) ? result._currentReturn.toFixed(1) : '0.0'}%
                                    </p>
                                    <p className={`text-2xl md:text-2xl font-bold tabular-nums leading-none mt-0.5 ${getDeltaColor(result.deltas.return)}`}>
-                                     {result._newReturn.toFixed(1)}%
+                                     {typeof result._newReturn === "number" && Number.isFinite(result._newReturn) ? result._newReturn.toFixed(1) : "Not Available"}%
                                    </p>
                                  </div>
                                  <p className={`text-xs md:text-xs font-bold ${result.deltas.return > 0.05 ? 'text-emerald-600' : result.deltas.return < -0.05 ? 'text-rose-600' : 'text-slate-600'} tabular-nums self-center`}>
-                                   {Math.abs(result.deltas.return) < 0.05 ? '~' : `${result.deltas.return >= 0 ? '+' : ''}${result.deltas.return.toFixed(1)}`}
+                                   {Math.abs(result.deltas.return) < 0.05 ? '~' : `${typeof result.deltas.return === "number" && Number.isFinite(result.deltas.return) ? (result.deltas.return >= 0 ? '+' : '') + result.deltas.return.toFixed(1) : "Not Available"}`}
                                  </p>
                                </div>
                              </div>
@@ -568,14 +595,14 @@ export default function ImpactDeltaAnalysis({
                                <div className="flex items-start justify-between">
                                  <div>
                                    <p className="text-[9px] md:text-[10px] text-slate-500 tabular-nums leading-none">
-                                     {(result.currentGoalProb * 100).toFixed(0)}%
+                                     {typeof result.currentGoalProb === "number" && Number.isFinite(result.currentGoalProb) ? (result.currentGoalProb * 100).toFixed(0) : "Not Available"}%
                                    </p>
                                    <p className={`text-2xl md:text-2xl font-bold tabular-nums leading-none mt-0.5 ${getDeltaColor(result.deltas.goalProb)}`}>
-                                     {(result.newGoalProb * 100).toFixed(0)}%
+                                     {typeof result.newGoalProb === "number" && Number.isFinite(result.newGoalProb) ? (result.newGoalProb * 100).toFixed(0) : "Not Available"}%
                                    </p>
                                  </div>
                                  <p className={`text-xs md:text-xs font-bold ${result.deltas.goalProb > 0.5 ? 'text-emerald-600' : result.deltas.goalProb < -0.5 ? 'text-rose-600' : 'text-slate-600'} tabular-nums self-center`}>
-                                   {Math.abs(result.deltas.goalProb) < 0.5 ? '~' : `${result.deltas.goalProb >= 0 ? '+' : ''}${Math.round(result.deltas.goalProb)}`}
+                                   {Math.abs(result.deltas.goalProb) < 0.5 ? '~' : `${typeof result.deltas.goalProb === "number" && Number.isFinite(result.deltas.goalProb) ? (result.deltas.goalProb >= 0 ? '+' : '') + Math.round(result.deltas.goalProb) : "Not Available"}`}
                                  </p>
                                </div>
                              </div>
@@ -586,14 +613,14 @@ export default function ImpactDeltaAnalysis({
                                <div className="flex items-start justify-between">
                                  <div>
                                    <p className="text-[9px] md:text-[10px] text-slate-500 tabular-nums leading-none">
-                                     {result.currentQualityScore}
+                                     {typeof result.currentQualityScore === "number" && Number.isFinite(result.currentQualityScore) ? result.currentQualityScore : "Not Available"}
                                    </p>
                                    <p className={`text-2xl md:text-2xl font-bold tabular-nums leading-none mt-0.5 ${getDeltaColor(result.deltas.quality)}`}>
-                                     {result.newQualityScore}
+                                     {typeof result.newQualityScore === "number" && Number.isFinite(result.newQualityScore) ? result.newQualityScore : "Not Available"}
                                    </p>
                                  </div>
                                  <p className={`text-xs md:text-xs font-bold ${result.deltas.quality > 0.5 ? 'text-emerald-600' : result.deltas.quality < -0.5 ? 'text-rose-600' : 'text-slate-600'} tabular-nums self-center`}>
-                                   {Math.abs(result.deltas.quality) < 0.5 ? '~' : `${result.deltas.quality >= 0 ? '+' : ''}${Math.round(result.deltas.quality)}`}
+                                   {Math.abs(result.deltas.quality) < 0.5 ? '~' : `${typeof result.deltas.quality === "number" && Number.isFinite(result.deltas.quality) ? (result.deltas.quality >= 0 ? '+' : '') + Math.round(result.deltas.quality) : "Not Available"}`}
                                  </p>
                                </div>
                              </div>
@@ -602,10 +629,10 @@ export default function ImpactDeltaAnalysis({
                           {/* Drawdown Protection Highlight - DISPLAY FORMATTED */}
                           {(() => {
                            const portfolioSize = 30000;
-                           const currentDD = Math.abs(result.currentDrawdown || -85);
-                           const newDD = Math.abs(result.newDrawdown || -85);
+                           const currentDD = Math.abs(typeof result.currentDrawdown === "number" && Number.isFinite(result.currentDrawdown) ? result.currentDrawdown : -85);
+                           const newDD = Math.abs(typeof result.newDrawdown === "number" && Number.isFinite(result.newDrawdown) ? result.newDrawdown : -85);
                            const dollarSaved = portfolioSize * ((currentDD - newDD) / 100);
-                           const ptsImprovement = result.deltas.drawdown;
+                           const ptsImprovement = typeof result.deltas.drawdown === "number" && Number.isFinite(result.deltas.drawdown) ? result.deltas.drawdown : 0;
 
                            if (ptsImprovement > 1) {
                              return (
@@ -622,13 +649,13 @@ export default function ImpactDeltaAnalysis({
                                        <div className="bg-white/80 rounded-2xl p-4 md:p-5 border-2 border-emerald-300 shadow-md">
                                          <p className="text-xs md:text-sm text-slate-600 mb-2 leading-tight font-medium">Drawdown Improvement</p>
                                          <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-emerald-700 tabular-nums leading-none break-words">
-                                           +{ptsImprovement.toFixed(2)} pts
+                                           +{typeof ptsImprovement === "number" && Number.isFinite(ptsImprovement) ? ptsImprovement.toFixed(2) : "Not Available"} pts
                                          </p>
                                        </div>
                                        <div className="bg-white/80 rounded-2xl p-4 md:p-5 border-2 border-emerald-300 shadow-md">
                                          <p className="text-xs md:text-sm text-slate-600 mb-2 leading-tight font-medium">Est. Loss Reduction</p>
                                          <p className="text-2xl md:text-3xl lg:text-4xl font-bold text-emerald-700 tabular-nums leading-none break-words">
-                                           ${dollarSaved.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                           ${typeof dollarSaved === "number" && Number.isFinite(dollarSaved) ? dollarSaved.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : "Not Available"}
                                          </p>
                                        </div>
                                      </div>
@@ -646,7 +673,7 @@ export default function ImpactDeltaAnalysis({
                           <div className="mt-5 md:mt-6 p-4 md:p-5 bg-slate-50/80 rounded-2xl border-2 border-slate-300 shadow-md">
                             <p className="text-xs md:text-sm text-slate-700 leading-relaxed">
                               <strong className="text-slate-900">Calculation Methodology:</strong> Adds {customAllocation}% {diversifier.symbol}, proportionally reducing existing positions. 
-                              Assumes {diversifier.correlation.toFixed(2)} correlation with portfolio. 
+                              Assumes {typeof diversifier.correlation === "number" && Number.isFinite(diversifier.correlation) ? diversifier.correlation.toFixed(2) : "Not Available"} correlation with portfolio. 
                               Drawdown via Magdon-Ismail (10Y, 95%ile). 
                               Goal probability via 15k Monte Carlo iterations (fat-tailed distribution).
                               <span className="block mt-2 font-semibold text-slate-900">
