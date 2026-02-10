@@ -130,7 +130,7 @@ export function adjustExpectedReturn(baseReturn, vixRegime, currentVIX) {
  * @private
  */
 function getReturnAdjustmentReasoning(regime, vix) {
-  const vixFormatted = round(vix, 1);
+  const vixFormatted = typeof vix === "number" && Number.isFinite(vix) ? vix.toFixed(1) : "Not Available";
   
   switch(regime) {
     case 'low':
@@ -257,21 +257,21 @@ export function calculateForwardLookingRisk(companies, weights, correlationMatri
       symbol: c.symbol || 'N/A',
       name: c.name || 'Unknown',
       sector: c.sector || 'Unknown',
-      beta: round(sanitizeNumber(c.beta, 1.0), 3),
-      historical: round(historicalVol, 1),
-      forwardLooking: round(forwardVol, 1),
-      delta: round(forwardVol - historicalVol, 1),
-      weight: round(sanitizeNumber(weights[i], 0) * 100, 1)
+      beta: typeof c.beta === "number" && Number.isFinite(c.beta) ? round(c.beta, 3) : "Not Available",
+      historical: typeof historicalVol === "number" && Number.isFinite(historicalVol) ? round(historicalVol, 1) : "Not Available",
+      forwardLooking: typeof forwardVol === "number" && Number.isFinite(forwardVol) ? round(forwardVol, 1) : "Not Available",
+      delta: (typeof forwardVol === "number" && Number.isFinite(forwardVol) && typeof historicalVol === "number" && Number.isFinite(historicalVol)) ? round(forwardVol - historicalVol, 1) : "Not Available",
+      weight: typeof weights[i] === "number" && Number.isFinite(weights[i]) ? round(weights[i] * 100, 1) : "Not Available"
     };
   });
   
   return {
-    forwardRisk: round(forwardRisk, 1),
-    historicalRisk: round(historicalRisk, 1),
-    regimeImpact: round(forwardRisk - historicalRisk, 1),
+    forwardRisk: typeof forwardRisk === "number" && Number.isFinite(forwardRisk) ? round(forwardRisk, 1) : "Not Available",
+    historicalRisk: typeof historicalRisk === "number" && Number.isFinite(historicalRisk) ? round(historicalRisk, 1) : "Not Available",
+    regimeImpact: (typeof forwardRisk === "number" && Number.isFinite(forwardRisk) && typeof historicalRisk === "number" && Number.isFinite(historicalRisk)) ? round(forwardRisk - historicalRisk, 1) : "Not Available",
     regime: regime,
     regimeDescription: regimeDescription,
-    vixLevel: round(currentVIX, 1),
+    vixLevel: typeof currentVIX === "number" && Number.isFinite(currentVIX) ? round(currentVIX, 1) : "Not Available",
     assetAdjustments: assetAdjustments,
     methodology: {
       volatilityBlend: '60% historical + 40% VIX-implied',
