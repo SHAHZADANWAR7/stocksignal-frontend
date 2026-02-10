@@ -39,7 +39,7 @@ const classifyAssetRiskProfile = (company) => {
       label: 'Profitable', 
       icon: CheckCircle, 
       color: 'emerald',
-      tooltip: `P/E: ${company.pe_ratio?.toFixed(2) || 'N/A'}, TTM EPS: $${company.eps_ttm?.toFixed(2) || 'N/A'}, Profit Margin: ${(company.profit_margin * 100)?.toFixed(1) || 'N/A'}%`
+      tooltip: `P/E: ${typeof company.pe_ratio === "number" && Number.isFinite(company.pe_ratio) ? company.pe_ratio.toFixed(2) : 'N/A'}, TTM EPS: $${typeof company.eps_ttm === "number" && Number.isFinite(company.eps_ttm) ? company.eps_ttm.toFixed(2) : 'N/A'}, Profit Margin: ${typeof company.profit_margin === "number" && Number.isFinite(company.profit_margin) ? (company.profit_margin * 100).toFixed(1) : 'N/A'}%`
     };
   } 
   // LOSS-MAKING: Negative P/E or negative EPS
@@ -49,7 +49,7 @@ const classifyAssetRiskProfile = (company) => {
       label: 'Loss-making', 
       icon: XCircle, 
       color: 'rose',
-      tooltip: `TTM EPS: $${company.eps_ttm?.toFixed(2) || 'negative'}, Operating at a loss`
+      tooltip: `TTM EPS: $${typeof company.eps_ttm === "number" && Number.isFinite(company.eps_ttm) ? company.eps_ttm.toFixed(2) : 'negative'}, Operating at a loss`
     };
   } 
   // PRE-PROFIT: No P/E data or unclear profitability
@@ -81,13 +81,13 @@ const classifyAssetRiskProfile = (company) => {
     traits.valuation = { 
       label: 'High valuation multiple', 
       color: 'amber',
-      tooltip: `P/E: ${peRatio.toFixed(1)}, P/S: ${psRatio.toFixed(2)}, P/B: ${pbRatio.toFixed(2)}${pegRatio ? `, PEG: ${pegRatio.toFixed(2)}` : ''}`
+      tooltip: `P/E: ${typeof peRatio === "number" && Number.isFinite(peRatio) ? peRatio.toFixed(1) : 'N/A'}, P/S: ${typeof psRatio === "number" && Number.isFinite(psRatio) ? psRatio.toFixed(2) : 'N/A'}, P/B: ${typeof pbRatio === "number" && Number.isFinite(pbRatio) ? pbRatio.toFixed(2) : 'N/A'}${pegRatio && typeof pegRatio === "number" && Number.isFinite(pegRatio) ? `, PEG: ${pegRatio.toFixed(2)}` : ''}`
     };
   } else if (peRatio > 25 || psRatio > 5) {
     traits.valuation = { 
       label: 'Growth-weighted valuation', 
       color: 'blue',
-      tooltip: `P/E: ${peRatio.toFixed(1)}, P/S: ${psRatio.toFixed(2)} - priced for growth`
+      tooltip: `P/E: ${typeof peRatio === "number" && Number.isFinite(peRatio) ? peRatio.toFixed(1) : 'N/A'}, P/S: ${typeof psRatio === "number" && Number.isFinite(psRatio) ? psRatio.toFixed(2) : 'N/A'} - priced for growth`
     };
   }
   
@@ -107,19 +107,19 @@ const classifyAssetRiskProfile = (company) => {
     traits.stability = { 
       label: 'High volatility', 
       color: 'rose',
-      tooltip: `5Y Beta: ${betaValue.toFixed(2)}${earningsVol ? `, EPS StdDev: ${earningsVol.toFixed(2)}` : ''} - significant price/earnings swings`
+      tooltip: `5Y Beta: ${typeof betaValue === "number" && Number.isFinite(betaValue) ? betaValue.toFixed(2) : 'N/A'}${earningsVol && typeof earningsVol === "number" && Number.isFinite(earningsVol) ? `, EPS StdDev: ${earningsVol.toFixed(2)}` : ''} - significant price/earnings swings`
     };
   } else if (company.sector === 'Automotive' || company.sector === 'Energy') {
     traits.stability = { 
       label: 'Cyclical sector', 
       color: 'amber',
-      tooltip: `${company.sector} sector - sensitive to economic cycles. Beta: ${betaValue.toFixed(2)}`
+      tooltip: `${company.sector} sector - sensitive to economic cycles. Beta: ${typeof betaValue === "number" && Number.isFinite(betaValue) ? betaValue.toFixed(2) : 'N/A'}`
     };
   } else if (betaValue > 1.3 || (earningsGrowthVol && Math.abs(earningsGrowthVol) > 0.3)) {
     traits.stability = { 
       label: 'Moderate volatility', 
       color: 'amber',
-      tooltip: `Beta: ${betaValue.toFixed(2)} - above-market volatility`
+      tooltip: `Beta: ${typeof betaValue === "number" && Number.isFinite(betaValue) ? betaValue.toFixed(2) : 'N/A'} - above-market volatility`
     };
   }
   
@@ -190,7 +190,7 @@ const classifyAssetRiskProfile = (company) => {
     traits.financial = { 
       label: 'Financial stress risk', 
       color: 'rose',
-      tooltip: `Pre-profit small-cap with negative operating margin: ${(company.operating_margin * 100)?.toFixed(1)}%`
+      tooltip: `Pre-profit small-cap with negative operating margin: ${typeof company.operating_margin === "number" && Number.isFinite(company.operating_margin) ? (company.operating_margin * 100).toFixed(1) : 'N/A'}%`
     };
   } 
   // Flag margin pressure only if unprofitable with very low margins
@@ -198,7 +198,7 @@ const classifyAssetRiskProfile = (company) => {
     traits.financial = { 
       label: 'Margin pressure', 
       color: 'amber',
-      tooltip: `Operating margin: ${(company.operating_margin * 100)?.toFixed(1)}% - profitability challenges`
+      tooltip: `Operating margin: ${typeof company.operating_margin === "number" && Number.isFinite(company.operating_margin) ? (company.operating_margin * 100).toFixed(1) : 'N/A'}% - profitability challenges`
     };
   }
   
@@ -377,7 +377,7 @@ export default function PortfolioQualityCard({ companies, portfolioQuality, simi
                         (portfolioQuality.avgSharpe || 0) >= 0 ? 'text-amber-700' :
                         'text-rose-700'
                       }`}>
-                        {portfolioQuality.avgSharpe?.toFixed(3) || 'N/A'}
+                        {typeof portfolioQuality.avgSharpe === "number" && Number.isFinite(portfolioQuality.avgSharpe) ? portfolioQuality.avgSharpe.toFixed(3) : 'N/A'}
                       </p>
                       <p className="text-[10px] md:text-xs text-slate-500 mt-1">
                         {(portfolioQuality.avgSharpe || 0) >= 0.5 ? 'Good' :
@@ -411,7 +411,7 @@ export default function PortfolioQualityCard({ companies, portfolioQuality, simi
                         (portfolioQuality.avgCorrelation || 0) <= 0.7 ? 'text-amber-700' :
                         'text-rose-700'
                       }`}>
-                        {((portfolioQuality.avgCorrelation || 0) * 100).toFixed(0)}%
+                        {typeof portfolioQuality.avgCorrelation === "number" && Number.isFinite(portfolioQuality.avgCorrelation) ? ((portfolioQuality.avgCorrelation || 0) * 100).toFixed(0) : "N/A"}%
                       </p>
                       <p className="text-[10px] md:text-xs text-slate-500 mt-1 truncate">
                         {(portfolioQuality.avgCorrelation || 0) <= 0.5 ? 'Well diversified' :
@@ -444,7 +444,7 @@ export default function PortfolioQualityCard({ companies, portfolioQuality, simi
                         speculativeData.ratio <= 0.5 ? 'text-amber-700' :
                         'text-rose-700'
                       }`}>
-                        {(speculativeData.ratio * 100).toFixed(0)}%
+                        {typeof speculativeData.ratio === "number" && Number.isFinite(speculativeData.ratio) ? (speculativeData.ratio * 100).toFixed(0) : "N/A"}%
                       </p>
                       <p className="text-[10px] md:text-xs text-slate-500 mt-1">
                         {speculativeData.count} of {companies.length} assets
@@ -543,9 +543,9 @@ export default function PortfolioQualityCard({ companies, portfolioQuality, simi
                             <TooltipContent>
                               <div className="text-xs max-w-xs">
                                 <p className="font-semibold mb-1">Profitability Metrics</p>
-                                <p>TTM EPS: ${traits.metrics.profitability.eps_ttm?.toFixed(2) || 'N/A'}</p>
-                                <p>Profit Margin: {(traits.metrics.profitability.profit_margin * 100)?.toFixed(1) || 'N/A'}%</p>
-                                <p>P/E Ratio: {traits.metrics.profitability.pe_ratio?.toFixed(2) || 'N/A'}</p>
+                                <p>TTM EPS: {typeof traits.metrics.profitability.eps_ttm === "number" && Number.isFinite(traits.metrics.profitability.eps_ttm) ? `$${traits.metrics.profitability.eps_ttm.toFixed(2)}` : 'N/A'}</p>
+                                <p>Profit Margin: {typeof traits.metrics.profitability.profit_margin === "number" && Number.isFinite(traits.metrics.profitability.profit_margin) ? `${(traits.metrics.profitability.profit_margin * 100).toFixed(1)}` : 'N/A'}%</p>
+                                <p>P/E Ratio: {typeof traits.metrics.profitability.pe_ratio === "number" && Number.isFinite(traits.metrics.profitability.pe_ratio) ? traits.metrics.profitability.pe_ratio.toFixed(2) : 'N/A'}</p>
                               </div>
                             </TooltipContent>
                           </Tooltip>
@@ -583,7 +583,7 @@ export default function PortfolioQualityCard({ companies, portfolioQuality, simi
                                 <div className="text-xs max-w-xs">
                                   <p className="font-semibold mb-1">Volatility Analysis</p>
                                   <p>{traits.stability.tooltip}</p>
-                                  {traits.metrics.stability.earnings_volatility && (
+                                  {traits.metrics.stability.earnings_volatility && typeof traits.metrics.stability.earnings_volatility === "number" && Number.isFinite(traits.metrics.stability.earnings_volatility) && (
                                     <p className="mt-1">EPS Std Dev: {traits.metrics.stability.earnings_volatility.toFixed(2)}</p>
                                   )}
                                 </div>
