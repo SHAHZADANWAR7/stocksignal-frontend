@@ -74,11 +74,11 @@ export default function AssetExplanation({ asset, adjustments, compact = false }
                   <div className="flex items-center gap-1 mb-1">
                     {getCategoryIcon(adj.category)}
                     <span className="font-semibold">{adj.metric}:</span>
-                    {adj.delta && (
+                    {adj.delta !== undefined && adj.delta !== null && !isNaN(adj.delta) ? (
                       <Badge variant="outline" className="text-xs">
-                        {adj.delta >= 0 ? '+' : ''}{adj.delta.toFixed(2)}{adj.unit || '%'}
+                        {(typeof adj.delta === "number" && Number.isFinite(adj.delta) ? (adj.delta >= 0 ? '+' : '') + adj.delta.toFixed(2) : "Not Available")}{adj.unit || '%'}
                       </Badge>
-                    )}
+                    ) : null}
                   </div>
                   <p className="text-slate-700">{adj.explanation}</p>
                 </div>
@@ -103,11 +103,11 @@ export default function AssetExplanation({ asset, adjustments, compact = false }
             <div className="flex-1 text-xs">
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-semibold">{adj.metric}</span>
-                {adj.delta && (
+                {adj.delta !== undefined && adj.delta !== null && !isNaN(adj.delta) ? (
                   <Badge variant="outline" className="text-xs">
-                    {adj.delta >= 0 ? '+' : ''}{adj.delta.toFixed(2)}{adj.unit || '%'}
+                    {(typeof adj.delta === "number" && Number.isFinite(adj.delta) ? (adj.delta >= 0 ? '+' : '') + adj.delta.toFixed(2) : "Not Available")}{adj.unit || '%'}
                   </Badge>
-                )}
+                ) : null}
               </div>
               <p className="leading-relaxed">{adj.explanation}</p>
             </div>
