@@ -60,13 +60,13 @@ export default function SpeculativeContributionBadge({ company }) {
     const beta = Math.abs(company.beta || 1.0);
     if (beta > 2.0) {
       score += 20;
-      factors.push(`Extreme beta ${beta.toFixed(2)} (20 pts)`);
+      factors.push(`Extreme beta ${typeof beta === "number" && Number.isFinite(beta) ? beta.toFixed(2) : "Not Available"} (20 pts)`);
     } else if (beta > 1.5) {
       score += 15;
-      factors.push(`High beta ${beta.toFixed(2)} (15 pts)`);
+      factors.push(`High beta ${typeof beta === "number" && Number.isFinite(beta) ? beta.toFixed(2) : "Not Available"} (15 pts)`);
     } else if (beta > 1.2) {
       score += 10;
-      factors.push(`Above-avg beta ${beta.toFixed(2)} (10 pts)`);
+      factors.push(`Above-avg beta ${typeof beta === "number" && Number.isFinite(beta) ? beta.toFixed(2) : "Not Available"} (10 pts)`);
     }
 
     // Factor 4: Revenue Stability (0-15 points)
