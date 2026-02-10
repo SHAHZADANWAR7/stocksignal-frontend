@@ -104,7 +104,7 @@ export default function ForwardRiskCard({
               <TooltipContent className="max-w-md">
                 <p className="text-xs leading-relaxed">
                   <strong>Methodology:</strong><br/>
-                  • VIX: CBOE real-time ({(vixData.current || vixData.currentVIX).toFixed(1)}%)<br/>
+                  • VIX: CBOE real-time ({typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}%)<br/>
                   • Beta: Yahoo Finance 5-year regression<br/>
                   • Blend: 60% historical + 40% (VIX × β)<br/>
                   • Correlation: Regime-adjusted ({vixData.regime})<br/><br/>
@@ -139,7 +139,7 @@ export default function ForwardRiskCard({
                     Market Regime: {vixData.regime.charAt(0).toUpperCase() + vixData.regime.slice(1)} Volatility
                   </h4>
                   <Badge className={`text-lg px-3 py-1 ${regimeBadgeColors[vixData.regime]}`}>
-                    VIX: {(vixData.current || vixData.currentVIX).toFixed(1)}
+                    VIX: {typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}
                   </Badge>
                 </div>
                 <p className="text-sm text-slate-700 mb-3">{vixData.regimeDescription}</p>
@@ -150,7 +150,7 @@ export default function ForwardRiskCard({
                       <TooltipTrigger asChild>
                         <div className="p-2 md:p-3 bg-white/50 rounded-xl cursor-help">
                           <p className="text-[10px] md:text-xs text-slate-600 truncate">Current VIX</p>
-                          <p className="text-base md:text-lg font-bold break-words">{(vixData.current || vixData.currentVIX).toFixed(1)}</p>
+                          <p className="text-base md:text-lg font-bold break-words">{typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}</p>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
@@ -161,13 +161,13 @@ export default function ForwardRiskCard({
                   
                   <div className="p-2 md:p-3 bg-white/50 rounded-xl">
                     <p className="text-[10px] md:text-xs text-slate-600 truncate">1Y Average</p>
-                    <p className="text-base md:text-lg font-bold break-words">{(vixData.average1Year || vixData.avgVIX).toFixed(1)}</p>
+                    <p className="text-base md:text-lg font-bold break-words">{typeof (vixData.average1Year || vixData.avgVIX) === "number" && Number.isFinite(vixData.average1Year || vixData.avgVIX) ? (vixData.average1Year || vixData.avgVIX).toFixed(1) : "Not Available"}</p>
                   </div>
                   <div className="p-2 md:p-3 bg-white/50 rounded-xl">
                     <p className="text-[10px] md:text-xs text-slate-600 truncate">1Y Range</p>
                     <p className="text-sm md:text-base font-bold break-words">
-                      {(vixData.minVIX || vixData.range52Week?.low || 12.2).toFixed(1)}-
-                      {(vixData.maxVIX || vixData.range52Week?.high || 28.4).toFixed(1)}
+                      {typeof (vixData.minVIX || vixData.range52Week?.low || 12.2) === "number" && Number.isFinite(vixData.minVIX || vixData.range52Week?.low || 12.2) ? (vixData.minVIX || vixData.range52Week?.low || 12.2).toFixed(1) : "Not Available"}-
+                      {typeof (vixData.maxVIX || vixData.range52Week?.high || 28.4) === "number" && Number.isFinite(vixData.maxVIX || vixData.range52Week?.high || 28.4) ? (vixData.maxVIX || vixData.range52Week?.high || 28.4).toFixed(1) : "Not Available"}
                     </p>
                   </div>
                 </div>
@@ -189,23 +189,23 @@ export default function ForwardRiskCard({
                     <div className="space-y-3 md:space-y-4">
                       <div className="p-3 md:p-4 bg-white rounded-xl border border-purple-200">
                         <p className="text-xs md:text-sm text-slate-600 mb-1 truncate">Historical Volatility (σ)</p>
-                        <p className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 break-words tabular-nums">{portfolioRisk.toFixed(1)}%</p>
+                        <p className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 break-words tabular-nums">{typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}%</p>
                         <p className="text-[10px] md:text-xs text-slate-500 mt-1">Trailing 252-day annualized</p>
                       </div>
                       
                       <div className="p-3 md:p-4 bg-white rounded-xl border border-indigo-200">
                         <p className="text-xs md:text-sm text-slate-600 mb-1 truncate">Forward-Looking Risk (σ)</p>
                         <div className="flex items-center gap-2">
-                          <p className="text-xl md:text-2xl lg:text-3xl font-bold text-indigo-600 break-words tabular-nums">{forwardRiskMetrics.forwardRisk}%</p>
-                          {forwardRiskMetrics.forwardRisk > portfolioRisk && (
+                          <p className="text-xl md:text-2xl lg:text-3xl font-bold text-indigo-600 break-words tabular-nums">{typeof forwardRiskMetrics.forwardRisk === "number" && Number.isFinite(forwardRiskMetrics.forwardRisk) ? forwardRiskMetrics.forwardRisk : "Not Available"}%</p>
+                          {typeof forwardRiskMetrics.forwardRisk === "number" && Number.isFinite(forwardRiskMetrics.forwardRisk) && typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) && forwardRiskMetrics.forwardRisk > portfolioRisk && (
                             <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-rose-600 flex-shrink-0" />
                           )}
-                          {forwardRiskMetrics.forwardRisk < portfolioRisk && (
+                          {typeof forwardRiskMetrics.forwardRisk === "number" && Number.isFinite(forwardRiskMetrics.forwardRisk) && typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) && forwardRiskMetrics.forwardRisk < portfolioRisk && (
                             <TrendingDown className="w-4 h-4 md:w-5 md:h-5 text-emerald-600 flex-shrink-0" />
                           )}
                         </div>
                         <p className="text-[10px] md:text-xs text-slate-500 mt-1">60% historical + 40% (VIX × β)</p>
-                        {Math.abs(forwardRiskMetrics.forwardRisk - portfolioRisk) > 1 && (
+                        {typeof forwardRiskMetrics.forwardRisk === "number" && Number.isFinite(forwardRiskMetrics.forwardRisk) && typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) && Math.abs(forwardRiskMetrics.forwardRisk - portfolioRisk) > 1 && (
                           <Badge className={`mt-2 text-[10px] md:text-xs rounded-lg ${
                             forwardRiskMetrics.forwardRisk > portfolioRisk 
                               ? 'bg-rose-100 text-rose-800' 
@@ -223,9 +223,9 @@ export default function ForwardRiskCard({
               <TooltipContent className="max-w-md">
                 <p className="text-xs leading-relaxed">
                   <strong>Portfolio Volatility Blend:</strong><br/>
-                  Historical: {portfolioRisk.toFixed(1)}% (weighted average of asset volatilities)<br/>
-                  VIX-Implied: {(vixData.current || vixData.currentVIX).toFixed(1)}% × portfolio beta<br/>
-                  Forward: {forwardRiskMetrics.forwardRisk}% = 0.6×{portfolioRisk.toFixed(1)}% + 0.4×VIX-implied<br/><br/>
+                  Historical: {typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% (weighted average of asset volatilities)<br/>
+                  VIX-Implied: {typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}% × portfolio beta<br/>
+                  Forward: {typeof forwardRiskMetrics.forwardRisk === "number" && Number.isFinite(forwardRiskMetrics.forwardRisk) ? forwardRiskMetrics.forwardRisk : "Not Available"}% = 0.6×{typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% + 0.4×VIX-implied<br/><br/>
                   Regime: {vixData.regime} adds correlation surge factor
                 </p>
               </TooltipContent>
@@ -243,15 +243,15 @@ export default function ForwardRiskCard({
                     <div className="space-y-3 md:space-y-4">
                       <div className="p-3 md:p-4 bg-white rounded-xl border border-teal-200">
                         <p className="text-xs md:text-sm text-slate-600 mb-1 truncate">Base Expected Return</p>
-                        <p className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 break-words tabular-nums">{expectedReturn.toFixed(1)}%</p>
+                        <p className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 break-words tabular-nums">{typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}%</p>
                         <p className="text-[10px] md:text-xs text-slate-500 mt-1">CAPM + Historical</p>
                       </div>
                       
                       <div className="p-3 md:p-4 bg-white rounded-xl border border-teal-200">
                         <p className="text-xs md:text-sm text-slate-600 mb-1 truncate">VIX-Adjusted Return</p>
                         <div className="flex items-center gap-2">
-                          <p className="text-xl md:text-2xl lg:text-3xl font-bold text-teal-600 break-words tabular-nums">{returnAdj.adjusted.toFixed(1)}%</p>
-                          {returnAdj.adjustment !== 0 && (
+                          <p className="text-xl md:text-2xl lg:text-3xl font-bold text-teal-600 break-words tabular-nums">{typeof returnAdj.adjusted === "number" && Number.isFinite(returnAdj.adjusted) ? returnAdj.adjusted.toFixed(1) : "Not Available"}%</p>
+                          {typeof returnAdj.adjustment === "number" && Number.isFinite(returnAdj.adjustment) && returnAdj.adjustment !== 0 && (
                             <Badge className={`text-[10px] md:text-xs flex-shrink-0 rounded-lg ${
                               returnAdj.adjustment > 0 
                                 ? 'bg-emerald-100 text-emerald-800' 
@@ -270,8 +270,8 @@ export default function ForwardRiskCard({
               <TooltipContent className="max-w-md">
                 <p className="text-xs leading-relaxed">
                   <strong>VIX Regime Impact on Returns:</strong><br/>
-                  Base return: {expectedReturn.toFixed(1)}% (CAPM + historical blend)<br/>
-                  VIX adjustment: {returnAdj.adjustment > 0 ? '+' : ''}{returnAdj.adjustment}% ({vixData.regime} regime)<br/><br/>
+                  Base return: {typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}% (CAPM + historical blend)<br/>
+                  VIX adjustment: {typeof returnAdj.adjustment === "number" && Number.isFinite(returnAdj.adjustment) ? (returnAdj.adjustment > 0 ? '+' : '') + returnAdj.adjustment : "Not Available"}% ({vixData.regime} regime)<br/><br/>
                   High VIX → higher forward returns (fear = opportunity)<br/>
                   Low VIX → mean reversion downward (complacency risk)<br/><br/>
                   Academic: Campbell & Shiller (1988), Bekaert & Hoerova (2014)
@@ -296,7 +296,7 @@ export default function ForwardRiskCard({
                       <p className="text-xs leading-relaxed">
                         Each asset's forward volatility:<br/>
                         σ_forward = 0.6 × σ_historical + 0.4 × (VIX × β)<br/><br/>
-                        VIX: {(vixData.current || vixData.currentVIX).toFixed(1)}%<br/>
+                        VIX: {typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}%<br/>
                         β: Verified 5-year Yahoo Finance data
                       </p>
                     </TooltipContent>
@@ -348,10 +348,10 @@ export default function ForwardRiskCard({
                           <p className="font-bold text-slate-900">{data.symbol}</p>
                           {company && <p className="text-xs text-slate-600 mb-2">{company.name}</p>}
                           <div className="space-y-1 text-xs">
-                            <p><span className="text-slate-600">Historical:</span> <span className="font-bold text-slate-700">{data.historical}%</span></p>
-                            <p><span className="text-slate-600">VIX-Adjusted:</span> <span className="font-bold text-indigo-700">{data.forwardLooking}%</span></p>
-                            <p><span className="text-slate-600">Delta:</span> <span className={`font-bold ${data.delta > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{data.delta > 0 ? '+' : ''}{data.delta}%</span></p>
-                            {company && <p><span className="text-slate-600">Beta:</span> <span className="font-semibold">{(company.beta || 1.0).toFixed(3)}</span></p>}
+                            <p><span className="text-slate-600">Historical:</span> <span className="font-bold text-slate-700">{typeof data.historical === "number" && Number.isFinite(data.historical) ? data.historical : "Not Available"}%</span></p>
+                            <p><span className="text-slate-600">VIX-Adjusted:</span> <span className="font-bold text-indigo-700">{typeof data.forwardLooking === "number" && Number.isFinite(data.forwardLooking) ? data.forwardLooking : "Not Available"}%</span></p>
+                            <p><span className="text-slate-600">Delta:</span> <span className={`font-bold ${typeof data.delta === "number" && Number.isFinite(data.delta) && data.delta > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{typeof data.delta === "number" && Number.isFinite(data.delta) && data.delta > 0 ? '+' : ''}{typeof data.delta === "number" && Number.isFinite(data.delta) ? data.delta : "Not Available"}%</span></p>
+                            {company && <p><span className="text-slate-600">Beta:</span> <span className="font-semibold">{typeof (company.beta || 1.0) === "number" && Number.isFinite(company.beta || 1.0) ? (company.beta || 1.0).toFixed(3) : "Not Available"}</span></p>}
                           </div>
                         </div>
                       );
@@ -386,28 +386,28 @@ export default function ForwardRiskCard({
                                   {adj.name && <p className="text-xs text-slate-600 truncate">• {adj.name}</p>}
                                 </div>
                                 <div className="flex items-center gap-2 md:gap-3 text-xs text-slate-600 flex-wrap">
-                                  <span className="whitespace-nowrap">Historical: {adj.historical}%</span>
+                                  <span className="whitespace-nowrap">Historical: {typeof adj.historical === "number" && Number.isFinite(adj.historical) ? adj.historical : "Not Available"}%</span>
                                   <span>→</span>
-                                  <span className="font-semibold text-indigo-700 whitespace-nowrap">VIX-Adj: {adj.forwardLooking}%</span>
-                                  {adj.beta && <span className="text-blue-700 whitespace-nowrap">β={adj.beta}</span>}
+                                  <span className="font-semibold text-indigo-700 whitespace-nowrap">VIX-Adj: {typeof adj.forwardLooking === "number" && Number.isFinite(adj.forwardLooking) ? adj.forwardLooking : "Not Available"}%</span>
+                                  {adj.beta && <span className="text-blue-700 whitespace-nowrap">β={typeof adj.beta === "number" && Number.isFinite(adj.beta) ? adj.beta : "Not Available"}</span>}
                                 </div>
                               </div>
                               <Badge className={`flex-shrink-0 ml-2 rounded-lg text-[10px] md:text-xs whitespace-nowrap ${
-                                adj.delta > 1 ? 'bg-rose-100 text-rose-800' :
-                                adj.delta < -1 ? 'bg-emerald-100 text-emerald-800' :
+                                typeof adj.delta === "number" && Number.isFinite(adj.delta) && adj.delta > 1 ? 'bg-rose-100 text-rose-800' :
+                                typeof adj.delta === "number" && Number.isFinite(adj.delta) && adj.delta < -1 ? 'bg-emerald-100 text-emerald-800' :
                                 'bg-slate-100 text-slate-700'
                               }`}>
-                                {adj.delta >= 0 ? '+' : ''}{adj.delta}%
+                                {typeof adj.delta === "number" && Number.isFinite(adj.delta) ? (adj.delta >= 0 ? '+' : '') + adj.delta : "Not Available"}%
                               </Badge>
                             </div>
                           </TooltipTrigger>
                           <TooltipContent className="max-w-xs">
                             <p className="text-xs leading-relaxed">
                               <strong>{adj.symbol} Volatility Calculation:</strong><br/>
-                              0.6 × {adj.historical}% (historical) + 0.4 × ({(vixData.current || vixData.currentVIX).toFixed(1)}% VIX × {adj.beta || '1.0'} β)
-                              = {adj.forwardLooking}%<br/><br/>
+                              0.6 × {typeof adj.historical === "number" && Number.isFinite(adj.historical) ? adj.historical : "Not Available"}% (historical) + 0.4 × ({typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}% VIX × {typeof adj.beta === "number" && Number.isFinite(adj.beta) ? adj.beta : "Not Available"} β)
+                              = {typeof adj.forwardLooking === "number" && Number.isFinite(adj.forwardLooking) ? adj.forwardLooking : "Not Available"}%<br/><br/>
                               {company?.sector && `Sector: ${company.sector}`}<br/>
-                              Allocation: {adj.weight}%
+                              Allocation: {typeof adj.weight === "number" && Number.isFinite(adj.weight) ? adj.weight : "Not Available"}%
                             </p>
                           </TooltipContent>
                         </UITooltip>
@@ -442,7 +442,7 @@ export default function ForwardRiskCard({
                           • Normal (VIX 15-25): 1.0× base (no adjustment)<br/>
                           • Elevated (VIX 25-35): 1.15× base (+15% surge)<br/>
                           • High (VIX &gt;35): 1.3× base (+30% crisis surge)<br/><br/>
-                          Current VIX: {(vixData.current || vixData.currentVIX).toFixed(1)}% → {vixData.regime} regime<br/><br/>
+                          Current VIX: {typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}% → {vixData.regime} regime<br/><br/>
                           Academic: Ang & Chen (2002), Longin & Solnik (2001)
                         </p>
                       </TooltipContent>
@@ -462,7 +462,7 @@ export default function ForwardRiskCard({
                 <div className="text-xs text-slate-700 bg-white/50 p-2 rounded space-y-1">
                   <p><strong>Academic Source:</strong> Ang & Chen (2002) "Asymmetric correlations of equity portfolios"</p>
                   <p><strong>Key Finding:</strong> Correlations surge during market stress, reducing diversification when most needed.</p>
-                  <p><strong>Current VIX:</strong> {(vixData.current || vixData.currentVIX).toFixed(1)}% • <strong>1Y Avg:</strong> {(vixData.average1Year || vixData.avgVIX).toFixed(1)}%</p>
+                  <p><strong>Current VIX:</strong> {typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}% • <strong>1Y Avg:</strong> {typeof (vixData.average1Year || vixData.avgVIX) === "number" && Number.isFinite(vixData.average1Year || vixData.avgVIX) ? (vixData.average1Year || vixData.avgVIX).toFixed(1) : "Not Available"}%</p>
                 </div>
               </div>
             </div>
@@ -476,8 +476,8 @@ export default function ForwardRiskCard({
             VIX data from CBOE real-time market feed. Market regime thresholds: Low (&lt;15), Normal (15-25), Elevated (25-35), High (&gt;35). 
             Correlation adjustments based on empirical crisis behavior (Ang & Chen 2002, Longin & Solnik 2001). 
             Return adjustments reflect mean-reversion and VIX risk premium (Campbell & Shiller 1988, Bekaert & Hoerova 2014).<br/><br/>
-            <strong>Current Data:</strong> VIX {(vixData.current || vixData.currentVIX).toFixed(1)}% • 1Y Avg {(vixData.average1Year || vixData.avgVIX).toFixed(1)}% • 
-            Range {(vixData.minVIX || vixData.range52Week?.low || 12.2).toFixed(1)}-{(vixData.maxVIX || vixData.range52Week?.high || 28.4).toFixed(1)}% • 
+            <strong>Current Data:</strong> VIX {typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}% • 1Y Avg {typeof (vixData.average1Year || vixData.avgVIX) === "number" && Number.isFinite(vixData.average1Year || vixData.avgVIX) ? (vixData.average1Year || vixData.avgVIX).toFixed(1) : "Not Available"}% • 
+            Range {typeof (vixData.minVIX || vixData.range52Week?.low || 12.2) === "number" && Number.isFinite(vixData.minVIX || vixData.range52Week?.low || 12.2) ? (vixData.minVIX || vixData.range52Week?.low || 12.2).toFixed(1) : "Not Available"}-{typeof (vixData.maxVIX || vixData.range52Week?.high || 28.4) === "number" && Number.isFinite(vixData.maxVIX || vixData.range52Week?.high || 28.4) ? (vixData.maxVIX || vixData.range52Week?.high || 28.4).toFixed(1) : "Not Available"}% • 
             Regime: {vixData.regime} • Rf: 4.5% • MRP: 8.0%<br/><br/>
             <strong className="text-slate-900">⚠️ This is educational analysis for stress testing, not a volatility forecast.</strong>
           </p>
