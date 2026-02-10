@@ -113,11 +113,11 @@ export default function ConfidenceBandsChart({
                 <p className="text-xs leading-relaxed">
                   <strong>Geometric Brownian Motion (GBM):</strong><br/>
                   dS = μS dt + σS dW<br/><br/>
-                  • μ (drift): {portfolioReturn.toFixed(1)}% annual return<br/>
-                  • σ (volatility): {portfolioRisk.toFixed(1)}% annualized<br/>
+                  • μ (drift): {typeof portfolioReturn === "number" && Number.isFinite(portfolioReturn) ? portfolioReturn.toFixed(1) : "Not Available"}% annual return<br/>
+                  • σ (volatility): {typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% annualized<br/>
                   • Accounts for volatility drag: drift = μ - 0.5σ²<br/><br/>
                   68% band: ±1σ, 95% band: ±2σ<br/>
-                  Contributions: ${monthlyContribution}/month
+                  Contributions: ${typeof monthlyContribution === "number" && Number.isFinite(monthlyContribution) ? monthlyContribution : "Not Available"}/month
                 </p>
               </TooltipContent>
             </UITooltip>
@@ -141,7 +141,7 @@ export default function ConfidenceBandsChart({
             <XAxis 
               dataKey="year" 
               label={{ value: 'Years', position: 'insideBottom', offset: -5 }}
-              tickFormatter={(val) => val.toFixed(0)}
+              tickFormatter={(val) => typeof val === "number" && Number.isFinite(val) ? val.toFixed(0) : "Not Available"}
             />
             <YAxis 
               label={{ 
@@ -151,12 +151,12 @@ export default function ConfidenceBandsChart({
                 offset: 10,
                 style: { fontSize: 12, fill: '#475569', fontWeight: 600 }
               }}
-              tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+              tickFormatter={(value) => typeof value === "number" && Number.isFinite(value) ? `$${(value / 1000).toFixed(0)}k` : "Not Available"}
               tick={{ fontSize: 11 }}
             />
             <Tooltip 
-              formatter={(value) => [`$${value.toLocaleString()}`, '']}
-              labelFormatter={(year) => `Year ${year.toFixed(1)}`}
+              formatter={(value) => typeof value === "number" && Number.isFinite(value) ? [`$${value.toLocaleString()}`, ''] : ["Not Available", ""]}
+              labelFormatter={(year) => typeof year === "number" && Number.isFinite(year) ? `Year ${year.toFixed(1)}` : "Not Available"}
             />
             <Legend />
             
@@ -209,8 +209,8 @@ export default function ConfidenceBandsChart({
           <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
             <h4 className="font-semibold text-purple-900 mb-2">68% Confidence Range (1σ)</h4>
             <p className="text-sm text-purple-800">
-              At 10 years: <strong>${projectionData[120].lower1sigma.toLocaleString()}</strong> to{' '}
-              <strong>${projectionData[120].upper1sigma.toLocaleString()}</strong>
+              At 10 years: <strong>{typeof projectionData[120]?.lower1sigma === "number" && Number.isFinite(projectionData[120]?.lower1sigma) ? `$${projectionData[120].lower1sigma.toLocaleString()}` : "Not Available"}</strong> to{' '}
+              <strong>{typeof projectionData[120]?.upper1sigma === "number" && Number.isFinite(projectionData[120]?.upper1sigma) ? `$${projectionData[120].upper1sigma.toLocaleString()}` : "Not Available"}</strong>
             </p>
             <p className="text-xs text-purple-700 mt-1">
               ~68% chance actual value falls in this range
@@ -220,8 +220,8 @@ export default function ConfidenceBandsChart({
           <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
             <h4 className="font-semibold text-indigo-900 mb-2">95% Confidence Range (2σ)</h4>
             <p className="text-sm text-indigo-800">
-              At 10 years: <strong>${projectionData[120].lower2sigma.toLocaleString()}</strong> to{' '}
-              <strong>${projectionData[120].upper2sigma.toLocaleString()}</strong>
+              At 10 years: <strong>{typeof projectionData[120]?.lower2sigma === "number" && Number.isFinite(projectionData[120]?.lower2sigma) ? `$${projectionData[120].lower2sigma.toLocaleString()}` : "Not Available"}</strong> to{' '}
+              <strong>{typeof projectionData[120]?.upper2sigma === "number" && Number.isFinite(projectionData[120]?.upper2sigma) ? `$${projectionData[120].upper2sigma.toLocaleString()}` : "Not Available"}</strong>
             </p>
             <p className="text-xs text-indigo-700 mt-1">
               ~95% chance actual value falls in this range
@@ -236,11 +236,11 @@ export default function ConfidenceBandsChart({
               <p className="font-semibold mb-2">📊 Statistical Interpretation (100% Data-Driven)</p>
               <ul className="space-y-1 text-xs">
                 <li>• <strong>Shaded areas:</strong> Statistical uncertainty in portfolio growth based on historical volatility patterns</li>
-                <li>• <strong>Wider bands:</strong> Higher portfolio volatility ({portfolioRisk.toFixed(1)}%) = more uncertain outcomes</li>
+                <li>• <strong>Wider bands:</strong> Higher portfolio volatility ({typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}%) = more uncertain outcomes</li>
                 <li>• <strong>68% band (1σ):</strong> ~68% probability actual outcome falls within this range</li>
                 <li>• <strong>95% band (2σ):</strong> ~95% probability actual outcome falls within this range</li>
-                <li>• <strong>Methodology:</strong> Geometric Brownian motion (GBM) with drift μ={portfolioReturn.toFixed(1)}%, volatility σ={portfolioRisk.toFixed(1)}%, accounts for volatility drag</li>
-                <li>• <strong>Contributions:</strong> ${investmentAmount.toLocaleString()} initial + ${monthlyContribution}/month compounded monthly</li>
+                <li>• <strong>Methodology:</strong> Geometric Brownian motion (GBM) with drift μ={typeof portfolioReturn === "number" && Number.isFinite(portfolioReturn) ? portfolioReturn.toFixed(1) : "Not Available"}%, volatility σ={typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}%, accounts for volatility drag</li>
+                <li>• <strong>Contributions:</strong> {typeof investmentAmount === "number" && Number.isFinite(investmentAmount) ? `$${investmentAmount.toLocaleString()}` : "Not Available"} initial + {typeof monthlyContribution === "number" && Number.isFinite(monthlyContribution) ? `$${monthlyContribution}` : "Not Available"}/month compounded monthly</li>
               </ul>
               <p className="mt-2 pt-2 border-t border-blue-300 text-[10px] text-blue-700 italic">
                 These are statistical projections for educational purposes. Actual returns may differ due to market conditions, 
