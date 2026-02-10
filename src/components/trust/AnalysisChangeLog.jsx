@@ -25,7 +25,7 @@ export default function AnalysisChangeLog({ analysisResult }) {
             if (analyzedDate > lastVisitDate) {
               newChanges.push({
                 message: `${company.symbol} data refreshed`,
-                details: `Price: $${company.current_price?.toFixed(2)}`
+                details: `Price: ${typeof company.current_price === "number" && Number.isFinite(company.current_price) ? `$${company.current_price.toFixed(2)}` : "Not Available"}`
               });
             }
           }
