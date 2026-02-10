@@ -38,7 +38,7 @@ export default function ExtremeBetaWarning({ companies }) {
 
             <div className="space-y-2">
               {extremeBetaAssets.map(asset => {
-                const marketSensitivity = ((Math.abs(asset.beta) - 1) * 100).toFixed(0);
+                const marketSensitivity = typeof asset.beta === "number" && Number.isFinite(asset.beta) ? ((Math.abs(asset.beta) - 1) * 100).toFixed(0) : "Not Available";
                 const direction = asset.beta > 0 ? 'same' : 'opposite';
                 
                 return (
@@ -49,7 +49,7 @@ export default function ExtremeBetaWarning({ companies }) {
                         <span className="text-sm text-slate-600 ml-2">{asset.name}</span>
                       </div>
                       <Badge className="bg-purple-200 text-purple-900 font-bold">
-                        β = {asset.beta.toFixed(3)}
+                        β = {typeof asset.beta === "number" && Number.isFinite(asset.beta) ? asset.beta.toFixed(3) : "Not Available"}
                       </Badge>
                     </div>
                     
@@ -60,9 +60,9 @@ export default function ExtremeBetaWarning({ companies }) {
                       </p>
                       <p>
                         <strong>Practical Impact:</strong> When market moves ±10%, expect {asset.symbol} to move 
-                        ±{(Math.abs(asset.beta) * 10).toFixed(1)}%
+                        ±{typeof asset.beta === "number" && Number.isFinite(asset.beta) ? (Math.abs(asset.beta) * 10).toFixed(1) : "Not Available"}%
                       </p>
-                      {asset.beta_1year && Math.abs(asset.beta_1year - asset.beta) > 0.5 && (
+                      {asset.beta_1year && typeof asset.beta_1year === "number" && Number.isFinite(asset.beta_1year) && typeof asset.beta === "number" && Number.isFinite(asset.beta) && Math.abs(asset.beta_1year - asset.beta) > 0.5 && (
                         <p className="text-amber-700 font-semibold">
                           ⚠️ Beta shift: 1Y={asset.beta_1year.toFixed(3)} vs 5Y={asset.beta.toFixed(3)} 
                           (risk regime may be changing)
