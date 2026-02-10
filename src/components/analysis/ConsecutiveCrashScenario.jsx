@@ -158,7 +158,8 @@ export default function ConsecutiveCrashScenario({ companies, weights, portfolio
   
   // Verify drawdown severity meets minimum threshold
   if (Math.abs(actualMaxDrawdown) < Math.abs(largestSingleCrash)) {
-    console.warn(`Max drawdown ${actualMaxDrawdown.toFixed(1)}% less severe than largest crash ${largestSingleCrash}%, using crash value`);
+    // eslint-disable-next-line no-console
+    console.warn(`Max drawdown ${typeof actualMaxDrawdown === "number" && Number.isFinite(actualMaxDrawdown) ? actualMaxDrawdown.toFixed(1) : "Not Available"}% less severe than largest crash ${typeof largestSingleCrash === "number" && Number.isFinite(largestSingleCrash) ? largestSingleCrash.toFixed(1) : "Not Available"}%, using crash value`);
   }
 
   // Calculate beta adjustments consistent with portfolio composition
@@ -183,7 +184,7 @@ export default function ConsecutiveCrashScenario({ companies, weights, portfolio
       normalBeta: normalBeta,
       crisisBeta: crisisBeta,
       correlationSpike: diversificationLoss,
-      betaIncrease: ((crisisBeta / normalBeta - 1) * 100).toFixed(0)
+      betaIncrease: (typeof normalBeta === "number" && Number.isFinite(normalBeta) && normalBeta !== 0 && typeof crisisBeta === "number" && Number.isFinite(crisisBeta) ? ((crisisBeta / normalBeta - 1) * 100).toFixed(0) : "Not Available")
     };
   });
 
@@ -226,7 +227,7 @@ export default function ConsecutiveCrashScenario({ companies, weights, portfolio
           </div>
           <p className="text-xs text-purple-700 mt-2 font-semibold">
             {selectedScenario === 'rolling_bear' 
-              ? `Cumulative compounding effect: ${cumulativeDecline.toFixed(1)}% total decline before final recovery`
+              ? `Cumulative compounding effect: ${typeof cumulativeDecline === "number" && Number.isFinite(cumulativeDecline) ? cumulativeDecline.toFixed(1) : "Not Available"}% total decline before final recovery`
               : scenario.educationalNote}
           </p>
         </div>
@@ -246,7 +247,7 @@ export default function ConsecutiveCrashScenario({ companies, weights, portfolio
             />
             <YAxis 
               label={{ value: 'Portfolio Value ($)', angle: -90, position: 'insideLeft' }}
-              tickFormatter={(val) => `$${(val/1000).toFixed(0)}k`}
+              tickFormatter={(val) => typeof val === "number" && Number.isFinite(val) ? `$${(val/1000).toFixed(0)}k` : "Not Available"}
             />
             <Tooltip 
               content={({ active, payload }) => {
@@ -255,7 +256,7 @@ export default function ConsecutiveCrashScenario({ companies, weights, portfolio
                   return (
                     <div className="bg-white p-3 border-2 border-purple-300 rounded-lg shadow-lg">
                       <p className="font-bold text-slate-900">Month {data.month}</p>
-                      <p className="text-sm text-purple-700">Value: ${data.value.toLocaleString()}</p>
+                      <p className="text-sm text-purple-700">Value: {typeof data.value === "number" && Number.isFinite(data.value) ? `$${data.value.toLocaleString()}` : "Not Available"}</p>
                       {data.event && (
                         <Badge className="bg-rose-200 text-rose-900 text-xs mt-1">
                           {data.event}
@@ -287,7 +288,7 @@ export default function ConsecutiveCrashScenario({ companies, weights, portfolio
           <div className="p-3 bg-rose-50 rounded-lg border border-rose-300 text-center">
             <p className="text-xs text-slate-600 mb-1">Max Drawdown</p>
             <p className="text-2xl font-bold text-rose-700">
-              {actualMaxDrawdown.toFixed(1)}%
+              {typeof actualMaxDrawdown === "number" && Number.isFinite(actualMaxDrawdown) ? actualMaxDrawdown.toFixed(1) : "Not Available"}%
             </p>
             <p className="text-[10px] text-slate-500 mt-1">
               Peak to trough
@@ -296,7 +297,7 @@ export default function ConsecutiveCrashScenario({ companies, weights, portfolio
           <div className="p-3 bg-blue-50 rounded-lg border border-blue-300 text-center">
             <p className="text-xs text-slate-600 mb-1">Final Value (5yr)</p>
             <p className="text-xl font-bold text-blue-700">
-              ${(finalValue/1000).toFixed(1)}k
+              {typeof finalValue === "number" && Number.isFinite(finalValue) ? `$${(finalValue/1000).toFixed(1)}k` : "Not Available"}
             </p>
             <p className="text-[10px] text-slate-500 mt-1">
               After {scenario.events.length} crashes
@@ -305,7 +306,7 @@ export default function ConsecutiveCrashScenario({ companies, weights, portfolio
           <div className="p-3 bg-purple-50 rounded-lg border border-purple-300 text-center">
             <p className="text-xs text-slate-600 mb-1">5-Year Return</p>
             <p className={`text-xl font-bold ${totalReturn >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-              {totalReturn >= 0 ? '+' : ''}{totalReturn.toFixed(1)}%
+              {totalReturn >= 0 ? '+' : ''}{typeof totalReturn === "number" && Number.isFinite(totalReturn) ? totalReturn.toFixed(1) : "Not Available"}%
             </p>
             <p className="text-[10px] text-slate-500 mt-1">
               {totalReturn >= 0 ? 'Net gain' : 'Net loss'}
@@ -319,8 +320,8 @@ export default function ConsecutiveCrashScenario({ companies, weights, portfolio
             Crisis Correlation & Beta Adjustments (Portfolio-Specific)
           </h5>
           <p className="text-sm text-slate-700 mb-3">
-            During crises, asset correlations spike to ~{(scenario.correlationSpike * 100).toFixed(0)}% 
-            (vs {(normalCorr * 100).toFixed(0)}% normal), and betas amplify by 20-50% based on asset characteristics. 
+            During crises, asset correlations spike to ~{typeof scenario.correlationSpike === "number" && Number.isFinite(scenario.correlationSpike) ? (scenario.correlationSpike * 100).toFixed(0) : "Not Available"}% 
+            (vs {typeof normalCorr === "number" && Number.isFinite(normalCorr) ? (normalCorr * 100).toFixed(0) : "Not Available"}% normal), and betas amplify by 20-50% based on asset characteristics. 
             <strong> "Diversification disappears when you need it most."</strong>
           </p>
           
@@ -329,15 +330,15 @@ export default function ConsecutiveCrashScenario({ companies, weights, portfolio
               <div key={impact.symbol} className="flex items-center justify-between text-sm p-2 bg-purple-50 rounded">
                 <div>
                   <span className="font-semibold text-slate-900">{impact.symbol}</span>
-                  <span className="text-slate-600 ml-2">({impact.weight.toFixed(1)}% allocation)</span>
+                  <span className="text-slate-600 ml-2">({typeof impact.weight === "number" && Number.isFinite(impact.weight) ? impact.weight.toFixed(1) : "Not Available"}% allocation)</span>
                 </div>
                 <div className="text-right text-xs">
                   <p className="text-purple-700">
-                    β: {impact.normalBeta.toFixed(2)} → <strong className="text-rose-700">{impact.crisisBeta.toFixed(2)}</strong>
+                    β: {typeof impact.normalBeta === "number" && Number.isFinite(impact.normalBeta) ? impact.normalBeta.toFixed(2) : "Not Available"} → <strong className="text-rose-700">{typeof impact.crisisBeta === "number" && Number.isFinite(impact.crisisBeta) ? impact.crisisBeta.toFixed(2) : "Not Available"}</strong>
                     <span className="text-rose-600 ml-1">(+{impact.betaIncrease}%)</span>
                   </p>
                   <p className="text-slate-600">
-                    Correlation: {(normalCorr * 100).toFixed(0)}% → {(scenario.correlationSpike * 100).toFixed(0)}%
+                    Correlation: {typeof normalCorr === "number" && Number.isFinite(normalCorr) ? (normalCorr * 100).toFixed(0) : "Not Available"}% → {typeof scenario.correlationSpike === "number" && Number.isFinite(scenario.correlationSpike) ? (scenario.correlationSpike * 100).toFixed(0) : "Not Available"}%
                   </p>
                 </div>
               </div>
@@ -347,7 +348,7 @@ export default function ConsecutiveCrashScenario({ companies, weights, portfolio
           <p className="text-xs text-slate-600 mt-3 leading-relaxed">
             <strong>Methodology:</strong> Beta adjustments reflect empirical crisis behavior: 
             profitable large-caps increase by ~20% (β × 1.2), while speculative assets increase by ~50% (β × 1.5). 
-            Correlation spike from {(normalCorr * 100).toFixed(0)}% to {(scenario.correlationSpike * 100).toFixed(0)}% 
+            Correlation spike from {typeof normalCorr === "number" && Number.isFinite(normalCorr) ? (normalCorr * 100).toFixed(0) : "Not Available"}% to {typeof scenario.correlationSpike === "number" && Number.isFinite(scenario.correlationSpike) ? (scenario.correlationSpike * 100).toFixed(0) : "Not Available"}% 
             based on historical stress periods (2008, 2020). These amplify portfolio-wide losses and reduce diversification benefits.
           </p>
         </div>
@@ -365,23 +366,23 @@ export default function ConsecutiveCrashScenario({ companies, weights, portfolio
                 <br/>• <strong>Sequential Crashes:</strong> {selectedScenario === 'flash_crash_recovery' 
                   ? 'Month 2: -45% crash → $55k. Month 10: -12% from recovered value.' 
                   : selectedScenario === 'rolling_bear'
-                  ? 'Each decline compounds: -15%, then -22% from new base, then -18% (cumulative: ' + cumulativeDecline.toFixed(1) + '%)'
+                  ? 'Each decline compounds: -15%, then -22% from new base, then -18% (cumulative: ' + (typeof cumulativeDecline === "number" && Number.isFinite(cumulativeDecline) ? cumulativeDecline.toFixed(1) : "Not Available") + '%)'
                   : 'Each crash applies to current portfolio value, compounding effects'}
-                <br/>• <strong>Max Drawdown Validation:</strong> Peak-to-trough = {actualMaxDrawdown.toFixed(1)}% 
-                (verified ≥ largest single crash: {largestSingleCrash.toFixed(1)}%)
+                <br/>• <strong>Max Drawdown Validation:</strong> Peak-to-trough = {typeof actualMaxDrawdown === "number" && Number.isFinite(actualMaxDrawdown) ? actualMaxDrawdown.toFixed(1) : "Not Available"}% 
+                (verified ≥ largest single crash: {typeof largestSingleCrash === "number" && Number.isFinite(largestSingleCrash) ? largestSingleCrash.toFixed(1) : "Not Available"}%)
                 {selectedScenario === 'rolling_bear' && (
-                  <><br/>• <strong>Cumulative Compounding:</strong> {cumulativeDecline.toFixed(1)}% total decline before 36-month recovery begins</>
+                  <><br/>• <strong>Cumulative Compounding:</strong> {typeof cumulativeDecline === "number" && Number.isFinite(cumulativeDecline) ? cumulativeDecline.toFixed(1) : "Not Available"}% total decline before 36-month recovery begins</>
                 )}
                 <br/>• <strong>Beta Amplification (Crisis):</strong> Profitable large-caps: β × 1.2 (+20%), Speculative assets: β × 1.5 (+50%)
-                <br/>• <strong>Correlation Spike:</strong> {(normalCorr * 100).toFixed(0)}% (normal) → {(scenario.correlationSpike * 100).toFixed(0)}% (crisis) based on 2008/2020 empirical data
+                <br/>• <strong>Correlation Spike:</strong> {typeof normalCorr === "number" && Number.isFinite(normalCorr) ? (normalCorr * 100).toFixed(0) : "Not Available"}% (normal) → {typeof scenario.correlationSpike === "number" && Number.isFinite(scenario.correlationSpike) ? (scenario.correlationSpike * 100).toFixed(0) : "Not Available"}% (crisis) based on 2008/2020 empirical data
                 <br/>• <strong>Recovery Model:</strong> {selectedScenario === 'rolling_bear' 
                   ? '36-month geometric recovery to initial $100k after final capitulation' 
                   : selectedScenario === 'flash_crash_recovery'
                   ? 'First crash: 6-month recovery. Second crash: 18-month recovery. Then resume growth.'
                   : 'Geometric recovery to pre-crash levels between events'} 
-                <br/>• <strong>Final Value Calculation:</strong> ${(finalValue/1000).toFixed(1)}k = initial $100k 
-                {selectedScenario === 'flash_crash_recovery' && '× (1-0.45) after month 2 → recover 6mo → × (1-0.12) at month 10 → recover 18mo → grow at ' + (expectedReturn || 8).toFixed(1) + '% annually'}
-                {selectedScenario === 'rolling_bear' && '× (1-0.15) × (1-0.22) × (1-0.18) = ' + (100000 * (1-0.15) * (1-0.22) * (1-0.18) / 1000).toFixed(1) + 'k at trough → 36mo recovery → growth'}
+                <br/>• <strong>Final Value Calculation:</strong> {typeof finalValue === "number" && Number.isFinite(finalValue) ? `$${(finalValue/1000).toFixed(1)}k` : "Not Available"} = initial $100k 
+                {selectedScenario === 'flash_crash_recovery' && (typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? '× (1-0.45) after month 2 → recover 6mo → × (1-0.12) at month 10 → recover 18mo → grow at ' + expectedReturn.toFixed(1) + '% annually' : '')}
+                {selectedScenario === 'rolling_bear' && (typeof cumulativeDecline === "number" && Number.isFinite(cumulativeDecline) ? '× (1-0.15) × (1-0.22) × (1-0.18) = ' + (100000 * (1-0.15) * (1-0.22) * (1-0.18) / 1000).toFixed(1) + 'k at trough → 36mo recovery → growth' : '')}
                 {selectedScenario === 'double_crash' && '× (1-0.35) → recover → × (1-0.28) → recover → grow'}
               </p>
               <p className="font-semibold text-amber-800 border-t border-amber-300 pt-2 mt-2">
