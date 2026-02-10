@@ -42,9 +42,9 @@ export default function LiquidityWarning({ allocations, companies, investmentAmo
       warnings.push({
         symbol,
         name: company.name,
-        shares: shares.toFixed(0),
-        estimatedDailyVolume: estimatedDailyVolume.toLocaleString(),
-        proportion: (dailyVolumeProportion * 100).toFixed(1),
+        shares: typeof shares === "number" && Number.isFinite(shares) ? shares.toFixed(0) : "Not Available",
+        estimatedDailyVolume: typeof estimatedDailyVolume === "number" && Number.isFinite(estimatedDailyVolume) ? estimatedDailyVolume.toLocaleString() : "Not Available",
+        proportion: typeof dailyVolumeProportion === "number" && Number.isFinite(dailyVolumeProportion) ? (dailyVolumeProportion * 100).toFixed(1) : "Not Available",
         severity: dailyVolumeProportion > 0.20 ? 'high' : dailyVolumeProportion > 0.10 ? 'medium' : 'low'
       });
     }
