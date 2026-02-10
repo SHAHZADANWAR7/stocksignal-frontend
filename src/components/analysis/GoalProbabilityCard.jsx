@@ -126,7 +126,9 @@ export default function GoalProbabilityCard({
                 <RadioGroupItem value="historical" id="hist" />
                 <Label htmlFor="hist" className="flex-1 cursor-pointer">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Historical ({baseVolatility.toFixed(1)}%)</span>
+                    <span className="text-sm">
+                      {typeof baseVolatility === "number" && Number.isFinite(baseVolatility) ? `Historical (${baseVolatility.toFixed(1)}%)` : "Historical (Not Available)"}
+                    </span>
                     <Badge variant="outline" className="text-xs">Default</Badge>
                   </div>
                   <p className="text-xs text-slate-500">Based on past volatility</p>
@@ -137,7 +139,9 @@ export default function GoalProbabilityCard({
                 <Label htmlFor="vix" className="flex-1 cursor-pointer">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">
-                      VIX-Adjusted ({(baseVolatility * (vixData ? (0.7 + 0.3 * (vixData.currentVIX / baseVolatility)) : 1.15)).toFixed(1)}%)
+                      {typeof baseVolatility === "number" && Number.isFinite(baseVolatility)
+                        ? `VIX-Adjusted (${(baseVolatility * (vixData ? (0.7 + 0.3 * (vixData.currentVIX / baseVolatility)) : 1.15)).toFixed(1)}%)`
+                        : "VIX-Adjusted (Not Available)"}
                     </span>
                     <Badge variant="outline" className="text-xs bg-blue-50">
                       {vixData ? 'Live VIX' : 'Estimated'}
@@ -145,7 +149,11 @@ export default function GoalProbabilityCard({
                   </div>
                   <p className="text-xs text-slate-500">
                     {vixData 
-                      ? `Current market VIX: ${vixData.currentVIX.toFixed(1)}%` 
+                      ? (
+                        typeof vixData.currentVIX === "number" && Number.isFinite(vixData.currentVIX)
+                          ? `Current market VIX: ${vixData.currentVIX.toFixed(1)}%`
+                          : "Current market VIX: Not Available"
+                      )
                       : 'Current market implied volatility'}
                   </p>
                 </Label>
@@ -154,7 +162,7 @@ export default function GoalProbabilityCard({
                 <RadioGroupItem value="conservative" id="cons" />
                 <Label htmlFor="cons" className="flex-1 cursor-pointer">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">Conservative ({(baseVolatility * 1.35).toFixed(1)}%)</span>
+                    <span className="text-sm">{typeof baseVolatility === "number" && Number.isFinite(baseVolatility) ? `Conservative (${(baseVolatility * 1.35).toFixed(1)}%)` : "Conservative (Not Available)"}</span>
                     <Badge variant="outline" className="text-xs bg-amber-50">Stress-adjusted</Badge>
                   </div>
                   <p className="text-xs text-slate-500">Assumes higher uncertainty</p>
@@ -169,10 +177,10 @@ export default function GoalProbabilityCard({
           <div className="text-center mb-3">
             <p className="text-sm text-slate-600 mb-2">Base Probability</p>
             <p className={`text-5xl font-bold text-${color}-600 mb-1`}>
-              {(baseProbability * 100).toFixed(0)}%
+              {typeof baseProbability === "number" && Number.isFinite(baseProbability) ? (baseProbability * 100).toFixed(0) : "Not Available"}%
             </p>
             <p className="text-sm text-slate-500">
-              Range: {(probabilityLow * 100).toFixed(0)}%–{(probabilityHigh * 100).toFixed(0)}%
+              Range: {typeof probabilityLow === "number" && Number.isFinite(probabilityLow) ? (probabilityLow * 100).toFixed(0) : "Not Available"}%–{typeof probabilityHigh === "number" && Number.isFinite(probabilityHigh) ? (probabilityHigh * 100).toFixed(0) : "Not Available"}%
             </p>
             <Badge className={`mt-2 bg-${color}-100 text-${color}-700`}>
               {volatilityMode === 'historical' && 'Historical Vol'}
@@ -183,10 +191,10 @@ export default function GoalProbabilityCard({
 
           <div className="bg-slate-50 rounded-lg p-3 mt-4">
             <p className="text-xs text-slate-700 leading-relaxed">
-              <strong>Interpretation:</strong> In {(baseProbability * 100).toFixed(0)} out of 100 simulated scenarios, 
+              <strong>Interpretation:</strong> In {typeof baseProbability === "number" && Number.isFinite(baseProbability) ? (baseProbability * 100).toFixed(0) : "Not Available"} out of 100 simulated scenarios, 
               your goal was reached under {volatilityMode.replace('_', ' ')} volatility assumptions.
               <br/><br/>
-              <strong className="text-slate-900">Range explains uncertainty:</strong> Confidence interval is ±{(confidenceInterval * 100).toFixed(0)}% 
+              <strong className="text-slate-900">Range explains uncertainty:</strong> Confidence interval is ±{typeof confidenceInterval === "number" && Number.isFinite(confidenceInterval) ? (confidenceInterval * 100).toFixed(0) : "Not Available"}% 
               due to simulation sampling and assumption sensitivity.
             </p>
           </div>
@@ -205,8 +213,16 @@ export default function GoalProbabilityCard({
                 <br/><br/>
                 • <strong>Historical:</strong> Assumes past volatility continues<br/>
                 • <strong>VIX-Adjusted:</strong> {vixData 
-                  ? `Uses live VIX (${vixData.currentVIX.toFixed(1)}%) blended with historical` 
-                  : `Uses current market expectations (~${(baseVolatility * 0.15).toFixed(0)}% higher)`}<br/>
+                  ? (
+                    typeof vixData.currentVIX === "number" && Number.isFinite(vixData.currentVIX)
+                      ? `Uses live VIX (${vixData.currentVIX.toFixed(1)}%) blended with historical`
+                      : "Uses live VIX (Not Available) blended with historical"
+                  )
+                  : (
+                    typeof baseVolatility === "number" && Number.isFinite(baseVolatility)
+                      ? `Uses current market expectations (~${(baseVolatility * 0.15).toFixed(0)}% higher)`
+                      : "Uses current market expectations (~Not Available% higher)"
+                  )}<br/>
                 • <strong>Conservative:</strong> Stress-tests with elevated uncertainty (+35%)
                 <br/><br/>
                 Toggle between modes to understand sensitivity to assumptions.
@@ -224,8 +240,8 @@ export default function GoalProbabilityCard({
                 📊 Distribution-Driven Probability (Not a Forecast)
               </p>
               <p className="text-xs text-blue-800 leading-relaxed">
-                This probability is generated using Monte Carlo simulation with {volatility.toFixed(1)}% volatility 
-                and {expectedReturn.toFixed(1)}% expected return.
+                This probability is generated using Monte Carlo simulation with {typeof volatility === "number" && Number.isFinite(volatility) ? volatility.toFixed(1) : "Not Available"}% volatility 
+                and {typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}% expected return.
                 <br/><br/>
                 <strong>It is NOT:</strong>
                 <br/>• A prediction of what will happen
