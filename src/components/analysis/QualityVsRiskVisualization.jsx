@@ -156,7 +156,7 @@ export default function QualityVsRiskVisualization({ qualityScore, portfolioRisk
                     <div className="bg-white p-3 border-2 border-blue-300 rounded-lg shadow-lg">
                       <p className="font-bold text-slate-900">{data.label}</p>
                       <p className="text-sm text-blue-700">Quality: {data.quality}/100</p>
-                      <p className="text-sm text-rose-700">Risk: {data.risk.toFixed(1)}%</p>
+                      <p className="text-sm text-rose-700">Risk: {typeof data.risk === "number" && Number.isFinite(data.risk) ? data.risk.toFixed(1) : "Not Available"}%</p>
                     </div>
                   );
                 }
@@ -183,7 +183,7 @@ export default function QualityVsRiskVisualization({ qualityScore, portfolioRisk
                   <p className="font-semibold mb-1">High Quality ≠ Low Risk</p>
                   <p className="text-xs text-amber-800 mb-2">
                     Your {qualityScore}/100 quality score reflects <strong>effective diversification</strong> and 
-                    balanced allocations. However, with {portfolioRisk.toFixed(1)}% annualized volatility{actualSpeculativeRatio > 0 ? ` and ${(actualSpeculativeRatio * 100).toFixed(0)}% speculative exposure (${speculativeCount} of ${companies?.length || 0} assets)` : ''}, 
+                    balanced allocations. However, with {typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% annualized volatility{actualSpeculativeRatio > 0 ? ` and ${typeof actualSpeculativeRatio === "number" && Number.isFinite(actualSpeculativeRatio) ? (actualSpeculativeRatio * 100).toFixed(0) : "Not Available"}% speculative exposure (${speculativeCount} of ${companies?.length || 0} assets)` : ''}, 
                     tail-risk drawdowns may be significant.
                   </p>
                   <TooltipProvider>
@@ -191,7 +191,7 @@ export default function QualityVsRiskVisualization({ qualityScore, portfolioRisk
                       <TooltipTrigger asChild>
                         <div className="inline-flex items-center gap-1 text-xs text-amber-700 bg-amber-100 px-2 py-1 rounded cursor-help">
                           <Info className="w-3 h-3" />
-                          <span>Est. worst-case drawdown: {expectedDrawdown?.toFixed(0)}%</span>
+                          <span>Est. worst-case drawdown: {typeof expectedDrawdown === "number" && Number.isFinite(expectedDrawdown) ? expectedDrawdown.toFixed(0) : "Not Available"}%</span>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
@@ -215,7 +215,7 @@ export default function QualityVsRiskVisualization({ qualityScore, portfolioRisk
                 <div className="text-sm text-rose-900">
                   <p className="font-semibold mb-1">⚠️ High Risk + Limited Diversification</p>
                   <p className="text-xs text-rose-800 mb-2">
-                    Quality score of {qualityScore}/100 combined with {portfolioRisk.toFixed(1)}% annualized volatility indicates 
+                    Quality score of {qualityScore}/100 combined with {typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% annualized volatility indicates 
                     elevated portfolio fragility. Consider adding uncorrelated assets (bonds, index funds) to improve risk-adjusted returns.
                   </p>
                   <TooltipProvider>
@@ -223,7 +223,7 @@ export default function QualityVsRiskVisualization({ qualityScore, portfolioRisk
                       <TooltipTrigger asChild>
                         <div className="inline-flex items-center gap-1 text-xs text-rose-700 bg-rose-100 px-2 py-1 rounded cursor-help">
                           <Info className="w-3 h-3" />
-                          <span>Est. tail-risk drawdown: {expectedDrawdown?.toFixed(0)}%</span>
+                          <span>Est. tail-risk drawdown: {typeof expectedDrawdown === "number" && Number.isFinite(expectedDrawdown) ? expectedDrawdown.toFixed(0) : "Not Available"}%</span>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
@@ -252,7 +252,7 @@ export default function QualityVsRiskVisualization({ qualityScore, portfolioRisk
                     </p>
                     <ul className="ml-4 mt-1 space-y-1 list-disc">
                       <li>
-                        <span className="font-medium">Sharpe ratio:</span> {avgSharpe?.toFixed(3)} 
+                        <span className="font-medium">Sharpe ratio:</span> {typeof avgSharpe === "number" && Number.isFinite(avgSharpe) ? avgSharpe.toFixed(3) : "Not Available"} 
                         {avgSharpe >= sp500BenchmarkSharpe 
                           ? ` (Above S&P 500 avg ~${sp500BenchmarkSharpe.toFixed(2)})` 
                           : avgSharpe >= 0.3 
@@ -260,7 +260,7 @@ export default function QualityVsRiskVisualization({ qualityScore, portfolioRisk
                           : ` (Below S&P 500 avg ~${sp500BenchmarkSharpe.toFixed(2)})`}
                       </li>
                       <li>
-                        <span className="font-medium">Avg correlation:</span> {((avgCorrelation || 0) * 100).toFixed(0)}% 
+                        <span className="font-medium">Avg correlation:</span> {typeof avgCorrelation === "number" && Number.isFinite(avgCorrelation) ? ((avgCorrelation || 0) * 100).toFixed(0) : "Not Available"}% 
                         {avgCorrelation <= 0.5 ? ' (Low - good)' : avgCorrelation <= 0.7 ? ' (Moderate)' : ' (High - limited diversification)'}
                       </li>
                       <li>
@@ -273,7 +273,7 @@ export default function QualityVsRiskVisualization({ qualityScore, portfolioRisk
                         {sectorCount >= 3 ? ' ✓' : sectorCount >= 2 ? ' (consider adding more)' : ' (needs diversification)'}
                       </li>
                       <li>
-                        <span className="font-medium">Speculative exposure:</span> {(actualSpeculativeRatio * 100).toFixed(0)}% ({speculativeCount} of {companies?.length || 0} assets) 
+                        <span className="font-medium">Speculative exposure:</span> {typeof actualSpeculativeRatio === "number" && Number.isFinite(actualSpeculativeRatio) ? (actualSpeculativeRatio * 100).toFixed(0) : "Not Available"}% ({speculativeCount} of {companies?.length || 0} assets) 
                         {actualSpeculativeRatio <= 0.2 ? ' (Low)' : actualSpeculativeRatio <= 0.5 ? ' (Moderate)' : ' (High)'}
                       </li>
                     </ul>
@@ -284,7 +284,7 @@ export default function QualityVsRiskVisualization({ qualityScore, portfolioRisk
                       <TooltipTrigger asChild>
                         <div className="cursor-help bg-rose-50 p-2 rounded">
                           <p>
-                            <strong>Portfolio Risk ({portfolioRisk.toFixed(1)}%):</strong> Annualized volatility (σ) 
+                            <strong>Portfolio Risk ({typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}%):</strong> Annualized volatility (σ) 
                             <Info className="w-3 h-3 inline ml-1 text-rose-600" />
                           </p>
                         </div>
@@ -292,8 +292,8 @@ export default function QualityVsRiskVisualization({ qualityScore, portfolioRisk
                       <TooltipContent className="max-w-xs">
                         <p className="text-xs">
                           <strong>Volatility Definition:</strong> Expected standard deviation of annual returns. 
-                          With {portfolioRisk.toFixed(1)}% volatility, in a typical year your portfolio might return 
-                          ±{portfolioRisk.toFixed(1)}% from the expected value. This measures normal fluctuations, 
+                          With {typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% volatility, in a typical year your portfolio might return 
+                          ±{typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% from the expected value. This measures normal fluctuations, 
                           NOT crash scenarios or drawdowns.
                         </p>
                       </TooltipContent>
@@ -325,10 +325,10 @@ export default function QualityVsRiskVisualization({ qualityScore, portfolioRisk
                         <p className="text-xs font-semibold mb-1">Projected Impact on Your Portfolio:</p>
                         <p className="text-xs mb-2">
                           Adding 20% bonds (BND, correlation ~0.1-0.2 with stocks):
-                          <br/>• Quality score: {qualityScore} → {Math.min(100, qualityScore + 10)} (+{Math.min(35, Math.round((100 - qualityScore) * 0.3))} pts)
-                          <br/>• Avg correlation: {((avgCorrelation || 0) * 100).toFixed(0)}% → {Math.max(20, ((avgCorrelation || 0) * 100) - 15).toFixed(0)}% (-10-20%)
-                          <br/>• Portfolio volatility: {portfolioRisk.toFixed(1)}% → {Math.max(8, portfolioRisk * 0.85).toFixed(1)}% (-10-15%)
-                          <br/>• Tail-risk drawdown: {expectedDrawdown?.toFixed(0)}% → {Math.max(-60, expectedDrawdown * 0.75).toFixed(0)}% (-20-30%)
+                          <br/>• Quality score: {qualityScore} → {typeof qualityScore === "number" && Number.isFinite(qualityScore) ? Math.min(100, qualityScore + 10) : "Not Available"} (+{typeof qualityScore === "number" && Number.isFinite(qualityScore) ? Math.min(35, Math.round((100 - qualityScore) * 0.3)) : "Not Available"} pts)
+                          <br/>• Avg correlation: {typeof avgCorrelation === "number" && Number.isFinite(avgCorrelation) ? ((avgCorrelation || 0) * 100).toFixed(0) : "Not Available"}% → {typeof avgCorrelation === "number" && Number.isFinite(avgCorrelation) ? Math.max(20, ((avgCorrelation || 0) * 100) - 15).toFixed(0) : "Not Available"}% (-10-20%)
+                          <br/>• Portfolio volatility: {typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% → {typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? Math.max(8, portfolioRisk * 0.85).toFixed(1) : "Not Available"}% (-10-15%)
+                          <br/>• Tail-risk drawdown: {typeof expectedDrawdown === "number" && Number.isFinite(expectedDrawdown) ? expectedDrawdown.toFixed(0) : "Not Available"}% → {typeof expectedDrawdown === "number" && Number.isFinite(expectedDrawdown) ? Math.max(-60, expectedDrawdown * 0.75).toFixed(0) : "Not Available"}% (-20-30%)
                         </p>
                         <p className="text-xs text-slate-500 border-t border-amber-300 pt-2 mt-2">
                           💡 See "Impact Delta Analysis" below for precise, simulation-based calculations
