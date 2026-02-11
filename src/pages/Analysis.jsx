@@ -2518,7 +2518,7 @@ If analyzing similar companies (same sector), focus on:
                     </div>
                   </CardContent>
                 </Card>
-                // ============================================================================
+                {/* ============================================================================
                 // ============================================================================
                 // SECTION 6 (PART 6): Strategy Cards & Investment Projections
 // ============================================================================
@@ -2536,7 +2536,7 @@ If analyzing similar companies (same sector), focus on:
 //
 // ✅ VIX ENHANCEMENT: Added forward-looking risk display to strategy cards
 // Shows VIX-adjusted risk metrics if available from analysisResult
-// ============================================================================
+// ============================================================================ */}
 
                 {/* Minimum Variance Portfolio */}
                 {analysisResult.minimum_variance_portfolio && (
