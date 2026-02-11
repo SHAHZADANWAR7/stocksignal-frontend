@@ -175,7 +175,7 @@ export default function Analysis() {
         regime: 'normal',
         regimeDescription: 'Normal volatility (error fallback)',
         riskLevel: 'Low',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
         dataSource: 'error_fallback',
         timestamp: new Date().toISOString()
       console.warn('⚠️ Using fallback VIX data due to error');
