@@ -127,10 +127,7 @@ export default function Analysis() {
   const fetchVIXData = async () => {
     setVixLoading(true);
     setVixError(null);
-<<<<<<< HEAD
 
-=======
->>>>>>> 0c102ab9520067cd3031499471cfcba33b7651a5
     try {
       console.log('🔍 Fetching VIX data from Lambda...');
       const response = await callAwsFunction('getVIXData', {});
@@ -171,7 +168,6 @@ export default function Analysis() {
       console.error('❌ VIX Lambda Error:', error);
       setVixError(error.message);
 
-<<<<<<< HEAD
       // Set fallback VIX data
       setVixData({
         currentVIX: 18,
@@ -198,8 +194,6 @@ export default function Analysis() {
 
       setVixError(error.message);
       
-=======
->>>>>>> 0c102ab9520067cd3031499471cfcba33b7651a5
       // Set fallback VIX data
       setVixData({
         currentVIX: 18,
@@ -2148,9 +2142,7 @@ If analyzing similar companies (same sector), focus on:
                 </CardContent>
               </Card>
               {/* 
-=====================
 SECTION 5 (PART 5): Analysis Results - Warnings, Cards & Strategy Comparison
-============================================================================
 This section contains JSX rendering for analysis results:
 - Correlation & confidence warning (extreme/high/moderate tiers)
 - Concentration alert
@@ -2173,7 +2165,6 @@ This section contains JSX rendering for analysis results:
 //
 ✅ VIX CHANGES: Added vixData and forwardRiskMetrics props to ForwardRiskCard
 ForwardRiskCard component will display VIX-adjusted risk metrics
-============================================================================
  */}
               {/* Correlation & Confidence Warning */}
               {analysisResult.portfolio_quality && analysisResult.portfolio_quality.correlationTier && 
@@ -3023,9 +3014,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
               })()}
 
               {/* ============================================================================
-============================================================================
 SECTION 7 (PART 7 - FINAL): Charts, Allocations, Company Metrics & Closing
-============================================================================
 This section contains the final JSX rendering:
 - Strategy Comparison Charts (BarChart & ScatterChart for risk-return positioning)
 - Selected Strategy Details card:
@@ -3044,7 +3033,6 @@ This section contains the final JSX rendering:
 NO CHANGES - Pure JSX rendering of asset-level data
 ✅ NO VIX INTEGRATION NEEDED: This section displays individual company metrics only
 VIX portfolio-level metrics are displayed in Section 5 (ForwardRiskCard) and Section 6 (Strategy cards)
-============================================================================ */}
 
               {/* Strategy Comparison Charts */}
               {comparisonData.length > 0 && (
