@@ -158,33 +158,53 @@ export default function Analysis() {
       if (vixResponse.success || vixResponse.currentVIX) {
         setVixData({
           currentVIX: vixResponse.currentVIX || vixResponse.current || 18,
+          avgVIX: vixResponse.avgVIX,
+          minVIX: vixResponse.minVIX,
+          maxVIX: vixResponse.maxVIX,
+          change: vixResponse.change,
+          changePercent: vixResponse.changePercent,
           impliedAnnualVol: vixResponse.impliedAnnualVol || vixResponse.currentVIX || 18,
-          regime: vixResponse.regime || 'normal',
-          regimeDescription: vixResponse.regimeDescription || 'Normal volatility',
-          riskLevel: vixResponse.riskLevel || 'Low',
-          dataSource: vixResponse.dataSource || 'Lambda',
-          timestamp: vixResponse.timestamp || new Date().toISOString()
+          regime: vixResponse.regime || "normal",
+          regimeDescription: vixResponse.regimeDescription || "Normal volatility",
+          riskLevel: vixResponse.riskLevel || "Low",
+          dataSource: vixResponse.dataSource || "Lambda",
+          timestamp: vixResponse.timestamp || new Date().toISOString(),
+          historicalData: vixResponse.historicalData,
+          ...(vixResponse.vix || {})
         });
         
         console.log('✅ VIX data loaded successfully:', {
-          current: vixResponse.currentVIX,
-          regime: vixResponse.regime,
-          source: vixResponse.dataSource
-        });
-      } else {
-        // Lambda returned fallback data
-        console.warn('⚠️ VIX Lambda returned fallback data');
         setVixData({
           currentVIX: 18,
+          avgVIX: null,
+          minVIX: null,
+          maxVIX: null,
+          change: null,
+          changePercent: null,
           impliedAnnualVol: 18,
-          regime: 'normal',
-          regimeDescription: 'Normal volatility (fallback)',
-          riskLevel: 'Low',
-          dataSource: 'fallback',
-          timestamp: new Date().toISOString()
+          regime: "normal",
+          regimeDescription: "Normal volatility (fallback)",
+          riskLevel: "Low",
+          dataSource: "fallback",
+          timestamp: new Date().toISOString(),
+          historicalData: null
         });
-      }
-
+          impliedAnnualVol: 18,
+        setVixData({
+          currentVIX: 18,
+          avgVIX: null,
+          minVIX: null,
+          maxVIX: null,
+          change: null,
+          changePercent: null,
+          impliedAnnualVol: 18,
+          regime: "normal",
+          regimeDescription: "Normal volatility (error fallback)",
+          riskLevel: "Low",
+          dataSource: "error_fallback",
+          timestamp: new Date().toISOString(),
+          historicalData: null
+        });
     } catch (error) {
       console.error('❌ VIX Lambda Error:', error);
       setVixError(error.message);
