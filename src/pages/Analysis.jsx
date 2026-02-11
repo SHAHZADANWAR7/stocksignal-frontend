@@ -173,7 +173,7 @@ export default function Analysis() {
           ...(vixResponse.vix || {})
         });
         
-        console.log('✅ VIX data loaded successfully:', {
+        console.log("Fallback to manual/default VIX data: Lambda not successful.");
         setVixData({
           currentVIX: 18,
           avgVIX: null,
@@ -189,22 +189,8 @@ export default function Analysis() {
           timestamp: new Date().toISOString(),
           historicalData: null
         });
-          impliedAnnualVol: 18,
-        setVixData({
-          currentVIX: 18,
-          avgVIX: null,
-          minVIX: null,
-          maxVIX: null,
-          change: null,
-          changePercent: null,
-          impliedAnnualVol: 18,
-          regime: "normal",
-          regimeDescription: "Normal volatility (error fallback)",
-          riskLevel: "Low",
-          dataSource: "error_fallback",
-          timestamp: new Date().toISOString(),
-          historicalData: null
-        });
+    }
+
     } catch (error) {
       console.error('❌ VIX Lambda Error:', error);
       setVixError(error.message);
