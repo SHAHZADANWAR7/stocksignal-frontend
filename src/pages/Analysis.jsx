@@ -142,53 +142,25 @@ export default function Analysis() {
       } else if (response.body) {
         vixResponse = typeof response.body === 'string' 
           ? JSON.parse(response.body) 
-          : response.body;
-      } else {
-        vixResponse = response;
-      }
-
-      console.log('✅ Parsed VIX Data:', vixResponse);
-
-      // Validate VIX data structure
-      if (!vixResponse || typeof vixResponse !== 'object') {
-        throw new Error('Invalid VIX response format');
-      }
-
       // Handle both success and fallback cases
       if (vixResponse.success || vixResponse.currentVIX) {
         setVixData({
-          currentVIX: vixResponse.currentVIX || vixResponse.current || 18,
-          avgVIX: vixResponse.avgVIX,
-          minVIX: vixResponse.minVIX,
-          maxVIX: vixResponse.maxVIX,
-          change: vixResponse.change,
-          changePercent: vixResponse.changePercent,
-          impliedAnnualVol: vixResponse.impliedAnnualVol || vixResponse.currentVIX || 18,
-          regime: vixResponse.regime || "normal",
-          regimeDescription: vixResponse.regimeDescription || "Normal volatility",
-          riskLevel: vixResponse.riskLevel || "Low",
-          dataSource: vixResponse.dataSource || "Lambda",
-          timestamp: vixResponse.timestamp || new Date().toISOString(),
-          historicalData: vixResponse.historicalData,
-          ...(vixResponse.vix || {})
+          currentVIX: vixResponse.currentVIX ?? vixResponse.vix?.currentVIX ?? 18,
+          avgVIX: vixResponse.avgVIX ?? vixResponse.vix?.avgVIX ?? null,
+          minVIX: vixResponse.minVIX ?? vixResponse.vix?.minVIX ?? null,
+          maxVIX: vixResponse.maxVIX ?? vixResponse.vix?.maxVIX ?? null,
+          change: vixResponse.change ?? vixResponse.vix?.change ?? null,
+          changePercent: vixResponse.changePercent ?? vixResponse.vix?.changePercent ?? null,
+          impliedAnnualVol: vixResponse.impliedAnnualVol ?? vixResponse.vix?.impliedAnnualVol ?? 18,
+          regime: vixResponse.regime ?? vixResponse.vix?.regime ?? "normal",
+          regimeDescription: vixResponse.regimeDescription ?? vixResponse.vix?.regimeDescription ?? "Normal volatility",
+          riskLevel: vixResponse.riskLevel ?? vixResponse.vix?.riskLevel ?? "Low",
+          dataSource: vixResponse.dataSource ?? vixResponse.vix?.dataSource ?? "Lambda",
+          timestamp: vixResponse.timestamp ?? vixResponse.vix?.timestamp ?? new Date().toISOString(),
+          historicalData: vixResponse.historicalData ?? vixResponse.vix?.historicalData ?? null
         });
-        
-        console.log("Fallback to manual/default VIX data: Lambda not successful.");
-        setVixData({
-          currentVIX: 18,
-          avgVIX: null,
-          minVIX: null,
-          maxVIX: null,
-          change: null,
-          changePercent: null,
-          impliedAnnualVol: 18,
-          regime: "normal",
-          regimeDescription: "Normal volatility (fallback)",
-          riskLevel: "Low",
-          dataSource: "fallback",
-          timestamp: new Date().toISOString(),
-          historicalData: null
-        });
+        return;
+      }
     }
 
     } catch (error) {
