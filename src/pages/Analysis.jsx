@@ -123,11 +123,14 @@ export default function Analysis() {
     fetchVIXData();
   }, []);
 
-  // ✅ NEW: VIX Fetch Function
+  // ✅ NEW: VIX Fetch Function (fixed and robust)
   const fetchVIXData = async () => {
     setVixLoading(true);
     setVixError(null);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0c102ab9520067cd3031499471cfcba33b7651a5
     try {
       console.log('🔍 Fetching VIX data from Lambda...');
       const response = await callAwsFunction('getVIXData', {});
@@ -168,6 +171,7 @@ export default function Analysis() {
       console.error('❌ VIX Lambda Error:', error);
       setVixError(error.message);
 
+<<<<<<< HEAD
       // Set fallback VIX data
       setVixData({
         currentVIX: 18,
@@ -194,6 +198,8 @@ export default function Analysis() {
 
       setVixError(error.message);
       
+=======
+>>>>>>> 0c102ab9520067cd3031499471cfcba33b7651a5
       // Set fallback VIX data
       setVixData({
         currentVIX: 18,
@@ -204,7 +210,7 @@ export default function Analysis() {
         dataSource: 'error_fallback',
         timestamp: new Date().toISOString()
       });
-      
+
       console.warn('⚠️ Using fallback VIX data due to error');
     } finally {
       setVixLoading(false);
