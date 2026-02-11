@@ -127,25 +127,23 @@ export default function Analysis() {
   const fetchVIXData = async () => {
     setVixLoading(true);
     setVixError(null);
-    
+
     try {
       console.log('🔍 Fetching VIX data from Lambda...');
-      
       const response = await callAwsFunction('getVIXData', {});
-      
       console.log('📊 Raw VIX Lambda Response:', response);
-      
+
       // Parse Lambda response (handle different formats)
       let vixResponse;
       if (typeof response === 'string') {
         vixResponse = JSON.parse(response);
       } else if (response.body) {
-  vixResponse = typeof response.body === "string" 
-    ? JSON.parse(response.body) 
-    : response.body;
-} else {
-  vixResponse = response;
-}
+        vixResponse = typeof response.body === 'string'
+          ? JSON.parse(response.body)
+          : response.body;
+      } else {
+        vixResponse = response;
+      }
 
       // Handle both success and fallback cases
       if (vixResponse.success || vixResponse.currentVIX) {
@@ -157,19 +155,43 @@ export default function Analysis() {
           change: vixResponse.change ?? vixResponse.vix?.change ?? null,
           changePercent: vixResponse.changePercent ?? vixResponse.vix?.changePercent ?? null,
           impliedAnnualVol: vixResponse.impliedAnnualVol ?? vixResponse.vix?.impliedAnnualVol ?? 18,
-          regime: vixResponse.regime ?? vixResponse.vix?.regime ?? "normal",
-          regimeDescription: vixResponse.regimeDescription ?? vixResponse.vix?.regimeDescription ?? "Normal volatility",
-          riskLevel: vixResponse.riskLevel ?? vixResponse.vix?.riskLevel ?? "Low",
-          dataSource: vixResponse.dataSource ?? vixResponse.vix?.dataSource ?? "Lambda",
+          regime: vixResponse.regime ?? vixResponse.vix?.regime ?? 'normal',
+          regimeDescription: vixResponse.regimeDescription ?? vixResponse.vix?.regimeDescription ?? 'Normal volatility',
+          riskLevel: vixResponse.riskLevel ?? vixResponse.vix?.riskLevel ?? 'Low',
+          dataSource: vixResponse.dataSource ?? vixResponse.vix?.dataSource ?? 'Lambda',
           timestamp: vixResponse.timestamp ?? vixResponse.vix?.timestamp ?? new Date().toISOString(),
           historicalData: vixResponse.historicalData ?? vixResponse.vix?.historicalData ?? null
         });
         return;
       }
-    }
-
     } catch (error) {
       console.error('❌ VIX Lambda Error:', error);
+      setVixError(error.message);
+
+      // Set fallback VIX data
+      setVixData({
+        currentVIX: 18,
+        impliedAnnualVol: 18,
+        regime: 'normal',
+        regimeDescription: 'Normal volatility (error fallback)',
+        riskLevel: 'Low',
+        timestamp: new Date().toISOString()
+        dataSource: 'error_fallback',
+        timestamp: new Date().toISOString()
+      console.warn('⚠️ Using fallback VIX data due to error');
+    } finally {
+      setVixLoading(false);
+    }
+  };
+
+      });
+
+      console.warn('⚠️ Using fallback VIX data due to error');
+    } finally {
+      setVixLoading(false);
+    }
+  };
+
       setVixError(error.message);
       
       // Set fallback VIX data
@@ -3545,3 +3567,4 @@ VIX portfolio-level metrics are displayed in Section 5 (ForwardRiskCard) and Sec
       />
     </div>
   );
+}
