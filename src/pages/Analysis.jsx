@@ -1573,13 +1573,7 @@ If analyzing similar companies (same sector), focus on:
         diversification_recommendations: diversificationRecommendations,
         // ✅ NEW: Add VIX-adjusted risk metrics
         forward_risk_metrics: forwardRiskMetrics,
-        vix_data: vixData ? {
-          currentVIX: vixData.currentVIX,
-          regime: vixData.regime,
-          regimeDescription: vixData.regimeDescription,
-          timestamp: vixData.timestamp,
-          dataSource: vixData.dataSource
-        } : null
+        vix_data: vixData ? { ...vixData } : null
       };
 
       setAnalysisResult(finalResult);
