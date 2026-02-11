@@ -3017,29 +3017,29 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
                 );
               })()}
 
-              // ============================================================================
-              // ============================================================================
-              // SECTION 7 (PART 7 - FINAL): Charts, Allocations, Company Metrics & Closing
-// ============================================================================
-// This section contains the final JSX rendering:
-// - Strategy Comparison Charts (BarChart & ScatterChart for risk-return positioning)
-// - Selected Strategy Details card:
-//   - Allocation breakdown with trade buttons
-//   - Portfolio composition bar chart
-// - Individual Company Analysis cards:
-//   - Market metrics (price, P/E, historical returns)
-//   - Modeled metrics (expected return, volatility, Sharpe ratio)
-//   - Dual-horizon beta display (5-year & 1-year)
-//   - Valuation reasoning & methodology
-//   - AI adjustment explainability
-// - Action buttons (Refresh Analysis, New Analysis)
-// - TradeModal component
-// - Closing tags for all nested divs
+              {/* ============================================================================
+============================================================================
+SECTION 7 (PART 7 - FINAL): Charts, Allocations, Company Metrics & Closing
+============================================================================
+This section contains the final JSX rendering:
+- Strategy Comparison Charts (BarChart & ScatterChart for risk-return positioning)
+- Selected Strategy Details card:
+  - Allocation breakdown with trade buttons
+  - Portfolio composition bar chart
+- Individual Company Analysis cards:
+  - Market metrics (price, P/E, historical returns)
+  - Modeled metrics (expected return, volatility, Sharpe ratio)
+  - Dual-horizon beta display (5-year & 1-year)
+  - Valuation reasoning & methodology
+  - AI adjustment explainability
+- Action buttons (Refresh Analysis, New Analysis)
+- TradeModal component
+- Closing tags for all nested divs
 //
-// NO CHANGES - Pure JSX rendering of asset-level data
-// ✅ NO VIX INTEGRATION NEEDED: This section displays individual company metrics only
-// VIX portfolio-level metrics are displayed in Section 5 (ForwardRiskCard) and Section 6 (Strategy cards)
-// ============================================================================
+NO CHANGES - Pure JSX rendering of asset-level data
+✅ NO VIX INTEGRATION NEEDED: This section displays individual company metrics only
+VIX portfolio-level metrics are displayed in Section 5 (ForwardRiskCard) and Section 6 (Strategy cards)
+============================================================================ */}
 
               {/* Strategy Comparison Charts */}
               {comparisonData.length > 0 && (
