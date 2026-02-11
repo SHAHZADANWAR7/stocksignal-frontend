@@ -143,7 +143,10 @@ export default function Analysis() {
   vixResponse = typeof response.body === "string" 
     ? JSON.parse(response.body) 
     : response.body;
+} else {
+  vixResponse = response;
 }
+
       // Handle both success and fallback cases
       if (vixResponse.success || vixResponse.currentVIX) {
         setVixData({
@@ -3542,4 +3545,3 @@ VIX portfolio-level metrics are displayed in Section 5 (ForwardRiskCard) and Sec
       />
     </div>
   );
-}
