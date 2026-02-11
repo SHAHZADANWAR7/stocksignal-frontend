@@ -2142,34 +2142,34 @@ If analyzing similar companies (same sector), focus on:
                   </div>
                 </CardContent>
               </Card>
-
-              // =====================
-              // SECTION 5 (PART 5): Analysis Results - Warnings, Cards & Strategy Comparison
-// ============================================================================
-// This section contains JSX rendering for analysis results:
-// - Correlation & confidence warning (extreme/high/moderate tiers)
-// - Concentration alert
-// - Extreme beta warning
-// - Liquidity warning
-// - Portfolio quality diagnostics card
-// - Impact delta what-if analysis
-// - Quality vs risk visualization
-// - Stress testing card
-// - Consecutive crash scenario
-// - Model limitations disclosure
-// - Rebalancing simulator
-// - Forward risk card (✅ VIX INTEGRATION ADDED)
-// - Portfolio storytelling chart
-// - Confidence bands chart
-// - Transaction cost card
-// - Return cap notifications (collapsible)
-// - Validation warnings
-// - Strategy comparison cards (Optimal Portfolio card - start)
+              {/* 
+=====================
+SECTION 5 (PART 5): Analysis Results - Warnings, Cards & Strategy Comparison
+============================================================================
+This section contains JSX rendering for analysis results:
+- Correlation & confidence warning (extreme/high/moderate tiers)
+- Concentration alert
+- Extreme beta warning
+- Liquidity warning
+- Portfolio quality diagnostics card
+- Impact delta what-if analysis
+- Quality vs risk visualization
+- Stress testing card
+- Consecutive crash scenario
+- Model limitations disclosure
+- Rebalancing simulator
+- Forward risk card (✅ VIX INTEGRATION ADDED)
+- Portfolio storytelling chart
+- Confidence bands chart
+- Transaction cost card
+- Return cap notifications (collapsible)
+- Validation warnings
+- Strategy comparison cards (Optimal Portfolio card - start)
 //
-// ✅ VIX CHANGES: Added vixData and forwardRiskMetrics props to ForwardRiskCard
-// ForwardRiskCard component will display VIX-adjusted risk metrics
-// ============================================================================
-
+✅ VIX CHANGES: Added vixData and forwardRiskMetrics props to ForwardRiskCard
+ForwardRiskCard component will display VIX-adjusted risk metrics
+============================================================================
+ */}
               {/* Correlation & Confidence Warning */}
               {analysisResult.portfolio_quality && analysisResult.portfolio_quality.correlationTier && 
                (analysisResult.portfolio_quality.correlationTier === 'moderate' || 
