@@ -140,8 +140,10 @@ export default function Analysis() {
       if (typeof response === 'string') {
         vixResponse = JSON.parse(response);
       } else if (response.body) {
-        vixResponse = typeof response.body === 'string' 
-          ? JSON.parse(response.body) 
+  vixResponse = typeof response.body === "string" 
+    ? JSON.parse(response.body) 
+    : response.body;
+}
       // Handle both success and fallback cases
       if (vixResponse.success || vixResponse.currentVIX) {
         setVixData({
