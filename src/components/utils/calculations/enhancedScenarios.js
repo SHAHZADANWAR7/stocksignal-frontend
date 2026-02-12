@@ -20,9 +20,9 @@ export function getRegimeAdjustedCorrelations(baseCorrelationMatrix, vixLevel = 
   
   // Correlation multiplier based on VIX regime
   let correlationMultiplier = 1.0;
-  if (vixLevel > 40) correlationMultiplier = 1.5; // High stress
-  else if (vixLevel > 30) correlationMultiplier = 1.3; // Elevated stress
-  else if (vixLevel > 20) correlationMultiplier = 1.15; // Moderate stress
+  if (vixLevel > 30) correlationMultiplier = 2.0; // Extreme stress (diversification breakdown)
+  else if (vixLevel > 25) correlationMultiplier = 1.5; // High stress
+  else if (vixLevel > 20) correlationMultiplier = 1.2; // Moderate stress
   
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n; j++) {
