@@ -131,7 +131,7 @@ export default function Analysis() {
     try {
       console.log('🔍 Fetching VIX data from Lambda...');
       
-      const response = await callAwsFunction('getVIXData', {});
+      const response = await callAwsFunction('getVIXData', {symbols: selectedCompanies.map(c => c.symbol)});
       
       console.log('📊 Raw VIX Lambda Response:', response);
       
