@@ -3543,3 +3543,4 @@ VIX portfolio-level metrics are displayed in Section 5 (ForwardRiskCard) and Sec
       />
     </div>
   );
+}
