@@ -249,14 +249,14 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={currentResult.assetImpacts} layout="vertical" margin={{ left: 10, right: 10 }}>
+                  <ResponsiveContainer width="100%" height={350}>
+                    <BarChart data={currentResult.assetImpacts} layout="vertical" margin={{ left: 10, right: 10, bottom: 30 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis 
                         type="number" 
                         unit="%" 
                         tick={{ fontSize: 12 }}
-                        label={{ value: 'Projected Decline (%)', position: 'insideBottom', offset: -5, style: { fontSize: 11 } }}
+                        label={{ value: 'Projected Decline (%)', position: 'bottom', offset: 20, style: { fontSize: 12, fontWeight: 600 } }}
                       />
                       <YAxis 
                         type="category" 
