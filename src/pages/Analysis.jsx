@@ -162,6 +162,8 @@ export default function Analysis() {
           riskLevel: vixResponse.riskLevel ?? vixResponse.vix?.riskLevel ?? "Low",
           dataSource: vixResponse.dataSource ?? vixResponse.vix?.dataSource ?? "Lambda",
           timestamp: vixResponse.timestamp ?? vixResponse.vix?.timestamp ?? new Date().toISOString(),
+          historicalVol: vixResponse.historicalVol ?? vixResponse.vix?.historicalVol ?? null,
+          baseExpectedReturn: vixResponse.baseExpectedReturn ?? vixResponse.vix?.baseExpectedReturn ?? null,
           historicalData: vixResponse.historicalData ?? vixResponse.vix?.historicalData ?? null
         });
         return;
