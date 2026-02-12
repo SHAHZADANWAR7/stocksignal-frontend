@@ -162,7 +162,7 @@ export default function Analysis() {
           riskLevel: vixResponse.riskLevel ?? vixResponse.vix?.riskLevel ?? "Low",
           dataSource: vixResponse.dataSource ?? vixResponse.vix?.dataSource ?? "Lambda",
           timestamp: vixResponse.timestamp ?? vixResponse.vix?.timestamp ?? new Date().toISOString(),
-          historicalVol: vixResponse.historicalVol ?? vixResponse.vix?.historicalVol ?? null,
+          historicalVol: vixResponse.historicalVol ?? vixResponse.vix?.historicalVol ?? vixResponse.impliedAnnualVol ?? 18,
           baseExpectedReturn: vixResponse.baseExpectedReturn ?? vixResponse.vix?.baseExpectedReturn ?? null,
           historicalData: vixResponse.historicalData ?? vixResponse.vix?.historicalData ?? null
         });
@@ -179,6 +179,7 @@ export default function Analysis() {
         impliedAnnualVol: 18,
         regime: 'normal',
         regimeDescription: 'Normal volatility (error fallback)',
+        historicalVol: 18,
         riskLevel: 'Low',
         dataSource: 'error_fallback',
         timestamp: new Date().toISOString()
