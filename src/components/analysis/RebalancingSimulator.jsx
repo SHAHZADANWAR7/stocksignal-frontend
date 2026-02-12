@@ -47,7 +47,7 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
     if (companies && initialWeights) {
       calculateRebalancing();
     }
-  }, [companies, initialWeights]);
+  }, [companies, initialWeights, qualityScore, vixData]);
   
   const calculateRebalancing = () => {
     // Dynamic threshold based on Quality Score (Sync with Risk Card)
@@ -64,10 +64,10 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
   
   // Adjust drift volatility based on VIX regime
   const volMultiplier = vixData?.regime === "high" ? 1.5 : (vixData?.regime === "low" ? 0.7 : 1.0);
-  const driftData = simulatePortfolioDrift(companies, initialWeights, 36);
-  const dcaComparison = compareDCAvsLumpSum(10000, 500, expectedReturn, volatility, 10);
-  const panicImpact = calculatePanicSellingImpact(expectedReturn, volatility, 10);
-  const optimalThreshold = calculateOptimalThreshold(companies, initialWeights, 5);
+  const driftData = simulatePortfolioDrift(companies, initialWeights, 36, volMultiplier);
+  const dcaComparison = compareDCAvsLumpSum(10000, 500, expectedReturn, volatility * volMultiplier, 10);
+  const panicImpact = calculatePanicSellingImpact(expectedReturn, volatility * volMultiplier, 10);
+  const optimalThreshold = calculateOptimalThreshold(companies, initialWeights, dynamicThreshold);
   
   const driftChartData = driftData.map(snapshot => {
     const dataPoint = { month: snapshot.month };
