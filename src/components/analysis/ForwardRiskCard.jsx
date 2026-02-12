@@ -227,7 +227,7 @@ export default function ForwardRiskCard({
               <TooltipContent className="max-w-md">
                 <p className="text-xs leading-relaxed">
                   <strong>Portfolio Volatility Blend:</strong><br/>
-                  Historical: {typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% (weighted average of asset volatilities)<br/>
+                 Historical: {vixData.historicalVol ? vixData.historicalVol.toFixed(1) : (typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available")}% (verified historical volatility)<br/>
                   VIX-Implied: {typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}% × portfolio beta<br/>
                   Forward: {typeof forwardRiskMetrics.forwardRisk === "number" && Number.isFinite(forwardRiskMetrics.forwardRisk) ? forwardRiskMetrics.forwardRisk : "Not Available"}% = 0.6×{typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% + 0.4×VIX-implied<br/><br/>
                   Regime: {vixData.regime} adds correlation surge factor
