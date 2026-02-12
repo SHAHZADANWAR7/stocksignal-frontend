@@ -141,7 +141,12 @@ export default function Analysis() {
         vixResponse = JSON.parse(response);
       } else if (response.body) {
         vixResponse = typeof response.body === 'string' 
-          ? JSON.parse(response.body) 
+          ? JSON.parse(response.body)
+          : response.body;
+      } else {
+        vixResponse = response;
+      }
+      
       // Handle both success and fallback cases
       if (vixResponse.success || vixResponse.currentVIX) {
         setVixData({
@@ -161,7 +166,6 @@ export default function Analysis() {
         });
         return;
       }
-    }
 
     } catch (error) {
       console.error('❌ VIX Lambda Error:', error);
@@ -216,7 +220,6 @@ export default function Analysis() {
       const response = await callAwsFunction('getCompanies', {});
       
       console.log("📊 getCompanies response:", response);
-      
       // Handle response format (companies should have items array)
       const companiesData = response.items || response.companies || [];
       const indexFundsData = response.index_funds || [];
@@ -3540,4 +3543,3 @@ VIX portfolio-level metrics are displayed in Section 5 (ForwardRiskCard) and Sec
       />
     </div>
   );
-}
