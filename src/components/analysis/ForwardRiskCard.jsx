@@ -79,7 +79,11 @@ export default function ForwardRiskCard({
   }));
   
   // Calculate return adjustment
-  const returnAdj = adjustExpectedReturn(expectedReturn, vixData.regime, vixData.currentVIX || vixData.current);
+  const returnAdj = adjustExpectedReturn(
+  vixData.baseExpectedReturn ?? expectedReturn, 
+  vixData.regime, 
+  vixData.currentVIX || vixData.current
+);
   
   return (
     <Card className="border-2 border-slate-200 shadow-xl bg-white rounded-xl">
