@@ -70,11 +70,11 @@ export function adjustCorrelationForRegime(baseCorrelation, vixRegime) {
   
   // Regime factors calibrated to historical crisis data
   const regimeFactors = {
-    low: 0.9,       // VIX < 15: correlations slightly lower (complacency)
+    low: 0.7,       // VIX < 15: correlations slightly lower (complacency)
     normal: 1.0,    // VIX 15-25: use base correlation
-    elevated: 1.15, // VIX 25-35: correlations increase by 15%
-    high: 1.3,      // VIX 35-40: correlations surge by 30% (crisis mode)
-    extreme: 1.4    // VIX > 40: extreme correlation surge
+    elevated: 1.2, // VIX 25-35: correlations increase by 15%
+    high: 1.5,      // VIX 35-40: correlations surge by 30% (crisis mode)
+    extreme: 2.0    // VIX > 40: extreme correlation surge
   };
   
   const factor = regimeFactors[cleanRegime] || 1.0;

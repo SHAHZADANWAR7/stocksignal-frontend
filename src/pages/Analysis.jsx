@@ -1735,20 +1735,20 @@ If analyzing similar companies (same sector), focus on:
     analysisResult.maximum_return_portfolio) ? [
     { 
       name: "Optimal", 
-      return: typeof analysisResult.optimal_portfolio.expected_return === "number" && Number.isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available",
-      risk: typeof analysisResult.optimal_portfolio.risk === "number" && Number.isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available",
+      return: typeof analysisResult?.optimal_portfolio?.expected_return === "number" && Number.isFinite(analysisResult?.optimal_portfolio?.expected_return) ? analysisResult?.optimal_portfolio?.expected_return.toFixed(2) : "Not Available",
+      risk: typeof analysisResult?.optimal_portfolio?.risk === "number" && Number.isFinite(analysisResult?.optimal_portfolio?.risk) ? analysisResult?.optimal_portfolio?.risk.toFixed(2) : "Not Available",
       sharpe: typeof analysisResult.optimal_portfolio.sharpe_ratio === "number" && Number.isFinite(analysisResult.optimal_portfolio.sharpe_ratio) ? analysisResult.optimal_portfolio.sharpe_ratio.toFixed(3) : "Not Available"
     },
     { 
       name: "Min Variance", 
       return: typeof analysisResult.minimum_variance_portfolio.expected_return === "number" && Number.isFinite(analysisResult.minimum_variance_portfolio.expected_return) ? analysisResult.minimum_variance_portfolio.expected_return.toFixed(2) : "Not Available",
-      risk: typeof analysisResult.minimum_variance_portfolio.risk === "number" && Number.isFinite(analysisResult.minimum_variance_portfolio.risk) ? analysisResult.minimum_variance_portfolio.risk.toFixed(2) : "Not Available",
+      risk: typeof analysisResult?.minimum_variance_portfolio?.risk === "number" && Number.isFinite(analysisResult?.minimum_variance_portfolio?.risk) ? analysisResult?.minimum_variance_portfolio?.risk.toFixed(2) : "Not Available",
       sharpe: typeof analysisResult.minimum_variance_portfolio.sharpe_ratio === "number" && Number.isFinite(analysisResult.minimum_variance_portfolio.sharpe_ratio) ? analysisResult.minimum_variance_portfolio.sharpe_ratio.toFixed(3) : "Not Available"
     },
     { 
       name: "Max Return", 
       return: typeof analysisResult.maximum_return_portfolio.expected_return === "number" && Number.isFinite(analysisResult.maximum_return_portfolio.expected_return) ? analysisResult.maximum_return_portfolio.expected_return.toFixed(2) : "Not Available",
-      risk: typeof analysisResult.maximum_return_portfolio.risk === "number" && Number.isFinite(analysisResult.maximum_return_portfolio.risk) ? analysisResult.maximum_return_portfolio.risk.toFixed(2) : "Not Available",
+      risk: typeof analysisResult?.maximum_return_portfolio?.risk === "number" && Number.isFinite(analysisResult?.maximum_return_portfolio?.risk) ? analysisResult?.maximum_return_portfolio?.risk.toFixed(2) : "Not Available",
       sharpe: typeof analysisResult.maximum_return_portfolio.sharpe_ratio === "number" && Number.isFinite(analysisResult.maximum_return_portfolio.sharpe_ratio) ? analysisResult.maximum_return_portfolio.sharpe_ratio.toFixed(3) : "Not Available"
     }
   ] : [];
@@ -1996,7 +1996,7 @@ If analyzing similar companies (same sector), focus on:
               <SessionChangeSummary 
                 currentMetrics={{
                   portfolioBeta: analysisResult.optimal_portfolio?.beta,
-                  riskLevel: analysisResult.optimal_portfolio?.risk ? classifyRiskLevel(analysisResult.optimal_portfolio.risk).level : null,
+                  riskLevel: analysisResult.optimal_portfolio?.risk ? classifyRiskLevel(analysisResult?.optimal_portfolio?.risk).level : null,
                   volatilityRegime: 'normal',
                   lastDataRefresh: new Date().toISOString()
                 }}
@@ -2287,8 +2287,8 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
               {/* Quality vs Risk Visualization */}
               {analysisResult.portfolio_quality && analysisResult.optimal_portfolio && (
                 <QualityVsRiskVisualization
-                  qualityScore={analysisResult.portfolio_quality.qualityScore}
-                  portfolioRisk={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
+                  qualityScore={analysisResult?.portfolio_quality?.qualityScore}
+                  portfolioRisk={analysisResult?.minimum_variance_portfolio?.risk || 15}
                   expectedDrawdown={analysisResult.optimal_portfolio.expectedDrawdown || -85}
                   avgSharpe={analysisResult.portfolio_quality.avgSharpe}
                   avgCorrelation={analysisResult.portfolio_quality.avgCorrelation}
@@ -2300,46 +2300,46 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
               {/* Phase 2: Stress Testing & Tail Risk */}
               <StressTestingCard
                 companies={analysisResult.companies}
-                weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
-                portfolioRisk={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
-                expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
+                weights={Object.values(analysisResult?.optimal_portfolio?.allocations || {}).map(a => (a < 1 ? a : a / 100))}
+                portfolioRisk={analysisResult?.maximum_return_portfolio?.risk || 25}
+                expectedReturn={Number(analysisResult?.optimal_portfolio?.expected_return) || 8}
               />
 
               {/* Consecutive Crisis Scenarios */}
               <ConsecutiveCrashScenario
                 companies={analysisResult.companies}
-                weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
-                portfolioRisk={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
-                expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
+                weights={Object.values(analysisResult?.optimal_portfolio?.allocations || {}).map(a => (a < 1 ? a : a / 100))}
+                portfolioRisk={analysisResult?.optimal_portfolio?.risk || 18}
+                expectedReturn={Number(analysisResult?.optimal_portfolio?.expected_return) || 8}
               />
               
               <ModelLimitationsDisclosure modelType="stress_testing" />
 
               {/* Phase 3: Rebalancing & Behavioral Analysis */}
               <RebalancingSimulator
-                qualityScore={analysisResult.portfolio_quality.qualityScore}
+                qualityScore={analysisResult?.portfolio_quality?.qualityScore}
                 vixData={vixData}
-                initialWeights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
-                expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
+                initialWeights={Object.values(analysisResult?.optimal_portfolio?.allocations || {}).map(a => (a < 1 ? a : a / 100))}
+                expectedReturn={Number(analysisResult?.optimal_portfolio?.expected_return) || 8}
                 volatility={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
               />
 
               {/* ✅ Phase 4: Forward-Looking Risk Analysis (VIX-ADJUSTED) */}
               <ForwardRiskCard
                 companies={analysisResult.companies}
-                weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
+                weights={Object.values(analysisResult?.optimal_portfolio?.allocations || {}).map(a => (a < 1 ? a : a / 100))}
                 correlationMatrix={getCorrelationMatrix(analysisResult.companies)}
-                portfolioRisk={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
-                expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
-                qualityScore={analysisResult.portfolio_quality.qualityScore}
+                portfolioRisk={analysisResult?.optimal_portfolio?.risk || 18}
+                expectedReturn={Number(analysisResult?.optimal_portfolio?.expected_return) || 8}
+                qualityScore={analysisResult?.portfolio_quality?.qualityScore}
                 vixData={vixData}
                 forwardRiskMetrics={analysisResult.forward_risk_metrics?.optimal}
               />
 
               {/* Portfolio Storytelling with Tail Events */}
               <PortfolioStorytellingChart
-                portfolioReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
-                portfolioRisk={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
+                portfolioReturn={typeof analysisResult?.optimal_portfolio?.expected_return === "number" && isFinite(analysisResult?.optimal_portfolio?.expected_return) ? analysisResult?.optimal_portfolio?.expected_return.toFixed(2) : "Not Available"}
+                portfolioRisk={analysisResult?.optimal_portfolio?.risk || 18}
                 companies={analysisResult.companies}
                 maxDrawdown={analysisResult.optimal_portfolio.expectedDrawdown}
                 recoveryMonths={36}
@@ -2348,15 +2348,15 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
 
               {/* Confidence Bands */}
               <ConfidenceBandsChart
-                portfolioReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
-                portfolioRisk={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
+                portfolioReturn={typeof analysisResult?.optimal_portfolio?.expected_return === "number" && isFinite(analysisResult?.optimal_portfolio?.expected_return) ? analysisResult?.optimal_portfolio?.expected_return.toFixed(2) : "Not Available"}
+                portfolioRisk={analysisResult?.optimal_portfolio?.risk || 18}
                 investmentAmount={parseFloat(investmentAmount)}
                 monthlyContribution={parseFloat(monthlyContribution)}
               />
 
               {/* Transaction Costs */}
               <TransactionCostCard
-                allocations={analysisResult.optimal_portfolio.allocations}
+                allocations={analysisResult?.optimal_portfolio?.allocations}
                 companies={analysisResult.companies}
                 investmentAmount={parseFloat(investmentAmount)}
               />
@@ -2470,13 +2470,13 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
                     <div className="bg-blue-50/50 rounded-lg p-3">
                     <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">Modeled Base-Case Return</p>
                     <p className={`text-2xl md:text-3xl font-bold tabular-nums ${
-                    (analysisResult.optimal_portfolio.expected_return || 0) >= 0 
+                    (analysisResult?.optimal_portfolio?.expected_return || 0) >= 0 
                     ? 'text-blue-600' 
                     : 'text-rose-600'
                     }`}>
-                    {typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}%
+                    {typeof analysisResult?.optimal_portfolio?.expected_return === "number" && isFinite(analysisResult?.optimal_portfolio?.expected_return) ? analysisResult?.optimal_portfolio?.expected_return.toFixed(2) : "Not Available"}%
                     </p>
-                      {(analysisResult.optimal_portfolio.expected_return || 0) < 0 && (
+                      {(analysisResult?.optimal_portfolio?.expected_return || 0) < 0 && (
                         <p className="text-xs text-rose-600 mt-1 font-semibold">
                           ⚠️ Negative modeled return
                         </p>
@@ -2485,7 +2485,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
                     <div className="bg-amber-50/50 rounded-lg p-3">
                       <p className="text-xs md:text-sm text-slate-600 mb-1.5 font-medium">Volatility (σ)</p>
                       <p className="text-xl md:text-2xl font-bold text-slate-900 tabular-nums">
-                        {typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}%
+                        {typeof analysisResult?.optimal_portfolio?.risk === "number" && isFinite(analysisResult?.optimal_portfolio?.risk) ? analysisResult?.optimal_portfolio?.risk.toFixed(2) : "Not Available"}%
                       </p>
                     </div>
                     <div className="bg-indigo-50/50 rounded-lg p-3">
@@ -2550,7 +2550,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
                             {analysisResult.forward_risk_metrics?.minimum_variance ? 'Historical Risk' : 'Volatility (σ)'}
                           </p>
                           <p className="text-xl md:text-2xl font-bold text-emerald-900 tabular-nums">
-                            {typeof analysisResult.minimum_variance_portfolio.risk === "number" && isFinite(analysisResult.minimum_variance_portfolio.risk) ? analysisResult.minimum_variance_portfolio.risk.toFixed(2) : "Not Available"}%
+                            {typeof analysisResult?.minimum_variance_portfolio?.risk === "number" && isFinite(analysisResult?.minimum_variance_portfolio?.risk) ? analysisResult?.minimum_variance_portfolio?.risk.toFixed(2) : "Not Available"}%
                           </p>
                           {/* ✅ NEW: Show forward-looking risk if available */}
                           {analysisResult.forward_risk_metrics?.minimum_variance && (
@@ -2613,7 +2613,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
                             {analysisResult.forward_risk_metrics?.maximum_return ? 'Historical Risk' : 'Volatility (σ)'}
                           </p>
                           <p className="text-xl md:text-2xl font-bold text-slate-900 tabular-nums">
-                            {typeof analysisResult.maximum_return_portfolio.risk === "number" && isFinite(analysisResult.maximum_return_portfolio.risk) ? analysisResult.maximum_return_portfolio.risk.toFixed(2) : "Not Available"}%
+                            {typeof analysisResult?.maximum_return_portfolio?.risk === "number" && isFinite(analysisResult?.maximum_return_portfolio?.risk) ? analysisResult?.maximum_return_portfolio?.risk.toFixed(2) : "Not Available"}%
                           </p>
                           {/* ✅ NEW: Show forward-looking risk if available */}
                           {analysisResult.forward_risk_metrics?.maximum_return && (
@@ -2821,7 +2821,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
                           <GoalProbabilityCard
                             principal={principal}
                             monthlyContribution={monthly}
-                            expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
+                            expectedReturn={Number(analysisResult?.optimal_portfolio?.expected_return) || 8}
                             baseVolatility={portfolioRisk}
                             goalAmount={goal}
                             months={monthsToGoal}
