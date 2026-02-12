@@ -494,7 +494,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                   Crash Probability Analysis
                 </CardTitle>
                 <p className="text-sm text-purple-700 mt-1">
-                  Based on portfolio volatility ({typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}%), beta, and fat-tailed distribution
+                  Based on portfolio volatility ({Number(portfolioRisk).toFixed(1)}%), beta, and fat-tailed distribution
                 </p>
               </div>
               <TooltipProvider>
@@ -505,7 +505,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                   <TooltipContent className="max-w-md">
                     <p className="text-xs leading-relaxed">
                       <strong>Calculation Methodology:</strong><br/>
-                      Uses portfolio annualized volatility ({typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}%), expected return ({typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}%), 
+                      Uses portfolio annualized volatility ({Number(portfolioRisk).toFixed(1)}%), expected return ({typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}%), 
                       and fat-tailed distribution adjustments to estimate probability of specific decline thresholds.<br/><br/>
                       10-year probability calculated as: 1 - (1 - annual_prob)^10<br/><br/>
                       These are statistical estimates, not predictions. Actual outcomes vary.
@@ -531,7 +531,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="text-xs">Probability of portfolio declining ≥20% in any given year based on {typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% volatility</p>
+                        <p className="text-xs">Probability of portfolio declining ≥20% in any given year based on {Number(portfolioRisk).toFixed(1)}% volatility</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -595,7 +595,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
             <div className="mt-4 p-3 bg-white/60 rounded-lg border border-purple-200">
               <p className="text-xs text-purple-900">
                 <strong>Note:</strong> Probabilities calculated using z-scores and fat-tailed distribution adjustments. 
-                Portfolio volatility: {typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}%, Expected return: {typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}%. 
+                Portfolio volatility: {Number(portfolioRisk).toFixed(1)}%, Expected return: {typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}%. 
                 These are statistical estimates for stress testing, not predictions of actual outcomes.
               </p>
             </div>
