@@ -2302,7 +2302,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
                 companies={analysisResult.companies}
                 weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
                 portfolioRisk={Number(vixData?.historicalVol) || 18}
-                expectedReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
+                expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
               />
 
               {/* Consecutive Crisis Scenarios */}
@@ -2310,7 +2310,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
                 companies={analysisResult.companies}
                 weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
                 portfolioRisk={Number(vixData?.historicalVol) || 18}
-                expectedReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
+                expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
               />
               
               <ModelLimitationsDisclosure modelType="stress_testing" />
@@ -2319,7 +2319,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
               <RebalancingSimulator
                 companies={analysisResult.companies}
                 initialWeights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
-                expectedReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
+                expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
                 volatility={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
               />
 
@@ -2329,7 +2329,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
                 weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
                 correlationMatrix={getCorrelationMatrix(analysisResult.companies)}
                 portfolioRisk={Number(vixData?.historicalVol) || 18}
-                expectedReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
+                expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
                 vixData={analysisResult.vix_data}
                 forwardRiskMetrics={analysisResult.forward_risk_metrics?.optimal}
               />
@@ -2819,7 +2819,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
                           <GoalProbabilityCard
                             principal={principal}
                             monthlyContribution={monthly}
-                            expectedReturn={expectedReturn}
+                            expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
                             baseVolatility={portfolioRisk}
                             goalAmount={goal}
                             months={monthsToGoal}

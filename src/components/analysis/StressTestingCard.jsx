@@ -505,7 +505,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                   <TooltipContent className="max-w-md">
                     <p className="text-xs leading-relaxed">
                       <strong>Calculation Methodology:</strong><br/>
-                      Uses portfolio annualized volatility ({Number(portfolioRisk).toFixed(1)}%), expected return ({typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}%), 
+                      Uses portfolio annualized volatility ({Number(portfolioRisk).toFixed(1)}%), expected return ({Number(expectedReturn).toFixed(1)}%), 
                       and fat-tailed distribution adjustments to estimate probability of specific decline thresholds.<br/><br/>
                       10-year probability calculated as: 1 - (1 - annual_prob)^10<br/><br/>
                       These are statistical estimates, not predictions. Actual outcomes vary.
@@ -595,7 +595,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
             <div className="mt-4 p-3 bg-white/60 rounded-lg border border-purple-200">
               <p className="text-xs text-purple-900">
                 <strong>Note:</strong> Probabilities calculated using z-scores and fat-tailed distribution adjustments. 
-                Portfolio volatility: {Number(portfolioRisk).toFixed(1)}%, Expected return: {typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}%. 
+                Portfolio volatility: {Number(portfolioRisk).toFixed(1)}%, Expected return: {Number(expectedReturn).toFixed(1)}%. 
                 These are statistical estimates for stress testing, not predictions of actual outcomes.
               </p>
             </div>
