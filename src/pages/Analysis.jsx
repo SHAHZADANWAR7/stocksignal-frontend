@@ -2301,7 +2301,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
               <StressTestingCard
                 companies={analysisResult.companies}
                 weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
-                portfolioRisk={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
+                portfolioRisk={Number(vixData?.historicalVol) || 18}
                 expectedReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
               />
 
@@ -2309,7 +2309,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
               <ConsecutiveCrashScenario
                 companies={analysisResult.companies}
                 weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
-                portfolioRisk={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
+                portfolioRisk={Number(vixData?.historicalVol) || 18}
                 expectedReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
               />
               
@@ -2328,7 +2328,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
                 companies={analysisResult.companies}
                 weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
                 correlationMatrix={getCorrelationMatrix(analysisResult.companies)}
-                portfolioRisk={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
+                portfolioRisk={Number(vixData?.historicalVol) || 18}
                 expectedReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
                 vixData={analysisResult.vix_data}
                 forwardRiskMetrics={analysisResult.forward_risk_metrics?.optimal}
@@ -2337,7 +2337,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
               {/* Portfolio Storytelling with Tail Events */}
               <PortfolioStorytellingChart
                 portfolioReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
-                portfolioRisk={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
+                portfolioRisk={Number(vixData?.historicalVol) || 18}
                 companies={analysisResult.companies}
                 maxDrawdown={analysisResult.optimal_portfolio.expectedDrawdown}
                 recoveryMonths={36}
@@ -2347,7 +2347,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
               {/* Confidence Bands */}
               <ConfidenceBandsChart
                 portfolioReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
-                portfolioRisk={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
+                portfolioRisk={Number(vixData?.historicalVol) || 18}
                 investmentAmount={parseFloat(investmentAmount)}
                 monthlyContribution={parseFloat(monthlyContribution)}
               />
