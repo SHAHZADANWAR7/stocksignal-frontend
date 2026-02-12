@@ -94,6 +94,8 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
               <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
                 Quality Sync: {qualityScore}%
               </Badge>
+            </div>
+          )}
         <p className="text-white/90 text-sm mt-2">
           Understand allocation drift, rebalancing benefits, and behavioral risks
         </p>
