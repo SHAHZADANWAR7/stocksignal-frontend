@@ -274,7 +274,7 @@ export default function ForwardRiskCard({
               <TooltipContent className="max-w-md">
                 <p className="text-xs leading-relaxed">
                   <strong>VIX Regime Impact on Returns:</strong><br/>
-                  Base return: {typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}% (CAPM + historical blend)<br/>
+                  Base return: {vixData.baseExpectedReturn ? vixData.baseExpectedReturn.toFixed(1) : (typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available")}% (lambda-calculated base return)<br/>
                   VIX adjustment: {typeof returnAdj.adjustment === "number" && Number.isFinite(returnAdj.adjustment) ? (returnAdj.adjustment > 0 ? '+' : '') + returnAdj.adjustment : "Not Available"}% ({vixData.regime} regime)<br/><br/>
                   High VIX → higher forward returns (fear = opportunity)<br/>
                   Low VIX → mean reversion downward (complacency risk)<br/><br/>
