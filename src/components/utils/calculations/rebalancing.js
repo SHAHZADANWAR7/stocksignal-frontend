@@ -31,7 +31,7 @@ import {
  * @param {number} months - Simulation horizon in months
  * @returns {Array} Drift snapshots at quarterly intervals
  */
-export function simulatePortfolioDrift(companies, initialWeights, months = 36) {
+export function simulatePortfolioDrift(companies, initialWeights, months = 36, volMultiplier = 1) {
   // Validate inputs
   const weightSum = initialWeights.reduce((a, b) => a + b, 0);
   if (Math.abs(weightSum - 1.0) > 0.01) {
@@ -56,7 +56,7 @@ export function simulatePortfolioDrift(companies, initialWeights, months = 36) {
           const u1 = Math.random();
           const u2 = Math.random();
           const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-          const monthReturn = monthlyReturns[i] + z * monthlyVols[i];
+          const monthReturn = monthlyReturns[i] + z * monthlyVols[i] * volMultiplier;
           value *= (1 + monthReturn);
         }
         return Math.max(0, value);
@@ -305,13 +305,13 @@ export function calculateRebalancingImpact(companies, initialWeights, years = 10
  * @param {number} years - Investment horizon
  * @returns {Object} Comparison results with median, percentiles, win rate
  */
-export function compareDCAvsLumpSum(principal, monthlyAmount, expectedReturn, volatility, years = 10) {
+export function compareDCAvsLumpSum(principal, monthlyAmount, expectedReturn, volatility, years = 10, volMultiplier = 1) {
   const simulations = 5000;
   const dcaResults = [];
   const lumpSumResults = [];
   
   const monthlyReturn = expectedReturn / 12 / 100;
-  const monthlyVol = volatility / Math.sqrt(12) / 100;
+  const monthlyVol =  (volatility * volMultiplier) / Math.sqrt(12) / 100;
   
   for (let sim = 0; sim < simulations; sim++) {
     // DCA Strategy: Invest principal immediately + monthly contributions
@@ -398,10 +398,10 @@ export function compareDCAvsLumpSum(principal, monthlyAmount, expectedReturn, vo
  * @param {number} years - Investment horizon
  * @returns {Object} Panic selling impact analysis
  */
-export function calculatePanicSellingImpact(expectedReturn, volatility, years = 10) {
+export function calculatePanicSellingImpact(expectedReturn, volatility, years = 10, volMultiplier = 1) {
   const simulations = 3000;
   const monthlyReturn = expectedReturn / 12 / 100;
-  const monthlyVol = volatility / Math.sqrt(12) / 100;
+  const monthlyVol =  (volatility * volMultiplier) / Math.sqrt(12) / 100;
   
   const stayInvestedResults = [];
   const panicSellResults = [];
