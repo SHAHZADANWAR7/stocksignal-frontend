@@ -2287,7 +2287,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
               {analysisResult.portfolio_quality && analysisResult.optimal_portfolio && (
                 <QualityVsRiskVisualization
                   qualityScore={analysisResult.portfolio_quality.qualityScore}
-                  portfolioRisk={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
+                  portfolioRisk={vixData?.historicalVol ? vixData.historicalVol.toFixed(1) : (typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available")}
                   expectedDrawdown={analysisResult.optimal_portfolio.expectedDrawdown || -85}
                   avgSharpe={analysisResult.portfolio_quality.avgSharpe}
                   avgCorrelation={analysisResult.portfolio_quality.avgCorrelation}
