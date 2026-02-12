@@ -131,7 +131,7 @@ export default function Analysis() {
     try {
       console.log('🔍 Fetching VIX data from Lambda...');
       
-      const response = await callAwsFunction('getVIXData', {symbols: selectedCompanies.map(c => c.symbol)});
+      const response = await callAwsFunction('getVIXData', {symbols: companies.map(c => c.symbol)});
       
       console.log('📊 Raw VIX Lambda Response:', response);
       
@@ -1216,7 +1216,7 @@ If analyzing similar companies (same sector), focus on:
 
       // Update Company records with fresh data (skip index funds as they don't have the same schema)
       const updatePromises = result.companies.map(companyData => {
-        const companyRecord = selectedCompanies.find(c => c.symbol === companyData.symbol);
+        const companyRecord = companies.find(c => c.symbol === companyData.symbol);
         if (companyRecord && !companyRecord.isIndexFund) {
           // CRITICAL: Build update object with explicit exclusions
           // NEVER include market_cap, market_cap_raw, market_cap_category - these cause validation errors
