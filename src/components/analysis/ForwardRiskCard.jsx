@@ -193,7 +193,7 @@ export default function ForwardRiskCard({
                     <div className="space-y-3 md:space-y-4">
                       <div className="p-3 md:p-4 bg-white rounded-xl border border-purple-200">
                         <p className="text-xs md:text-sm text-slate-600 mb-1 truncate">Historical Volatility (σ)</p>
-                        <p className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 break-words tabular-nums">{typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}%</p>
+                        <p className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 break-words tabular-nums">{vixData.historicalVol ? vixData.historicalVol.toFixed(1) : (typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available")}%</p>
                         <p className="text-[10px] md:text-xs text-slate-500 mt-1">Trailing 252-day annualized</p>
                       </div>
                       
@@ -247,7 +247,7 @@ export default function ForwardRiskCard({
                     <div className="space-y-3 md:space-y-4">
                       <div className="p-3 md:p-4 bg-white rounded-xl border border-teal-200">
                         <p className="text-xs md:text-sm text-slate-600 mb-1 truncate">Base Expected Return</p>
-                        <p className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 break-words tabular-nums">{typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available"}%</p>
+                        <p className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-900 break-words tabular-nums">{vixData.baseExpectedReturn ? vixData.baseExpectedReturn.toFixed(1) : (typeof expectedReturn === "number" && Number.isFinite(expectedReturn) ? expectedReturn.toFixed(1) : "Not Available")}%</p>
                         <p className="text-[10px] md:text-xs text-slate-500 mt-1">CAPM + Historical</p>
                       </div>
                       
