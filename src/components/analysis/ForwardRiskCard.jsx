@@ -444,10 +444,10 @@ export default function ForwardRiskCard({ qualityScore,
                       <TooltipContent className="max-w-md">
                         <p className="text-xs leading-relaxed">
                           <strong>Regime Correlation Factors:</strong><br/>
-                          • Low (VIX &lt;15): 0.9× base (enhanced diversification)<br/>
-                          • Normal (VIX 15-25): 1.0× base (no adjustment)<br/>
-                          • Elevated (VIX 25-35): 1.15× base (+15% surge)<br/>
-                          • High (VIX &gt;35): 1.3× base (+30% crisis surge)<br/><br/>
+                          • Low (VIX &lt;12): 0.7× base (enhanced diversification)<br/>
+                          • Normal (VIX 12-20): 1.0× base (no adjustment)<br/>
+                          • Elevated (VIX 20-25): 1.2× base (+15% surge)<br/>
+                          • High (VIX 25-30): 1.5×, Extreme (VIX &gt;30): 2.0× base (+30% crisis surge)<br/><br/>
                           Current VIX: {typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}% → {vixData.regime} regime<br/><br/>
                           Academic: Ang & Chen (2002), Longin & Solnik (2001)
                         </p>
@@ -479,7 +479,7 @@ export default function ForwardRiskCard({ qualityScore,
         <div className="p-4 bg-slate-50 rounded-xl border-2 border-slate-200">
           <p className="text-xs text-slate-600 leading-relaxed">
             <strong>Methodology (100% Verified):</strong> Forward-looking risk blends historical volatility (60%) with VIX-implied volatility (40%) scaled by verified 5-year beta. 
-            VIX data from CBOE real-time market feed. Market regime thresholds: Low (&lt;15), Normal (15-25), Elevated (25-35), High (&gt;35). 
+            VIX data from CBOE real-time market feed. Market regime thresholds: Low (&lt;12), Normal (12-20), Elevated (20-25), High (25-30), Extreme (&gt;30). 
             Correlation adjustments based on empirical crisis behavior (Ang & Chen 2002, Longin & Solnik 2001). 
             Return adjustments reflect mean-reversion and VIX risk premium (Campbell & Shiller 1988, Bekaert & Hoerova 2014).<br/><br/>
             <strong>Current Data:</strong> VIX {typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}% • 1Y Avg {typeof (vixData.average1Year || vixData.avgVIX) === "number" && Number.isFinite(vixData.average1Year || vixData.avgVIX) ? (vixData.average1Year || vixData.avgVIX).toFixed(1) : "Not Available"}% • 
