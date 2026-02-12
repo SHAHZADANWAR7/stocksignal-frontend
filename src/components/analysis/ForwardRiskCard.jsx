@@ -40,7 +40,7 @@ import {
  * ✅ REMOVED: base44 import and local VIX fetching
  * ✅ VIX INTEGRATION COMPLETE
  */
-export default function ForwardRiskCard({ 
+export default function ForwardRiskCard({ qualityScore,  
   companies, 
   weights, 
   correlationMatrix, 
@@ -71,11 +71,13 @@ export default function ForwardRiskCard({
   };
   
   // Build chart data
+  // Adjust for Quality: Speculative portfolios face higher "Tail Risk"
+  const qualityMultiplier = qualityScore < 45 ? 1.25 : (qualityScore < 65 ? 1.1 : 1.0);
   const chartData = forwardRiskMetrics.assetAdjustments.map(adj => ({
     symbol: adj.symbol,
     historical: adj.historical,
-    forwardLooking: adj.forwardLooking,
-    delta: adj.delta
+    forwardLooking: adj.forwardLooking * qualityMultiplier,
+    delta: (adj.forwardLooking * qualityMultiplier) - adj.historical
   }));
   
   // Calculate return adjustment
@@ -110,7 +112,7 @@ export default function ForwardRiskCard({
                   <strong>Methodology:</strong><br/>
                   • VIX: CBOE real-time ({typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}%)<br/>
                   • Beta: Yahoo Finance 5-year regression<br/>
-                  • Blend: 60% historical + 40% (VIX × β)<br/>
+                  • Blend: 60% Hist. + 40% (VIX × β) × QualityFactor<br/>
                   • Correlation: Regime-adjusted ({vixData.regime})<br/><br/>
                   Risk-free rate: 4.5%, Market premium: 8.0%
                 </p>

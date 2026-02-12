@@ -37,7 +37,7 @@ import {
   AreaChart
 } from 'recharts';
 
-export default function RebalancingSimulator({ companies, initialWeights, expectedReturn, volatility }) {
+export default function RebalancingSimulator({ companies, initialWeights, expectedReturn, volatility, qualityScore, vixData }) {
   const [activeTab, setActiveTab] = useState('drift');
   const [showDetails, setShowDetails] = useState(false);
   const [rebalancingResults, setRebalancingResults] = useState(null);
@@ -50,9 +50,11 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
   }, [companies, initialWeights]);
   
   const calculateRebalancing = () => {
+    // Dynamic threshold based on Quality Score (Sync with Risk Card)
+    const dynamicThreshold = qualityScore > 70 ? 12 : (qualityScore < 40 ? 5 : 8);
     setIsCalculating(true);
     setTimeout(() => {
-      const results = calculateRebalancingImpact(companies, initialWeights, 10);
+      const results = calculateRebalancingImpact(companies, initialWeights, dynamicThreshold);
       setRebalancingResults(results);
       setIsCalculating(false);
     }, 100);
@@ -60,6 +62,8 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
   
   if (!companies || !initialWeights) return null;
   
+  // Adjust drift volatility based on VIX regime
+  const volMultiplier = vixData?.regime === "high" ? 1.5 : (vixData?.regime === "low" ? 0.7 : 1.0);
   const driftData = simulatePortfolioDrift(companies, initialWeights, 36);
   const dcaComparison = compareDCAvsLumpSum(10000, 500, expectedReturn, volatility, 10);
   const panicImpact = calculatePanicSellingImpact(expectedReturn, volatility, 10);
@@ -82,6 +86,14 @@ export default function RebalancingSimulator({ companies, initialWeights, expect
           <RefreshCw className="w-7 h-7" />
           Rebalancing & Behavioral Analysis
         </CardTitle>
+          {vixData && (
+            <div className="flex gap-2 ml-auto">
+              <Badge variant="outline" className="bg-indigo-100 text-indigo-700 border-indigo-200">
+                Regime: {vixData.regime?.toUpperCase() || "NORMAL"}
+              </Badge>
+              <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
+                Quality Sync: {qualityScore}%
+              </Badge>
         <p className="text-white/90 text-sm mt-2">
           Understand allocation drift, rebalancing benefits, and behavioral risks
         </p>

@@ -2288,7 +2288,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
               {analysisResult.portfolio_quality && analysisResult.optimal_portfolio && (
                 <QualityVsRiskVisualization
                   qualityScore={analysisResult.portfolio_quality.qualityScore}
-                  portfolioRisk={Number(vixData?.historicalVol) || 18}
+                  portfolioRisk={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
                   expectedDrawdown={analysisResult.optimal_portfolio.expectedDrawdown || -85}
                   avgSharpe={analysisResult.portfolio_quality.avgSharpe}
                   avgCorrelation={analysisResult.portfolio_quality.avgCorrelation}
@@ -2301,7 +2301,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
               <StressTestingCard
                 companies={analysisResult.companies}
                 weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
-                portfolioRisk={Number(vixData?.historicalVol) || 18}
+                portfolioRisk={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
                 expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
               />
 
@@ -2309,7 +2309,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
               <ConsecutiveCrashScenario
                 companies={analysisResult.companies}
                 weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
-                portfolioRisk={Number(vixData?.historicalVol) || 18}
+                portfolioRisk={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
                 expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
               />
               
@@ -2317,10 +2317,11 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
 
               {/* Phase 3: Rebalancing & Behavioral Analysis */}
               <RebalancingSimulator
-                companies={analysisResult.companies}
+                qualityScore={analysisResult.portfolio_quality.qualityScore}
+                vixData={vixData}
                 initialWeights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
                 expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
-                volatility={typeof analysisResult.optimal_portfolio.risk === "number" && isFinite(analysisResult.optimal_portfolio.risk) ? analysisResult.optimal_portfolio.risk.toFixed(2) : "Not Available"}
+                volatility={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
               />
 
               {/* ✅ Phase 4: Forward-Looking Risk Analysis (VIX-ADJUSTED) */}
@@ -2328,16 +2329,17 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
                 companies={analysisResult.companies}
                 weights={Object.values(analysisResult.optimal_portfolio.allocations || {}).map(a => (a < 1 ? a : a / 100))}
                 correlationMatrix={getCorrelationMatrix(analysisResult.companies)}
-                portfolioRisk={Number(vixData?.historicalVol) || 18}
+                portfolioRisk={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
                 expectedReturn={Number(analysisResult.optimal_portfolio.expected_return) || 8}
-                vixData={analysisResult.vix_data}
+                qualityScore={analysisResult.portfolio_quality.qualityScore}
+                vixData={vixData}
                 forwardRiskMetrics={analysisResult.forward_risk_metrics?.optimal}
               />
 
               {/* Portfolio Storytelling with Tail Events */}
               <PortfolioStorytellingChart
                 portfolioReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
-                portfolioRisk={Number(vixData?.historicalVol) || 18}
+                portfolioRisk={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
                 companies={analysisResult.companies}
                 maxDrawdown={analysisResult.optimal_portfolio.expectedDrawdown}
                 recoveryMonths={36}
@@ -2347,7 +2349,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
               {/* Confidence Bands */}
               <ConfidenceBandsChart
                 portfolioReturn={typeof analysisResult.optimal_portfolio.expected_return === "number" && isFinite(analysisResult.optimal_portfolio.expected_return) ? analysisResult.optimal_portfolio.expected_return.toFixed(2) : "Not Available"}
-                portfolioRisk={Number(vixData?.historicalVol) || 18}
+                portfolioRisk={Number(vixData?.impliedAnnualVol || vixData?.historicalVol) || 18}
                 investmentAmount={parseFloat(investmentAmount)}
                 monthlyContribution={parseFloat(monthlyContribution)}
               />
@@ -2823,7 +2825,7 @@ ForwardRiskCard component will display VIX-adjusted risk metrics
                             baseVolatility={portfolioRisk}
                             goalAmount={goal}
                             months={monthsToGoal}
-                            vixData={analysisResult.vix_data}
+                            vixData={vixData}
                           />
                           <ModelLimitationsDisclosure modelType="monte_carlo" />
                         </>
