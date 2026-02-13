@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/Table";
-import { Lightbulb, TrendingDown, TrendingUp, Search, RefreshCw, Loader2  } from "lucide-react";
+import { Lightbulb, TrendingDown, TrendingUp, Search, RefreshCw, Loader2 } from "lucide-react";
 import TableSkeleton from "@/components/ui/TableSkeleton"; // Adjust path if TableSkeleton is not in ui/TableSkeleton
 
 export default function Holdings() {
@@ -31,9 +31,24 @@ export default function Holdings() {
       setFilteredHoldings(holdings);
     } else {
       const query = searchQuery.toLowerCase();
-      setFilteredHoldings(holdings.filter(h => h.symbol.toLowerCase().includes(query)));
+      setFilteredHoldings(holdings.filter(h => h.symbol && h.symbol.toLowerCase().includes(query)));
     }
   }, [searchQuery, holdings]);
+
+  // Fix: Convert DynamoDB AttributeValue Asset to Plain JS Object
+  const dynamoItemToJS = (item) => {
+    if (item && item.M) {
+      const out = {};
+      for (const [k, v] of Object.entries(item.M)) {
+        if (v.S !== undefined) out[k] = v.S;
+        else if (v.N !== undefined) out[k] = parseFloat(v.N);
+        else if (v.BOOL !== undefined) out[k] = v.BOOL;
+        else out[k] = v;
+      }
+      return out;
+    }
+    return item;
+  };
 
   const loadHoldings = async () => {
     setIsLoading(true);
@@ -41,9 +56,11 @@ export default function Holdings() {
       const userId = localStorage.getItem('user_id');
       const response = await awsApi.syncPortfolio({ userId });
       if (response && response.assets) {
+        // Convert assets if needed
+        const cleanAssets = response.assets.map(dynamoItemToJS);
         setPortfolio(response);
-        setHoldings(response.assets || []);
-        setFilteredHoldings(response.assets || []);
+        setHoldings(cleanAssets);
+        setFilteredHoldings(cleanAssets);
       }
     } catch (error) {
       console.error("Error loading portfolio:", error);
@@ -134,13 +151,20 @@ export default function Holdings() {
               <Input placeholder="Search by symbol or name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 border-slate-300" />
             </div>
           </Card>
-          {holdings.length > 0 && (
-            <Card className="border-2 border-purple-200 shadow-sm p-4 bg-gradient-to-br from-purple-50 to-pink-50">
-              <Button onClick={explainPortfolio} disabled={isExplaining} className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                {isExplaining ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Explaining...</> : <><Lightbulb className="w-4 h-4 mr-2" />Explain My Portfolio</>}
-              </Button>
-            </Card>
-          )}
+          {/* Always show the Explain button, even if holdings are empty */}
+          <Card className="border-2 border-purple-200 shadow-sm p-4 bg-gradient-to-br from-purple-50 to-pink-50">
+            <Button
+              onClick={explainPortfolio}
+              disabled={isExplaining || holdings.length === 0}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            >
+              {isExplaining ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Explaining...</>
+              ) : (
+                <><Lightbulb className="w-4 h-4 mr-2" />Explain My Portfolio Like I'm 10</>
+              )}
+            </Button>
+          </Card>
         </div>
         {showExplanation && explanation && (
           <Card className="border-2 border-purple-200 shadow-lg bg-gradient-to-br from-purple-50 to-pink-50 mb-6">
