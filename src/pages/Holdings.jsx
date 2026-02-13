@@ -103,6 +103,7 @@ export default function Holdings() {
     return { currentValue, costBasis, gainLoss, gainLossPercent };
   };
 
+  // LOGGING & SAFE RENDER FIX BEGINS ====
   const explainPortfolio = async () => {
     setIsExplaining(true);
     setShowExplanation(true);
@@ -115,13 +116,40 @@ export default function Holdings() {
     try {
       // Updated to invoke the LLM endpoint with the prompt directly
       const result = await awsApi.invokeLLM(prompt);
-      setExplanation(result);
+
+      // LOG THE FULL RESPONSE
+      console.log("LLM Response:", result);
+
+      // Defensive rendering: pick the right result field or show a fallback
+      if (typeof result === "string") {
+        setExplanation(result);
+      } else if (
+        typeof result === "object" &&
+        result !== null
+      ) {
+        // Try most common properties for LLM response
+        let text = "";
+        if (result.response && typeof result.response === "string") {
+          text = result.response;
+        } else if (result.content && typeof result.content === "string") {
+          text = result.content;
+        } else if (result.message && typeof result.message === "string") {
+          text = result.message;
+        } else {
+          // Fallback: Serialize the object to string for debugging (not user-facing)
+          text = "[Unable to parse portfolio explanation]\n" + JSON.stringify(result, null, 2);
+        }
+        setExplanation(text);
+      } else {
+        setExplanation("Unable to interpret explanation response from AI.");
+      }
     } catch (error) {
       console.error("Error explaining:", error);
       setExplanation("Unable to generate explanation.");
     }
     setIsExplaining(false);
   };
+  // LOGGING & SAFE RENDER FIX ENDS ====
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
@@ -173,7 +201,15 @@ export default function Holdings() {
                 <Lightbulb className="w-5 h-5 text-purple-600" />Your Portfolio Explained
               </h3>
               <div className="bg-white rounded-lg p-4">
-                <p className="text-slate-700 whitespace-pre-line leading-relaxed">{explanation}</p>
+                {/* Defensive rendering: always render as a string or show fallback */}
+                <p className="text-slate-700 whitespace-pre-line leading-relaxed">
+                  {typeof explanation === "string"
+                    ? explanation
+                    : (explanation && typeof explanation === "object" && explanation.response
+                      ? explanation.response
+                      : "[Unable to display explanation]")
+                  }
+                </p>
               </div>
             </CardContent>
           </Card>
