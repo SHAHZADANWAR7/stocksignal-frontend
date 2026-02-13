@@ -35,7 +35,7 @@ export default function Holdings() {
     }
   }, [searchQuery, holdings]);
 
-  // Fix: Convert DynamoDB AttributeValue Asset to Plain JS Object
+  // Convert DynamoDB AttributeValue Asset to Plain JS Object
   const dynamoItemToJS = (item) => {
     if (item && item.M) {
       const out = {};
@@ -55,10 +55,10 @@ export default function Holdings() {
     try {
       const userId = localStorage.getItem('user_id');
       const response = await awsApi.syncPortfolio({ userId });
-      if (response && response.assets) {
-        // Convert assets if needed
-        const cleanAssets = response.assets.map(dynamoItemToJS);
-        setPortfolio(response);
+      // Fix: use response.portfolio.assets, not response.assets
+      if (response && response.portfolio && response.portfolio.assets) {
+        const cleanAssets = response.portfolio.assets.map(dynamoItemToJS);
+        setPortfolio(response.portfolio);
         setHoldings(cleanAssets);
         setFilteredHoldings(cleanAssets);
       }
