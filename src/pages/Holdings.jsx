@@ -9,7 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/Table";
 import { Lightbulb, TrendingDown, TrendingUp, Search, RefreshCw, Loader2 } from "lucide-react";
-import TableSkeleton from "@/components/ui/TableSkeleton"; // Adjust path if TableSkeleton is not in ui/TableSkeleton
+import TableSkeleton from "@/components/ui/TableSkeleton";
+
+// === Markdown rendering import added below ===
+import ReactMarkdown from 'react-markdown';
 
 export default function Holdings() {
   const [portfolio, setPortfolio] = useState(null);
@@ -35,7 +38,6 @@ export default function Holdings() {
     }
   }, [searchQuery, holdings]);
 
-  // Convert DynamoDB AttributeValue Asset to Plain JS Object
   const dynamoItemToJS = (item) => {
     if (item && item.M) {
       const out = {};
@@ -55,7 +57,6 @@ export default function Holdings() {
     try {
       const userId = localStorage.getItem('user_id');
       const response = await awsApi.syncPortfolio({ userId });
-      // Fix: use response.portfolio.assets, not response.assets
       if (response && response.portfolio && response.portfolio.assets) {
         const cleanAssets = response.portfolio.assets.map(dynamoItemToJS);
         setPortfolio(response.portfolio);
@@ -103,7 +104,6 @@ export default function Holdings() {
     return { currentValue, costBasis, gainLoss, gainLossPercent };
   };
 
-  // LOGGING & SAFE RENDER FIX BEGINS ====
   const explainPortfolio = async () => {
     setIsExplaining(true);
     setShowExplanation(true);
@@ -114,20 +114,14 @@ export default function Holdings() {
     });
     const prompt = `Explain this portfolio like I'm 10. Simple language, analogies. Portfolio: ${JSON.stringify(holdingsList)} Total: $${totalValue.toLocaleString()}. Why own these? What risks? Why better/worse? What know?`;
     try {
-      // Updated to invoke the LLM endpoint with the prompt directly
       const result = await awsApi.invokeLLM(prompt);
-
-      // LOG THE FULL RESPONSE
       console.log("LLM Response:", result);
-
-      // Defensive rendering: pick the right result field or show a fallback
       if (typeof result === "string") {
         setExplanation(result);
       } else if (
         typeof result === "object" &&
         result !== null
       ) {
-        // Try most common properties for LLM response
         let text = "";
         if (result.response && typeof result.response === "string") {
           text = result.response;
@@ -136,7 +130,6 @@ export default function Holdings() {
         } else if (result.message && typeof result.message === "string") {
           text = result.message;
         } else {
-          // Fallback: Serialize the object to string for debugging (not user-facing)
           text = "[Unable to parse portfolio explanation]\n" + JSON.stringify(result, null, 2);
         }
         setExplanation(text);
@@ -149,7 +142,6 @@ export default function Holdings() {
     }
     setIsExplaining(false);
   };
-  // LOGGING & SAFE RENDER FIX ENDS ====
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
@@ -201,15 +193,15 @@ export default function Holdings() {
                 <Lightbulb className="w-5 h-5 text-purple-600" />Your Portfolio Explained
               </h3>
               <div className="bg-white rounded-lg p-4">
-                {/* Defensive rendering: always render as a string or show fallback */}
-                <p className="text-slate-700 whitespace-pre-line leading-relaxed">
+                {/* === Markdown rendering fix applied here === */}
+                <ReactMarkdown className="text-slate-700 leading-relaxed">
                   {typeof explanation === "string"
                     ? explanation
                     : (explanation && typeof explanation === "object" && explanation.response
                       ? explanation.response
                       : "[Unable to display explanation]")
                   }
-                </p>
+                </ReactMarkdown>
               </div>
             </CardContent>
           </Card>
