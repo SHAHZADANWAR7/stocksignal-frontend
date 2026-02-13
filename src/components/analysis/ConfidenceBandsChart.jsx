@@ -30,7 +30,7 @@ import {
  * 
  * ✅ VERIFIED: Compatible with updated Analysis.jsx
  * ✅ NO CHANGES NEEDED
- * ✅ NO VIX NEEDED (uses portfolio-specific volatility, not market VIX)
+ * ✅ VIX-SYNCHRONIZED (Scales with market regime multipliers from parent)
  */
 export default function ConfidenceBandsChart({ 
   portfolioReturn, 
