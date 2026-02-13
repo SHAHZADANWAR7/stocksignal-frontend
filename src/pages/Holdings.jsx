@@ -10,9 +10,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/Table";
 import { Lightbulb, TrendingDown, TrendingUp, Search, RefreshCw, Loader2 } from "lucide-react";
 import TableSkeleton from "@/components/ui/TableSkeleton";
-
-// === Markdown rendering import added below ===
 import ReactMarkdown from 'react-markdown';
+// NEW: import markdown styling
+import 'github-markdown-css/github-markdown.css';
 
 export default function Holdings() {
   const [portfolio, setPortfolio] = useState(null);
@@ -112,7 +112,17 @@ export default function Holdings() {
       const { gainLossPercent } = calculateMetrics(h);
       return { symbol: h.symbol, value: h.quantity * h.currentPrice, gain_loss_percent: gainLossPercent };
     });
-    const prompt = `Explain this portfolio like I'm 10. Simple language, analogies. Portfolio: ${JSON.stringify(holdingsList)} Total: $${totalValue.toLocaleString()}. Why own these? What risks? Why better/worse? What know?`;
+    // UPDATED PROMPT FOR LLM (structured, professional markdown)
+    const prompt = `
+Explain this portfolio to a 10-year-old using clear, structured, professional Markdown:
+- Use headings, bullet points, and bold text.
+- Avoid slang. Be concise, informative, and visually organized.
+- Provide actionable recommendations at the end.
+- Use analogies but keep the tone friendly and mature.
+Portfolio: ${JSON.stringify(holdingsList)}
+Total: $${totalValue.toLocaleString()}.
+Why own these? What risks? Why better/worse? What should I know?
+`;
     try {
       const result = await awsApi.invokeLLM(prompt);
       console.log("LLM Response:", result);
@@ -171,7 +181,6 @@ export default function Holdings() {
               <Input placeholder="Search by symbol or name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 border-slate-300" />
             </div>
           </Card>
-          {/* Always show the Explain button, even if holdings are empty */}
           <Card className="border-2 border-purple-200 shadow-sm p-4 bg-gradient-to-br from-purple-50 to-pink-50">
             <Button
               onClick={explainPortfolio}
@@ -193,8 +202,8 @@ export default function Holdings() {
                 <Lightbulb className="w-5 h-5 text-purple-600" />Your Portfolio Explained
               </h3>
               <div className="bg-white rounded-lg p-4">
-                {/* === Markdown rendering fix applied here === */}
-                <ReactMarkdown className="text-slate-700 leading-relaxed">
+                {/* Render professional markdown using github-markdown-css styles */}
+                <ReactMarkdown className="markdown-body">
                   {typeof explanation === "string"
                     ? explanation
                     : (explanation && typeof explanation === "object" && explanation.response
