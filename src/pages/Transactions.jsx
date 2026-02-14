@@ -38,11 +38,10 @@ export default function Transactions() {
 
   const loadData = async () => {
     try {
-      const userId = localStorage.getItem('user_id');
       const [txData, holdingsData, journalData] = await Promise.all([
-        awsApi.getTransactions(userId),
-        awsApi.getHoldings(userId),
-        awsApi.getInvestmentJournals(userId)
+        awsApi.getTransactions(),
+        awsApi.getHoldings(),
+        awsApi.getInvestmentJournals()
       ]);
       
       setTransactions(txData ? txData.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date)) : []);
@@ -58,9 +57,7 @@ export default function Transactions() {
     setIsSubmitting(true);
 
     try {
-      const userId = localStorage.getItem('user_id');
       const transactionData = {
-        userId,
         type: formData.type,
         symbol: formData.symbol,
         asset_name: formData.asset_name,
@@ -74,7 +71,6 @@ export default function Transactions() {
       const createdTx = await awsApi.createTransaction(transactionData);
 
       const journalData = {
-        userId,
         transaction_id: createdTx.id,
         symbol: formData.symbol,
         action: formData.type,
@@ -93,10 +89,9 @@ export default function Transactions() {
           const newCost = (existingHolding.quantity * existingHolding.average_cost) + 
                          (parseFloat(formData.quantity) * parseFloat(formData.price)) +
                          parseFloat(formData.fees || 0);
-          await awsApi.updateHolding(existingHolding.id, { quantity: newQuantity, average_cost: newCost / newQuantity });
+          await awsApi.updateHolding(existingHolding.symbol, { quantity: newQuantity, average_cost: newCost / newQuantity });
         } else {
           await awsApi.createHolding({
-            userId,
             symbol: formData.symbol,
             name: formData.asset_name,
             quantity: parseFloat(formData.quantity),
@@ -107,9 +102,9 @@ export default function Transactions() {
       } else if (formData.type === "sell" && existingHolding) {
         const newQuantity = existingHolding.quantity - parseFloat(formData.quantity);
         if (newQuantity > 0) {
-          await awsApi.updateHolding(existingHolding.id, { quantity: newQuantity });
+          await awsApi.updateHolding(existingHolding.symbol, { quantity: newQuantity });
         } else {
-          await awsApi.deleteHolding(existingHolding.id);
+          await awsApi.deleteHolding(existingHolding.symbol);
         }
       }
 
