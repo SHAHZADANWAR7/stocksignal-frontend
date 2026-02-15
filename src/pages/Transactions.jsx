@@ -36,6 +36,7 @@ export default function Transactions() {
     loadData();
   }, []);
 
+  // FIXED: Extract .transactions array from API response and sort
   const loadData = async () => {
     try {
       const [txData, holdingsData, journalData] = await Promise.all([
@@ -43,8 +44,10 @@ export default function Transactions() {
         awsApi.getHoldings(),
         awsApi.getInvestmentJournals()
       ]);
-      
-      setTransactions(txData ? txData.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date)) : []);
+      const transactionArr = txData?.transactions || [];
+      setTransactions(
+        transactionArr.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date))
+      );
       setHoldings(holdingsData || []);
       setJournals(journalData || []);
     } catch (error) {
@@ -327,7 +330,8 @@ export default function Transactions() {
                     </thead>
                     <tbody>
                       {transactions.map((tx) => (
-                        <tr key={tx.id} className="border-b border-slate-100">
+                        // FIXED: Use a safe composite key for each transaction, not tx.id
+                        <tr key={`${tx.user_email}-${tx.transaction_date}-${tx.symbol}`} className="border-b border-slate-100">
                           <td className="p-4">
                             <Badge className={tx.type === 'buy' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}>
                               {tx.type === 'buy' ? <ArrowUpCircle className="w-3 h-3 mr-1" /> : <ArrowDownCircle className="w-3 h-3 mr-1" />}
