@@ -105,7 +105,7 @@ export const validateGoalAnalysis = (goal, metrics, recommendation) => {
     isValid: errors.length === 0,
     errors,
     warnings,
-    timestamp: new Date().toISOString()
+    timestamp: (() => { try { return new Date().toISOString(); } catch (e) { return new Date().toLocaleDateString(); } })()
   };
 };
 

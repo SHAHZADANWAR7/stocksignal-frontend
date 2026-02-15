@@ -127,6 +127,6 @@ export const runAllGoalProgressTests = () => {
     allPassed: results.every(r => r.passed),
     criticalFailure: !!criticalFailure,
     results,
-    timestamp: new Date().toISOString()
+    timestamp: (() => { try { return new Date().toISOString(); } catch (e) { return new Date().toLocaleDateString(); } })()
   };
 };

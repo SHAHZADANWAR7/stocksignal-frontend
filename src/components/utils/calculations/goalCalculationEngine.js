@@ -41,7 +41,7 @@ export function calculateGoalMetrics(goal, holdings = [], referenceDate = new Da
   
   const initialCapital = sanitizeNumber(goal.current_allocation || 0);
   const targetAmount = sanitizeNumber(goal.target_amount || 0);
-  const targetDate = new Date(goal.target_date);
+  const targetDate = sanitizeDate(goal.target_date);
   
   if (targetAmount <= 0) {
     throw new Error(`Invalid goal target amount: ${goal.target_amount}`);
@@ -95,7 +95,7 @@ export function calculateGoalMetrics(goal, holdings = [], referenceDate = new Da
   return {
     // Time metrics
     monthsRemaining: Math.round(monthsRemaining * 100) / 100,
-    targetDate: targetDate.toISOString().split('T')[0],
+    targetDate: sanitizeDate(targetDate).toISOString().split('T')[0],
     
     // Capital metrics (SINGLE SOURCE OF TRUTH)
     initialCapital: Math.round(initialCapital),
@@ -386,4 +386,14 @@ export function runValidationSuite() {
   
   const allPassed = Object.values(results).every(r => r.passed);
   return { allPassed, results };
+}
+
+/**
+ * HELPER: Sanitize date input and return a valid Date object
+ * Fallback to today's date if input is invalid
+ */
+function sanitizeDate(dateInput) {
+  if (!dateInput) return new Date();
+  const d = new Date(dateInput);
+  return (d instanceof Date && !isNaN(d.getTime())) ? d : new Date();
 }

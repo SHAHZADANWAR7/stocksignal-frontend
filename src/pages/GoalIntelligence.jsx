@@ -883,7 +883,7 @@ OUTPUT EXAMPLE:
         assets_fail_order: result.assets_fail_order,
         benefiting_assets: result.benefiting_assets,
         narrative_story: result.narrative_story,
-        simulation_date: new Date().toISOString().split('T')[0]
+        simulation_date: (() => { try { return new Date().toISOString().split('T')[0]; } catch (e) { return new Date().toLocaleDateString().split('/').reverse().join('-'); } })()
       });
 
       setBlackSwanResult(result);
