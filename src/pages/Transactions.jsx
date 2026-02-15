@@ -36,7 +36,7 @@ export default function Transactions() {
     loadData();
   }, []);
 
-  // FIXED: Extract .transactions array from API response and sort
+  // Log returned transactions for debugging!
   const loadData = async () => {
     try {
       const [txData, holdingsData, journalData] = await Promise.all([
@@ -45,6 +45,7 @@ export default function Transactions() {
         awsApi.getInvestmentJournals()
       ]);
       const transactionArr = txData?.transactions || [];
+      console.log('Transactions returned:', transactionArr); // <-- LOG FOR DEBUGGING
       setTransactions(
         transactionArr.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date))
       );
@@ -330,7 +331,6 @@ export default function Transactions() {
                     </thead>
                     <tbody>
                       {transactions.map((tx) => (
-                        // FIXED: Use a safe composite key for each transaction, not tx.id
                         <tr key={`${tx.user_email}-${tx.transaction_date}-${tx.symbol}`} className="border-b border-slate-100">
                           <td className="p-4">
                             <Badge className={tx.type === 'buy' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}>
