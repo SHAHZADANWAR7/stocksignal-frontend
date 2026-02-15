@@ -167,6 +167,18 @@ const invokeProxy = async (functionName, payload = {}) => {
 
     const data = await response.json();
     
+    // Unwrap API Gateway response format
+    if (data.statusCode && data.body) {
+      const bodyData = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
+      console.log(`✅ invokeProxy - Success for ${functionName}:`, bodyData);
+      
+      if (bodyData.errorMessage) {
+        throw new Error(bodyData.errorMessage);
+      }
+      
+      return bodyData;
+    }
+    
     console.log(`✅ invokeProxy - Success for ${functionName}:`, data);
     
     if (data.errorMessage) {
@@ -206,7 +218,6 @@ export const awsApi = {
   executeTrade: (tradeData) => invokeProxy("executeTrade", tradeData),
   getPortfolio: async () => { const response = await invokeProxy("getPortfolio", {}); return response?.Item || response; },
   syncPortfolioData: () => invokeProxy("syncPortfolio", {}),
-  // FIXED getTransactions method to parse "transactions" key
   getTransactions: async () => {
     const response = await invokeProxy("getTransactions", {});
     return response?.transactions || [];
