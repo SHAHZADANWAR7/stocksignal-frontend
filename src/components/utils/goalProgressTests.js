@@ -50,6 +50,7 @@ export const runAllGoalProgressTests = () => {
   // Test 4: Months remaining calculated
   const test4 = () => {
     const futureDate = new Date();
+    futureDate.setHours(0, 0, 0, 0);
     futureDate.setMonth(futureDate.getMonth() + 6);
     const goal = { target_amount: 100000, current_allocation: 0, target_date: futureDate };
     const metrics = calculateGoalMetrics(goal, []);
