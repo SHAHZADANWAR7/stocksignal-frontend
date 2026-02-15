@@ -180,7 +180,7 @@ const invokeProxy = async (functionName, payload = {}) => {
   }
 };
 
-// Export all API methods
+// Export all API methods; FIXED getTransactions method to use response.transactions!
 export const awsApi = {
   callAwsFunction: (functionName, payload) => invokeProxy(functionName, payload),
   getStockQuote: (symbol) => invokeProxy("getStockQuote", { symbol }),
@@ -206,7 +206,11 @@ export const awsApi = {
   executeTrade: (tradeData) => invokeProxy("executeTrade", tradeData),
   getPortfolio: async () => { const response = await invokeProxy("getPortfolio", {}); return response?.Item || response; },
   syncPortfolioData: () => invokeProxy("syncPortfolio", {}),
-  getTransactions: async () => { const response = await invokeProxy("getTransactions", {}); return response?.Items || response?.items || []; },
+  // FIXED getTransactions method to parse "transactions" key
+  getTransactions: async () => {
+    const response = await invokeProxy("getTransactions", {});
+    return response?.transactions || [];
+  },
   createTransaction: async (data) => invokeProxy("createTransaction", data),
   getHoldings: async () => { const response = await invokeProxy("getHoldings", {}); return response?.Items || response?.items || []; },
   createHolding: async (data) => invokeProxy("createHolding", data),
