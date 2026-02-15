@@ -46,8 +46,8 @@ export function calculateGoalMetrics(goal, holdings = [], referenceDate = new Da
   if (targetAmount <= 0) {
     throw new Error(`Invalid goal target amount: ${goal.target_amount}`);
   }
-  if (targetDate <= referenceDate) {
-    throw new Error(`Goal target date must be in the future`);
+  if (targetDate <= referenceDate) { // Soft landing for past dates
+    console.warn("Goal date is in the past; metrics will reflect completion.");
   }
   
   // ═══════════════════════════════════════════════════════════════════════════════
@@ -95,7 +95,7 @@ export function calculateGoalMetrics(goal, holdings = [], referenceDate = new Da
   return {
     // Time metrics
     monthsRemaining: Math.round(monthsRemaining * 100) / 100,
-    targetDate: sanitizeDate(targetDate).toISOString().split('T')[0],
+    targetDate: targetDate.toISOString().split('T')[0],
     
     // Capital metrics (SINGLE SOURCE OF TRUTH)
     initialCapital: Math.round(initialCapital),
@@ -393,7 +393,13 @@ export function runValidationSuite() {
  * Fallback to today's date if input is invalid
  */
 function sanitizeDate(dateInput) {
-  if (!dateInput) return new Date();
+  if (!dateInput) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
   const d = new Date(dateInput);
-  return (d instanceof Date && !isNaN(d.getTime())) ? d : new Date();
+  const validDate = (d instanceof Date && !isNaN(d.getTime())) ? d : new Date();
+  validDate.setHours(0, 0, 0, 0);
+  return validDate;
 }
