@@ -36,7 +36,6 @@ export default function Transactions() {
     loadData();
   }, []);
 
-  // Log returned transactions for debugging!
   const loadData = async () => {
     try {
       const [txData, holdingsData, journalData] = await Promise.all([
@@ -44,8 +43,8 @@ export default function Transactions() {
         awsApi.getHoldings(),
         awsApi.getInvestmentJournals()
       ]);
-      const transactionArr = txData?.transactions || [];
-      console.log('Transactions returned:', transactionArr); // <-- LOG FOR DEBUGGING
+      const transactionArr = txData || []; // ✅ FIXED: removed double unwrapping
+      console.log('Transactions returned:', transactionArr);
       setTransactions(
         transactionArr.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date))
       );
