@@ -91,7 +91,7 @@ export const validateGoalAnalysis = (goal, metrics, recommendation) => {
         0
       );
 
-      if (Math.abs(totalAllocation - 100) > 1) {
+      if (Math.abs(totalAllocation - 100) > 0.01) {
         warnings.push({
           code: 'ALLOCATION_MISMATCH',
           message: `Allocation percentages sum to ${totalAllocation}%, expected 100%`,
