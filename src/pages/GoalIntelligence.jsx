@@ -2068,18 +2068,12 @@ OUTPUT EXAMPLE:
       </div>
 
       <Dialog open={showAddGoal} onOpenChange={(open) => {
-        setShowAddGoal(open);
         if (!open) {
+          setShowAddGoal(false);
           setEditingGoalId(null);
-          setNewGoal({
-            goal_name: "",
-            goal_type: "retirement",
-            target_amount: "",
-            target_date: "",
-            current_allocation: "",
-            assigned_holdings: [],
-            priority: "medium"
-          });
+          setNewGoal({ goal_name: "", goal_type: "retirement", target_amount: "", target_date: "", current_allocation: "", assigned_holdings: [], priority: "medium" });
+        } else {
+          setShowAddGoal(true);
         }
       }}>
         <DialogContent className="sm:max-w-md">
