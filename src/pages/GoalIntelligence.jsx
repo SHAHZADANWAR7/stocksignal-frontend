@@ -375,13 +375,14 @@ export default function GoalIntelligence() {
     setShowAddGoal(true);
   };
 
-  const handleDeleteGoal = async (goalId) => {
+  const handleDeleteGoal = async (goal) => {
     if (confirm("Are you sure you want to delete this goal?")) {
       const userId = localStorage.getItem('user_id');
-      await awsApi.deletePortfolioGoal(userId, goalId);
+      await awsApi.deletePortfolioGoal(goal.id, goal.user_email);
+      await loadData();
       setRecommendations(prev => {
         const updated = { ...prev };
-        delete updated[goalId];
+        delete updated[goal.id];
         return updated;
       });
       loadData();
@@ -1111,7 +1112,7 @@ OUTPUT EXAMPLE:
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleDeleteGoal(goal.id)}
+                              onClick={() => handleDeleteGoal(goal)}
                               className="hover:bg-rose-50"
                             >
                               <Trash2 className="w-4 h-4 text-rose-600" />
@@ -1123,7 +1124,7 @@ OUTPUT EXAMPLE:
                           <div className="flex justify-between text-sm">
                             <span className="text-slate-600">Progress to Goal</span>
                             <span className="font-semibold text-slate-900">
-                              ${current.toLocaleString()} / ${goal.target_amount.toLocaleString()}
+                              ${(current || 0).toLocaleString()} / ${(goal?.target_amount || 0).toLocaleString()}
                             </span>
                           </div>
                           <Progress value={Math.min(100, progress)} className="h-3" />
@@ -1134,7 +1135,7 @@ OUTPUT EXAMPLE:
                           {goal.current_allocation > 0 && (
                             <div className="text-xs text-slate-600 pt-2 border-t border-slate-200">
                               <p>💰 Capital Accounting:</p>
-                              <p className="ml-4">• Contributed: ${Math.round(contributed_capital).toLocaleString()}</p>
+                              <p className="ml-4">• Contributed: ${Math.round(contributed_capital || 0).toLocaleString()}</p>
                               <p className="ml-4">• Holdings Value: ${Math.round(portfolio_value || 0).toLocaleString()}</p>
                             </div>
                           )}
