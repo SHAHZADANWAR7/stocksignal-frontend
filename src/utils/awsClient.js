@@ -64,6 +64,18 @@ const getAuthData = async () => {
     const cognitoSub = idToken?.payload?.sub;
     const userEmail = idToken?.payload?.email;
     
+    console.log('🔐 getAuthData - Session retrieved:', {
+      sessionExists: !!session,
+      tokensExist: !!session.tokens,
+      idTokenExists: !!idToken,
+      tokenPresent: !!token,
+      tokenLength: token?.length || 0,
+      tokenPreview: token ? token.substring(0, 50) + '...' : 'NO TOKEN',
+      cognitoSub: cognitoSub || 'MISSING',
+      userEmail: userEmail || 'MISSING',
+      idTokenPayload: idToken?.payload || 'NO PAYLOAD'
+    });
+    
     return {
       token,
       cognitoSub,
@@ -108,12 +120,21 @@ const getAuthHeaders = async () => {
     headers['x-user-email'] = userEmail;
   }
   
+  console.log('🔐 getAuthHeaders - Headers prepared:', {
+    authorizationPresent: !!headers['Authorization'],
+    xCognitoSubPresent: !!headers['x-cognito-sub'],
+    xUserEmailPresent: !!headers['x-user-email'],
+    xApiKeyPresent: !!headers['x-api-key']
+  });
+  
   return headers;
 };
 
 // Generic proxy invocation - calls through apiGatewayProxy
 const invokeProxy = async (functionName, payload = {}) => {
   try {
+    console.log(`📡 invokeProxy - Starting invocation for: ${functionName}`, { payload });
+    
     const headers = await getAuthHeaders();
     const { cognitoSub, userEmail } = await getAuthData();
     
@@ -129,6 +150,13 @@ const invokeProxy = async (functionName, payload = {}) => {
       enhancedPayload.userEmail = userEmail;
     }
     
+    console.log(`📡 invokeProxy - Request details for ${functionName}:`, {
+      url: `${PROXY_CONFIG.API_GATEWAY_URL}/${PROXY_CONFIG.PROXY_ENDPOINT}`,
+      keyType,
+      headersKeys: Object.keys(headers),
+      payload: enhancedPayload
+    });
+    
     const response = await fetch(`${PROXY_CONFIG.API_GATEWAY_URL}/${PROXY_CONFIG.PROXY_ENDPOINT}`, {
       method: 'POST',
       headers,
@@ -138,19 +166,32 @@ const invokeProxy = async (functionName, payload = {}) => {
       })
     });
 
+    console.log(`📡 invokeProxy - Response status for ${functionName}: ${response.status} ${response.statusText}`);
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
     const data = await response.json();
     
+    // Unwrap API Gateway response format
     if (data.statusCode && data.body) {
       const bodyData = typeof data.body === 'string' ? JSON.parse(data.body) : data.body;
-      if (bodyData.errorMessage) throw new Error(bodyData.errorMessage);
+      console.log(`✅ invokeProxy - Success for ${functionName}:`, bodyData);
+      
+      if (bodyData.errorMessage) {
+        throw new Error(bodyData.errorMessage);
+      }
+      
       return bodyData;
     }
     
-    if (data.errorMessage) throw new Error(data.errorMessage);
+    console.log(`✅ invokeProxy - Success for ${functionName}:`, data);
+    
+    if (data.errorMessage) {
+      throw new Error(data.errorMessage);
+    }
+    
     return data;
   } catch (error) {
     console.error(`❌ invokeProxy - Proxy invocation failed for ${functionName}:`, error);
@@ -158,7 +199,7 @@ const invokeProxy = async (functionName, payload = {}) => {
   }
 };
 
-// Export all API methods
+// Export all API methods; FIXED getTransactions method to use response.transactions!
 export const awsApi = {
   callAwsFunction: (functionName, payload) => invokeProxy(functionName, payload),
   getStockQuote: (symbol) => invokeProxy("getStockQuote", { symbol }),
@@ -183,6 +224,10 @@ export const awsApi = {
   updateCompany: async (symbol, updateData) => invokeProxy("updateCompany", { symbol, updateData }),
   executeTrade: (tradeData) => invokeProxy("executeTrade", tradeData),
   getPortfolio: async () => { const response = await invokeProxy("getPortfolio", {}); return response?.Item || response; },
+  createPortfolioGoal: (data) => invokeProxy("createPortfolioGoal", data),
+  updatePortfolioGoal: (data) => invokeProxy("updatePortfolioGoal", data),
+  deletePortfolioGoal: (goalId) => invokeProxy("deletePortfolioGoal", { goalId }),
+  createBlackSwanSimulation: (data) => invokeProxy("createBlackSwanSimulation", data),
   syncPortfolioData: () => invokeProxy("syncPortfolio", {}),
   getTransactions: async () => {
     const response = await invokeProxy("getTransactions", {});
@@ -230,9 +275,5 @@ export const awsApi = {
   getUserTrades: () => invokeProxy("getUserTrades", {}),
   invokeLLM: (prompt, context) => invokeProxy("invokeLLM", { prompt, context }),
   sendEmail: (data) => invokeProxy("sendEmail", data),
-  getUserDashboardData: async () => { const response = await invokeProxy("getUserDashboardData", {}); return response; },
-  createPortfolioGoal: (data) => invokeProxy("createPortfolioGoal", data),
-  updatePortfolioGoal: (data) => invokeProxy("updatePortfolioGoal", data),
-  deletePortfolioGoal: (goalId) => invokeProxy("deletePortfolioGoal", { goalId }),
-  createBlackSwanSimulation: (data) => invokeProxy("createBlackSwanSimulation", data)
+  getUserDashboardData: async () => { const response = await invokeProxy("getUserDashboardData", {}); return response; }
 };
