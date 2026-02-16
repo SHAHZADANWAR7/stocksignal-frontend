@@ -2076,7 +2076,7 @@ OUTPUT EXAMPLE:
           setShowAddGoal(true);
         }
       }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()} onCloseAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>{editingGoalId ? "Edit Financial Goal" : "Add Financial Goal"}</DialogTitle>
           </DialogHeader>
@@ -2096,7 +2096,7 @@ OUTPUT EXAMPLE:
                 onValueChange={(value) => setNewGoal({...newGoal, goal_type: value})}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select..." />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="retirement">Retirement</SelectItem>
@@ -2133,7 +2133,7 @@ OUTPUT EXAMPLE:
                 onValueChange={(value) => setNewGoal({...newGoal, priority: value})}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select..." />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="high">High</SelectItem>
