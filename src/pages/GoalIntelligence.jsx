@@ -2096,7 +2096,7 @@ OUTPUT EXAMPLE:
                 onValueChange={(value) => setNewGoal({...newGoal, goal_type: value})}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select..." />
+                  <SelectValue>{newGoal.goal_type ? (newGoal.goal_type.charAt(0).toUpperCase() + newGoal.goal_type.slice(1).replace("_", " ")) : "Select..."}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="retirement">Retirement</SelectItem>
@@ -2133,7 +2133,7 @@ OUTPUT EXAMPLE:
                 onValueChange={(value) => setNewGoal({...newGoal, priority: value})}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select..." />
+                  <SelectValue>{newGoal.priority ? (newGoal.priority.charAt(0).toUpperCase() + newGoal.priority.slice(1)) : "Select..."}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="high">High</SelectItem>
