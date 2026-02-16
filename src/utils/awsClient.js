@@ -275,5 +275,9 @@ export const awsApi = {
   getUserTrades: () => invokeProxy("getUserTrades", {}),
   invokeLLM: (prompt, context) => invokeProxy("invokeLLM", { prompt, context }),
   sendEmail: (data) => invokeProxy("sendEmail", data),
-  getUserDashboardData: async () => { const response = await invokeProxy("getUserDashboardData", {}); return response; }
+  getUserDashboardData: async () => { const response = await invokeProxy("getUserDashboardData", {}); return response; },
+  createPortfolioGoal: (data) => invokeProxy("createPortfolioGoal", data),
+  updatePortfolioGoal: (data) => invokeProxy("updatePortfolioGoal", data),
+  deletePortfolioGoal: (goalId) => invokeProxy("deletePortfolioGoal", { goalId }),
+  createBlackSwanSimulation: (data) => invokeProxy("createBlackSwanSimulation", data)
 };
