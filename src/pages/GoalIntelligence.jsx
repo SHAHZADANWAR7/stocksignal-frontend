@@ -208,8 +208,8 @@ export default function GoalIntelligence() {
 
     const prompt = `FETCH AND ANALYZE ACTUAL 5-YEAR HISTORICAL STOCK DATA:
 
-    Portfolio: ${holdingsList.map(h => `${h.symbol} ($${h.current_value.toLocaleString()})`).join(', ')}
-    Total Value: $${totalValue.toLocaleString()}
+    Portfolio: ${holdingsList.map(h => `${h.symbol} ($${(h.current_value || 0).toLocaleString()})`).join(', ')}
+    Total Value: $${(totalValue || 0).toLocaleString()}
     Date Range: December 2020 to December 2025 (5 years)
 
     STEP 1 - LOOKUP REAL HISTORICAL PRICES FROM YAHOO FINANCE:
@@ -243,7 +243,7 @@ export default function GoalIntelligence() {
     Blended: 0.6×60 + 0.4×16 = 42% total, 7.3% annual
 
     STEP 5 - MISSED OPPORTUNITY:
-    Dollar amount = (Optimal% - Actual%) / 100 × $${totalValue.toLocaleString()}
+    Dollar amount = (Optimal% - Actual%) / 100 × $${(totalValue || 0).toLocaleString()}
     Example: (95% - 76%) / 100 × $100,000 = $19,000
 
     OUTPUT FORMAT - USE WHOLE NUMBER PERCENTAGES:
@@ -659,7 +659,7 @@ OUTPUT: Provide historically accurate, educational narratives that maintain cred
     const selectedGoal = goals.find(g => g.id === selectedGoalForReco);
     const goalContext = selectedGoal 
       ? `- Selected Goal: ${selectedGoal.goal_name}
-- Goal Target: $${selectedGoal.target_amount.toLocaleString()}
+- Goal Target: $${(selectedGoal?.target_amount || 0).toLocaleString()}
 - Goal Date: ${format(new Date(selectedGoal.target_date), 'MMM d, yyyy')}
 - Goal Type: ${selectedGoal.goal_type}
 - Priority: ${selectedGoal.priority}
@@ -1216,14 +1216,14 @@ OUTPUT EXAMPLE:
                           <div className="bg-white rounded-lg p-4 border-2 border-slate-200">
                             <p className="text-sm text-slate-600 mb-1">Initial Contribution</p>
                             <p className="text-3xl font-bold text-blue-600">
-                              ${Math.round(recommendation.initial_investment.amount).toLocaleString()}
+                              ${Math.round(recommendation.initial_investment?.amount || 0).toLocaleString()}
                             </p>
                             <p className="text-xs text-slate-500 mt-2">{recommendation.initial_investment.rationale}</p>
                           </div>
                           <div className="bg-white rounded-lg p-4 border-2 border-slate-200">
                             <p className="text-sm text-slate-600 mb-1">Monthly Contribution</p>
                             <p className="text-3xl font-bold text-emerald-600">
-                              ${Math.round(recommendation.monthly_contribution.amount).toLocaleString()}
+                              ${Math.round(recommendation.monthly_contribution?.amount || 0).toLocaleString()}
                             </p>
                             <p className="text-xs text-slate-500 mt-2">{recommendation.monthly_contribution.rationale}</p>
                           </div>
@@ -1258,11 +1258,11 @@ OUTPUT EXAMPLE:
                                     </div>
                                     <div className="flex justify-between pt-2">
                                       <span className="text-slate-600 font-semibold">Total Contributions:</span>
-                                      <span className="font-bold text-slate-900">${Math.round(scenario.total_invested).toLocaleString()}</span>
+                                      <span className="font-bold text-slate-900">${Math.round(scenario.total_invested || 0).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-slate-600 font-semibold">Goal Reached:</span>
-                                      <span className="font-bold text-emerald-600">${Math.round(scenario.goal_value || scenario.total_invested).toLocaleString()}</span>
+                                      <span className="font-bold text-emerald-600">${Math.round(scenario.goal_value || scenario.total_invested || 0).toLocaleString()}</span>
                                     </div>
                                   </div>
                                 </CardContent>
@@ -1315,11 +1315,11 @@ OUTPUT EXAMPLE:
                                         </div>
                                         <div className="flex justify-between">
                                           <span className="text-slate-600 text-xs">Estimated Projected Value:</span>
-                                          <span className="font-bold text-emerald-600">${Math.round(scenario.projected_value).toLocaleString()}</span>
+                                          <span className="font-bold text-emerald-600">${Math.round(scenario.projected_value || 0).toLocaleString()}</span>
                                         </div>
                                         <div className="flex justify-between">
                                           <span className="text-slate-600 text-xs">Estimated Growth (Returns):</span>
-                                          <span className="font-bold text-purple-700">+${Math.round(scenario.growth_from_returns).toLocaleString()}</span>
+                                          <span className="font-bold text-purple-700">+${Math.round(scenario.growth_from_returns || 0).toLocaleString()}</span>
                                         </div>
                                         <p className="text-xs text-purple-600 italic mt-2">
                                           *Monthly compounding, end-of-month contributions
@@ -1441,7 +1441,7 @@ OUTPUT EXAMPLE:
                                                  })}
                                                </div>
                                                <p className="text-xs text-slate-600 mt-2 italic">
-                                                 Based on {scenario.annual_return}% return at 18-month midpoint. Continue ${Math.round(scenario.monthly_contribution).toLocaleString()}/month.
+                                                 Based on {scenario.annual_return}% return at 18-month midpoint. Continue ${Math.round(scenario.monthly_contribution || 0).toLocaleString()}/month.
                                                </p>
                                              </div>
                                            </>
