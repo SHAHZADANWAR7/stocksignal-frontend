@@ -333,34 +333,32 @@ export default function GoalIntelligence() {
   };
 
   const handleAddGoal = async () => {
-    const userId = localStorage.getItem('user_id');
-    const goalData = {
-      ...newGoal,
-      target_amount: parseFloat(newGoal.target_amount),
-      current_allocation: parseFloat(newGoal.current_allocation || 0),
-      userId
-    };
-
-    if (editingGoalId) {
-      await awsApi.updatePortfolioGoal(userId, editingGoalId, goalData);
-    } else {
-      const createdGoal = await awsApi.createPortfolioGoal(goalData);
-      // Generate recommendations for the new goal
-      generateRecommendations(createdGoal);
+    const userId = localStorage.getItem("user_id");
+    if (!newGoal.goal_name || !newGoal.target_amount || !newGoal.target_date) {
+      alert("⚠️ Missing Fields: Please ensure Name, Target Amount, and Date are filled.");
+      return;
     }
-    
-    setShowAddGoal(false);
-    setEditingGoalId(null);
-    setNewGoal({
-      goal_name: "",
-      goal_type: "retirement",
-      target_amount: "",
-      target_date: "",
-      current_allocation: "",
-      assigned_holdings: [],
-      priority: "medium"
-    });
-    loadData();
+    try {
+      const goalData = {
+        ...newGoal,
+        target_amount: parseFloat(newGoal.target_amount),
+        current_allocation: parseFloat(newGoal.current_allocation || 0),
+        userId
+      };
+      if (editingGoalId) {
+        await awsApi.updatePortfolioGoal(userId, editingGoalId, goalData);
+      } else {
+        const createdGoal = await awsApi.createPortfolioGoal(goalData);
+        if (createdGoal) generateRecommendations(createdGoal);
+      }
+      setShowAddGoal(false);
+      setEditingGoalId(null);
+      setNewGoal({ goal_name: "", goal_type: "retirement", target_amount: "", target_date: "", current_allocation: "", assigned_holdings: [], priority: "medium" });
+      await loadData();
+    } catch (error) {
+      console.error("❌ Goal Save Error:", error);
+      alert("Critical Error: Could not save goal.");
+    }
   };
 
   const handleEditGoal = (goal) => {
