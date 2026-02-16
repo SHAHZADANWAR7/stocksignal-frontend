@@ -31,9 +31,6 @@ const LAMBDA_KEY_MAPPING = {
     "executePaperTrade",
     "executeTrade",
     "getPortfolio",
-    "createPortfolioGoal",
-    "updatePortfolioGoal",
-    "deletePortfolioGoal",
     "createBlackSwanSimulation"
   ],
   user_email: [
@@ -148,6 +145,7 @@ const invokeProxy = async (functionName, payload = {}) => {
       enhancedPayload.cognitoSub = cognitoSub;
     } else if (keyType === 'user_email' && userEmail) {
       enhancedPayload.userEmail = userEmail;
+      enhancedPayload.email = userEmail; // Ensure the 'email' key required by DynamoDB is present
     }
     
     console.log(`📡 invokeProxy - Request details for ${functionName}:`, {
@@ -199,7 +197,7 @@ const invokeProxy = async (functionName, payload = {}) => {
   }
 };
 
-// Export all API methods; FIXED getTransactions method to use response.transactions!
+// Export all API methods
 export const awsApi = {
   callAwsFunction: (functionName, payload) => invokeProxy(functionName, payload),
   getStockQuote: (symbol) => invokeProxy("getStockQuote", { symbol }),
@@ -275,9 +273,5 @@ export const awsApi = {
   getUserTrades: () => invokeProxy("getUserTrades", {}),
   invokeLLM: (prompt, context) => invokeProxy("invokeLLM", { prompt, context }),
   sendEmail: (data) => invokeProxy("sendEmail", data),
-  getUserDashboardData: async () => { const response = await invokeProxy("getUserDashboardData", {}); return response; },
-  createPortfolioGoal: (data) => invokeProxy("createPortfolioGoal", data),
-  updatePortfolioGoal: (data) => invokeProxy("updatePortfolioGoal", data),
-  deletePortfolioGoal: (goalId) => invokeProxy("deletePortfolioGoal", { goalId }),
-  createBlackSwanSimulation: (data) => invokeProxy("createBlackSwanSimulation", data)
+  getUserDashboardData: async () => { const response = await invokeProxy("getUserDashboardData", {}); return response; }
 };
