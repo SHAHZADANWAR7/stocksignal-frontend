@@ -30,7 +30,11 @@ const LAMBDA_KEY_MAPPING = {
     "syncPortfolio",
     "executePaperTrade",
     "executeTrade",
-    "getPortfolio"
+    "getPortfolio",
+    "createPortfolioGoal",
+    "updatePortfolioGoal",
+    "deletePortfolioGoal",
+    "createBlackSwanSimulation"
   ],
   user_email: [
     "getHoldings",
@@ -43,7 +47,10 @@ const LAMBDA_KEY_MAPPING = {
     "sendDailyAlert",
     "sendMonthlyReport",
     "sendNewsletter",
-    "getUserDashboardData"
+    "getUserDashboardData",
+    "createPortfolioGoal",
+    "updatePortfolioGoal",
+    "deletePortfolioGoal"
   ]
 };
 
