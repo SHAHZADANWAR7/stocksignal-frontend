@@ -353,7 +353,7 @@ export default function GoalIntelligence() {
       }
       setShowAddGoal(false);
       setEditingGoalId(null);
-      setNewGoal({ goal_name: "", goal_type: "retirement", target_amount: "", target_date: "", current_allocation: "", assigned_holdings: [], priority: "medium" });
+      setNewGoal({ goal_name: "", goal_type: "retirement", target_amount: "", target_date: "", priority: "medium", target_amount: "", target_date: "", current_allocation: "", assigned_holdings: [], priority: "medium" });
       await loadData();
     } catch (error) {
       console.error("❌ Goal Save Error:", error);
@@ -2071,7 +2071,7 @@ OUTPUT EXAMPLE:
         if (!open) {
           setShowAddGoal(false);
           setEditingGoalId(null);
-          setNewGoal({ goal_name: "", goal_type: "retirement", target_amount: "", target_date: "", current_allocation: "", assigned_holdings: [], priority: "medium" });
+          setNewGoal({ goal_name: "", goal_type: "retirement", target_amount: "", target_date: "", priority: "medium", target_amount: "", target_date: "", current_allocation: "", assigned_holdings: [], priority: "medium" });
         } else {
           setShowAddGoal(true);
         }
@@ -2091,7 +2091,7 @@ OUTPUT EXAMPLE:
             </div>
             <div>
               <Label>Goal Type</Label>
-              <Select
+              <Select key={`type-${editingGoalId || "new"}`}
                 value={newGoal.goal_type}
                 onValueChange={(value) => setNewGoal({...newGoal, goal_type: value})}
               >
@@ -2128,7 +2128,7 @@ OUTPUT EXAMPLE:
             </div>
             <div>
               <Label>Priority</Label>
-              <Select
+              <Select key={`priority-${editingGoalId || "new"}`}
                 value={newGoal.priority}
                 onValueChange={(value) => setNewGoal({...newGoal, priority: value})}
               >

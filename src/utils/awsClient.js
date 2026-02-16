@@ -223,7 +223,11 @@ export const awsApi = {
   saveAnalysis: async (data) => invokeProxy("saveAnalysis", data),
   updateCompany: async (symbol, updateData) => invokeProxy("updateCompany", { symbol, updateData }),
   executeTrade: (tradeData) => invokeProxy("executeTrade", tradeData),
-  getPortfolio: async () => { const response = await invokeProxy("getPortfolio", {}); return response?.Item || response; },
+  getPortfolio: async () => { const response = await invokeProxy("getPortfolio",
+    "createPortfolioGoal",
+    "updatePortfolioGoal",
+    "deletePortfolioGoal",
+    "createBlackSwanSimulation"
   syncPortfolioData: () => invokeProxy("syncPortfolio", {}),
   getTransactions: async () => {
     const response = await invokeProxy("getTransactions", {});
@@ -256,10 +260,6 @@ export const awsApi = {
   createSimulationChallenge: (data) => invokeProxy("createSimulationChallenge", data),
   getSimulationResults: (simulationId) => invokeProxy("getSimulationResults", { simulationId }),
   runScenarioSimulation: (data) => invokeProxy("runScenarioSimulation", data),
-  createPortfolioGoal: (data) => invokeProxy("createPortfolioGoal", data),
-  updatePortfolioGoal: (goalId, data) => invokeProxy("updatePortfolioGoal", { goalId, ...data }),
-  deletePortfolioGoal: (goalId) => invokeProxy("deletePortfolioGoal", { goalId }),
-  createBlackSwanSimulation: (data) => invokeProxy("createBlackSwanSimulation", data),
   getBlackSwanSimulations: () => invokeProxy("getBlackSwanSimulations", {}),
   getSubscriptions: () => invokeProxy("getSubscriptions", {}),
   createSubscription: (data) => invokeProxy("createSubscription", data),
@@ -275,5 +275,8 @@ export const awsApi = {
   getUserTrades: () => invokeProxy("getUserTrades", {}),
   invokeLLM: (prompt, context) => invokeProxy("invokeLLM", { prompt, context }),
   sendEmail: (data) => invokeProxy("sendEmail", data),
-  getUserDashboardData: async () => { const response = await invokeProxy("getUserDashboardData", {}); return response; },
+  getUserDashboardData: async () => { const response = await invokeProxy("getUserDashboardData",
+    "createPortfolioGoal",
+    "updatePortfolioGoal",
+    "deletePortfolioGoal"
 };
