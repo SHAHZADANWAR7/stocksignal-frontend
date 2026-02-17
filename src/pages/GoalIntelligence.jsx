@@ -413,8 +413,8 @@ export default function GoalIntelligence() {
     const prompt = `Generate savings plan rationale and example stock allocation for a ${goal.goal_type} goal:
 
 Target: $${(targetAmount || 0).toLocaleString()} in ${monthsToGoal} months
-Initial Capital: $${Math.round(initialCapital).toLocaleString()}
-Monthly Contribution: $${Math.round(monthlyContribution).toLocaleString()}
+Initial Capital: $${Math.round(initialCapital || 0).toLocaleString()}
+Monthly Contribution: $${Math.round(monthlyContribution || 0).toLocaleString()}
 
 Provide:
 1. Brief rationale for the initial contribution (focus on commitment, financial discipline) - 2 sentences
@@ -422,8 +422,8 @@ Provide:
 3. EXAMPLE stock allocation across 5 diversified companies:
    - Symbol and name
    - Allocation percentage (must sum to 100%)
-   - Initial amount: allocation_percentage% of $${Math.round(initialCapital)}
-   - Monthly amount: allocation_percentage% of $${Math.round(monthlyContribution)}
+   - Initial amount: allocation_percentage% of $${Math.round(initialCapital || 0)}
+   - Monthly amount: allocation_percentage% of $${Math.round(monthlyContribution || 0)}
    - Brief rationale (sector diversification focus)
 4. Strong disclaimer emphasizing this is EXAMPLE ONLY, NOT a recommendation, applies to both initial and monthly contributions, high risk, potential total loss
 
@@ -481,7 +481,7 @@ CRITICAL: Focus on disciplined saving, not investment returns or strategies.`;
       sampleAllocation = llmResult.sample_allocation;
     } else {
       // Generate fallback allocation (explicit, not silent)
-      sampleAllocation = generateFallbackAllocation(Math.round(initialCapital), Math.round(monthlyContribution));
+      sampleAllocation = generateFallbackAllocation(Math.round(initialCapital || 0), Math.round(monthlyContribution || 0));
       usedFallback = true;
     }
 
@@ -492,11 +492,11 @@ CRITICAL: Focus on disciplined saving, not investment returns or strategies.`;
     const fullRecommendation = {
       plan_type: "Goal-Based Investment Plan",
       initial_investment: {
-        amount: Math.round(initialCapital),
+        amount: Math.round(initialCapital || 0),
         rationale: llmResult?.initial_investment?.rationale || "Strategic initial contribution to establish strong foundation for goal."
       },
       monthly_contribution: {
-        amount: Math.round(monthlyContribution),
+        amount: Math.round(monthlyContribution || 0),
         rationale: llmResult?.monthly_contribution?.rationale || "Consistent monthly contributions ensure steady progress toward goal."
       },
       savings_scenarios: savingsScenarios,
@@ -524,7 +524,7 @@ CRITICAL: Focus on disciplined saving, not investment returns or strategies.`;
     if (goal.current_allocation === 0 || !goal.current_allocation) {
       const userId = localStorage.getItem('user_id');
       await awsApi.updatePortfolioGoal(userId, goal.id, {
-        current_allocation: Math.round(initialCapital)
+        current_allocation: Math.round(initialCapital || 0)
       });
     }
 
@@ -1127,9 +1127,9 @@ OUTPUT EXAMPLE:
                               ${(current || 0).toLocaleString()} / ${(goal?.target_amount || 0).toLocaleString()}
                             </span>
                           </div>
-                          <Progress value={Math.min(100, progress)} className="h-3" />
+                          <Progress value={Math.min(100, progress || 0)} className="h-3" />
                           <p className="text-sm font-medium text-slate-700">
-                            {Math.max(0, progress).toFixed(1)}% Complete • {monthsToGoal} months remaining
+                            {Math.max(0, progress || 0).toFixed(1)}% Complete • {monthsToGoal} months remaining
                           </p>
                           {/* Capital Accounting Transparency */}
                           {goal.current_allocation > 0 && (
@@ -1244,11 +1244,11 @@ OUTPUT EXAMPLE:
                                   <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
                                       <span className="text-slate-600">Initial:</span>
-                                      <span className="font-semibold">${Math.round(scenario.initial_investment).toLocaleString()}</span>
+                                      <span className="font-semibold">${Math.round(scenario.initial_investment || 0).toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between">
                                       <span className="text-slate-600">Monthly:</span>
-                                      <span className="font-semibold">${Math.round(scenario.monthly_contribution).toLocaleString()}</span>
+                                      <span className="font-semibold">${Math.round(scenario.monthly_contribution || 0).toLocaleString()}</span>
                                     </div>
                                     <div className="flex flex-col gap-1 pt-3 border-t border-blue-200 bg-blue-50 -mx-4 px-4 py-3 mt-3">
                                       <div className="flex justify-between items-center">
@@ -1293,11 +1293,11 @@ OUTPUT EXAMPLE:
                                       <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">
                                           <span className="text-slate-600">Initial:</span>
-                                          <span className="font-semibold">${Math.round(scenario.initial_investment).toLocaleString()}</span>
+                                          <span className="font-semibold">${Math.round(scenario.initial_investment || 0).toLocaleString()}</span>
                                         </div>
                                         <div className="flex justify-between">
                                           <span className="text-slate-600">Monthly:</span>
-                                          <span className="font-semibold">${Math.round(scenario.monthly_contribution).toLocaleString()}</span>
+                                          <span className="font-semibold">${Math.round(scenario.monthly_contribution || 0).toLocaleString()}</span>
                                         </div>
                                         <div className="flex justify-between">
                                           <span className="text-slate-600">Return Rate:</span>
@@ -1311,7 +1311,7 @@ OUTPUT EXAMPLE:
                                         </div>
                                         <div className="flex justify-between pt-2">
                                           <span className="text-slate-600 font-semibold">Total Contributions:</span>
-                                          <span className="font-semibold text-slate-900">${Math.round(scenario.total_contributions).toLocaleString()}</span>
+                                          <span className="font-semibold text-slate-900">${Math.round(scenario.total_contributions || 0).toLocaleString()}</span>
                                         </div>
                                         <div className="flex justify-between">
                                           <span className="text-slate-600 text-xs">Estimated Projected Value:</span>
@@ -1381,11 +1381,11 @@ OUTPUT EXAMPLE:
                                                    <div className="grid grid-cols-2 gap-3 text-xs pt-2 border-t border-slate-100">
                                                      <div>
                                                        <span className="text-slate-500">Initial Amount:</span>
-                                                       <p className="font-semibold text-slate-900">${Math.round(initialAlloc).toLocaleString()}</p>
+                                                       <p className="font-semibold text-slate-900">${Math.round(initialAlloc || 0).toLocaleString()}</p>
                                                      </div>
                                                      <div>
                                                        <span className="text-slate-500">Monthly Amount:</span>
-                                                       <p className="font-semibold text-slate-900">${Math.round(monthlyAlloc).toLocaleString()}</p>
+                                                       <p className="font-semibold text-slate-900">${Math.round(monthlyAlloc || 0).toLocaleString()}</p>
                                                      </div>
                                                    </div>
                                                  </div>
@@ -1410,8 +1410,8 @@ OUTPUT EXAMPLE:
                                                    scenario.annual_return <= 6 ? { drop: 15, label: 'Moderate' } : { drop: 20, label: 'Moderate' },
                                                    scenario.annual_return <= 6 ? { drop: 20, label: 'Severe' } : scenario.annual_return >= 10 ? { drop: 35, label: 'Severe' } : { drop: 30, label: 'Severe' }
                                                  ].map(({ drop, label }) => {
-                                                   const initialInvestment = Math.round(scenario.initial_investment);
-                                                   const monthlyContrib = Math.round(scenario.monthly_contribution);
+                                                   const initialInvestment = Math.round(scenario.initial_investment || 0);
+                                                   const monthlyContrib = Math.round(scenario.monthly_contribution || 0);
                                                    const monthsToGoal = differenceInMonths(new Date(goal.target_date), new Date());
                                                    const returnRate = scenario.annual_return / 100;
 
@@ -1430,11 +1430,11 @@ OUTPUT EXAMPLE:
                                                      <div key={drop} className="bg-white rounded-lg p-2 border border-slate-200">
                                                        <div className="flex items-center justify-between mb-1">
                                                          <span className="text-xs font-semibold text-slate-700">{label} ({drop}% decline)</span>
-                                                         <span className="text-xs font-bold text-rose-600">-${Math.round(lossAmount).toLocaleString()}</span>
+                                                         <span className="text-xs font-bold text-rose-600">-${Math.round(lossAmount || 0).toLocaleString()}</span>
                                                        </div>
                                                        <div className="flex items-center justify-between text-xs text-slate-600">
                                                          <span>New Value:</span>
-                                                         <span className="font-semibold">${Math.round(newValue).toLocaleString()}</span>
+                                                         <span className="font-semibold">${Math.round(newValue || 0).toLocaleString()}</span>
                                                        </div>
                                                      </div>
                                                    );
@@ -1611,14 +1611,14 @@ OUTPUT EXAMPLE:
                               <div className="bg-blue-50 rounded-lg p-2 md:p-3">
                                 <p className="text-[10px] md:text-xs text-slate-600">Initial Purchase</p>
                                 <p className="text-base md:text-xl font-bold text-blue-600 break-words">
-                                  ${Math.round(stock.initial_amount).toLocaleString()}
+                                  ${Math.round(stock.initial_amount || 0).toLocaleString()}
                                 </p>
                                 <p className="text-[10px] md:text-xs text-slate-500 mt-1">≈ {Math.floor(stock.initial_amount / (stock.estimated_price || 1))} shares</p>
                               </div>
                               <div className="bg-emerald-50 rounded-lg p-2 md:p-3">
                                 <p className="text-[10px] md:text-xs text-slate-600">Monthly Purchase</p>
                                 <p className="text-base md:text-xl font-bold text-emerald-600 break-words">
-                                  ${Math.round(stock.monthly_amount).toLocaleString()}
+                                  ${Math.round(stock.monthly_amount || 0).toLocaleString()}
                                 </p>
                                 <p className="text-[10px] md:text-xs text-slate-500 mt-1">≈ {Math.floor(stock.monthly_amount / (stock.estimated_price || 1))} shares</p>
                               </div>
