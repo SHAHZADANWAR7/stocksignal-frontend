@@ -412,7 +412,7 @@ export default function GoalIntelligence() {
     // Use LLM only for text descriptions and sample allocation
     const prompt = `Generate savings plan rationale and example stock allocation for a ${goal.goal_type} goal:
 
-Target: $${targetAmount.toLocaleString()} in ${monthsToGoal} months
+Target: $${(targetAmount || 0).toLocaleString()} in ${monthsToGoal} months
 Initial Capital: $${Math.round(initialCapital).toLocaleString()}
 Monthly Contribution: $${Math.round(monthlyContribution).toLocaleString()}
 
@@ -546,7 +546,7 @@ CRITICAL: Focus on disciplined saving, not investment returns or strategies.`;
     const prompt = `EDUCATIONAL CRISIS SIMULATION - Historical Accuracy Required
 
 Current Portfolio: ${JSON.stringify(holdingsList)}
-Total Value: $${totalValue.toLocaleString()}
+Total Value: $${(totalValue || 0).toLocaleString()}
 
 CRITICAL ACCURACY RULES:
 1. Use ONLY historically accurate recovery times from market data (S&P 500 / NASDAQ Composite)
@@ -669,8 +669,8 @@ OUTPUT: Provide historically accurate, educational narratives that maintain cred
     const prompt = `As a certified financial advisor, analyze this investment profile and provide personalized stock recommendations:
 
 Investment Profile:
-- Initial Investment: $${initial.toLocaleString()}
-- Monthly Contribution: $${monthly.toLocaleString()}
+- Initial Investment: $${(initial || 0).toLocaleString()}
+- Monthly Contribution: $${(monthly || 0).toLocaleString()}
 ${goalContext}
 
 Provide:
@@ -800,7 +800,7 @@ Make recommendations realistic, diversified (different sectors), and aligned wit
 
 Scenario: ${scenarioPrompts[scenario]}
 Portfolio: ${JSON.stringify(holdingsList)}
-Total Value: $${totalValue.toLocaleString()}
+Total Value: $${(totalValue || 0).toLocaleString()}
 
 SCENARIO-SPECIFIC REQUIREMENTS:
 - Immediate Drawdown Range: ${guidelines.drawdown}% (pick ONE whole number within this range)
@@ -2019,7 +2019,7 @@ OUTPUT EXAMPLE:
                       <div>
                         <p className="text-sm text-slate-600 mb-1">Potential Gain Difference</p>
                         <p className="text-4xl font-bold text-amber-700">
-                          ${scenarios.missed_opportunity.potential_gain.toLocaleString()}
+                          ${(scenarios?.missed_opportunity?.potential_gain || 0).toLocaleString()}
                         </p>
                       </div>
                       <div className="flex-1">
