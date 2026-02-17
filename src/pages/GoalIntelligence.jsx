@@ -114,7 +114,7 @@ export default function GoalIntelligence() {
     }
     
     const [goalsData, holdingsData] = await Promise.all([
-      awsApi.getStockBatch(userId),
+      awsApi.getPortfolioGoal(localStorage.getItem("user_email")),
       awsApi.getStockBatch(userId)
     ]);
     

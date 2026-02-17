@@ -45,6 +45,7 @@ const LAMBDA_KEY_MAPPING = {
     "sendMonthlyReport",
     "sendNewsletter",
     "getUserDashboardData",
+    "getPortfolioGoal",
     "createPortfolioGoal",
     "updatePortfolioGoal",
     "deletePortfolioGoal"
@@ -222,6 +223,7 @@ export const awsApi = {
   updateCompany: async (symbol, updateData) => invokeProxy("updateCompany", { symbol, updateData }),
   executeTrade: (tradeData) => invokeProxy("executeTrade", tradeData),
   getPortfolio: async () => { const response = await invokeProxy("getPortfolio", {}); return response?.Item || response; },
+  getPortfolioGoal: (email) => invokeProxy("getPortfolioGoal", { email }),
   createPortfolioGoal: (data) => invokeProxy("createPortfolioGoal", data),
   updatePortfolioGoal: (data) => invokeProxy("updatePortfolioGoal", data),
   deletePortfolioGoal: (goalId) => invokeProxy("deletePortfolioGoal", { goalId }),
