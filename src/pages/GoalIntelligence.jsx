@@ -148,7 +148,7 @@ export default function GoalIntelligence() {
     // Load cached black swan simulations from database
     const simulations = await awsApi.getBlackSwanSimulations({});
     const simulationsByType = {};
-    (simulations || []).forEach(sim => {
+    ((simulations?.data?.scenarios || simulations || []).forEach)(sim => {
       if (!simulationsByType[sim.scenario_type]) {
         simulationsByType[sim.scenario_type] = sim;
       }
