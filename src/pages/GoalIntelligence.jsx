@@ -108,6 +108,8 @@ export default function GoalIntelligence() {
   const loadData = async () => {
     setIsLoading(true);
     const userId = localStorage.getItem('user_id');
+    console.log("[GoalDebug] Current userId from storage:", userId);
+    console.log("[GoalDebug] Current email from storage:", localStorage.getItem("user_email"));
     if (!userId) {
       setIsLoading(false);
       return;
