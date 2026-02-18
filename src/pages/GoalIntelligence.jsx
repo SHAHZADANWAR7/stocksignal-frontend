@@ -116,14 +116,14 @@ export default function GoalIntelligence() {
     }
     
     const [goalsData, holdingsData] = await Promise.all([
-      awsApi.getPortfolioGoal(),
-      awsApi.getStockBatch()
+      awsApi.getPortfolioGoal({}),
+      awsApi.getStockBatch(["SPY"])
     ]);
     
     // Also load paper trading portfolio if regular holdings are empty
     let allHoldings = []; try { allHoldings = holdingsData || [];
     if (allHoldings.length === 0) {
-      const paperPortfolio = await awsApi.getStockBatch();
+      const paperPortfolio = await awsApi.getStockBatch(["SPY"]);
       if (paperPortfolio?.assets) {
         // Convert paper trading assets to holdings format
         allHoldings = paperPortfolio.assets.map(asset => ({
@@ -146,7 +146,7 @@ export default function GoalIntelligence() {
     if (!userId) return;
     
     // Load cached black swan simulations from database
-    const simulations = await awsApi.getBlackSwanSimulations();
+    const simulations = await awsApi.getBlackSwanSimulations({});
     const simulationsByType = {};
     (simulations || []).forEach(sim => {
       if (!simulationsByType[sim.scenario_type]) {
