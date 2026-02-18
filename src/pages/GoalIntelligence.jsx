@@ -109,14 +109,14 @@ export default function GoalIntelligence() {
     setIsLoading(true);
     const userId = localStorage.getItem('user_id') || JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub;
     console.log("[GoalDebug] Current userId from storage:", userId);
-    console.log("[GoalDebug] Current email from storage:", localStorage.getItem("user_email"));
+    console.log("[GoalDebug] Resolved email from attributes:", JSON.parse(localStorage.getItem("stocksignal_user_attributes"))?.email);
     if (!userId) {
       setIsLoading(false);
       return;
     }
     
     const [goalsData, holdingsData] = await Promise.all([
-      awsApi.getPortfolioGoal(localStorage.getItem("user_email") || JSON.parse(localStorage.getItem("stocksignal_user_attributes"))?.email),
+      awsApi.getPortfolioGoal(JSON.parse(localStorage.getItem("stocksignal_user_attributes"))?.email || localStorage.getItem("user_email")),
       awsApi.getStockBatch(userId)
     ]);
     
