@@ -107,7 +107,7 @@ export default function GoalIntelligence() {
 
   const loadData = async () => {
     setIsLoading(true);
-    const userId = localStorage.getItem('user_id');
+    const userId = localStorage.getItem('user_id') || JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub;
     console.log("[GoalDebug] Current userId from storage:", userId);
     console.log("[GoalDebug] Current email from storage:", localStorage.getItem("user_email"));
     if (!userId) {
@@ -116,7 +116,7 @@ export default function GoalIntelligence() {
     }
     
     const [goalsData, holdingsData] = await Promise.all([
-      awsApi.getPortfolioGoal(localStorage.getItem("user_email")),
+      awsApi.getPortfolioGoal(localStorage.getItem("user_email") || JSON.parse(localStorage.getItem("stocksignal_user_attributes"))?.email),
       awsApi.getStockBatch(userId)
     ]);
     
@@ -142,7 +142,7 @@ export default function GoalIntelligence() {
   };
 
   const loadBlackSwanSimulations = async () => {
-    const userId = localStorage.getItem('user_id');
+    const userId = localStorage.getItem('user_id') || JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub;
     if (!userId) return;
     
     // Load cached black swan simulations from database
@@ -379,7 +379,7 @@ export default function GoalIntelligence() {
 
   const handleDeleteGoal = async (goal) => {
     if (confirm("Are you sure you want to delete this goal?")) {
-      const userId = localStorage.getItem('user_id');
+      const userId = localStorage.getItem('user_id') || JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub;
       await awsApi.deletePortfolioGoal(goal.id, goal.user_email);
       await loadData();
       setRecommendations(prev => {
@@ -524,7 +524,7 @@ CRITICAL: Focus on disciplined saving, not investment returns or strategies.`;
     // SYNC INITIAL CAPITAL TO GOAL: Ensure progress calculation reflects recommendation
     // ═══════════════════════════════════════════════════════════════════════════════
     if (goal.current_allocation === 0 || !goal.current_allocation) {
-      const userId = localStorage.getItem('user_id');
+      const userId = localStorage.getItem('user_id') || JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub;
       await awsApi.updatePortfolioGoal(userId, goal.id, {
         current_allocation: Math.round(initialCapital || 0)
       });
@@ -872,7 +872,7 @@ OUTPUT EXAMPLE:
       });
 
       // Save to database
-      const userId = localStorage.getItem('user_id');
+      const userId = localStorage.getItem('user_id') || JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub;
       await awsApi.createBlackSwanSimulation({
         userId,
         scenario_type: scenario,
