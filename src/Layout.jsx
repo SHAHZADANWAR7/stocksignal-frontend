@@ -93,6 +93,7 @@ export default function Layout({ children }) {
   });
   const [userAttributes, setUserAttributes] = useState(() => getCachedUserAttributes());
   const [isLoading, setIsLoading] = useState(true);
+  const authInitialized = useRef(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isAuthenticatedRef = useRef(false);
 
@@ -112,6 +113,7 @@ export default function Layout({ children }) {
 
   useEffect(() => {
     console.log("[Layout] useEffect - initAuth starting");
+    if (authInitialized.current) return;
     let unsubscribe;
 
     const initAuth = async () => {
@@ -140,6 +142,7 @@ export default function Layout({ children }) {
       } finally {
         console.log("[Layout] initAuth - Setting isLoading to false");
         setIsLoading(false);
+        authInitialized.current = true;
       }
     };
 
@@ -186,7 +189,7 @@ export default function Layout({ children }) {
       console.log("[Layout] Cleanup - Unsubscribing from Hub");
       if (unsubscribe) unsubscribe();
     };
-  }, [userAttributes]);
+  }, []);
 
   useEffect(() => {
     console.log("[Layout] Redirect check - isLoading:", isLoading, "user:", !!user, "userAttributes:", !!userAttributes, "isPublicPage:", isPublicPage);
