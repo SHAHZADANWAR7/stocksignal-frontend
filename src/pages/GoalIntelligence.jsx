@@ -121,7 +121,7 @@ export default function GoalIntelligence() {
     ]);
     
     // Also load paper trading portfolio if regular holdings are empty
-    let allHoldings = []; try { allHoldings = holdingsData || [];
+    let allHoldings = []; try { allHoldings = holdingsData?.stocks || holdingsData || [];
     if (allHoldings.length === 0) {
       const paperPortfolio = await awsApi.getStockBatch(["SPY"]);
       if (paperPortfolio?.assets) {
