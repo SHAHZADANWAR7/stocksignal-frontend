@@ -121,7 +121,7 @@ export default function GoalIntelligence() {
     ]);
     
     // Also load paper trading portfolio if regular holdings are empty
-    let allHoldings = holdingsData || [];
+    let allHoldings = []; try { allHoldings = holdingsData || [];
     if (allHoldings.length === 0) {
       const paperPortfolio = await awsApi.getStockBatch();
       if (paperPortfolio?.assets) {
@@ -136,7 +136,7 @@ export default function GoalIntelligence() {
       }
     }
     
-    setGoals(goalsData || []);
+    setGoals(goalsData || []); } catch (e) { console.error("Holdings failed but setting goals", e); setGoals(goalsData || []); }
     setHoldings(allHoldings);
     setIsLoading(false);
   };
