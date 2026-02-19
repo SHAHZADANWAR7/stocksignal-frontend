@@ -734,7 +734,7 @@ Make recommendations realistic, diversified (different sectors), and aligned wit
         }
       });
 
-      setCustomRecommendations(result);
+      setCustomRecommendations(result.response);
     } catch (error) {
       console.error("Error generating recommendations:", error);
       alert("Error generating recommendations. Please try again.");
