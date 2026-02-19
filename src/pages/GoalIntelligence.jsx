@@ -728,14 +728,16 @@ Make recommendations realistic, diversified (different sectors), and aligned wit
                   monthly_amount: { type: "number" },
                   estimated_price: { type: "number" },
                   reasoning: { type: "string" }
-                }
+                },
+                required: ["symbol", "company_name", "sector", "allocation_percent", "initial_amount", "monthly_amount", "estimated_price", "reasoning"]
               }
             },
             improvement_tips: {
               type: "array",
               items: { type: "string" }
             }
-          }
+          },
+          required: ["risk_profile", "investment_style", "time_horizon", "profile_reasoning", "stock_recommendations", "improvement_tips"]
         }
       });
 
@@ -2166,3 +2168,4 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
