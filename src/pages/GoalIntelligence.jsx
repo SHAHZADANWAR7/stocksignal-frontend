@@ -276,7 +276,7 @@ export default function GoalIntelligence() {
     }`;
 
     try {
-      const result = await awsApi.invokeLLM(prompt, true, {
+      const result = await awsApi.invokeLLM({ prompt: prompt, analysis_type: "investment_recommendation", use_schema: true, json_schema: {
         type: "object",
         properties: {
           actual_scenario: {
@@ -597,7 +597,7 @@ This simulation illustrates past market behavior; future results may differ."
 OUTPUT: Provide historically accurate, educational narratives that maintain credibility.`;
 
     try {
-      const result = await awsApi.invokeLLM(prompt, true, {
+      const result = await awsApi.invokeLLM({ prompt: prompt, analysis_type: "investment_recommendation", use_schema: true, json_schema: {
         type: "object",
         properties: {
           crisis_2008: {
@@ -704,8 +704,7 @@ Provide:
 Make recommendations realistic, diversified (different sectors), and aligned with the investment amounts provided.`;
 
     try {
-      const result = await awsApi.invokeLLM(prompt, true, {
-        type: "object",
+      const result = await awsApi.invokeLLM({ prompt: prompt, analysis_type: "investment_recommendation", use_schema: true, json_schema: {
         properties: {
           risk_profile: { type: "string" },
           investment_style: { type: "string" },
@@ -734,7 +733,7 @@ Make recommendations realistic, diversified (different sectors), and aligned wit
         }
       });
 
-      setCustomRecommendations(result);
+      setCustomRecommendations(result.response);
     } catch (error) {
       console.error("Error generating recommendations:", error);
       alert("Error generating recommendations. Please try again.");
@@ -845,7 +844,7 @@ OUTPUT EXAMPLE:
 }`;
 
     try {
-      const result = await awsApi.invokeLLM(prompt, true, {
+      const result = await awsApi.invokeLLM({ prompt: prompt, analysis_type: "investment_recommendation", use_schema: true, json_schema: {
         type: "object",
         properties: {
           scenario_name: { type: "string" },
