@@ -703,38 +703,43 @@ Provide:
 
 Make recommendations realistic, diversified (different sectors), and aligned with the investment amounts provided.`;
 
-    try {
-      const result = await awsApi.invokeLLM(prompt, true, {
-        type: "object",
-        properties: {
-          risk_profile: { type: "string" },
-          investment_style: { type: "string" },
-          time_horizon: { type: "string" },
-          profile_reasoning: { type: "string" },
-          stock_recommendations: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                symbol: { type: "string" },
-                company_name: { type: "string" },
-                sector: { type: "string" },
-                allocation_percent: { type: "number" },
-                initial_amount: { type: "number" },
-                monthly_amount: { type: "number" },
-                estimated_price: { type: "number" },
-                reasoning: { type: "string" }
+  try {
+      const result = await awsApi.invokeLLM({ 
+        prompt: prompt, 
+        analysis_type: "investment_recommendation", 
+        use_schema: true, 
+        json_schema: {
+          type: "object",
+          properties: {
+            risk_profile: { type: "string" },
+            investment_style: { type: "string" },
+            time_horizon: { type: "string" },
+            profile_reasoning: { type: "string" },
+            stock_recommendations: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  symbol: { type: "string" },
+                  company_name: { type: "string" },
+                  sector: { type: "string" },
+                  allocation_percent: { type: "number" },
+                  initial_amount: { type: "number" },
+                  monthly_amount: { type: "number" },
+                  estimated_price: { type: "number" },
+                  reasoning: { type: "string" }
+                }
               }
+            },
+            improvement_tips: {
+              type: "array",
+              items: { type: "string" }
             }
-          },
-          improvement_tips: {
-            type: "array",
-            items: { type: "string" }
           }
         }
       });
 
-      setCustomRecommendations(result);
+      setCustomRecommendations(result.response);
     } catch (error) {
       console.error("Error generating recommendations:", error);
       alert("Error generating recommendations. Please try again.");
@@ -2159,4 +2164,5 @@ OUTPUT EXAMPLE:
     </div>
   );
 }
+
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
