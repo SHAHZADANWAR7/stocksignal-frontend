@@ -703,9 +703,10 @@ Provide:
 
 Make recommendations realistic, diversified (different sectors), and aligned with the investment amounts provided.`;
 
-  try {
-      const result = await awsApi.invokeLLM({ 
-        prompt: prompt, 
+ try {
+      // We pass the prompt string as the first argument 
+      // and the config object as the second argument (context)
+      const result = await awsApi.invokeLLM(prompt, { 
         analysis_type: "investment_recommendation", 
         use_schema: true, 
         json_schema: {
@@ -746,7 +747,6 @@ Make recommendations realistic, diversified (different sectors), and aligned wit
       console.error("Error generating recommendations:", error);
       alert("Error generating recommendations. Please try again.");
     }
-
     setIsGeneratingCustomReco(false);
   };
 
@@ -2168,4 +2168,5 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
