@@ -1176,22 +1176,30 @@ OUTPUT EXAMPLE:
                                                       JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub : null);
                                       
                                       if (!userId) {
-                                        console.error("No User ID found!");
                                         alert("Session expired. Please log in again.");
                                         return;
                                       }
 
                                       const updatedIsLinked = !goal.is_linked;
-                                      console.log("Updating to:", updatedIsLinked);
                                       
-                                      await awsApi.updatePortfolioGoal(userId, goal.id, { 
-                                        ...goal, 
-                                        is_linked: updatedIsLinked 
-                                      });
+                                      // CLEAN PAYLOAD: We only send the raw fields the database expects
+                                      const updatePayload = {
+                                        goal_name: goal.goal_name,
+                                        goal_type: goal.goal_type,
+                                        target_amount: goal.target_amount,
+                                        target_date: goal.target_date,
+                                        priority: goal.priority,
+                                        assigned_holdings: goal.assigned_holdings || [],
+                                        is_linked: updatedIsLinked
+                                      };
+
+                                      console.log("Sending clean update to AWS:", updatePayload);
+                                      await awsApi.updatePortfolioGoal(userId, goal.id, updatePayload);
                                       
                                       await loadData();
                                     } catch (err) {
                                       console.error("Link Portfolio Error:", err);
+                                      alert("Update failed. Check console for details.");
                                     }
                                   }}
                                   style={{ position: 'relative', zIndex: 50 }}
@@ -2269,6 +2277,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
