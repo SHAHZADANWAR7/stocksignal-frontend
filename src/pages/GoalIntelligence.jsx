@@ -243,15 +243,15 @@ const analyzeScenarios = async () => {
     OUTPUT FORMAT - USE WHOLE NUMBER PERCENTAGES:
     {
     "actual_scenario": {
-    "five_year_return": 76,     // NOT 0.76
-    "annual_return": 12,          // NOT 0.12
+    "five_year_return": 76,
+    "annual_return": 12,
     "risk_level": "High",
-    "description": "Provide a brief summary of how the specific stocks in the user's holdings performed over the last 5 years"
+    "description": "Briefly summarize performance based ONLY on the specific stocks provided above."
     },
     "optimal_scenario": {
     "five_year_return": 95,
     "annual_return": 14,
-    "key_changes": ["Overweight TSLA 60%", "AAPL 30%", "GOOGL 10%"]
+    "key_changes": ["Suggest specific allocation changes for the actual stocks provided"]
     },
     "conservative_scenario": {
     "five_year_return": 42,
@@ -2196,6 +2196,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
