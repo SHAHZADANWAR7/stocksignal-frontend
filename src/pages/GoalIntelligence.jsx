@@ -390,6 +390,7 @@ const analyzeScenarios = async () => {
         ...newGoal,
         target_amount: parseFloat(newGoal.target_amount),
         current_allocation: parseFloat(newGoal.current_allocation || 0),
+        is_linked: newGoal.is_linked || false,
         userId
       };
       if (editingGoalId) {
@@ -416,7 +417,8 @@ const analyzeScenarios = async () => {
       target_date: goal.target_date,
       current_allocation: goal.current_allocation?.toString() || "",
       assigned_holdings: goal.assigned_holdings || [],
-      priority: goal.priority
+      priority: goal.priority,
+      is_linked: goal.is_linked || false
     });
     setEditingGoalId(goal.id);
     setShowAddGoal(true);
@@ -2243,6 +2245,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
