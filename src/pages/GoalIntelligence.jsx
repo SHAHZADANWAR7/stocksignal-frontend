@@ -325,11 +325,11 @@ const analyzeScenarios = async () => {
       // CRASH PROTECTION: Identify the correct data key
       // The Lambda returns data in 'response' or 'data'.
       let finalData = null;
-      if (result.response && result.response.actual_scenario) {
+      if (result && result.response && result.response.actual_scenario) {
         finalData = result.response;
-      } else if (result.data && result.data.actual_scenario) {
+      } else if (result && result.data && result.data.actual_scenario) {
         finalData = result.data;
-      } else if (result.actual_scenario) {
+      } else if (result && result.actual_scenario) {
         finalData = result;
       }
 
@@ -337,7 +337,7 @@ const analyzeScenarios = async () => {
         setScenarios(finalData);
       } else {
         console.error("AI returned malformed data:", result);
-        alert("Received unexpected data format from AI.");
+        alert("Received unexpected data format from AI. Please try again.");
       }
       
     } catch (error) {
@@ -2194,6 +2194,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
