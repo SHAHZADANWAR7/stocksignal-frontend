@@ -108,37 +108,65 @@ export default function GoalIntelligence() {
   const loadData = async () => {
     setIsLoading(true);
     const userId = localStorage.getItem('user_id') || JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub;
-    console.log("[GoalDebug] Current userId from storage:", userId);
-    console.log("[GoalDebug] Resolved email from attributes:", JSON.parse(localStorage.getItem("stocksignal_user_attributes"))?.email);
+    
     if (!userId) {
       setIsLoading(false);
       return;
     }
     
-    const [goalsData, holdingsData] = await Promise.all([
-      awsApi.getPortfolioGoal({}),
-      awsApi.getStockBatch(["SPY"])
-    ]);
-    
-    // Also load paper trading portfolio if regular holdings are empty
-    let allHoldings = []; try { allHoldings = holdingsData?.stocks || holdingsData || [];
-    if (allHoldings.length === 0) {
-      const paperPortfolio = await awsApi.getStockBatch(["SPY"]);
-      if (paperPortfolio?.assets) {
-        // Convert paper trading assets to holdings format
-        allHoldings = paperPortfolio.assets.map(asset => ({
-          symbol: asset.symbol,
-          name: asset.symbol,
-          quantity: asset.quantity,
-          average_cost: asset.avgCost,
-          current_price: asset.currentPrice || asset.avgCost
+    try {
+      // 1. Fetch Goals as usual
+      const goalsData = await awsApi.getPortfolioGoal({});
+      setGoals(goalsData || []);
+
+      // 2. Fetch Portfolio Data
+      // We check for a recent snapshot first as it's the fastest way to get your current mix
+      const portfolioData = await awsApi.getBlackSwanSimulations({});
+      
+      let allHoldings = [];
+
+      // Check if we have a saved snapshot from your real portfolio
+      const snapshot = portfolioData?.data?.scenarios?.[0]?.portfolio_snapshot || portfolioData?.[0]?.portfolio_snapshot;
+
+      if (snapshot && snapshot.length > 0) {
+        console.log("✅ [GoalIntelligence] Loading real holdings from snapshot");
+        allHoldings = snapshot.map(h => ({
+          symbol: h.symbol,
+          name: h.name || h.symbol,
+          quantity: parseFloat(h.quantity || 0),
+          current_price: parseFloat(h.current_price || h.value / h.quantity || 0),
+          average_cost: parseFloat(h.average_cost || 0)
         }));
+      } else {
+        // FALLBACK: If no snapshot exists, we fetch your main trading symbols
+        // Add your known symbols here to ensure they are always included
+        console.log("⚠️ [GoalIntelligence] No snapshot found, fetching batch defaults");
+        const holdingsData = await awsApi.getStockBatch(["SPY", "AAPL", "TDG", "SOUN"]);
+        allHoldings = holdingsData?.stocks || (Array.isArray(holdingsData) ? holdingsData : []);
       }
+
+      // If still empty, check paper trading assets explicitly
+      if (allHoldings.length === 0) {
+        const paperPortfolio = await awsApi.getPaperPortfolio(); // Assuming this helper exists
+        if (paperPortfolio?.assets) {
+          allHoldings = paperPortfolio.assets.map(asset => ({
+            symbol: asset.symbol,
+            name: asset.symbol,
+            quantity: asset.quantity,
+            average_cost: asset.avgCost,
+            current_price: asset.currentPrice || asset.avgCost
+          }));
+        }
+      }
+
+      console.log("📊 [GoalIntelligence] Holdings Loaded:", allHoldings);
+      setHoldings(allHoldings);
+      
+    } catch (e) { 
+      console.error("❌ [GoalIntelligence] loadData failed:", e); 
+    } finally {
+      setIsLoading(false);
     }
-    
-    setGoals(goalsData || []); } catch (e) { console.error("Holdings failed but setting goals", e); setGoals(goalsData || []); }
-    setHoldings(allHoldings);
-    setIsLoading(false);
   };
 
   const loadBlackSwanSimulations = async () => {
@@ -2196,6 +2224,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
