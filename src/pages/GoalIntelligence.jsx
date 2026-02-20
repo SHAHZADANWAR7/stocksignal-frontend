@@ -220,18 +220,10 @@ const analyzeScenarios = async () => {
     - Price in Dec 2025 (current)
     - Calculate 5-year return: ((Dec2025 - Dec2020) / Dec2020) × 100
 
-    Example format:
-    AAPL: $132 (Dec 2020) → $250 (Dec 2025) = 89% gain over 5 years
-    TSLA: $235 (Dec 2020) → $425 (Dec 2025) = 81% gain over 5 years
-
     STEP 2 - CALCULATE ACTUAL PORTFOLIO PERFORMANCE:
     Weight each stock by current portfolio value:
     - Total return = Σ (stock_weight × stock_5yr_return)
     - Annualized = ((1 + total_return/100)^0.2 - 1) × 100
-
-    Example: If portfolio is 40% AAPL (89% return) + 60% GOOGL (67% return):
-    Total 5yr return = 0.4×89 + 0.6×67 = 76%
-    Annual return = ((1.76)^0.2 - 1) × 100 = 12%
 
     STEP 3 - OPTIMAL STRATEGY (HINDSIGHT):
     Identify top 3 performers from portfolio stocks
@@ -276,8 +268,6 @@ const analyzeScenarios = async () => {
     }`;
 
     try {
-      // The wrapper expects arguments: (prompt, use_schema, json_schema, analysis_type)
-      // This ensures the payload sent to the Lambda is flat, not nested.
       const result = await awsApi.invokeLLM(
         prompt,
         true,
@@ -332,8 +322,24 @@ const analyzeScenarios = async () => {
         "portfolio_benchmarking"
       );
 
-      const resultData = result.data || result.response || result;
-      setScenarios(resultData);
+      // CRASH PROTECTION: Identify the correct data key
+      // The Lambda returns data in 'response' or 'data'.
+      let finalData = null;
+      if (result.response && result.response.actual_scenario) {
+        finalData = result.response;
+      } else if (result.data && result.data.actual_scenario) {
+        finalData = result.data;
+      } else if (result.actual_scenario) {
+        finalData = result;
+      }
+
+      if (finalData) {
+        setScenarios(finalData);
+      } else {
+        console.error("AI returned malformed data:", result);
+        alert("Received unexpected data format from AI.");
+      }
+      
     } catch (error) {
       console.error("Error analyzing scenarios:", error);
       alert("Error analyzing scenarios. Please try again.");
@@ -2188,6 +2194,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
