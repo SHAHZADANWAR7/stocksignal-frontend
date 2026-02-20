@@ -265,29 +265,28 @@ const analyzeScenarios = async () => {
     Blended: 0.6×60 + 0.4×16 = 42% total, 7.3% annual
 
     STEP 5 - MISSED OPPORTUNITY:
-    Dollar amount = (Optimal% - Actual%) / 100 × $${(totalValue || 0).toLocaleString()}
-    Example: (95% - 76%) / 100 × $100,000 = $19,000
+    Dollar amount = (Optimal% - Actual%) / 100 × [Your Total Portfolio Value]
 
     OUTPUT FORMAT - USE WHOLE NUMBER PERCENTAGES:
     {
     "actual_scenario": {
-    "five_year_return": 76,
-    "annual_return": 12,
-    "risk_level": "High",
-    "description": "Briefly summarize performance based ONLY on the specific stocks provided above."
+      "five_year_return": 76,
+      "annual_return": 12,
+      "risk_level": "High",
+      "description": "Summarize performance based ONLY on the specific stocks provided above."
     },
     "optimal_scenario": {
-    "five_year_return": 95,
-    "annual_return": 14,
-    "key_changes": ["Suggest specific allocation changes for the actual stocks provided"]
+      "five_year_return": 95,
+      "annual_return": 14,
+      "key_changes": ["Suggest specific changes for the actual stocks provided"]
     },
     "conservative_scenario": {
-    "five_year_return": 42,
-    "annual_return": 7
+      "five_year_return": 42,
+      "annual_return": 7
     },
     "missed_opportunity": {
-    "potential_gain": 19000,    // Dollar amount, NOT 0.19
-    "description": "Explain the difference in gains between the optimal allocation of these stocks vs actual"
+      "potential_gain": 0, // YOU MUST CALCULATE THIS: (Optimal% - Actual%) * Total Value / 100
+      "description": "Explain the difference in gains for this specific portfolio."
     },
     "benchmark_comparison": {
     "sp500_return": 60,
@@ -2224,6 +2223,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
