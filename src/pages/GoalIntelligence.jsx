@@ -861,29 +861,33 @@ OUTPUT EXAMPLE:
 }`;
 
     try {
-      const result = await awsApi.invokeLLM(prompt, true, {
-        type: "object",
-        properties: {
-          scenario_name: { type: "string" },
-          immediate_drawdown: { type: "number" },
-          drawdown_timeline: { type: "string" },
-          recovery_months: { type: "number" },
-          assets_fail_order: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                symbol: { type: "string" },
-                impact_range: { type: "string" },
-                reason: { type: "string" }
+      const result = await awsApi.invokeLLM(prompt, { 
+        analysis_type: "black_swan", 
+        use_schema: true, 
+        json_schema: {
+          type: "object",
+          properties: {
+            scenario_name: { type: "string" },
+            immediate_drawdown: { type: "number" },
+            drawdown_timeline: { type: "string" },
+            recovery_months: { type: "number" },
+            assets_fail_order: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  symbol: { type: "string" },
+                  impact_range: { type: "string" },
+                  reason: { type: "string" }
+                }
               }
-            }
-          },
-          benefiting_assets: {
-            type: "array",
-            items: { type: "string" }
-          },
-          narrative_story: { type: "string" }
+            },
+            benefiting_assets: {
+              type: "array",
+              items: { type: "string" }
+            },
+            narrative_story: { type: "string" }
+          }
         }
       });
 
@@ -892,18 +896,18 @@ OUTPUT EXAMPLE:
       await awsApi.createBlackSwanSimulation({
         userId,
         scenario_type: scenario,
-        scenario_name: result.scenario_name,
+        scenario_name: result.response.scenario_name,
         portfolio_snapshot: holdingsList,
-        immediate_drawdown: result.immediate_drawdown,
-        drawdown_timeline: result.drawdown_timeline,
-        recovery_months: result.recovery_months,
-        assets_fail_order: result.assets_fail_order,
-        benefiting_assets: result.benefiting_assets,
-        narrative_story: result.narrative_story,
-        simulation_date: (() => { try { return new Date().toISOString().split('T')[0]; } catch (e) { return new Date().toLocaleDateString().split('/').reverse().join('-'); } })()
+        immediate_drawdown: result.response.immediate_drawdown,
+        drawdown_timeline: result.response.drawdown_timeline,
+        recovery_months: result.response.recovery_months,
+        assets_fail_order: result.response.assets_fail_order,
+        benefiting_assets: result.response.benefiting_assets,
+        narrative_story: result.response.narrative_story,
+        simulation_date: new Date().toISOString().split('T')[0]
       });
 
-      setBlackSwanResult(result);
+      setBlackSwanResult(result.response);
       await loadBlackSwanSimulations();
     } catch (error) {
       console.error("Error generating black swan:", error);
@@ -2177,6 +2181,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
