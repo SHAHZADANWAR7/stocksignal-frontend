@@ -246,7 +246,7 @@ const analyzeScenarios = async () => {
     "five_year_return": 76,     // NOT 0.76
     "annual_return": 12,          // NOT 0.12
     "risk_level": "High",
-    "description": "Tech-heavy portfolio with AAPL, GOOGL, TSLA achieved solid gains but high volatility"
+    "description": "Provide a brief summary of how the specific stocks in the user's holdings performed over the last 5 years"
     },
     "optimal_scenario": {
     "five_year_return": 95,
@@ -2196,6 +2196,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
