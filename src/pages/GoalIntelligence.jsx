@@ -597,53 +597,62 @@ This simulation illustrates past market behavior; future results may differ."
 OUTPUT: Provide historically accurate, educational narratives that maintain credibility.`;
 
     try {
-      const result = await awsApi.invokeLLM(prompt, true, {
-        type: "object",
-        properties: {
-          crisis_2008: {
-            type: "object",
-            properties: {
-              name: { type: "string" },
-              drawdown_percent: { type: "number" },
-              recovery_months: { type: "number" },
-              story: { type: "string" },
-              worst_hit_asset: { type: "string" }
+      const result = await awsApi.invokeLLM(prompt, { 
+        analysis_type: "risk_assessment", 
+        use_schema: true, 
+        json_schema: {
+          type: "object",
+          properties: {
+            crisis_2008: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                drawdown_percent: { type: "number" },
+                recovery_months: { type: "number" },
+                story: { type: "string" },
+                worst_hit_asset: { type: "string" }
+              },
+              required: ["name", "drawdown_percent", "recovery_months", "story", "worst_hit_asset"]
+            },
+            crisis_covid: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                drawdown_percent: { type: "number" },
+                recovery_months: { type: "number" },
+                story: { type: "string" },
+                worst_hit_asset: { type: "string" }
+              },
+              required: ["name", "drawdown_percent", "recovery_months", "story", "worst_hit_asset"]
+            },
+            crisis_dotcom: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                drawdown_percent: { type: "number" },
+                recovery_months: { type: "number" },
+                story: { type: "string" },
+                worst_hit_asset: { type: "string" }
+              },
+              required: ["name", "drawdown_percent", "recovery_months", "story", "worst_hit_asset"]
+            },
+            crisis_inflation: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                drawdown_percent: { type: "number" },
+                recovery_months: { type: "number" },
+                story: { type: "string" },
+                worst_hit_asset: { type: "string" }
+              },
+              required: ["name", "drawdown_percent", "recovery_months", "story", "worst_hit_asset"]
             }
           },
-          crisis_covid: {
-            type: "object",
-            properties: {
-              name: { type: "string" },
-              drawdown_percent: { type: "number" },
-              recovery_months: { type: "number" },
-              story: { type: "string" },
-              worst_hit_asset: { type: "string" }
-            }
-          },
-          crisis_dotcom: {
-            type: "object",
-            properties: {
-              name: { type: "string" },
-              drawdown_percent: { type: "number" },
-              recovery_months: { type: "number" },
-              story: { type: "string" },
-              worst_hit_asset: { type: "string" }
-            }
-          },
-          crisis_inflation: {
-            type: "object",
-            properties: {
-              name: { type: "string" },
-              drawdown_percent: { type: "number" },
-              recovery_months: { type: "number" },
-              story: { type: "string" },
-              worst_hit_asset: { type: "string" }
-            }
-          }
+          required: ["crisis_2008", "crisis_covid", "crisis_dotcom", "crisis_inflation"]
         }
       });
 
-      setCrisisSimulation(result);
+      setCrisisSimulation(result.response);
     } catch (error) {
       console.error("Error simulating crises:", error);
       alert("Error simulating historical crises. Please try again.");
@@ -2168,5 +2177,6 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
