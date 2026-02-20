@@ -276,11 +276,11 @@ const analyzeScenarios = async () => {
     }`;
 
     try {
-      // Correct Argument Pattern: prompt, use_schema, schema_object, analysis_type
-      const result = await awsApi.invokeLLM(
-        prompt, 
-        true, 
-        {
+      const result = await awsApi.invokeLLM({
+        prompt: prompt,
+        analysis_type: "portfolio_benchmarking",
+        use_schema: true,
+        json_schema: {
           type: "object",
           properties: {
             actual_scenario: {
@@ -327,9 +327,8 @@ const analyzeScenarios = async () => {
               }
             }
           }
-        },
-        "portfolio_benchmarking"
-      );
+        }
+      });
 
       const resultData = result.data || result.response || result;
       setScenarios(resultData);
@@ -340,7 +339,6 @@ const analyzeScenarios = async () => {
 
     setIsLoading(false);
   };
-
   const handleAddGoal = async () => {
     const userId = localStorage.getItem("user_id");
     if (!newGoal.goal_name || !newGoal.target_amount || !newGoal.target_date) {
@@ -2188,6 +2186,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
