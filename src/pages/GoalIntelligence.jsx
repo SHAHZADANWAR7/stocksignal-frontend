@@ -190,20 +190,23 @@ export default function GoalIntelligence() {
   
   const calculateGoalProgress = (goal) => {
     try {
-      const metrics = calculateGoalMetrics(goal, holdings);
+      // If linked, we override assigned_holdings with all current symbols
+      const activeGoal = goal.is_linked 
+        ? { ...goal, assigned_holdings: holdings.map(h => h.symbol) } 
+        : goal;
+
+      const metrics = calculateGoalMetrics(activeGoal, holdings);
       return {
         current: metrics.portfolioValue,
         progress: metrics.progressPercent,
         contributed_capital: metrics.initialCapital,
         portfolio_value: metrics.holdingsValue,
         remaining_gap: metrics.remainingGap,
-        // Full metrics for advanced calculations
         _full: metrics
       };
     } catch (error) {
       // ═══════════════════════════════════════════════════════════════════════════
       // ARCHITECTURAL FIX: Do NOT swallow errors with fallback zeros
-      // Throw error so validation catches it and prevents misleading output
       // ═══════════════════════════════════════════════════════════════════════════
       console.error("❌ CRITICAL: Error calculating goal progress:", error);
       throw new Error(`Goal progress calculation failed for goal "${goal?.goal_name}": ${error.message}`);
@@ -2223,6 +2226,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
