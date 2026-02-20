@@ -1161,7 +1161,24 @@ OUTPUT EXAMPLE:
                               {getGoalIcon(goal.goal_type)}
                             </div>
                             <div>
-                              <h3 className="text-xl font-bold text-slate-900">{goal.goal_name}</h3>
+                              <div className="flex items-center gap-2">
+                                <h3 className="text-xl font-bold text-slate-900">{goal.goal_name}</h3>
+                                <button
+                                  onClick={async () => {
+                                    const userId = localStorage.getItem('user_id') || JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub;
+                                    await awsApi.updatePortfolioGoal(userId, goal.id, { ...goal, is_linked: !goal.is_linked });
+                                    loadData();
+                                  }}
+                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${
+                                    goal.is_linked 
+                                      ? "bg-blue-600 text-white shadow-md shadow-blue-200" 
+                                      : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                  }`}
+                                >
+                                  <Zap className={`w-3 h-3 ${goal.is_linked ? "fill-current" : ""}`} />
+                                  {goal.is_linked ? "LINKED" : "LINK PORTFOLIO"}
+                                </button>
+                              </div>
                               <Badge variant="outline" className={`${getPriorityColor(goal.priority)} border mt-1`}>
                                 {goal.priority} priority
                               </Badge>
@@ -2226,6 +2243,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
