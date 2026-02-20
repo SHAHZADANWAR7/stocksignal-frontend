@@ -268,10 +268,13 @@ const analyzeScenarios = async () => {
     }`;
 
     try {
-      const result = await awsApi.invokeLLM(
-        prompt,
-        true,
-        {
+      // The wrapper often fails to pass multiple arguments correctly.
+      // We pass a single object to ensure analysis_type and json_schema reach the Lambda top-level.
+      const result = await awsApi.invokeLLM({
+        prompt: prompt,
+        analysis_type: "portfolio_benchmarking",
+        use_schema: true,
+        json_schema: {
           type: "object",
           properties: {
             actual_scenario: {
@@ -318,9 +321,8 @@ const analyzeScenarios = async () => {
               }
             }
           }
-        },
-        "portfolio_benchmarking"
-      );
+        }
+      });
 
       // CRASH PROTECTION: Identify the correct data key
       // The Lambda returns data in 'response' or 'data'.
@@ -2194,6 +2196,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
