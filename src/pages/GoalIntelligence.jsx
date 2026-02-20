@@ -208,7 +208,7 @@ const analyzeScenarios = async () => {
       current_value: h.quantity * (h.current_price || h.average_cost)
     }));
 
-    const promptText = `FETCH AND ANALYZE ACTUAL 5-YEAR HISTORICAL STOCK DATA:
+    const prompt = `FETCH AND ANALYZE ACTUAL 5-YEAR HISTORICAL STOCK DATA:
 
     Portfolio: ${holdingsList.map(h => `${h.symbol} ($${(h.current_value || 0).toLocaleString()})`).join(', ')}
     Total Value: $${(totalValue || 0).toLocaleString()}
@@ -276,10 +276,9 @@ const analyzeScenarios = async () => {
     }`;
 
     try {
-      // By passing these as separate arguments, the awsApi wrapper will
-      // build the correct flat payload for the Lambda.
+      // Correct Argument Pattern: prompt, use_schema, schema_object, analysis_type
       const result = await awsApi.invokeLLM(
-        promptText, 
+        prompt, 
         true, 
         {
           type: "object",
@@ -332,7 +331,6 @@ const analyzeScenarios = async () => {
         "portfolio_benchmarking"
       );
 
-      // Extract and set data
       const resultData = result.data || result.response || result;
       setScenarios(resultData);
     } catch (error) {
@@ -2190,6 +2188,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
