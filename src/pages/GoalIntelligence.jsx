@@ -276,11 +276,12 @@ const analyzeScenarios = async () => {
     }`;
 
     try {
-      const result = await awsApi.invokeLLM({
-        prompt: prompt,
-        analysis_type: "portfolio_benchmarking",
-        use_schema: true,
-        json_schema: {
+      // The wrapper expects arguments: (prompt, use_schema, json_schema, analysis_type)
+      // This ensures the payload sent to the Lambda is flat, not nested.
+      const result = await awsApi.invokeLLM(
+        prompt,
+        true,
+        {
           type: "object",
           properties: {
             actual_scenario: {
@@ -327,8 +328,9 @@ const analyzeScenarios = async () => {
               }
             }
           }
-        }
-      });
+        },
+        "portfolio_benchmarking"
+      );
 
       const resultData = result.data || result.response || result;
       setScenarios(resultData);
@@ -2186,6 +2188,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
