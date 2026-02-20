@@ -242,12 +242,12 @@ const analyzeScenarios = async () => {
     Total Value: $${(totalValue || 0).toLocaleString()}
     Date Range: December 2020 to December 2025 (5 years)
 
-    STEP 1 - LOOKUP REAL HISTORICAL PRICES FROM YAHOO FINANCE:
-    For each symbol (SOUN, AAPL, GPRO, UAA, UA, GOOGL, TSLA, WW):
+    STEP 1 - LOOKUP REAL HISTORICAL PRICES:
+    For each symbol in the user's ACTUAL portfolio (${holdingsList.map(h => h.symbol).join(', ')}):
     - Price in Dec 2020
     - Price in Dec 2025 (current)
-    - Calculate 5-year return: ((Dec2025 - Dec2020) / Dec2020) × 100
-
+    - Calculate 5-year return using formula: ((Price2025 - Price2020) / Price2020) × 100
+    
     STEP 2 - CALCULATE ACTUAL PORTFOLIO PERFORMANCE:
     Weight each stock by current portfolio value:
     - Total return = Σ (stock_weight × stock_5yr_return)
@@ -2223,6 +2223,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
