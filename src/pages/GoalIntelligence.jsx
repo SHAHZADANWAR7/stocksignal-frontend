@@ -195,7 +195,7 @@ export default function GoalIntelligence() {
     };
   };
 
- const analyzeScenarios = async () => {
+const analyzeScenarios = async () => {
     setIsLoading(true);
 
     const totalValue = holdings.reduce((sum, h) => 
@@ -208,7 +208,7 @@ export default function GoalIntelligence() {
       current_value: h.quantity * (h.current_price || h.average_cost)
     }));
 
-    const prompt = `FETCH AND ANALYZE ACTUAL 5-YEAR HISTORICAL STOCK DATA:
+    const promptText = `FETCH AND ANALYZE ACTUAL 5-YEAR HISTORICAL STOCK DATA:
 
     Portfolio: ${holdingsList.map(h => `${h.symbol} ($${(h.current_value || 0).toLocaleString()})`).join(', ')}
     Total Value: $${(totalValue || 0).toLocaleString()}
@@ -276,11 +276,12 @@ export default function GoalIntelligence() {
     }`;
 
     try {
-      const result = await awsApi.invokeLLM({
-        prompt: prompt,
-        analysis_type: "portfolio_benchmarking",
-        use_schema: true,
-        json_schema: {
+      // By passing these as separate arguments, the awsApi wrapper will
+      // build the correct flat payload for the Lambda.
+      const result = await awsApi.invokeLLM(
+        promptText, 
+        true, 
+        {
           type: "object",
           properties: {
             actual_scenario: {
@@ -327,10 +328,11 @@ export default function GoalIntelligence() {
               }
             }
           }
-        }
-      });
+        },
+        "portfolio_benchmarking"
+      );
 
-      // Normalize data extraction based on how your proxy returns it
+      // Extract and set data
       const resultData = result.data || result.response || result;
       setScenarios(resultData);
     } catch (error) {
@@ -2188,6 +2190,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
