@@ -259,11 +259,11 @@ const analyzeScenarios = async () => {
     },
     "missed_opportunity": {
     "potential_gain": 19000,    // Dollar amount, NOT 0.19
-    "description": "By not overweighting top performers"
+    "description": "Explain the difference in gains between the optimal allocation of these stocks vs actual"
     },
     "benchmark_comparison": {
     "sp500_return": 60,
-    "vs_portfolio": "Portfolio outperformed S&P 500 by 16 percentage points"
+    "vs_portfolio": "Compare actual portfolio against S&P 500 performance"
     }
     }`;
 
@@ -2196,6 +2196,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
