@@ -195,7 +195,7 @@ export default function GoalIntelligence() {
     };
   };
 
-  const analyzeScenarios = async () => {
+ const analyzeScenarios = async () => {
     setIsLoading(true);
 
     const totalValue = holdings.reduce((sum, h) => 
@@ -252,7 +252,7 @@ export default function GoalIntelligence() {
     {
     "actual_scenario": {
     "five_year_return": 76,     // NOT 0.76
-    "annual_return": 12,         // NOT 0.12
+    "annual_return": 12,          // NOT 0.12
     "risk_level": "High",
     "description": "Tech-heavy portfolio with AAPL, GOOGL, TSLA achieved solid gains but high volatility"
     },
@@ -276,56 +276,63 @@ export default function GoalIntelligence() {
     }`;
 
     try {
-      const result = await awsApi.invokeLLM(prompt, true, {
-        type: "object",
-        properties: {
-          actual_scenario: {
-            type: "object",
-            properties: {
-              five_year_return: { type: "number" },
-              annual_return: { type: "number" },
-              risk_level: { type: "string" },
-              description: { type: "string" }
-            }
-          },
-          optimal_scenario: {
-            type: "object",
-            properties: {
-              five_year_return: { type: "number" },
-              annual_return: { type: "number" },
-              risk_level: { type: "string" },
-              description: { type: "string" },
-              key_changes: { type: "array", items: { type: "string" } }
-            }
-          },
-          conservative_scenario: {
-            type: "object",
-            properties: {
-              five_year_return: { type: "number" },
-              annual_return: { type: "number" },
-              risk_level: { type: "string" },
-              description: { type: "string" },
-              key_changes: { type: "array", items: { type: "string" } }
-            }
-          },
-          missed_opportunity: {
-            type: "object",
-            properties: {
-              potential_gain: { type: "number" },
-              description: { type: "string" }
-            }
-          },
-          benchmark_comparison: {
-            type: "object",
-            properties: {
-              sp500_return: { type: "number" },
-              vs_portfolio: { type: "string" }
+      const result = await awsApi.invokeLLM({
+        prompt: prompt,
+        analysis_type: "portfolio_benchmarking",
+        use_schema: true,
+        json_schema: {
+          type: "object",
+          properties: {
+            actual_scenario: {
+              type: "object",
+              properties: {
+                five_year_return: { type: "number" },
+                annual_return: { type: "number" },
+                risk_level: { type: "string" },
+                description: { type: "string" }
+              }
+            },
+            optimal_scenario: {
+              type: "object",
+              properties: {
+                five_year_return: { type: "number" },
+                annual_return: { type: "number" },
+                risk_level: { type: "string" },
+                description: { type: "string" },
+                key_changes: { type: "array", items: { type: "string" } }
+              }
+            },
+            conservative_scenario: {
+              type: "object",
+              properties: {
+                five_year_return: { type: "number" },
+                annual_return: { type: "number" },
+                risk_level: { type: "string" },
+                description: { type: "string" },
+                key_changes: { type: "array", items: { type: "string" } }
+              }
+            },
+            missed_opportunity: {
+              type: "object",
+              properties: {
+                potential_gain: { type: "number" },
+                description: { type: "string" }
+              }
+            },
+            benchmark_comparison: {
+              type: "object",
+              properties: {
+                sp500_return: { type: "number" },
+                vs_portfolio: { type: "string" }
+              }
             }
           }
         }
       });
 
-      setScenarios(result);
+      // Normalize data extraction based on how your proxy returns it
+      const resultData = result.data || result.response || result;
+      setScenarios(resultData);
     } catch (error) {
       console.error("Error analyzing scenarios:", error);
       alert("Error analyzing scenarios. Please try again.");
@@ -2181,6 +2188,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
