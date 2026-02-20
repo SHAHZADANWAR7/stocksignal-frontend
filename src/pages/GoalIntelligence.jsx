@@ -1166,12 +1166,36 @@ OUTPUT EXAMPLE:
                               <div className="flex items-center gap-2">
                                 <h3 className="text-xl font-bold text-slate-900">{goal.goal_name}</h3>
                                 <button
-                                  onClick={async () => {
-                                    const userId = localStorage.getItem('user_id') || JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub;
-                                    await awsApi.updatePortfolioGoal(userId, goal.id, { ...goal, is_linked: !goal.is_linked });
-                                    loadData();
+                                  onClick={async (e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log("Button clicked for goal:", goal.goal_name);
+                                    try {
+                                      const userId = localStorage.getItem('user_id') || 
+                                                     (localStorage.getItem('stocksignal_user_attributes') ? 
+                                                      JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub : null);
+                                      
+                                      if (!userId) {
+                                        console.error("No User ID found!");
+                                        alert("Session expired. Please log in again.");
+                                        return;
+                                      }
+
+                                      const updatedIsLinked = !goal.is_linked;
+                                      console.log("Updating to:", updatedIsLinked);
+                                      
+                                      await awsApi.updatePortfolioGoal(userId, goal.id, { 
+                                        ...goal, 
+                                        is_linked: updatedIsLinked 
+                                      });
+                                      
+                                      await loadData();
+                                    } catch (err) {
+                                      console.error("Link Portfolio Error:", err);
+                                    }
                                   }}
-                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold transition-all ${
+                                  style={{ position: 'relative', zIndex: 50 }}
+                                  className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold transition-all pointer-events-auto ${
                                     goal.is_linked 
                                       ? "bg-blue-600 text-white shadow-md shadow-blue-200" 
                                       : "bg-slate-100 text-slate-500 hover:bg-slate-200"
@@ -2245,6 +2269,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
