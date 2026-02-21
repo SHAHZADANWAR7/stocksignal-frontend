@@ -1169,7 +1169,8 @@ OUTPUT EXAMPLE:
                                   onClick={async (e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    console.log("Button clicked for goal:", goal.goal_name);
+                                    console.log("Linking goal:", goal.id);
+                                    
                                     try {
                                       const userId = localStorage.getItem('user_id') || 
                                                      (localStorage.getItem('stocksignal_user_attributes') ? 
@@ -1182,7 +1183,7 @@ OUTPUT EXAMPLE:
 
                                       const updatedIsLinked = !goal.is_linked;
                                       
-                                      // CLEAN PAYLOAD: We only send the raw fields the database expects
+                                      // Corrected Payload: Matches exactly what your Lambda expects
                                       const updatePayload = {
                                         goal_name: goal.goal_name,
                                         goal_type: goal.goal_type,
@@ -1190,16 +1191,19 @@ OUTPUT EXAMPLE:
                                         target_date: goal.target_date,
                                         priority: goal.priority,
                                         assigned_holdings: goal.assigned_holdings || [],
-                                        is_linked: updatedIsLinked
+                                        is_linked: updatedIsLinked,
+                                        user_email: goal.user_email || localStorage.getItem('user_email'),
+                                        userId: userId
                                       };
 
-                                      console.log("Sending clean update to AWS:", updatePayload);
-                                      await awsApi.updatePortfolioGoal(userId, goal.id, updatePayload);
+                                      // FIX: We now pass ONLY (goal.id, updatePayload)
+                                      await awsApi.updatePortfolioGoal(goal.id, updatePayload);
                                       
                                       await loadData();
+                                      console.log("Goal Link Successful!");
                                     } catch (err) {
                                       console.error("Link Portfolio Error:", err);
-                                      alert("Update failed. Check console for details.");
+                                      alert("Failed to link. Check console.");
                                     }
                                   }}
                                   style={{ position: 'relative', zIndex: 50 }}
@@ -2277,6 +2281,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
