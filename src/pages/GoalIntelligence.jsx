@@ -285,6 +285,12 @@ const analyzeScenarios = async () => {
     Total Value: $${(totalValue || 0).toLocaleString()}
     Date Range: December 2020 to December 2025 (5 years)
 
+    STRICT DATA RULES:
+    1. ONLY analyze the performance of the symbols in this list: ${holdingsList.map(h => h.symbol).join(', ')}
+    2. Calculation Base: Use exactly $${(totalValue || 0).toLocaleString()} for all percentage-to-dollar conversions
+    3. No Hallucinations: Do not mention any stocks (like TSLA or NVDA) unless they are in the portfolio list above
+    
+    
     STEP 1 - LOOKUP REAL HISTORICAL PRICES:
     For each symbol in the user's ACTUAL portfolio (${holdingsList.map(h => h.symbol).join(', ')}):
     - Price in Dec 2020
@@ -2327,6 +2333,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
