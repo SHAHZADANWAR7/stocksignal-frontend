@@ -58,16 +58,29 @@ export function calculateGoalMetrics(goal, holdings = [], referenceDate = new Da
   const monthsRemaining = Math.max(0, (targetDate - referenceDate) / msPerMonth);
   
   // ═══════════════════════════════════════════════════════════════════════════════
-  // STEP 3: CALCULATE HOLDINGS VALUE
+  // STEP 3: CALCULATE HOLDINGS VALUE (Priority-Based Selection)
   // ═══════════════════════════════════════════════════════════════════════════════
   
-  const assignedHoldings = holdings.filter(h => 
+  // PRIORITY 1: Existing Logic (Specific Manual Assignments)
+  let assignedHoldings = holdings.filter(h => 
     goal.assigned_holdings?.includes(h.symbol)
   );
-  
+
+  // PRIORITY 2: Linked Logic (If Priority 1 is empty AND goal is marked as linked)
+  if (assignedHoldings.length === 0 && goal.is_linked === true) {
+    assignedHoldings = holdings;
+  }
+
+  // PRIORITY 3: Global Fallback (If still empty, assume total portfolio is intended)
+  if (assignedHoldings.length === 0 && (!goal.assigned_holdings || goal.assigned_holdings.length === 0)) {
+    assignedHoldings = holdings;
+  }
+
   const holdingsValue = assignedHoldings.reduce((sum, h) => {
-    const currentValue = h.quantity * (h.current_price || h.average_cost || 0);
-    return sum + currentValue;
+    // Robust Price Selection: Handles all naming conventions across different pages
+    const price = parseFloat(h.current_price || h.currentPrice || h.average_cost || h.avgCost || 0);
+    const qty = parseFloat(h.quantity || 0);
+    return sum + (qty * price);
   }, 0);
   
   // ═══════════════════════════════════════════════════════════════════════════════
