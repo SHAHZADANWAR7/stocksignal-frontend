@@ -210,13 +210,18 @@ const calculateGoalProgress = (goal, currentHoldings = []) => {
       // 2. DATA SELECTION
       // If the goal is linked, we MUST use activeHoldings.
       // If activeHoldings is passed as an argument, use it.
-      const portfolioToUse = activeHoldings && activeHoldings.length > 0 
+     const portfolioToUse = activeHoldings && activeHoldings.length > 0 
         ? activeHoldings 
         : [];
 
-      const relevantHoldings = goal.is_linked 
+      // UNIVERSAL FAIL-SAFE: 
+      // If the goal is explicitly linked OR if it has no specific stocks assigned,
+      // we use the live portfolio ($194k).
+      const hasAssignedStocks = goal.assigned_holdings && goal.assigned_holdings.length > 0;
+      
+      const relevantHoldings = (goal.is_linked || !hasAssignedStocks) 
         ? portfolioToUse 
-        : (goal.assigned_holdings || []);
+        : goal.assigned_holdings;
       
       // 3. CALCULATION: Run the metrics engine
       const metrics = calculateGoalMetrics(goal, relevantHoldings);
@@ -2312,6 +2317,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
