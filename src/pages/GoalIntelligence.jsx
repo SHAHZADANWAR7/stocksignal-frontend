@@ -1169,7 +1169,6 @@ OUTPUT EXAMPLE:
                                   onClick={async (e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
-                                    console.log("Linking goal:", goal.id);
                                     
                                     try {
                                       const userId = localStorage.getItem('user_id') || 
@@ -1183,27 +1182,28 @@ OUTPUT EXAMPLE:
 
                                       const updatedIsLinked = !goal.is_linked;
                                       
-                                      // Corrected Payload: Matches exactly what your Lambda expects
-                                      const updatePayload = {
+                                      // One single object containing everything the Lambda and DynamoDB need
+                                      const combinedPayload = {
+                                        id: goal.id,
+                                        user_email: goal.user_email || localStorage.getItem('user_email'),
                                         goal_name: goal.goal_name,
                                         goal_type: goal.goal_type,
                                         target_amount: goal.target_amount,
                                         target_date: goal.target_date,
                                         priority: goal.priority,
                                         assigned_holdings: goal.assigned_holdings || [],
-                                        is_linked: updatedIsLinked,
-                                        user_email: goal.user_email || localStorage.getItem('user_email'),
-                                        userId: userId
+                                        is_linked: updatedIsLinked
                                       };
 
-                                      // FIX: We now pass ONLY (goal.id, updatePayload)
-                                      await awsApi.updatePortfolioGoal(goal.id, updatePayload);
+                                      console.log("Sending to AWS Client:", combinedPayload);
+                                      
+                                      // Pass ONLY the combinedPayload object
+                                      await awsApi.updatePortfolioGoal(combinedPayload);
                                       
                                       await loadData();
-                                      console.log("Goal Link Successful!");
                                     } catch (err) {
                                       console.error("Link Portfolio Error:", err);
-                                      alert("Failed to link. Check console.");
+                                      alert("Failed to link goal.");
                                     }
                                   }}
                                   style={{ position: 'relative', zIndex: 50 }}
@@ -2281,6 +2281,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
