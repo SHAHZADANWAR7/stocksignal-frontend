@@ -308,10 +308,10 @@ const analyzeScenarios = async () => {
     Calculate what return WOULD have been
 
     STEP 4 - CONSERVATIVE (60/40 S&P/BONDS):
-    S&P 500 Dec 2020: ~3,756
-    S&P 500 Dec 2025: ~6,000 = 60% total 5yr return
-    10-year Treasury bonds: ~3% annual = 16% total 5yr
-    Blended: 0.6×60 + 0.4×16 = 42% total, 7.3% annual
+    S&P 500 Dec 2020: ~3,700
+    S&P 500 Dec 2025: ~6,800 = 83% total 5yr return
+    10-year Treasury bonds: ~3.5% annual = 19% total 5yr
+    Blended: 0.6×83 + 0.4×19 = 57% total, 9.4% annual
 
     STEP 5 - MISSED OPPORTUNITY:
     Dollar amount = (Optimal% - Actual%) / 100 × [Your Total Portfolio Value]
@@ -2333,6 +2333,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
