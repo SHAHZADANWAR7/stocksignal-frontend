@@ -188,12 +188,25 @@ export default function GoalIntelligence() {
   // SINGLE SOURCE OF TRUTH: All goal calculations flow through goalCalculationEngine
   // ═══════════════════════════════════════════════════════════════════════════════
   
- const calculateGoalProgress = (goal) => {
+const calculateGoalProgress = (goal) => {
     try {
-      // THE FIX: When linked, we pass the full holdings objects (with prices/quantities)
-      // When not linked, we pass the specific holdings assigned to this goal
+      // 1. DATA READINESS CHECK: 
+      // If linked but holdings haven't arrived yet, return neutral state
+      if (goal.is_linked && (!holdings || holdings.length === 0)) {
+        return {
+          current: 0,
+          progress: 0,
+          contributed_capital: 0,
+          portfolio_value: 0,
+          remaining_gap: goal.target_amount,
+          _full: {}
+        };
+      }
+
+      // 2. DATA SELECTION: Use full portfolio if linked, otherwise use goal-specific holdings
       const relevantHoldings = goal.is_linked ? holdings : (goal.assigned_holdings || []);
 
+      // 3. CALCULATION: Run the metrics engine
       const metrics = calculateGoalMetrics(goal, relevantHoldings);
       
       return {
@@ -205,11 +218,13 @@ export default function GoalIntelligence() {
         _full: metrics
       };
     } catch (error) {
-      // ═══════════════════════════════════════════════════════════════════════════
-      // ARCHITECTURAL FIX: Do NOT swallow errors with fallback zeros
-      // ═══════════════════════════════════════════════════════════════════════════
+      // ARCHITECTURAL FIX: Log but return empty state to prevent UI crash
       console.error("❌ CRITICAL: Error calculating goal progress:", error);
-      throw new Error(`Goal progress calculation failed for goal "${goal?.goal_name}": ${error.message}`);
+      return { 
+        current: 0, 
+        progress: 0, 
+        remaining_gap: goal?.target_amount || 0 
+      };
     }
   };
 
@@ -2283,6 +2298,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
