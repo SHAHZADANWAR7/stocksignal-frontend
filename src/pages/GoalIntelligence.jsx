@@ -105,9 +105,11 @@ export default function GoalIntelligence() {
     loadBlackSwanSimulations();
   }, []);
 
-  const loadData = async () => {
+ const loadData = async () => {
     setIsLoading(true);
-    const userId = localStorage.getItem('user_id') || JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub;
+    const userId = localStorage.getItem('user_id') || 
+                   (localStorage.getItem('stocksignal_user_attributes') ? 
+                    JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub : null);
     
     if (!userId) {
       setIsLoading(false);
@@ -115,51 +117,36 @@ export default function GoalIntelligence() {
     }
     
     try {
-      // 1. Fetch Goals as usual
+      // 1. Fetch Goals
       const goalsData = await awsApi.getPortfolioGoal({});
       setGoals(goalsData || []);
 
-      // 2. Fetch Portfolio Data
-      // We check for a recent snapshot first as it's the fastest way to get your current mix
-      const portfolioData = await awsApi.getBlackSwanSimulations({});
+      // 2. Fetch LIVE Portfolio Data (Direct from source)
+      console.log("📡 [GoalIntelligence] Fetching live portfolio assets...");
+      const portfolioResponse = await awsApi.getPortfolio();
+      
+      // Accessing the assets - getPortfolio usually returns { Item: { assets: [...] } } or just { assets: [...] }
+      const assets = portfolioResponse?.assets || portfolioResponse?.Item?.assets || [];
       
       let allHoldings = [];
 
-      // Check if we have a saved snapshot from your real portfolio
-      const snapshot = portfolioData?.data?.scenarios?.[0]?.portfolio_snapshot || portfolioData?.[0]?.portfolio_snapshot;
-
-      if (snapshot && snapshot.length > 0) {
-        console.log("✅ [GoalIntelligence] Loading real holdings from snapshot");
-        allHoldings = snapshot.map(h => ({
+      if (assets.length > 0) {
+        console.log(`✅ [GoalIntelligence] Loaded ${assets.length} live assets`);
+        allHoldings = assets.map(h => ({
           symbol: h.symbol,
           name: h.name || h.symbol,
           quantity: parseFloat(h.quantity || 0),
-          current_price: parseFloat(h.current_price || h.value / h.quantity || 0),
-          average_cost: parseFloat(h.average_cost || 0)
+          current_price: parseFloat(h.currentPrice || h.current_price || h.avgCost || h.average_cost || 0),
+          average_cost: parseFloat(h.avgCost || h.average_cost || 0)
         }));
       } else {
-        // FALLBACK: If no snapshot exists, we fetch your main trading symbols
-        // Add your known symbols here to ensure they are always included
-        console.log("⚠️ [GoalIntelligence] No snapshot found, fetching batch defaults");
-        const holdingsData = await awsApi.getStockBatch(["SPY", "AAPL", "TDG", "SOUN"]);
+        // FALLBACK: Only if live portfolio is empty
+        console.log("⚠️ [GoalIntelligence] No live assets found, fetching batch defaults");
+        const holdingsData = await awsApi.getStockBatch(["SPY", "AAPL", "TDG", "AMP"]);
         allHoldings = holdingsData?.stocks || (Array.isArray(holdingsData) ? holdingsData : []);
       }
 
-      // If still empty, check paper trading assets explicitly
-      if (allHoldings.length === 0) {
-        const paperPortfolio = await awsApi.getPaperPortfolio(); // Assuming this helper exists
-        if (paperPortfolio?.assets) {
-          allHoldings = paperPortfolio.assets.map(asset => ({
-            symbol: asset.symbol,
-            name: asset.symbol,
-            quantity: asset.quantity,
-            average_cost: asset.avgCost,
-            current_price: asset.currentPrice || asset.avgCost
-          }));
-        }
-      }
-
-      console.log("📊 [GoalIntelligence] Holdings Loaded:", allHoldings);
+      console.log("📊 [GoalIntelligence] Final Holdings for Calculation:", allHoldings);
       setHoldings(allHoldings);
       
     } catch (e) { 
@@ -2298,6 +2285,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
