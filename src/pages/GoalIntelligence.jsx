@@ -177,11 +177,14 @@ const loadData = async () => {
   // SINGLE SOURCE OF TRUTH: All goal calculations flow through goalCalculationEngine
   // ═══════════════════════════════════════════════════════════════════════════════
   
-const calculateGoalProgress = (goal) => {
+const calculateGoalProgress = (goal, currentHoldings = []) => {
     try {
       // 1. DATA READINESS CHECK: 
-      // If linked but holdings haven't arrived yet, return neutral state
-      if (goal.is_linked && (!holdings || holdings.length === 0)) {
+      // Use the passed in currentHoldings or fallback to global if it exists
+      const activeHoldings = (currentHoldings && currentHoldings.length > 0) ? currentHoldings : holdings;
+
+      // If linked but no holdings are available yet, return neutral state
+      if (goal.is_linked && (!activeHoldings || activeHoldings.length === 0)) {
         return {
           current: 0,
           progress: 0,
@@ -192,8 +195,8 @@ const calculateGoalProgress = (goal) => {
         };
       }
 
-      // 2. DATA SELECTION: Use full portfolio if linked, otherwise use goal-specific holdings
-      const relevantHoldings = goal.is_linked ? holdings : (goal.assigned_holdings || []);
+      // 2. DATA SELECTION: Use active holdings if linked, otherwise use goal-specific holdings
+      const relevantHoldings = goal.is_linked ? activeHoldings : (goal.assigned_holdings || []);
 
       // 3. CALCULATION: Run the metrics engine
       const metrics = calculateGoalMetrics(goal, relevantHoldings);
@@ -2287,6 +2290,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
