@@ -221,7 +221,7 @@ const calculateGoalProgress = (goal, currentHoldings = []) => {
   };
 
   const calculateImpact = (goal, dropPercent) => {
-    const { current } = calculateGoalProgress(goal);
+    const { current } = calculateGoalProgress(goal, holdings);
     const impactAmount = current * (dropPercent / 100);
     const newProgress = ((current - impactAmount) / goal.target_amount) * 100;
     
@@ -1096,7 +1096,7 @@ OUTPUT EXAMPLE:
                 let validationError = null;
 
                 try {
-                  const result = calculateGoalProgress(goal);
+                 const result = calculateGoalProgress(goal, holdings);
                   
                   // ═══════════════════════════════════════════════════════════════════════════
                   // STRICT WIRING: Use engine output directly - NO fallback logic
@@ -2290,6 +2290,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
