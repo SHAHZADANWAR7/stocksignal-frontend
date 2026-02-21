@@ -134,23 +134,35 @@ const loadData = async () => {
       if (assets && assets.length > 0) {
         console.log(`✅ [GoalIntelligence] Successfully synced ${assets.length} assets ($${response.portfolio.totalValue?.toLocaleString()})`);
         
-        allHoldings = assets.map(asset => ({
-          symbol: asset.symbol,
-          name: asset.name || asset.symbol,
-          quantity: parseFloat(asset.quantity || 0),
-          // We map 'currentPrice' and 'avgCost' to the keys used by the Goal engine
-          current_price: parseFloat(asset.currentPrice || asset.avgCost || 0),
-          average_cost: parseFloat(asset.avgCost || 0)
-        }));
+        allHoldings = assets.map(asset => {
+          const price = parseFloat(asset.currentPrice || asset.current_price || asset.avgCost || 0);
+          const cost = parseFloat(asset.avgCost || asset.average_cost || 0);
+          const qty = parseFloat(asset.quantity || 0);
+          
+          return {
+            symbol: asset.symbol,
+            name: asset.name || asset.symbol,
+            quantity: qty,
+            current_price: price,
+            currentPrice: price, // Backup for camelCase
+            average_cost: cost,
+            avgCost: cost,       // Backup for camelCase
+            totalValue: qty * price
+          };
+        });
       } else {
-        // Only hits this if the portfolios table is literally empty
         console.log("⚠️ [GoalIntelligence] syncPortfolio returned no assets, using SPY fallback");
         const holdingsData = await awsApi.getStockBatch(["SPY"]);
-        allHoldings = holdingsData?.stocks || [];
+        // Apply the same robust mapping to fallback data
+        allHoldings = (holdingsData?.stocks || []).map(s => ({
+          ...s,
+          currentPrice: s.current_price,
+          avgCost: s.average_cost
+        }));
       }
 
       setHoldings(allHoldings);
-      console.log("📊 [GoalIntelligence] State updated with real-time holdings.");
+      console.log("📊 [GoalIntelligence] Robust state updated with real-time holdings:", allHoldings);
       
     } catch (error) {
       console.error("❌ [GoalIntelligence] loadData failed:", error);
@@ -2290,6 +2302,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
