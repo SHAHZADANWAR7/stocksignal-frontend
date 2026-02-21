@@ -642,7 +642,7 @@ Total Value: $${(totalValue || 0).toLocaleString()}
 CRITICAL ACCURACY RULES:
 1. Use ONLY historically accurate recovery times from market data (S&P 500 / NASDAQ Composite)
 2. Reference sectors (e.g., "Tech sector", "Consumer discretionary") instead of stocks that didn't exist
-3. Clearly state which current holdings existed vs. didn't exist during each crisis
+3. ONLY mention stocks from the provided Portfolio list: ${holdingsList.map(h => h.symbol).join(', ')}
 4. Differentiate between partial recovery and full recovery where relevant
 5. Use consistent index terminology (S&P 500 for broad market, NASDAQ Composite for tech)
 6. STRICT PROHIBITION: Do NOT mention TSLA, GPRO, GOOGL, or any other stock NOT in the provided list
@@ -2326,6 +2326,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
