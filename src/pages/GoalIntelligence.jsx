@@ -207,9 +207,17 @@ const calculateGoalProgress = (goal, currentHoldings = []) => {
         };
       }
 
-      // 2. DATA SELECTION: Use active holdings if linked, otherwise use goal-specific holdings
-      const relevantHoldings = goal.is_linked ? activeHoldings : (goal.assigned_holdings || []);
+      // 2. DATA SELECTION
+      // If the goal is linked, we MUST use activeHoldings.
+      // If activeHoldings is passed as an argument, use it.
+      const portfolioToUse = activeHoldings && activeHoldings.length > 0 
+        ? activeHoldings 
+        : [];
 
+      const relevantHoldings = goal.is_linked 
+        ? portfolioToUse 
+        : (goal.assigned_holdings || []);
+      
       // 3. CALCULATION: Run the metrics engine
       const metrics = calculateGoalMetrics(goal, relevantHoldings);
       
@@ -1108,7 +1116,9 @@ OUTPUT EXAMPLE:
                 let validationError = null;
 
                 try {
-                 const result = calculateGoalProgress(goal, holdings);
+                 // This tells the engine: "Use the holdings we just synced, 
+                 // or the state holdings, or an empty array."
+                 const result = calculateGoalProgress(goal, holdings || []);
                   
                   // ═══════════════════════════════════════════════════════════════════════════
                   // STRICT WIRING: Use engine output directly - NO fallback logic
@@ -2302,6 +2312,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
