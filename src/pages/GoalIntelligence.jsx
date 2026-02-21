@@ -188,14 +188,14 @@ export default function GoalIntelligence() {
   // SINGLE SOURCE OF TRUTH: All goal calculations flow through goalCalculationEngine
   // ═══════════════════════════════════════════════════════════════════════════════
   
-  const calculateGoalProgress = (goal) => {
+ const calculateGoalProgress = (goal) => {
     try {
-      // If linked, we override assigned_holdings with all current symbols
-      const activeGoal = goal.is_linked 
-        ? { ...goal, assigned_holdings: holdings.map(h => h.symbol) } 
-        : goal;
+      // THE FIX: When linked, we pass the full holdings objects (with prices/quantities)
+      // When not linked, we pass the specific holdings assigned to this goal
+      const relevantHoldings = goal.is_linked ? holdings : (goal.assigned_holdings || []);
 
-      const metrics = calculateGoalMetrics(activeGoal, holdings);
+      const metrics = calculateGoalMetrics(goal, relevantHoldings);
+      
       return {
         current: metrics.portfolioValue,
         progress: metrics.progressPercent,
@@ -555,7 +555,9 @@ CRITICAL: Focus on disciplined saving, not investment returns or strategies.`;
     };
 
     // Validate recommendation before storing
-    const metrics = calculateGoalMetrics(goal, holdings);
+    // Use full portfolio if linked, otherwise use goal-specific holdings
+    const relevantHoldings = goal.is_linked ? holdings : (goal.assigned_holdings || []);
+    const metrics = calculateGoalMetrics(goal, relevantHoldings);
     const validation = validateGoalAnalysis(goal, metrics, fullRecommendation);
     
     if (!validation.isValid) {
@@ -2281,6 +2283,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
