@@ -330,15 +330,15 @@ const analyzeScenarios = async () => {
       "key_changes": ["Suggest specific changes for the actual stocks provided"]
     },
     "conservative_scenario": {
-      "five_year_return": 42,
-      "annual_return": 7
+      "five_year_return": 57,
+      "annual_return": 9
     },
     "missed_opportunity": {
       "potential_gain": 0, // YOU MUST CALCULATE THIS: (Optimal% - Actual%) * Total Value / 100
       "description": "Explain the difference in gains for this specific portfolio."
     },
     "benchmark_comparison": {
-    "sp500_return": 60,
+    "sp500_return": 83,
     "vs_portfolio": "Compare actual portfolio against S&P 500 performance"
     }
     }`;
@@ -2333,6 +2333,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
