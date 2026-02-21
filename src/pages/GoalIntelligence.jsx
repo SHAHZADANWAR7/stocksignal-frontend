@@ -105,7 +105,7 @@ export default function GoalIntelligence() {
     loadBlackSwanSimulations();
   }, []);
 
- const loadData = async () => {
+const loadData = async () => {
     setIsLoading(true);
     const userId = localStorage.getItem('user_id') || 
                    (localStorage.getItem('stocksignal_user_attributes') ? 
@@ -123,38 +123,33 @@ export default function GoalIntelligence() {
 
       // 2. Fetch LIVE Portfolio Data
       console.log("📡 [GoalIntelligence] Fetching live portfolio assets...");
+      const response = await awsApi.getUserPortfolio();
       
-      // Use getUserPortfolio to match your backend Lambda name
-      const portfolioResponse = await awsApi.getUserPortfolio();
-      
-      // The "Universal Adapter": This finds your 6 stocks regardless of response shape
-      const assets = portfolioResponse?.assets || 
-                     portfolioResponse?.Item?.assets || 
-                     portfolioResponse?.items || 
-                     portfolioResponse?.Items ||
-                     (Array.isArray(portfolioResponse) ? portfolioResponse : []);
+      // TARGETED FIX: Your Lambda returns stocks inside response.portfolio.holdings
+      const assets = response?.portfolio?.holdings || 
+                     response?.holdings || 
+                     response?.assets || 
+                     (Array.isArray(response) ? response : []);
       
       let allHoldings = [];
 
       if (assets && assets.length > 0) {
-        console.log(`✅ [GoalIntelligence] Loaded ${assets.length} live assets`);
+        console.log(`✅ [GoalIntelligence] Found ${assets.length} stocks in your portfolio`);
         allHoldings = assets.map(h => ({
           symbol: h.symbol,
           name: h.name || h.symbol,
           quantity: parseFloat(h.quantity || 0),
-          // Maps both possible naming conventions (camelCase from paper trading vs snake_case)
-          current_price: parseFloat(h.currentPrice || h.current_price || h.avgCost || h.average_cost || 0),
-          average_cost: parseFloat(h.avgCost || h.average_cost || 0)
+          current_price: parseFloat(h.current_price || h.currentPrice || 0),
+          average_cost: parseFloat(h.average_cost || h.avgCost || 0)
         }));
       } else {
-        // FALLBACK: Only if live portfolio is empty
-        console.log("⚠️ [GoalIntelligence] No live assets found, fetching batch defaults");
-        const holdingsData = await awsApi.getStockBatch(["SPY", "AAPL", "TDG", "SOUN", "FOX", "AMP"]);
-        allHoldings = holdingsData?.stocks || (Array.isArray(holdingsData) ? holdingsData : []);
+        console.log("⚠️ [GoalIntelligence] No stocks found in live portfolio, using defaults");
+        const holdingsData = await awsApi.getStockBatch(["SPY"]);
+        allHoldings = holdingsData?.stocks || [];
       }
 
-      console.log("📊 [GoalIntelligence] Final Holdings for Calculation:", allHoldings);
       setHoldings(allHoldings);
+      console.log("📊 [GoalIntelligence] State updated with holdings:", allHoldings);
       
     } catch (e) { 
       console.error("❌ [GoalIntelligence] loadData failed:", e); 
@@ -2292,6 +2287,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
