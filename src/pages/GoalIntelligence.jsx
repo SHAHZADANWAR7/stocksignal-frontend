@@ -645,6 +645,7 @@ CRITICAL ACCURACY RULES:
 3. Clearly state which current holdings existed vs. didn't exist during each crisis
 4. Differentiate between partial recovery and full recovery where relevant
 5. Use consistent index terminology (S&P 500 for broad market, NASDAQ Composite for tech)
+6. STRICT PROHIBITION: Do NOT mention TSLA, GPRO, GOOGL, or any other stock NOT in the provided list
 
 For EACH crisis below, provide these exact fields:
 
@@ -2325,6 +2326,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
