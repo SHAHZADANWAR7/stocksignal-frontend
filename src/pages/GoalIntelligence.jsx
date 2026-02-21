@@ -911,11 +911,12 @@ Portfolio: ${JSON.stringify(holdingsList)}
 Total Value: $${(totalValue || 0).toLocaleString()}
 
 SCENARIO-SPECIFIC REQUIREMENTS:
+- STRICT PROHIBITION: ONLY analyze these specific symbols: ${holdingsList.map(h => h.symbol).join(', ')}. Do NOT mention TSLA, GOOGL, or any other external stocks.
 - Immediate Drawdown Range: ${guidelines.drawdown}% (pick ONE whole number within this range)
 - Recovery Timeline: ${guidelines.recovery} months
 - Defensive Assets: ${guidelines.benefiting.join(", ")}
-- Narrative Focus: ${guidelines.narrative_tone}
-
+- Narrative Focus: ${guidelines.narrative_tone}`;
+    
 CRITICAL FORMATTING RULES:
 1. immediate_drawdown: INTEGER only (e.g., 12 for 12% decline, NOT 0.12 or 12.5)
 2. recovery_months: EXACTLY ${guidelines.recovery}
@@ -2326,6 +2327,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
