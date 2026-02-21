@@ -121,28 +121,35 @@ export default function GoalIntelligence() {
       const goalsData = await awsApi.getPortfolioGoal({});
       setGoals(goalsData || []);
 
-      // 2. Fetch LIVE Portfolio Data (Direct from source)
+      // 2. Fetch LIVE Portfolio Data
       console.log("📡 [GoalIntelligence] Fetching live portfolio assets...");
-      const portfolioResponse = await awsApi.getPortfolio();
       
-      // Accessing the assets - getPortfolio usually returns { Item: { assets: [...] } } or just { assets: [...] }
-      const assets = portfolioResponse?.assets || portfolioResponse?.Item?.assets || [];
+      // Use getUserPortfolio to match your backend Lambda name
+      const portfolioResponse = await awsApi.getUserPortfolio();
+      
+      // The "Universal Adapter": This finds your 6 stocks regardless of response shape
+      const assets = portfolioResponse?.assets || 
+                     portfolioResponse?.Item?.assets || 
+                     portfolioResponse?.items || 
+                     portfolioResponse?.Items ||
+                     (Array.isArray(portfolioResponse) ? portfolioResponse : []);
       
       let allHoldings = [];
 
-      if (assets.length > 0) {
+      if (assets && assets.length > 0) {
         console.log(`✅ [GoalIntelligence] Loaded ${assets.length} live assets`);
         allHoldings = assets.map(h => ({
           symbol: h.symbol,
           name: h.name || h.symbol,
           quantity: parseFloat(h.quantity || 0),
+          // Maps both possible naming conventions (camelCase from paper trading vs snake_case)
           current_price: parseFloat(h.currentPrice || h.current_price || h.avgCost || h.average_cost || 0),
           average_cost: parseFloat(h.avgCost || h.average_cost || 0)
         }));
       } else {
         // FALLBACK: Only if live portfolio is empty
         console.log("⚠️ [GoalIntelligence] No live assets found, fetching batch defaults");
-        const holdingsData = await awsApi.getStockBatch(["SPY", "AAPL", "TDG", "AMP"]);
+        const holdingsData = await awsApi.getStockBatch(["SPY", "AAPL", "TDG", "SOUN", "FOX", "AMP"]);
         allHoldings = holdingsData?.stocks || (Array.isArray(holdingsData) ? holdingsData : []);
       }
 
@@ -2285,6 +2292,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
