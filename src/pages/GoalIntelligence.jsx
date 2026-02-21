@@ -223,27 +223,35 @@ const calculateGoalProgress = (goal, currentHoldings = []) => {
         ? portfolioToUse 
         : goal.assigned_holdings;
       
-      // 3. CALCULATION: Run the metrics engine
-      const metrics = calculateGoalMetrics(goal, relevantHoldings);
-      
-      return {
-        current: metrics.portfolioValue,
-        progress: metrics.progressPercent,
-        contributed_capital: metrics.initialCapital,
-        portfolio_value: metrics.holdingsValue,
-        remaining_gap: metrics.remainingGap,
-        _full: metrics
-      };
-    } catch (error) {
-      // ARCHITECTURAL FIX: Log but return empty state to prevent UI crash
-      console.error("❌ CRITICAL: Error calculating goal progress:", error);
-      return { 
-        current: 0, 
-        progress: 0, 
-        remaining_gap: goal?.target_amount || 0 
-      };
-    }
-  };
+      // 3. CALCULATION: Run the metrics engine with Debugging
+    console.log(`🧪 [DEBUG] Goal: ${goal.goal_name} | Linked: ${goal.is_linked} | HasAssigned: ${hasAssignedStocks} | Stocks Sent: ${relevantHoldings.length}`);
+    
+    const metrics = calculateGoalMetrics(goal, relevantHoldings);
+    
+    console.log(`📊 [DEBUG] Engine Result for ${goal.goal_name}:`, {
+      holdingsValue: metrics.holdingsValue,
+      progress: metrics.progressPercent,
+      target: goal.target_amount
+    });
+    
+    return {
+      current: metrics.portfolioValue,
+      progress: metrics.progressPercent,
+      contributed_capital: metrics.initialCapital,
+      portfolio_value: metrics.holdingsValue,
+      remaining_gap: metrics.remainingGap,
+      _full: metrics
+    };
+  } catch (error) {
+    // ARCHITECTURAL FIX: Log but return empty state to prevent UI crash
+    console.error("❌ CRITICAL: Error calculating goal progress:", error);
+    return { 
+      current: 0, 
+      progress: 0, 
+      remaining_gap: goal?.target_amount || 0 
+    };
+  }
+};
 
   const calculateImpact = (goal, dropPercent) => {
     const { current } = calculateGoalProgress(goal, holdings);
@@ -2317,6 +2325,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
