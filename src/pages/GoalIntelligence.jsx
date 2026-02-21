@@ -103,7 +103,7 @@ export default function GoalIntelligence() {
     
     loadData();
     loadBlackSwanSimulations();
-  }, []);
+ }, [holdings.length]);
 
 const loadData = async () => {
     setIsLoading(true);
@@ -2302,6 +2302,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
