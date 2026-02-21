@@ -107,57 +107,57 @@ export default function GoalIntelligence() {
 
 const loadData = async () => {
     setIsLoading(true);
-    const userId = localStorage.getItem('user_id') || 
-                   (localStorage.getItem('stocksignal_user_attributes') ? 
-                    JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub : null);
-    
-    if (!userId) {
-      setIsLoading(false);
-      return;
-    }
-    
     try {
+      const userId = localStorage.getItem('user_id') || 
+                     (localStorage.getItem('stocksignal_user_attributes') ? 
+                      JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub : null);
+      
+      if (!userId) {
+        setIsLoading(false);
+        return;
+      }
+
       // 1. Fetch Goals
       const goalsData = await awsApi.getPortfolioGoal({});
       setGoals(goalsData || []);
 
-      // 2. Fetch LIVE Portfolio Data
-      console.log("📡 [GoalIntelligence] Fetching live portfolio assets...");
-      const response = await awsApi.getUserPortfolio();
+      // 2. Fetch REAL Portfolio (Matching Holdings.jsx logic)
+      // This calls the Lambda that queries the 'portfolios' table ($194k)
+      console.log("📡 [GoalIntelligence] Calling syncPortfolio for live assets...");
+      const response = await awsApi.syncPortfolio({ userId });
       
-      // TARGETED FIX: Your Lambda returns stocks inside response.portfolio.holdings
-      const assets = response?.portfolio?.holdings || 
-                     response?.holdings || 
-                     response?.assets || 
-                     (Array.isArray(response) ? response : []);
+      // The SyncPortfolio Lambda returns data in response.portfolio.assets
+      const assets = response?.portfolio?.assets || [];
       
       let allHoldings = [];
 
       if (assets && assets.length > 0) {
-        console.log(`✅ [GoalIntelligence] Found ${assets.length} stocks in your portfolio`);
-        allHoldings = assets.map(h => ({
-          symbol: h.symbol,
-          name: h.name || h.symbol,
-          quantity: parseFloat(h.quantity || 0),
-          current_price: parseFloat(h.current_price || h.currentPrice || 0),
-          average_cost: parseFloat(h.average_cost || h.avgCost || 0)
+        console.log(`✅ [GoalIntelligence] Successfully synced ${assets.length} assets ($${response.portfolio.totalValue?.toLocaleString()})`);
+        
+        allHoldings = assets.map(asset => ({
+          symbol: asset.symbol,
+          name: asset.name || asset.symbol,
+          quantity: parseFloat(asset.quantity || 0),
+          // We map 'currentPrice' and 'avgCost' to the keys used by the Goal engine
+          current_price: parseFloat(asset.currentPrice || asset.avgCost || 0),
+          average_cost: parseFloat(asset.avgCost || 0)
         }));
       } else {
-        console.log("⚠️ [GoalIntelligence] No stocks found in live portfolio, using defaults");
+        // Only hits this if the portfolios table is literally empty
+        console.log("⚠️ [GoalIntelligence] syncPortfolio returned no assets, using SPY fallback");
         const holdingsData = await awsApi.getStockBatch(["SPY"]);
         allHoldings = holdingsData?.stocks || [];
       }
 
       setHoldings(allHoldings);
-      console.log("📊 [GoalIntelligence] State updated with holdings:", allHoldings);
+      console.log("📊 [GoalIntelligence] State updated with real-time holdings.");
       
-    } catch (e) { 
-      console.error("❌ [GoalIntelligence] loadData failed:", e); 
+    } catch (error) {
+      console.error("❌ [GoalIntelligence] loadData failed:", error);
     } finally {
       setIsLoading(false);
     }
   };
-
   const loadBlackSwanSimulations = async () => {
     const userId = localStorage.getItem('user_id') || JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.sub;
     if (!userId) return;
@@ -2287,6 +2287,7 @@ OUTPUT EXAMPLE:
 }
 
 // Build trigger: Tue Feb 17 06:07:41 PM UTC 2026
+
 
 
 
