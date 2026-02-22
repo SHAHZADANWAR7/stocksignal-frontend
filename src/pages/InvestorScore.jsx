@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { awsApi } from "@/utils/awsClient";
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,33 +44,34 @@ export default function InvestorScore() {
   // ---- loadData updated ----
   const loadData = async () => {
     try {
-      // 1. Fetch Auth Data and Dynamo Data
-      const [txResponse, syncResponse, userData] = await Promise.all([
+      // 1. Get the local session directly (Bypasses the 401 API call)
+      const session = await fetchAuthSession();
+      const email = session.tokens?.idToken?.payload?.email || "";
+      setUserEmail(email);
+
+      // 2. Fetch only the data that is working (Transactions and Portfolio)
+      const [txResponse, syncResponse] = await Promise.all([
         awsApi.getTransactions(null).catch(() => ({ transactions: [] })),
-        awsApi.syncPortfolio(null).catch(() => ({ portfolio: { assets: [], totalValue: 0 } })),
-        awsApi.getCurrentUser().catch(() => ({ email: "" })) // Get the real logged-in user
+        awsApi.syncPortfolio(null).catch(() => ({ portfolio: { assets: [], totalValue: 0 } }))
       ]);
 
-      // 2. Set the dynamic email
-      setUserEmail(userData.email);
-
-      // 3. Set Transactions (Your Journal entries for AI analysis)
+      // 3. Set Transactions
       const txData = txResponse.transactions || [];
       setTransactions(txData);
 
-      // 4. Set Holdings (The synced assets with fresh prices)
+      // 4. Set Holdings
       const portfolioObj = syncResponse.portfolio || {};
       const assetsData = portfolioObj.assets || [];
       setHoldings(assetsData);
 
-      // 5. Update the Portfolio State for the UI
+      // 5. Update Portfolio state
       const portfolioData = {
         totalValue: portfolioObj.totalValue || 0,
         assets: assetsData
       };
       setPortfolio(portfolioData);
 
-      // 6. Calculate metrics locally using real Transactions instead of Paper Trades
+      // 6. Calculate local metrics
       const metrics = calculateInvestorMetrics(txData, portfolioData);
       setScore(metrics);
     } catch (error) {
