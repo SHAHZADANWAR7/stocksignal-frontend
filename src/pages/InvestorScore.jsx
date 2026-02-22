@@ -72,7 +72,7 @@ export default function InvestorScore() {
     }
   };
 
-  // ---- analyzeDecisionQuality updated ----
+  // ---- analyzeDecisionQuality updated as per instructions ----
   const analyzeDecisionQuality = async () => {
     setIsAnalyzing(true);
 
@@ -84,13 +84,17 @@ export default function InvestorScore() {
       const result = await awsApi.analyzeInvestorBehavior({
         metrics: {
           totalTrades: transactions.length,
-          profitableTrades: transactions.filter(t => (t.profit || 0) > 0).length,
+          profitableTrades: 0, // Set to 0, as table doesn't have a profit field
           averageHoldingDays: transactions.length > 0 
             ? transactions.reduce((sum, t) => sum + (t.holdingDays || 0), 0) / transactions.length 
             : 0,
           journalEntries: transactions.map(t => ({
             symbol: t.symbol,
-            reason: t.notes || t.description || "No note provided"
+            type: t.type, // buy/sell
+            date: t.transaction_date,
+            price: t.price,
+            notes: t.notes || "No notes provided",
+            fees: t.fees
           })),
           holdings: holdings.map(h => ({
             symbol: h.symbol,
