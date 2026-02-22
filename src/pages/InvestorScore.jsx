@@ -81,7 +81,8 @@ export default function InvestorScore() {
       const metrics = calculateInvestorMetrics(transactions, portfolio);
 
       // AI payload uses real journal notes and real holdings
-      const result = await awsApi.analyzeInvestorBehavior({
+      const result = await awsApi.analyzeInvestmentBehavior({
+        userEmail: "dr.shahzadanwar40@yahoo.com", // Your verified email from the screenshot
         metrics: {
           totalTrades: transactions.length,
           profitableTrades: 0, // Set to 0, as table doesn't have a profit field
@@ -100,15 +101,15 @@ export default function InvestorScore() {
             symbol: h.symbol,
             allocation: (h.quantity * (h.currentPrice || 0)) / (portfolio?.totalValue || 1) * 100
           }))
-        },
-        userEmail: "ShahzadAnwar"
+        }
       });
 
       // Combine calculated metrics with AI analysis
       const finalScore = {
         ...metrics,
-        biases_detected: result.biases_detected || [],
-        improvement_suggestions: result.improvement_suggestions || [],
+        biases_detected: result.investor_score?.biases_detected || [],
+        improvement_suggestions: result.investor_score?.improvement_suggestions || [],
+        overall_score: result.investor_score?.overall_score || metrics.overall_score,
         analysis_date: new Date().toISOString()
       };
 
