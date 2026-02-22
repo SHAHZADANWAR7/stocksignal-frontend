@@ -22,6 +22,7 @@ function getWeekStart() {
  * @returns {Object} { allowed: boolean, message: string }
  */
 export async function checkUsageLimit(userEmail, actionType = 'analysis') {
+  return { allowed: true, message: '' }; // BYPASS: Always allow for now
   try {
     // Get user identity locally from Amplify (Safe, Fast, No 401)
     const authUser = await getCurrentUser().catch(() => null);
@@ -72,6 +73,7 @@ export async function checkUsageLimit(userEmail, actionType = 'analysis') {
  * @param {string} actionType - Type of action ('analysis' or 'premium')
  */
 export async function incrementUsage(userEmail, actionType = 'analysis') {
+  return; // BYPASS: Don't track usage for now
   try {
     // Get user identity locally from Amplify (Safe, Fast, No 401)
     const authUser = await getCurrentUser().catch(() => null);
@@ -102,6 +104,7 @@ export async function incrementUsage(userEmail, actionType = 'analysis') {
  * @returns {number} Remaining usage count
  */
 export async function getRemainingUsage(userEmail, actionType = 'analysis') {
+  return 999; // BYPASS: Show unlimited for now
   try {
     // Get user identity locally from Amplify (Safe, Fast, No 401)
     const authUser = await getCurrentUser().catch(() => null);
