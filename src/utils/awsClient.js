@@ -25,7 +25,6 @@ const LAMBDA_KEY_MAPPING = {
     "getTransactions",
     "getBlackSwanSimulations",
     "getSubscriptions",
-    "analyzeInvestmentBehavior",
     "syncPortfolio",
     "executePaperTrade",
     "executeTrade",
@@ -34,6 +33,7 @@ const LAMBDA_KEY_MAPPING = {
   ],
   user_email: [
     "checkSubscription",
+    "analyzeInvestmentBehavior",
     "getHoldings",
     "createHolding",
     "updateHolding",
@@ -270,9 +270,7 @@ export const awsApi = {
   optimizePortfolio: (data) => invokeProxy("optimizePortfolio", data),
   getUserPortfolio: () => invokeProxy("getUserPortfolio", {}),
   // MODIFY analyzeInvestmentBehavior export as requested.
-  analyzeInvestmentBehavior: (data) => invokeProxy("analyzeInvestmentBehavior", { 
-    email: data.userEmail || data.email 
-  }),
+  analyzeInvestmentBehavior: (payload = {}) => invokeProxy("analyzeInvestmentBehavior", payload),
   generateMarketInsights: () => invokeProxy("generateMarketInsights", {}),
   cacheMarketInsights: (data) => invokeProxy("cacheMarketInsights", data),
   getUserTrades: () => invokeProxy("getUserTrades", {}),
