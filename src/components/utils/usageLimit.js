@@ -1,4 +1,5 @@
 import { awsApi } from './api/awsApi';
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 
 /**
  * Get the start of the current week (Monday)
@@ -22,10 +23,13 @@ function getWeekStart() {
  */
 export async function checkUsageLimit(userEmail, actionType = 'analysis') {
   try {
-    const user = await awsApi.getCurrentUser();
-    
+    // Get user identity locally from Amplify (Safe, Fast, No 401)
+    const authUser = await getCurrentUser().catch(() => null);
+    const session = await fetchAuthSession().catch(() => null);
+    const attributes = session?.tokens?.idToken?.payload || {};
+
     // Admins have unlimited usage
-    if (user?.attributes?.['custom:role'] === 'admin') {
+    if (attributes['custom:role'] === 'admin') {
       return { allowed: true, message: '' };
     }
 
@@ -38,7 +42,7 @@ export async function checkUsageLimit(userEmail, actionType = 'analysis') {
     // Get usage stats
     const stats = await awsApi.getUsageStats(userEmail);
     const weekStart = getWeekStart();
-    
+
     // Check weekly limits for free users
     const limits = {
       analysis: 3,
@@ -47,7 +51,7 @@ export async function checkUsageLimit(userEmail, actionType = 'analysis') {
 
     const weeklyUsage = stats?.weeklyUsage || {};
     const currentWeekUsage = weeklyUsage[weekStart] || { analysis: 0, premium: 0 };
-    
+
     if (currentWeekUsage[actionType] >= limits[actionType]) {
       return {
         allowed: false,
@@ -69,10 +73,13 @@ export async function checkUsageLimit(userEmail, actionType = 'analysis') {
  */
 export async function incrementUsage(userEmail, actionType = 'analysis') {
   try {
-    const user = await awsApi.getCurrentUser();
-    
+    // Get user identity locally from Amplify (Safe, Fast, No 401)
+    const authUser = await getCurrentUser().catch(() => null);
+    const session = await fetchAuthSession().catch(() => null);
+    const attributes = session?.tokens?.idToken?.payload || {};
+
     // Don't track admin usage
-    if (user?.attributes?.['custom:role'] === 'admin') {
+    if (attributes['custom:role'] === 'admin') {
       return;
     }
 
@@ -96,10 +103,13 @@ export async function incrementUsage(userEmail, actionType = 'analysis') {
  */
 export async function getRemainingUsage(userEmail, actionType = 'analysis') {
   try {
-    const user = await awsApi.getCurrentUser();
-    
+    // Get user identity locally from Amplify (Safe, Fast, No 401)
+    const authUser = await getCurrentUser().catch(() => null);
+    const session = await fetchAuthSession().catch(() => null);
+    const attributes = session?.tokens?.idToken?.payload || {};
+
     // Admins have unlimited
-    if (user?.attributes?.['custom:role'] === 'admin') {
+    if (attributes['custom:role'] === 'admin') {
       return 999;
     }
 
@@ -112,7 +122,7 @@ export async function getRemainingUsage(userEmail, actionType = 'analysis') {
     // Get usage stats
     const stats = await awsApi.getUsageStats(userEmail);
     const weekStart = getWeekStart();
-    
+
     const limits = {
       analysis: 3,
       premium: 0,
@@ -120,7 +130,7 @@ export async function getRemainingUsage(userEmail, actionType = 'analysis') {
 
     const weeklyUsage = stats?.weeklyUsage || {};
     const currentWeekUsage = weeklyUsage[weekStart] || { analysis: 0, premium: 0 };
-    
+
     return Math.max(0, limits[actionType] - currentWeekUsage[actionType]);
   } catch (error) {
     console.error('Error getting remaining usage:', error);
