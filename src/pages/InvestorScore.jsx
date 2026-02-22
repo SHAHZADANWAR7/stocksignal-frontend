@@ -91,18 +91,13 @@ export default function InvestorScore() {
 
       const aiResult = await awsApi.invokeLLM(prompt);
 
-      // Step 3: Combine everything, explicitly mapping Lambda keys to UI keys
+      // Step 3: Set score with explicit mapping (per latest request)
       setScore({
         ...data,
         biases_detected: data.biases_detected || [],
-        improvement_suggestions: data.improvement_suggestions || [],
-        // AI mapping (if present)
-        ...(aiResult && {
-          biases_detected: aiResult.biases_detected || data.biases_detected || [],
-          improvement_suggestions: aiResult.improvement_suggestions || data.improvement_suggestions || []
-        }),
-        analysis_date: new Date().toISOString()
+        improvement_suggestions: data.improvement_suggestions || []
       });
+
       await awsApi.saveInvestorScore({ ...data, email: userEmail });
     } catch (error) {
       console.error("Analysis failed:", error);
