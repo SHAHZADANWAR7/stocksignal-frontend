@@ -23,7 +23,7 @@ import { calculateInvestorMetrics } from "@/components/utils/calculations/invest
 export default function InvestorScore() {
   const [score, setScore] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  const [paperTrades, setPaperTrades] = useState([]);
+  // ---- Removed paperTrades state ----
   const [portfolio, setPortfolio] = useState(null);
   const [holdings, setHoldings] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -39,59 +39,65 @@ export default function InvestorScore() {
     setRemainingUsage(usage);
   };
 
+  // ---- loadData updated ----
   const loadData = async () => {
     try {
-      // Fetch all data from DynamoDB
-      const [txData, holdingsData, tradesData] = await Promise.all([
-        awsApi.getTransactions(null).catch(() => []),
-        awsApi.getHoldings(null).catch(() => []),
-        awsApi.getPaperTrades(null).catch(() => [])
+      // 1. Fetch REAL history and REAL current synced values
+      const [txResponse, syncResponse] = await Promise.all([
+        awsApi.getTransactions(null).catch(() => ({ transactions: [] })),
+        awsApi.syncPortfolio(null).catch(() => ({ portfolio: { assets: [], totalValue: 0 } }))
       ]);
 
-      setTransactions(txData || []);
-      setHoldings(holdingsData || []);
-      setPaperTrades(tradesData || []);
+      // 2. Set Transactions (Your Journal entries for AI analysis)
+      const txData = txResponse.transactions || [];
+      setTransactions(txData);
 
-      // Calculate portfolio from holdings
-      const totalValue = (holdingsData || []).reduce((sum, h) => sum + (h.quantity * (h.current_price || 0)), 0);
+      // 3. Set Holdings (The synced assets with fresh prices)
+      const portfolioObj = syncResponse.portfolio || {};
+      const assetsData = portfolioObj.assets || [];
+      setHoldings(assetsData);
+
+      // 4. Update the Portfolio State for the UI
       const portfolioData = {
-        totalValue,
-        assets: holdingsData || []
+        totalValue: portfolioObj.totalValue || 0,
+        assets: assetsData
       };
       setPortfolio(portfolioData);
 
-      // Calculate metrics locally
-      const metrics = calculateInvestorMetrics(tradesData || [], portfolioData);
+      // 5. Calculate metrics locally using real Transactions instead of Paper Trades
+      const metrics = calculateInvestorMetrics(txData, portfolioData);
       setScore(metrics);
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Error loading Investor IQ data:", error);
     }
   };
 
+  // ---- analyzeDecisionQuality updated ----
   const analyzeDecisionQuality = async () => {
     setIsAnalyzing(true);
 
     try {
-      const metrics = calculateInvestorMetrics(paperTrades, portfolio);
-      
-      // Call Lambda with Bedrock for AI analysis
+      // Use real transactions for metrics
+      const metrics = calculateInvestorMetrics(transactions, portfolio);
+
+      // AI payload uses real journal notes and real holdings
       const result = await awsApi.analyzeInvestorBehavior({
         metrics: {
-          totalTrades: paperTrades.length,
-          profitableTrades: paperTrades.filter(t => (t.profit || 0) > 0).length,
-          averageHoldingDays: paperTrades.length > 0 
-            ? paperTrades.reduce((sum, t) => sum + (t.holdingDays || 0), 0) / paperTrades.length 
+          totalTrades: transactions.length,
+          profitableTrades: transactions.filter(t => (t.profit || 0) > 0).length,
+          averageHoldingDays: transactions.length > 0 
+            ? transactions.reduce((sum, t) => sum + (t.holdingDays || 0), 0) / transactions.length 
             : 0,
-          averageLoss: paperTrades.length > 0
-            ? paperTrades.filter(t => (t.profit || 0) < 0).reduce((sum, t) => sum + (t.profit || 0), 0) / Math.max(paperTrades.filter(t => (t.profit || 0) < 0).length, 1)
-            : 0,
-          daysActive: 30,
+          journalEntries: transactions.map(t => ({
+            symbol: t.symbol,
+            reason: t.notes || t.description || "No note provided"
+          })),
           holdings: holdings.map(h => ({
             symbol: h.symbol,
-            allocation: (h.quantity * (h.current_price || 0)) / (portfolio?.totalValue || 1) * 100
+            allocation: (h.quantity * (h.currentPrice || 0)) / (portfolio?.totalValue || 1) * 100
           }))
         },
-        userEmail: "unknown"
+        userEmail: "ShahzadAnwar"
       });
 
       // Combine calculated metrics with AI analysis
@@ -103,8 +109,7 @@ export default function InvestorScore() {
       };
 
       setScore(finalScore);
-      
-      // Save to DynamoDB
+
       await awsApi.saveInvestorScore(finalScore);
     } catch (error) {
       console.error("Error analyzing:", error);
@@ -184,7 +189,7 @@ export default function InvestorScore() {
                 </div>
                 <Button
                   onClick={analyzeDecisionQuality}
-                  disabled={isAnalyzing || paperTrades.length === 0}
+                  disabled={isAnalyzing || transactions.length === 0}
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                 >
                   {isAnalyzing ? (
@@ -212,9 +217,9 @@ export default function InvestorScore() {
               <p className="text-slate-500 mb-6">
                 Run your first behavioral analysis to see your Investor IQ Score
               </p>
-              {paperTrades.length === 0 && (
+              {transactions.length === 0 && (
                 <p className="text-sm text-slate-400">
-                  Execute some paper trades first to get meaningful analysis
+                  Add some journal entries in the Transactions page to get behavioral analysis
                 </p>
               )}
             </CardContent>
