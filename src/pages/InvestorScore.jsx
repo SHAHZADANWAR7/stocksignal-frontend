@@ -68,22 +68,22 @@ export default function InvestorScore() {
     }
   };
 
-  // --- Hybrid analyzeDecisionQuality logic ---
+  // --- Hybrid analyzeDecisionQuality logic with explicit mapping from Lambda ---
   const analyzeDecisionQuality = async () => {
     setIsAnalyzing(true);
     try {
       // Save current score as previous before updating
       if (score) setPreviousScore(score);
 
-      // Step 1: Get the Math Scores from your existing Lambda
-      const mathResult = await awsApi.analyzeInvestmentBehavior({ userEmail });
-      const mathScores = mathResult.investor_score || {};
+      // Step 1: Get the Math Scores from your existing Lambda -- explicit mapping
+      const response = await awsApi.analyzeInvestmentBehavior({ userEmail });
+      const data = response.investor_score || {};
 
       // Step 2: Get Qualitative Insights from invokeLLM
       const prompt = `Analyze these investor scores: 
-      Discipline: ${mathScores.discipline_score}, 
-      Frequency: ${mathScores.overtrading_score}, 
-      Emotional Control: ${mathScores.panic_selling_score}.
+      Discipline: ${data.discipline_score}, 
+      Frequency: ${data.overtrading_score}, 
+      Emotional Control: ${data.panic_selling_score}.
       Return JSON ONLY: { 
         "biases_detected": [{"bias_type": "string", "severity": "high/medium/low", "description": "string"}], 
         "improvement_suggestions": ["string"] 
@@ -91,16 +91,19 @@ export default function InvestorScore() {
 
       const aiResult = await awsApi.invokeLLM(prompt);
 
-      // Step 3: Combine everything
-      const finalScore = {
-        ...mathScores, // Math from specialized Lambda
-        biases_detected: aiResult.biases_detected || [], // Text from AI
-        improvement_suggestions: aiResult.improvement_suggestions || [], // Text from AI
+      // Step 3: Combine everything, explicitly mapping Lambda keys to UI keys
+      setScore({
+        ...data,
+        biases_detected: data.biases_detected || [],
+        improvement_suggestions: data.improvement_suggestions || [],
+        // AI mapping (if present)
+        ...(aiResult && {
+          biases_detected: aiResult.biases_detected || data.biases_detected || [],
+          improvement_suggestions: aiResult.improvement_suggestions || data.improvement_suggestions || []
+        }),
         analysis_date: new Date().toISOString()
-      };
-
-      setScore(finalScore);
-      await awsApi.saveInvestorScore({ ...finalScore, email: userEmail });
+      });
+      await awsApi.saveInvestorScore({ ...data, email: userEmail });
     } catch (error) {
       console.error("Analysis failed:", error);
     } finally {
