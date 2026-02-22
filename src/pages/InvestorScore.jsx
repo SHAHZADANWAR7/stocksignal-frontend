@@ -28,6 +28,7 @@ export default function InvestorScore() {
   const [holdings, setHoldings] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [remainingUsage, setRemainingUsage] = useState(null);
+  const [userEmail, setUserEmail] = useState(""); // Add this line
 
   useEffect(() => {
     loadData();
@@ -42,29 +43,33 @@ export default function InvestorScore() {
   // ---- loadData updated ----
   const loadData = async () => {
     try {
-      // 1. Fetch REAL history and REAL current synced values
-      const [txResponse, syncResponse] = await Promise.all([
+      // 1. Fetch Auth Data and Dynamo Data
+      const [txResponse, syncResponse, userData] = await Promise.all([
         awsApi.getTransactions(null).catch(() => ({ transactions: [] })),
-        awsApi.syncPortfolio(null).catch(() => ({ portfolio: { assets: [], totalValue: 0 } }))
+        awsApi.syncPortfolio(null).catch(() => ({ portfolio: { assets: [], totalValue: 0 } })),
+        awsApi.getCurrentUser().catch(() => ({ email: "" })) // Get the real logged-in user
       ]);
 
-      // 2. Set Transactions (Your Journal entries for AI analysis)
+      // 2. Set the dynamic email
+      setUserEmail(userData.email);
+
+      // 3. Set Transactions (Your Journal entries for AI analysis)
       const txData = txResponse.transactions || [];
       setTransactions(txData);
 
-      // 3. Set Holdings (The synced assets with fresh prices)
+      // 4. Set Holdings (The synced assets with fresh prices)
       const portfolioObj = syncResponse.portfolio || {};
       const assetsData = portfolioObj.assets || [];
       setHoldings(assetsData);
 
-      // 4. Update the Portfolio State for the UI
+      // 5. Update the Portfolio State for the UI
       const portfolioData = {
         totalValue: portfolioObj.totalValue || 0,
         assets: assetsData
       };
       setPortfolio(portfolioData);
 
-      // 5. Calculate metrics locally using real Transactions instead of Paper Trades
+      // 6. Calculate metrics locally using real Transactions instead of Paper Trades
       const metrics = calculateInvestorMetrics(txData, portfolioData);
       setScore(metrics);
     } catch (error) {
@@ -80,9 +85,9 @@ export default function InvestorScore() {
       // Use real transactions for metrics
       const metrics = calculateInvestorMetrics(transactions, portfolio);
 
-      // AI payload uses real journal notes and real holdings
+      // AI payload uses the dynamic userEmail from state
       const result = await awsApi.analyzeInvestmentBehavior({
-        userEmail: "dr.shahzadanwar40@yahoo.com", // Your verified email from the screenshot
+        userEmail: userEmail,
         metrics: {
           totalTrades: transactions.length,
           profitableTrades: 0, // Set to 0, as table doesn't have a profit field
@@ -107,6 +112,7 @@ export default function InvestorScore() {
       // Combine calculated metrics with AI analysis
       const finalScore = {
         ...metrics,
+        email: userEmail, // Dynamic key for the Save Lambda
         biases_detected: result.investor_score?.biases_detected || [],
         improvement_suggestions: result.investor_score?.improvement_suggestions || [],
         overall_score: result.investor_score?.overall_score || metrics.overall_score,
