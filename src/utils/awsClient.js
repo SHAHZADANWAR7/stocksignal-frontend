@@ -269,7 +269,10 @@ export const awsApi = {
   createPortalSession: (customerId) => invokeProxy("createPortalSession", { customerId }),
   optimizePortfolio: (data) => invokeProxy("optimizePortfolio", data),
   getUserPortfolio: () => invokeProxy("getUserPortfolio", {}),
-  analyzeInvestmentBehavior: (data) => invokeProxy("analyzeInvestmentBehavior", data),
+  // MODIFY analyzeInvestmentBehavior export as requested.
+  analyzeInvestmentBehavior: (data) => invokeProxy("analyzeInvestmentBehavior", { 
+    email: data.userEmail || data.email 
+  }),
   generateMarketInsights: () => invokeProxy("generateMarketInsights", {}),
   cacheMarketInsights: (data) => invokeProxy("cacheMarketInsights", data),
   getUserTrades: () => invokeProxy("getUserTrades", {}),
