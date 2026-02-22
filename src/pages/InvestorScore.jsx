@@ -30,6 +30,7 @@ export default function InvestorScore() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [remainingUsage, setRemainingUsage] = useState(null);
   const [userEmail, setUserEmail] = useState(""); // Add this line
+  const [previousScore, setPreviousScore] = useState(null); // Add previousScore state
 
   useEffect(() => {
     loadData();
@@ -41,95 +42,70 @@ export default function InvestorScore() {
     setRemainingUsage(usage);
   };
 
-  // ---- loadData updated ----
+  // --- loadData updated for Hybrid/Dev "Previous Score" Feature ---
   const loadData = async () => {
     try {
-      // 1. Get the local session directly (Bypasses the 401 API call)
       const session = await fetchAuthSession();
       const email = session.tokens?.idToken?.payload?.email || "";
       setUserEmail(email);
 
-      // 2. Fetch only the data that is working (Transactions and Portfolio)
       const [txResponse, syncResponse] = await Promise.all([
         awsApi.getTransactions(null).catch(() => ({ transactions: [] })),
         awsApi.syncPortfolio(null).catch(() => ({ portfolio: { assets: [], totalValue: 0 } }))
       ]);
-
-      // 3. Set Transactions
-      const txData = txResponse.transactions || [];
-      setTransactions(txData);
-
-      // 4. Set Holdings
-      const portfolioObj = syncResponse.portfolio || {};
-      const assetsData = portfolioObj.assets || [];
-      setHoldings(assetsData);
-
-      // 5. Update Portfolio state
-      const portfolioData = {
-        totalValue: portfolioObj.totalValue || 0,
-        assets: assetsData
+      setTransactions(txResponse.transactions || []);
+      const portfolioData = { 
+        totalValue: syncResponse.portfolio?.totalValue || 0, 
+        assets: syncResponse.portfolio?.assets || [] 
       };
       setPortfolio(portfolioData);
 
-      // 6. Calculate local metrics
-      const metrics = calculateInvestorMetrics(txData, portfolioData);
+      // Fallback math calculation so the page isn't empty on first load
+      const metrics = calculateInvestorMetrics(txResponse.transactions || [], portfolioData);
       setScore(metrics);
     } catch (error) {
-      console.error("Error loading Investor IQ data:", error);
+      console.error("Error loading data:", error);
     }
   };
 
-  // ---- analyzeDecisionQuality updated as per instructions ----
+  // --- Hybrid analyzeDecisionQuality logic ---
   const analyzeDecisionQuality = async () => {
     setIsAnalyzing(true);
-
     try {
-      // Use real transactions for metrics
-      const metrics = calculateInvestorMetrics(transactions, portfolio);
+      // Save current score as previous before updating
+      if (score) setPreviousScore(score);
 
-      // AI payload uses the dynamic userEmail from state
-      const result = await awsApi.analyzeInvestmentBehavior({
-        userEmail: userEmail,
-        metrics: {
-          totalTrades: transactions.length,
-          profitableTrades: 0, // Set to 0, as table doesn't have a profit field
-          averageHoldingDays: transactions.length > 0 
-            ? transactions.reduce((sum, t) => sum + (t.holdingDays || 0), 0) / transactions.length 
-            : 0,
-          journalEntries: transactions.map(t => ({
-            symbol: t.symbol,
-            type: t.type, // buy/sell
-            date: t.transaction_date,
-            price: t.price,
-            notes: t.notes || "No notes provided",
-            fees: t.fees
-          })),
-          holdings: holdings.map(h => ({
-            symbol: h.symbol,
-            allocation: (h.quantity * (h.currentPrice || 0)) / (portfolio?.totalValue || 1) * 100
-          }))
-        }
-      });
+      // Step 1: Get the Math Scores from your existing Lambda
+      const mathResult = await awsApi.analyzeInvestmentBehavior({ userEmail });
+      const mathScores = mathResult.investor_score || {};
 
-      // Combine calculated metrics with AI analysis
+      // Step 2: Get Qualitative Insights from invokeLLM
+      const prompt = `Analyze these investor scores: 
+      Discipline: ${mathScores.discipline_score}, 
+      Frequency: ${mathScores.overtrading_score}, 
+      Emotional Control: ${mathScores.panic_selling_score}.
+      Return JSON ONLY: { 
+        "biases_detected": [{"bias_type": "string", "severity": "high/medium/low", "description": "string"}], 
+        "improvement_suggestions": ["string"] 
+      }`;
+
+      const aiResult = await awsApi.invokeLLM(prompt);
+
+      // Step 3: Combine everything
       const finalScore = {
-        ...metrics,
-        email: userEmail, // Dynamic key for the Save Lambda
-        biases_detected: result.investor_score?.biases_detected || [],
-        improvement_suggestions: result.investor_score?.improvement_suggestions || [],
-        overall_score: result.investor_score?.overall_score || metrics.overall_score,
+        ...mathScores, // Math from specialized Lambda
+        biases_detected: aiResult.biases_detected || [], // Text from AI
+        improvement_suggestions: aiResult.improvement_suggestions || [], // Text from AI
         analysis_date: new Date().toISOString()
       };
 
       setScore(finalScore);
-
-      await awsApi.saveInvestorScore(finalScore);
+      await awsApi.saveInvestorScore({ ...finalScore, email: userEmail });
     } catch (error) {
-      console.error("Error analyzing:", error);
-      alert("Error analyzing decision quality. Please try again.");
+      console.error("Analysis failed:", error);
+    } finally {
+      setIsAnalyzing(false);
     }
-
-    setIsAnalyzing(false);
   };
 
   const getScoreColor = (score) => {
@@ -152,21 +128,17 @@ export default function InvestorScore() {
     return <AlertTriangle className="w-5 h-5 text-blue-600" />;
   };
 
-  const getBiasBadgeColor = (severity) => {
-    if (severity === "high") return "bg-rose-100 text-rose-700 border-rose-200";
-    if (severity === "medium") return "bg-amber-100 text-amber-700 border-amber-200";
-    return "bg-blue-100 text-blue-700 border-blue-200";
-  };
-
+  // --- Add "Overconfidence" & fallback formatting ---
   const getBiasLabel = (biasType) => {
     const labels = {
       loss_aversion: "Loss Aversion",
       recency_bias: "Recency Bias",
       confirmation_bias: "Confirmation Bias",
       home_country_bias: "Home Country Bias",
-      chasing_returns: "Chasing Returns"
+      chasing_returns: "Chasing Returns",
+      overconfidence: "Overconfidence" // Added this
     };
-    return labels[biasType] || biasType;
+    return labels[biasType] || biasType.replace('_', ' '); // Added fallback formatting
   };
 
   return (
@@ -202,20 +174,15 @@ export default function InvestorScore() {
                 </div>
                 <Button
                   onClick={analyzeDecisionQuality}
-                  disabled={isAnalyzing || transactions.length === 0}
+                  disabled={isAnalyzing}
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                 >
                   {isAnalyzing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Analyzing...
-                    </>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   ) : (
-                    <>
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      {score?.analysis_date ? "Refresh Analysis" : "Analyze My Decisions"}
-                    </>
+                    <RefreshCw className="w-4 h-4 mr-2" />
                   )}
+                  {score?.analysis_date ? "Refresh Analysis" : "Analyze My Decisions"}
                 </Button>
               </div>
             </CardContent>
@@ -247,17 +214,27 @@ export default function InvestorScore() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                {/* Score section with timestamp and previous score comparison */}
+                <div className="flex justify-between items-start mb-4">
                   <div>
-                    <p className={`text-5xl md:text-6xl font-bold ${getScoreColor(score.overall_score)} break-words`}>
+                    <p className={`text-6xl font-bold ${getScoreColor(score.overall_score)}`}>
                       {Math.round(score.overall_score)}
                     </p>
-                    {score.analysis_date && (
-                      <p className="text-sm text-slate-600 mt-2">
-                        Last analyzed: {format(new Date(score.analysis_date), 'MMM d, yyyy h:mm a')}
-                      </p>
-                    )}
+                    <p className="text-sm text-slate-500 mt-2">
+                      Last analyzed: {format(new Date(score.analysis_date || Date.now()), 'MMM d, yyyy h:mm a')}
+                    </p>
                   </div>
+                  {previousScore && (
+                    <div className="text-right">
+                      <p className="text-sm text-slate-500">Previous Score</p>
+                      <p className="text-2xl font-bold text-slate-300">{Math.round(previousScore.overall_score)}</p>
+                      <span className="text-xs font-bold text-emerald-600">
+                        {score.overall_score > previousScore.overall_score
+                          ? `+${Math.round(score.overall_score - previousScore.overall_score)} pts`
+                          : "No change"}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <p className="text-slate-700">
                   {score.overall_score >= 80 && "Excellent! You demonstrate strong investment discipline and decision-making."}
@@ -322,6 +299,7 @@ export default function InvestorScore() {
               </Card>
             </div>
 
+            {/* Biases and Suggestions Cards */}
             {score.biases_detected && score.biases_detected.length > 0 && (
               <Card className="border-2 border-amber-200 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50">
                 <CardHeader>
