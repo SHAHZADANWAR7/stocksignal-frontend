@@ -25,7 +25,6 @@ const LAMBDA_KEY_MAPPING = {
     "getTransactions",
     "getBlackSwanSimulations",
     "getSubscriptions",
-    "checkSubscription",
     "analyzeInvestmentBehavior",
     "syncPortfolio",
     "executePaperTrade",
@@ -34,6 +33,7 @@ const LAMBDA_KEY_MAPPING = {
     "createBlackSwanSimulation"
   ],
   user_email: [
+    "checkSubscription",
     "getHoldings",
     "createHolding",
     "updateHolding",
