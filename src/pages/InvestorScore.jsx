@@ -256,40 +256,41 @@ export default function InvestorScore() {
           </Card>
         ) : (
           <div className="space-y-6">
-            <Card className={`border-2 shadow-xl ${getScoreBg(score.overall_score)}`}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-                  <Award className={`w-5 h-5 md:w-6 md:h-6 ${getScoreColor(score.overall_score)}`} />
+            {/* YOUR INVESTOR IQ SCORE CARD - MATCHING DEV STYLING */}
+            <Card className="border-2 border-amber-200 shadow-sm bg-amber-50/50 overflow-hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-lg md:text-xl font-bold text-slate-900">
+                  <Award className="w-5 h-5 md:w-6 md:h-6 text-amber-600" />
                   Your Investor IQ Score
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6 pt-0">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <p className={`text-6xl font-bold ${getScoreColor(score.overall_score)}`}>
+                    {/* Large prominent score */}
+                    <p className="text-6xl font-bold text-amber-600">
                       {Math.round(score.overall_score)}
                     </p>
-                    <p className="text-sm text-slate-500 mt-2">
+                    <p className="text-sm text-slate-500 mt-2 font-medium">
                       Last analyzed: {format(new Date(score.analysis_date || Date.now()), 'MMM d, yyyy h:mm a')}
                     </p>
                   </div>
                   {previousScore && (
                     <div className="text-right">
-                      <p className="text-sm text-slate-500">Previous Score</p>
-                      <p className="text-2xl font-bold text-slate-300">{Math.round(previousScore.overall_score)}</p>
-                      <span className="text-xs font-bold text-emerald-600">
-                        {score.overall_score > previousScore.overall_score
-                          ? `+${Math.round(score.overall_score - previousScore.overall_score)} pts`
-                          : "No change"}
+                      <p className="text-sm text-slate-500 font-semibold mb-1">Previous Score</p>
+                      <p className="text-3xl font-bold text-slate-400">
+                        {Math.round(previousScore.overall_score)}
+                      </p>
+                      <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">
+                        {score.overall_score === previousScore.overall_score ? "No change" : ""}
                       </span>
                     </div>
                   )}
                 </div>
-                <p className="text-slate-700">
-                  {score.overall_score >= 80 && "Excellent! You demonstrate strong investment discipline and decision-making."}
-                  {score.overall_score >= 60 && score.overall_score < 80 && "Good! You're making solid decisions with room for improvement."}
-                  {score.overall_score >= 40 && score.overall_score < 60 && "Fair. Several behavioral patterns could be improved."}
-                  {score.overall_score < 40 && "Needs improvement. Focus on reducing emotional decision-making."}
+                <p className="text-slate-700 font-medium text-[15px] border-t border-amber-100 pt-4 mt-2">
+                  {score.overall_score >= 40 && score.overall_score < 60 
+                    ? "Fair. Several behavioral patterns could be improved." 
+                    : ""}
                 </p>
               </CardContent>
             </Card>
@@ -348,40 +349,35 @@ export default function InvestorScore() {
               </Card>
             </div>
 
-            {/* POLISHED BEHAVIORAL BIAS CARDS */}
+            {/* BEHAVIORAL BIAS CARDS - PROFESSIONAL DEV STYLING */}
             {score.biases_detected && score.biases_detected.length > 0 && (
-              <Card className="border-2 border-amber-200 shadow-lg bg-amber-50/50">
-                <CardHeader className="pb-4 border-b border-amber-100/50">
-                  <CardTitle className="flex items-center gap-3 text-xl font-bold text-amber-900">
+              <Card className="border-2 border-amber-200 shadow-md bg-amber-50/50">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-xl font-bold text-slate-900">
                     <AlertTriangle className="w-7 h-7 text-amber-600" />
                     Behavioral Biases Detected
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-6">
-                  <div className="grid gap-5">
+                <CardContent className="p-6 pt-0">
+                  <div className="grid gap-4">
                     {score.biases_detected.map((bias, idx) => (
-                      <motion.div 
-                        key={idx}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.1 }}
-                      >
-                        <Card className="border border-amber-200 bg-white/80 shadow-sm hover:shadow-md transition-shadow">
+                      <motion.div key={idx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                        <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden rounded-xl border-l-4 border-l-amber-400">
                           <CardContent className="p-5">
                             <div className="flex items-start gap-4">
-                              <div className={`p-2.5 rounded-xl ${bias.severity === 'high' ? 'bg-rose-50' : 'bg-amber-50'}`}>
+                              <div className={`p-2 rounded-lg shrink-0 ${bias.severity === 'high' ? 'bg-rose-50' : 'bg-amber-50'}`}>
                                 {getBiasIcon(bias.severity)}
                               </div>
                               <div className="flex-1">
                                 <div className="flex flex-wrap items-center gap-3 mb-2">
-                                  <h4 className="font-bold text-slate-900 text-lg">
+                                  <h4 className="font-bold text-slate-900 text-lg leading-tight">
                                     {getBiasLabel(bias.bias_type)}
                                   </h4>
-                                  <Badge variant="outline" className={`${getBiasBadgeColor(bias.severity)} border-current font-bold px-3 py-1 uppercase text-[10px] tracking-wider`}>
+                                  <Badge variant="outline" className={`${getBiasBadgeColor(bias.severity)} border-current font-bold px-2.5 py-0.5 uppercase text-[10px] tracking-widest`}>
                                     {bias.severity} severity
                                   </Badge>
                                 </div>
-                                <p className="text-slate-600 leading-relaxed text-sm md:text-base">
+                                <p className="text-slate-600 leading-relaxed text-[14px] md:text-[15px]">
                                   {bias.description}
                                 </p>
                               </div>
