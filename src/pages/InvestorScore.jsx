@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react"; // Add useRef here
+import React, { useState, useEffect, useRef } from "react";
 import { awsApi } from "@/utils/awsClient";
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,14 +24,13 @@ import { calculateInvestorMetrics } from "@/components/utils/calculations/invest
 export default function InvestorScore() {
   const [score, setScore] = useState(null);
   const [transactions, setTransactions] = useState([]);
-  // ---- Removed paperTrades state ----
   const [portfolio, setPortfolio] = useState(null);
   const [holdings, setHoldings] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [remainingUsage, setRemainingUsage] = useState(null);
-  const [userEmail, setUserEmail] = useState(""); // Add this line
-  const [previousScore, setPreviousScore] = useState(null); // Add previousScore state
-  const isInternalUpdate = useRef(false); // Add this "Stop Sign"
+  const [userEmail, setUserEmail] = useState("");
+  const [previousScore, setPreviousScore] = useState(null);
+  const isInternalUpdate = useRef(false);
 
   useEffect(() => {
     loadData();
@@ -43,20 +42,15 @@ export default function InvestorScore() {
     setRemainingUsage(usage);
   };
 
-  // --- loadData updated for Hybrid/Dev "Previous Score" Feature ---
   const loadData = async () => {
     try {
       const session = await fetchAuthSession();
-      // Add .toLowerCase() here for session email
       const email = (session.tokens?.idToken?.payload?.email || "").toLowerCase(); 
       setUserEmail(email);
 
-      // --- CHANGE 1: Check cache immediately but DON'T return ---
       const cached = sessionStorage.getItem(`last_iq_${email}`);
       if (cached) {
         setScore(JSON.parse(cached));
-        // We don't return here so that transactions/portfolio still load, 
-        // but the second guard below will protect this cached data.
       }
 
       const [txResponse, syncResponse] = await Promise.all([
@@ -71,9 +65,7 @@ export default function InvestorScore() {
       setPortfolio(portfolioData);
 
       const metrics = calculateInvestorMetrics(txResponse.transactions || [], portfolioData);
-      
       setScore(current => {
-        // --- CHANGE 2: The "Triple Guard" ---
         if (isInternalUpdate.current || current?.analysis_date) return current;
         return metrics;
       });
@@ -82,54 +74,45 @@ export default function InvestorScore() {
     }
   };
 
-  // --- UX Pro-Tip: Show math score immediately, finalize with AI data ---
   const analyzeDecisionQuality = async () => {
-    if (isAnalyzing || isInternalUpdate.current) return; // STOP if already running
+    if (isAnalyzing || isInternalUpdate.current) return;
     setIsAnalyzing(true);
     isInternalUpdate.current = true;
     try {
       if (score) setPreviousScore(score);
 
-      // Step 1: Get Math + Journal Sentiments from your updated Lambda
       const response = await awsApi.analyzeInvestmentBehavior({ userEmail });
       const mathData = response.investor_score || {};
 
-      // FIX: Only show the "preview" math if we haven't already finished a full analysis
       setScore(prev => {
         if (prev?.analysis_date || isInternalUpdate.current) return prev;
         return { ...prev, ...mathData };
       });
 
-      // Step 2: Prepare a much smarter prompt including your Journal notes
       const sentimentText = mathData.user_sentiments && mathData.user_sentiments.length > 0
         ? `INVESTOR JOURNAL NOTES (The user's thoughts):\n${mathData.user_sentiments.map(s => `- ${s}`).join('\n')}`
         : "No journal notes available.";
 
       const prompt = `Analyze this investor's behavioral performance.
-      
       NUMERIC DATA:
       - Discipline: ${mathData.discipline_score}/100
       - Trading Frequency: ${mathData.overtrading_score}/100
       - Emotional Control: ${mathData.panic_selling_score}/100
-      
+
       ${sentimentText}
-      
+
       TASK:
       1. Detect behavioral biases. (e.g., If they are 'confident' but discipline is 16, flag "Overconfidence Bias").
       2. If they mentioned being 'scared' or 'solid', reference those specific thoughts in the description.
-      
+
       Return JSON ONLY: { 
         "biases_detected": [{"bias_type": "string", "severity": "high/medium/low", "description": "string"}], 
         "improvement_suggestions": ["string"] 
       }`;
 
-     // Step 3: Get AI Insights
       const aiResponse = await awsApi.invokeLLM(prompt);
-      
-      // NEW: Parse the string into an object
       let aiResult = {};
       try {
-        // We look for .response or .analysis based on your logs
         const rawJson = aiResponse?.response || aiResponse?.analysis || "{}";
         aiResult = typeof rawJson === 'string' ? JSON.parse(rawJson) : rawJson;
       } catch (e) {
@@ -137,7 +120,6 @@ export default function InvestorScore() {
         aiResult = { biases_detected: [], improvement_suggestions: [] };
       }
 
-      // Step 4: Combine Math + AI Results
       const finalResult = {
         ...mathData,
         biases_detected: aiResult?.biases_detected || [],
@@ -145,18 +127,14 @@ export default function InvestorScore() {
         analysis_date: new Date().toISOString()
       };
 
-      // Step 5: LOCK and Update State
-      // Force lowercase here as well for the key
       sessionStorage.setItem(`last_iq_${userEmail.toLowerCase()}`, JSON.stringify(finalResult));
       setScore(finalResult);
 
-      // Step 6: Background Save
       awsApi.saveInvestorScore({ 
         ...finalResult, 
         user_email: userEmail 
       }).catch(err => console.error("Save failed:", err))
         .finally(() => {
-          // Wait 5 seconds before allowing ANY other updates to the score
           setTimeout(() => {
             isInternalUpdate.current = false;
           }, 5000);
@@ -189,14 +167,12 @@ export default function InvestorScore() {
     return <AlertTriangle className="w-5 h-5 text-blue-600" />;
   };
 
-  // --- Add getBiasBadgeColor as requested ---
   const getBiasBadgeColor = (severity) => {
     if (severity === "high") return "bg-rose-100 text-rose-700 border-rose-200";
     if (severity === "medium") return "bg-amber-100 text-amber-700 border-amber-200";
     return "bg-blue-100 text-blue-700 border-blue-200";
   };
 
-  // --- Add "Overconfidence" & fallback formatting ---
   const getBiasLabel = (biasType) => {
     const labels = {
       loss_aversion: "Loss Aversion",
@@ -232,23 +208,29 @@ export default function InvestorScore() {
           </div>
         </motion.div>
 
+        {/* POLISHED ANALYSIS HEADER */}
         <div className="mb-8">
-          <Card className="border-2 border-slate-200 shadow-lg bg-white/80 backdrop-blur-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-slate-900 mb-1">Decision Quality Analysis</h3>
-                  <p className="text-sm text-slate-600">Separate luck from skill with behavioral analysis</p>
+          <Card className="border-2 border-slate-200 shadow-md bg-white/90 backdrop-blur-xl overflow-hidden">
+            <CardContent className="p-0">
+              <div className="flex flex-col md:flex-row items-center justify-between p-6 gap-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Activity className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Decision Quality Analysis</h3>
+                    <p className="text-sm md:text-base text-slate-500">Separate luck from skill with behavioral insights</p>
+                  </div>
                 </div>
                 <Button
                   onClick={analyzeDecisionQuality}
                   disabled={isAnalyzing}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  className="w-full md:w-auto min-w-[180px] h-11 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md transition-all active:scale-95 text-base font-semibold"
                 >
                   {isAnalyzing ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   ) : (
-                    <RefreshCw className="w-4 h-4 mr-2" />
+                    <RefreshCw className="w-5 h-5 mr-2" />
                   )}
                   {score?.analysis_date ? "Refresh Analysis" : "Analyze My Decisions"}
                 </Button>
@@ -282,7 +264,6 @@ export default function InvestorScore() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {/* Score section with timestamp and previous score comparison */}
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <p className={`text-6xl font-bold ${getScoreColor(score.overall_score)}`}>
@@ -367,36 +348,47 @@ export default function InvestorScore() {
               </Card>
             </div>
 
-            {/* Biases and Suggestions Cards */}
+            {/* POLISHED BEHAVIORAL BIAS CARDS */}
             {score.biases_detected && score.biases_detected.length > 0 && (
-              <Card className="border-2 border-amber-200 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="w-6 h-6 text-amber-600" />
+              <Card className="border-2 border-amber-200 shadow-lg bg-amber-50/50">
+                <CardHeader className="pb-4 border-b border-amber-100/50">
+                  <CardTitle className="flex items-center gap-3 text-xl font-bold text-amber-900">
+                    <AlertTriangle className="w-7 h-7 text-amber-600" />
                     Behavioral Biases Detected
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4">
+                <CardContent className="p-6">
+                  <div className="grid gap-5">
                     {score.biases_detected.map((bias, idx) => (
-                      <Card key={idx} className="border border-slate-200 bg-white">
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            {getBiasIcon(bias.severity)}
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h4 className="font-bold text-slate-900">
-                                  {getBiasLabel(bias.bias_type)}
-                                </h4>
-                                <Badge variant="outline" className={`${getBiasBadgeColor(bias.severity)} border`}>
-                                  {bias.severity} severity
-                                </Badge>
+                      <motion.div 
+                        key={idx}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.1 }}
+                      >
+                        <Card className="border border-amber-200 bg-white/80 shadow-sm hover:shadow-md transition-shadow">
+                          <CardContent className="p-5">
+                            <div className="flex items-start gap-4">
+                              <div className={`p-2.5 rounded-xl ${bias.severity === 'high' ? 'bg-rose-50' : 'bg-amber-50'}`}>
+                                {getBiasIcon(bias.severity)}
                               </div>
-                              <p className="text-sm text-slate-700">{bias.description}</p>
+                              <div className="flex-1">
+                                <div className="flex flex-wrap items-center gap-3 mb-2">
+                                  <h4 className="font-bold text-slate-900 text-lg">
+                                    {getBiasLabel(bias.bias_type)}
+                                  </h4>
+                                  <Badge variant="outline" className={`${getBiasBadgeColor(bias.severity)} border-current font-bold px-3 py-1 uppercase text-[10px] tracking-wider`}>
+                                    {bias.severity} severity
+                                  </Badge>
+                                </div>
+                                <p className="text-slate-600 leading-relaxed text-sm md:text-base">
+                                  {bias.description}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
                     ))}
                   </div>
                 </CardContent>
