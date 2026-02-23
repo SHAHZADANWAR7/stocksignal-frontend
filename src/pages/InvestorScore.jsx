@@ -50,6 +50,14 @@ export default function InvestorScore() {
       const email = session.tokens?.idToken?.payload?.email || "";
       setUserEmail(email);
 
+      // Check sessionStorage BEFORE calculating metrics
+      // Check sessionStorage BEFORE calculating metrics
+      const cached = sessionStorage.getItem(`last_iq_${email}`);
+      if (cached) {
+        setScore(JSON.parse(cached));
+        // No return here! We want to continue and load the Transactions/Portfolio data
+      }
+
       const [txResponse, syncResponse] = await Promise.all([
         awsApi.getTransactions(null).catch(() => ({ transactions: [] })),
         awsApi.syncPortfolio(null).catch(() => ({ portfolio: { assets: [], totalValue: 0 } }))
@@ -61,13 +69,9 @@ export default function InvestorScore() {
       };
       setPortfolio(portfolioData);
 
-      // Fallback math calculation with check-first logic, but pull from sessionStorage if available
+      // Fallback math calculation with check-first logic
       const metrics = calculateInvestorMetrics(txResponse.transactions || [], portfolioData);
       setScore(current => {
-        // Check for cached AI result first
-        const cached = sessionStorage.getItem(`last_iq_${email}`);
-        if (cached) return JSON.parse(cached);
-
         if (isInternalUpdate.current || current?.analysis_date) return current;
         return metrics;
       });
