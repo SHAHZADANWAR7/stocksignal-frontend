@@ -60,16 +60,21 @@ export default function InvestorScore() {
       };
       setPortfolio(portfolioData);
 
-      // Fallback math calculation so the page isn't empty on first load
+      // Fallback math calculation with check-first logic
       const metrics = calculateInvestorMetrics(txResponse.transactions || [], portfolioData);
-      setScore(metrics);
+
+      setScore(current => {
+        // If we already have AI data (analysis_date), DO NOT overwrite it with basic math
+        if (current?.analysis_date) return current;
+        return metrics;
+      });
     } catch (error) {
       console.error("Error loading data:", error);
     }
   };
 
   // --- UX Pro-Tip: Show math score immediately, finalize with AI data ---
- const analyzeDecisionQuality = async () => {
+  const analyzeDecisionQuality = async () => {
     setIsAnalyzing(true);
     try {
       if (score) setPreviousScore(score);
@@ -108,25 +113,26 @@ export default function InvestorScore() {
       // Step 3: Get AI Insights
       const aiResult = await awsApi.invokeLLM(prompt);
 
-      // Step 4: Combine Math + AI Results into a final local object
+      // Step 4: Combine Math + AI Results
       const finalResult = {
         ...mathData,
-        // Ensure we keep the AI insights and don't let them get overwritten by the "save" response
-        biases_detected: aiResult?.biases_detected || mathData.biases || [],
-        improvement_suggestions: aiResult?.improvement_suggestions || mathData.suggestions || [],
+        biases_detected: aiResult?.biases_detected || [],
+        improvement_suggestions: aiResult?.improvement_suggestions || [],
         analysis_date: new Date().toISOString()
       };
 
-      // Step 5: Save to DB FIRST
-      // This way, if the save takes time, your screen doesn't "reset" mid-way
-      await awsApi.saveInvestorScore({ 
-        ...finalResult, 
-        user_email: userEmail // Using the explicit key name for safety
-      });
-
-      // Step 6: Final state update - This "locks" the data on the screen
-      // We call this AFTER the save is successful to prevent the flicker
+      // Step 5: Update the state IMMEDIATELY (This stops the flickering)
       setScore(finalResult);
+
+      // Step 6: Save to DB in the background
+      try {
+        await awsApi.saveInvestorScore({ 
+          ...finalResult, 
+          user_email: userEmail 
+        });
+      } catch (dbError) {
+        console.error("Database save failed, but UI is updated:", dbError);
+      }
 
     } catch (error) {
       console.error("Analysis failed:", error);
@@ -134,6 +140,7 @@ export default function InvestorScore() {
       setIsAnalyzing(false);
     }
   };
+
   const getScoreColor = (score) => {
     if (score >= 80) return "text-emerald-600";
     if (score >= 60) return "text-blue-600";
