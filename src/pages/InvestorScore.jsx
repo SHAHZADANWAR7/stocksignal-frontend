@@ -47,11 +47,11 @@ export default function InvestorScore() {
   const loadData = async () => {
     try {
       const session = await fetchAuthSession();
-      const email = session.tokens?.idToken?.payload?.email || "";
+      // Add .toLowerCase() here for session email
+      const email = (session.tokens?.idToken?.payload?.email || "").toLowerCase(); 
       setUserEmail(email);
 
       // --- CHANGE 1: Check cache immediately but DON'T return ---
-      // Check sessionStorage BEFORE anything else
       const cached = sessionStorage.getItem(`last_iq_${email}`);
       if (cached) {
         setScore(JSON.parse(cached));
@@ -84,7 +84,9 @@ export default function InvestorScore() {
 
   // --- UX Pro-Tip: Show math score immediately, finalize with AI data ---
   const analyzeDecisionQuality = async () => {
+    if (isAnalyzing || isInternalUpdate.current) return; // STOP if already running
     setIsAnalyzing(true);
+    isInternalUpdate.current = true;
     try {
       if (score) setPreviousScore(score);
 
@@ -132,11 +134,9 @@ export default function InvestorScore() {
         analysis_date: new Date().toISOString()
       };
 
-      // Step 5: PERSIST and LOCK
-      isInternalUpdate.current = true;
-      
-      // Write to browser memory BEFORE updating state
-      sessionStorage.setItem(`last_iq_${userEmail}`, JSON.stringify(finalResult));
+      // Step 5: LOCK and Update State
+      // Force lowercase here as well for the key
+      sessionStorage.setItem(`last_iq_${userEmail.toLowerCase()}`, JSON.stringify(finalResult));
       setScore(finalResult);
 
       // Step 6: Background Save
@@ -145,13 +145,14 @@ export default function InvestorScore() {
         user_email: userEmail 
       }).catch(err => console.error("Save failed:", err))
         .finally(() => {
-          // Keep the lock for 3 seconds to ensure no background refreshes wipe the data
-          setTimeout(() => { isInternalUpdate.current = false; }, 3000);
+          // Wait 5 seconds before allowing ANY other updates to the score
+          setTimeout(() => {
+            isInternalUpdate.current = false;
+          }, 5000);
         });
 
     } catch (error) {
       console.error("Analysis failed:", error);
-      isInternalUpdate.current = false; // Release lock on error
     } finally {
       setIsAnalyzing(false);
     }
