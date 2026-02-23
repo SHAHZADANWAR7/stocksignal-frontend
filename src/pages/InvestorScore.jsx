@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react"; // Add useRef here
 import { awsApi } from "@/utils/awsClient";
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +31,7 @@ export default function InvestorScore() {
   const [remainingUsage, setRemainingUsage] = useState(null);
   const [userEmail, setUserEmail] = useState(""); // Add this line
   const [previousScore, setPreviousScore] = useState(null); // Add previousScore state
+  const isInternalUpdate = useRef(false); // Add this "Stop Sign"
 
   useEffect(() => {
     loadData();
@@ -64,6 +65,9 @@ export default function InvestorScore() {
       const metrics = calculateInvestorMetrics(txResponse.transactions || [], portfolioData);
 
       setScore(current => {
+        // If we are currently in the middle of an AI analysis, STOP.
+        if (isInternalUpdate.current) return current;
+        
         // If we already have AI data (analysis_date), DO NOT overwrite it with basic math
         if (current?.analysis_date) return current;
         return metrics;
@@ -80,11 +84,15 @@ export default function InvestorScore() {
       if (score) setPreviousScore(score);
 
       // Step 1: Get Math + Journal Sentiments from your updated Lambda
+      // Step 1: Get Math + Journal Sentiments
       const response = await awsApi.analyzeInvestmentBehavior({ userEmail });
       const mathData = response.investor_score || {};
 
-      // Show math scores instantly
-      setScore(prev => ({ ...prev, ...mathData }));
+      // FIX: Only show the "preview" math if we haven't already finished a full analysis
+      setScore(prev => {
+        if (prev?.analysis_date || isInternalUpdate.current) return prev;
+        return { ...prev, ...mathData };
+      });
 
       // Step 2: Prepare a much smarter prompt including your Journal notes
       // We extract the user_sentiments your Lambda is now providing
@@ -121,17 +129,18 @@ export default function InvestorScore() {
         analysis_date: new Date().toISOString()
       };
 
-      // Step 5: Save to DB FIRST (or simultaneously)
-      // We remove the "await" from the save call so the UI doesn't wait for the network
+      // Step 5: LOCK the Stop Sign and Update State
+      isInternalUpdate.current = true; 
+      setScore(finalResult);
+
+      // Step 6: Save to DB in the background
       awsApi.saveInvestorScore({ 
         ...finalResult, 
         user_email: userEmail 
-      }).catch(err => console.error("Background save failed:", err));
-
-      // Step 6: Final state update - Use a functional update to LOCK the data
-      setScore(() => ({
-        ...finalResult
-      }));
+      }).finally(() => {
+        // Unlock the stop sign after the network is completely finished
+        isInternalUpdate.current = false; 
+      });
 
     } catch (error) {
       console.error("Analysis failed:", error);
