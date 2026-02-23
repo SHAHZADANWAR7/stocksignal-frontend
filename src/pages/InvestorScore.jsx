@@ -108,21 +108,25 @@ export default function InvestorScore() {
       // Step 3: Get AI Insights
       const aiResult = await awsApi.invokeLLM(prompt);
 
-      // Step 4: Combine Math + AI Results
-      const combinedScore = {
+      // Step 4: Combine Math + AI Results into a final local object
+      const finalResult = {
         ...mathData,
+        // Ensure we keep the AI insights and don't let them get overwritten by the "save" response
         biases_detected: aiResult?.biases_detected || mathData.biases || [],
         improvement_suggestions: aiResult?.improvement_suggestions || mathData.suggestions || [],
         analysis_date: new Date().toISOString()
       };
 
-      setScore(combinedScore);
-
-      // Step 5: Save the complete history to DynamoDB
+      // Step 5: Save to DB FIRST
+      // This way, if the save takes time, your screen doesn't "reset" mid-way
       await awsApi.saveInvestorScore({ 
-        ...combinedScore, 
-        email: userEmail 
+        ...finalResult, 
+        user_email: userEmail // Using the explicit key name for safety
       });
+
+      // Step 6: Final state update - This "locks" the data on the screen
+      // We call this AFTER the save is successful to prevent the flicker
+      setScore(finalResult);
 
     } catch (error) {
       console.error("Analysis failed:", error);
