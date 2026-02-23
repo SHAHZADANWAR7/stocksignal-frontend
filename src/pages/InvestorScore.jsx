@@ -69,21 +69,22 @@ export default function InvestorScore() {
   };
 
   // --- UX Pro-Tip: Show math score immediately, finalize with AI data ---
-  const analyzeDecisionQuality = async () => {
+ const analyzeDecisionQuality = async () => {
     setIsAnalyzing(true);
     try {
       if (score) setPreviousScore(score);
 
-      // Step 1: Get Math + Journal Sentiments from your Lambda
+      // Step 1: Get Math + Journal Sentiments from your updated Lambda
       const response = await awsApi.analyzeInvestmentBehavior({ userEmail });
       const mathData = response.investor_score || {};
 
-      // OPTIONAL: Update bars immediately
+      // Show math scores instantly
       setScore(prev => ({ ...prev, ...mathData }));
 
       // Step 2: Prepare a much smarter prompt including your Journal notes
+      // We extract the user_sentiments your Lambda is now providing
       const sentimentText = mathData.user_sentiments && mathData.user_sentiments.length > 0
-        ? `RECENT JOURNAL NOTES (Investor's internal thoughts):\n${mathData.user_sentiments.map(s => `- ${s}`).join('\n')}`
+        ? `INVESTOR JOURNAL NOTES (The user's thoughts):\n${mathData.user_sentiments.map(s => `- ${s}`).join('\n')}`
         : "No journal notes available.";
 
       const prompt = `Analyze this investor's behavioral performance.
@@ -96,9 +97,8 @@ export default function InvestorScore() {
       ${sentimentText}
       
       TASK:
-      Compare the numeric discipline with the user's notes. 
-      - If they express 'high confidence' but their discipline score is low, flag "Overconfidence Bias".
-      - If they use words like 'scared' or 'dip', check for "Loss Aversion".
+      1. Detect behavioral biases. (e.g., If they are 'confident' but discipline is 16, flag "Overconfidence Bias").
+      2. If they mentioned being 'scared' or 'solid', reference those specific thoughts in the description.
       
       Return JSON ONLY: { 
         "biases_detected": [{"bias_type": "string", "severity": "high/medium/low", "description": "string"}], 
@@ -108,7 +108,7 @@ export default function InvestorScore() {
       // Step 3: Get AI Insights
       const aiResult = await awsApi.invokeLLM(prompt);
 
-      // Step 4: Combine everything
+      // Step 4: Combine Math + AI Results
       const combinedScore = {
         ...mathData,
         biases_detected: aiResult?.biases_detected || mathData.biases || [],
@@ -130,7 +130,6 @@ export default function InvestorScore() {
       setIsAnalyzing(false);
     }
   };
-
   const getScoreColor = (score) => {
     if (score >= 80) return "text-emerald-600";
     if (score >= 60) return "text-blue-600";
