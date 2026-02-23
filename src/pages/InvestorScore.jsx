@@ -123,8 +123,19 @@ export default function InvestorScore() {
         "improvement_suggestions": ["string"] 
       }`;
 
-      // Step 3: Get AI Insights
-      const aiResult = await awsApi.invokeLLM(prompt);
+     // Step 3: Get AI Insights
+      const aiResponse = await awsApi.invokeLLM(prompt);
+      
+      // NEW: Parse the string into an object
+      let aiResult = {};
+      try {
+        // We look for .response or .analysis based on your logs
+        const rawJson = aiResponse?.response || aiResponse?.analysis || "{}";
+        aiResult = typeof rawJson === 'string' ? JSON.parse(rawJson) : rawJson;
+      } catch (e) {
+        console.error("Failed to parse AI JSON:", e);
+        aiResult = { biases_detected: [], improvement_suggestions: [] };
+      }
 
       // Step 4: Combine Math + AI Results
       const finalResult = {
