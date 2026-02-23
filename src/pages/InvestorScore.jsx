@@ -61,15 +61,14 @@ export default function InvestorScore() {
       };
       setPortfolio(portfolioData);
 
-      // Fallback math calculation with check-first logic
+      // Fallback math calculation with check-first logic, but pull from sessionStorage if available
       const metrics = calculateInvestorMetrics(txResponse.transactions || [], portfolioData);
-
       setScore(current => {
-        // If we are currently in the middle of an AI analysis, STOP.
-        if (isInternalUpdate.current) return current;
-        
-        // If we already have AI data (analysis_date), DO NOT overwrite it with basic math
-        if (current?.analysis_date) return current;
+        // Check for cached AI result first
+        const cached = sessionStorage.getItem(`last_iq_${email}`);
+        if (cached) return JSON.parse(cached);
+
+        if (isInternalUpdate.current || current?.analysis_date) return current;
         return metrics;
       });
     } catch (error) {
@@ -84,7 +83,6 @@ export default function InvestorScore() {
       if (score) setPreviousScore(score);
 
       // Step 1: Get Math + Journal Sentiments from your updated Lambda
-      // Step 1: Get Math + Journal Sentiments
       const response = await awsApi.analyzeInvestmentBehavior({ userEmail });
       const mathData = response.investor_score || {};
 
@@ -95,7 +93,6 @@ export default function InvestorScore() {
       });
 
       // Step 2: Prepare a much smarter prompt including your Journal notes
-      // We extract the user_sentiments your Lambda is now providing
       const sentimentText = mathData.user_sentiments && mathData.user_sentiments.length > 0
         ? `INVESTOR JOURNAL NOTES (The user's thoughts):\n${mathData.user_sentiments.map(s => `- ${s}`).join('\n')}`
         : "No journal notes available.";
@@ -129,18 +126,21 @@ export default function InvestorScore() {
         analysis_date: new Date().toISOString()
       };
 
-      // Step 5: LOCK the Stop Sign and Update State
-      isInternalUpdate.current = true; 
+      // Step 5: LOCK the Stop Sign and Update State IMMEDIATELY
+      isInternalUpdate.current = true;
+      // NEW: Cache it in browser memory so it cannot disappear
+      sessionStorage.setItem(`last_iq_${userEmail}`, JSON.stringify(finalResult));
       setScore(finalResult);
 
-      // Step 6: Save to DB in the background
+      // Step 6: Background Save (No await here, let it run silently)
       awsApi.saveInvestorScore({ 
         ...finalResult, 
         user_email: userEmail 
-      }).finally(() => {
-        // Unlock the stop sign after the network is completely finished
-        isInternalUpdate.current = false; 
-      });
+      }).catch(err => console.error("Save failed:", err))
+        .finally(() => {
+          // Wait 2 seconds before releasing the lock to ensure render stability
+          setTimeout(() => { isInternalUpdate.current = false; }, 2000);
+        });
 
     } catch (error) {
       console.error("Analysis failed:", error);
