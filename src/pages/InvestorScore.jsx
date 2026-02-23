@@ -121,18 +121,17 @@ export default function InvestorScore() {
         analysis_date: new Date().toISOString()
       };
 
-      // Step 5: Update the state IMMEDIATELY (This stops the flickering)
-      setScore(finalResult);
+      // Step 5: Save to DB FIRST (or simultaneously)
+      // We remove the "await" from the save call so the UI doesn't wait for the network
+      awsApi.saveInvestorScore({ 
+        ...finalResult, 
+        user_email: userEmail 
+      }).catch(err => console.error("Background save failed:", err));
 
-      // Step 6: Save to DB in the background
-      try {
-        await awsApi.saveInvestorScore({ 
-          ...finalResult, 
-          user_email: userEmail 
-        });
-      } catch (dbError) {
-        console.error("Database save failed, but UI is updated:", dbError);
-      }
+      // Step 6: Final state update - Use a functional update to LOCK the data
+      setScore(() => ({
+        ...finalResult
+      }));
 
     } catch (error) {
       console.error("Analysis failed:", error);
