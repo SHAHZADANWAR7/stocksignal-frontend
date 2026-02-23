@@ -72,29 +72,43 @@ export default function InvestorScore() {
   const analyzeDecisionQuality = async () => {
     setIsAnalyzing(true);
     try {
-      // Save current score as previous before updating
       if (score) setPreviousScore(score);
 
-      // Step 1: Get the Math Scores from your specialized Lambda
+      // Step 1: Get Math + Journal Sentiments from your Lambda
       const response = await awsApi.analyzeInvestmentBehavior({ userEmail });
       const mathData = response.investor_score || {};
 
-      // OPTIONAL: Show math score instantly
+      // OPTIONAL: Update bars immediately
       setScore(prev => ({ ...prev, ...mathData }));
 
-      // Step 2: Prepare prompt and get Qualitative Insights from invokeLLM
-      const prompt = `Analyze these investor scores: 
-      Discipline: ${mathData.discipline_score}, 
-      Frequency: ${mathData.overtrading_score}, 
-      Emotional Control: ${mathData.panic_selling_score}.
+      // Step 2: Prepare a much smarter prompt including your Journal notes
+      const sentimentText = mathData.user_sentiments && mathData.user_sentiments.length > 0
+        ? `RECENT JOURNAL NOTES (Investor's internal thoughts):\n${mathData.user_sentiments.map(s => `- ${s}`).join('\n')}`
+        : "No journal notes available.";
+
+      const prompt = `Analyze this investor's behavioral performance.
+      
+      NUMERIC DATA:
+      - Discipline: ${mathData.discipline_score}/100
+      - Trading Frequency: ${mathData.overtrading_score}/100
+      - Emotional Control: ${mathData.panic_selling_score}/100
+      
+      ${sentimentText}
+      
+      TASK:
+      Compare the numeric discipline with the user's notes. 
+      - If they express 'high confidence' but their discipline score is low, flag "Overconfidence Bias".
+      - If they use words like 'scared' or 'dip', check for "Loss Aversion".
+      
       Return JSON ONLY: { 
         "biases_detected": [{"bias_type": "string", "severity": "high/medium/low", "description": "string"}], 
         "improvement_suggestions": ["string"] 
       }`;
 
+      // Step 3: Get AI Insights
       const aiResult = await awsApi.invokeLLM(prompt);
 
-      // Step 3: Combine Math + AI Results with correct key mapping
+      // Step 4: Combine everything
       const combinedScore = {
         ...mathData,
         biases_detected: aiResult?.biases_detected || mathData.biases || [],
@@ -104,11 +118,12 @@ export default function InvestorScore() {
 
       setScore(combinedScore);
 
-      // Step 4: Save the COMPLETE object (Math + AI text) to DynamoDB
+      // Step 5: Save the complete history to DynamoDB
       await awsApi.saveInvestorScore({ 
         ...combinedScore, 
         email: userEmail 
       });
+
     } catch (error) {
       console.error("Analysis failed:", error);
     } finally {
