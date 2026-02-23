@@ -50,12 +50,13 @@ export default function InvestorScore() {
       const email = session.tokens?.idToken?.payload?.email || "";
       setUserEmail(email);
 
-      // Check sessionStorage BEFORE calculating metrics
-      // Check sessionStorage BEFORE calculating metrics
+      // --- CHANGE 1: Check cache immediately but DON'T return ---
+      // Check sessionStorage BEFORE anything else
       const cached = sessionStorage.getItem(`last_iq_${email}`);
       if (cached) {
         setScore(JSON.parse(cached));
-        // No return here! We want to continue and load the Transactions/Portfolio data
+        // We don't return here so that transactions/portfolio still load, 
+        // but the second guard below will protect this cached data.
       }
 
       const [txResponse, syncResponse] = await Promise.all([
@@ -69,9 +70,10 @@ export default function InvestorScore() {
       };
       setPortfolio(portfolioData);
 
-      // Fallback math calculation with check-first logic
       const metrics = calculateInvestorMetrics(txResponse.transactions || [], portfolioData);
+      
       setScore(current => {
+        // --- CHANGE 2: The "Triple Guard" ---
         if (isInternalUpdate.current || current?.analysis_date) return current;
         return metrics;
       });
@@ -130,24 +132,26 @@ export default function InvestorScore() {
         analysis_date: new Date().toISOString()
       };
 
-      // Step 5: LOCK the Stop Sign and Update State IMMEDIATELY
+      // Step 5: PERSIST and LOCK
       isInternalUpdate.current = true;
-      // NEW: Cache it in browser memory so it cannot disappear
+      
+      // Write to browser memory BEFORE updating state
       sessionStorage.setItem(`last_iq_${userEmail}`, JSON.stringify(finalResult));
       setScore(finalResult);
 
-      // Step 6: Background Save (No await here, let it run silently)
+      // Step 6: Background Save
       awsApi.saveInvestorScore({ 
         ...finalResult, 
         user_email: userEmail 
       }).catch(err => console.error("Save failed:", err))
         .finally(() => {
-          // Wait 2 seconds before releasing the lock to ensure render stability
-          setTimeout(() => { isInternalUpdate.current = false; }, 2000);
+          // Keep the lock for 3 seconds to ensure no background refreshes wipe the data
+          setTimeout(() => { isInternalUpdate.current = false; }, 3000);
         });
 
     } catch (error) {
       console.error("Analysis failed:", error);
+      isInternalUpdate.current = false; // Release lock on error
     } finally {
       setIsAnalyzing(false);
     }
