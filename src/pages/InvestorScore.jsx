@@ -68,22 +68,25 @@ export default function InvestorScore() {
     }
   };
 
-  // --- Hybrid analyzeDecisionQuality logic with explicit mapping from Lambda ---
+  // --- UX Pro-Tip: Show math score immediately, finalize with AI data ---
   const analyzeDecisionQuality = async () => {
     setIsAnalyzing(true);
     try {
       // Save current score as previous before updating
       if (score) setPreviousScore(score);
 
-      // Step 1: Get the Math Scores from your existing Lambda -- explicit mapping
+      // Step 1: Get the Math Scores from your specialized Lambda
       const response = await awsApi.analyzeInvestmentBehavior({ userEmail });
-      const data = response.investor_score || {};
+      const mathData = response.investor_score || {};
 
-      // Step 2: Get Qualitative Insights from invokeLLM
+      // OPTIONAL: Show math score instantly
+      setScore(prev => ({ ...prev, ...mathData }));
+
+      // Step 2: Prepare prompt and get Qualitative Insights from invokeLLM
       const prompt = `Analyze these investor scores: 
-      Discipline: ${data.discipline_score}, 
-      Frequency: ${data.overtrading_score}, 
-      Emotional Control: ${data.panic_selling_score}.
+      Discipline: ${mathData.discipline_score}, 
+      Frequency: ${mathData.overtrading_score}, 
+      Emotional Control: ${mathData.panic_selling_score}.
       Return JSON ONLY: { 
         "biases_detected": [{"bias_type": "string", "severity": "high/medium/low", "description": "string"}], 
         "improvement_suggestions": ["string"] 
@@ -91,14 +94,21 @@ export default function InvestorScore() {
 
       const aiResult = await awsApi.invokeLLM(prompt);
 
-      // Step 3: Set score with explicit mapping (per latest request)
-      setScore({
-        ...data,
-        biases_detected: data.biases_detected || [],
-        improvement_suggestions: data.improvement_suggestions || []
-      });
+      // Step 3: Combine Math + AI Results with correct key mapping
+      const combinedScore = {
+        ...mathData,
+        biases_detected: aiResult?.biases_detected || mathData.biases || [],
+        improvement_suggestions: aiResult?.improvement_suggestions || mathData.suggestions || [],
+        analysis_date: new Date().toISOString()
+      };
 
-      await awsApi.saveInvestorScore({ ...data, email: userEmail });
+      setScore(combinedScore);
+
+      // Step 4: Save the COMPLETE object (Math + AI text) to DynamoDB
+      await awsApi.saveInvestorScore({ 
+        ...combinedScore, 
+        email: userEmail 
+      });
     } catch (error) {
       console.error("Analysis failed:", error);
     } finally {
@@ -126,6 +136,13 @@ export default function InvestorScore() {
     return <AlertTriangle className="w-5 h-5 text-blue-600" />;
   };
 
+  // --- Add getBiasBadgeColor as requested ---
+  const getBiasBadgeColor = (severity) => {
+    if (severity === "high") return "bg-rose-100 text-rose-700 border-rose-200";
+    if (severity === "medium") return "bg-amber-100 text-amber-700 border-amber-200";
+    return "bg-blue-100 text-blue-700 border-blue-200";
+  };
+
   // --- Add "Overconfidence" & fallback formatting ---
   const getBiasLabel = (biasType) => {
     const labels = {
@@ -134,9 +151,9 @@ export default function InvestorScore() {
       confirmation_bias: "Confirmation Bias",
       home_country_bias: "Home Country Bias",
       chasing_returns: "Chasing Returns",
-      overconfidence: "Overconfidence" // Added this
+      overconfidence: "Overconfidence"
     };
-    return labels[biasType] || biasType.replace('_', ' '); // Added fallback formatting
+    return labels[biasType] || biasType.replace('_', ' ');
   };
 
   return (
