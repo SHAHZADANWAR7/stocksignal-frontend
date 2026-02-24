@@ -127,19 +127,28 @@ export default function InvestorScore() {
         analysis_date: new Date().toISOString()
       };
 
+      // Step 5: Update UI and Cache immediately
+      isInternalUpdate.current = true; 
       sessionStorage.setItem(`last_iq_${userEmail.toLowerCase()}`, JSON.stringify(finalResult));
       setScore(finalResult);
 
-      awsApi.saveInvestorScore({ 
-        ...finalResult, 
-        user_email: userEmail 
-      }).catch(err => console.error("Save failed:", err))
-        .finally(() => {
-          setTimeout(() => {
-            isInternalUpdate.current = false;
-          }, 5000);
-        });
+      // Step 6: Robust Background Save
+      const finalToSave = {
+        ...finalResult,
+        user_email: userEmail
+      };
 
+      try {
+        await awsApi.saveInvestorScore(finalToSave);
+      } catch (err) {
+        console.error("Save failed:", err);
+      } finally {
+        // Keep the lock for 5 seconds to prevent background refreshes 
+        // from pulling old data while the DB is indexing
+        setTimeout(() => {
+          isInternalUpdate.current = false;
+        }, 5000);
+      }
     } catch (error) {
       console.error("Analysis failed:", error);
     } finally {
@@ -358,7 +367,7 @@ export default function InvestorScore() {
               </Card>
             </div>
 
-           {/* BEHAVIORAL BIASES - MATCHING DEV */}
+          {/* BEHAVIORAL BIASES - FIXED CENTERING & PADDING */}
 {score.biases_detected && score.biases_detected.length > 0 && (
   <Card className="border-2 border-amber-200 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50 overflow-hidden">
     <CardHeader className="pb-4">
@@ -373,22 +382,22 @@ export default function InvestorScore() {
           <motion.div key={idx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="border border-slate-200 bg-white shadow-sm rounded-xl overflow-hidden">
               <CardContent className="p-5">
-                {/* Changed items-start to items-center for vertical centering */}
+                {/* items-center + gap-4 prevents text from hugging boundaries */}
                 <div className="flex items-center gap-4"> 
-                  <div className="flex-shrink-0">
+                  {/* Adding the background box here pushes the text away from the left edge */}
+                  <div className={`p-2 rounded-lg shrink-0 ${bias.severity === 'high' ? 'bg-rose-50' : 'bg-amber-50'}`}>
                     {getBiasIcon(bias.severity)}
                   </div>
                   <div className="flex-1">
-                    {/* Items-center here ensures the heading and badge line up perfectly */}
                     <div className="flex items-center gap-3 mb-1"> 
                       <h4 className="font-bold text-slate-900 text-lg leading-none">
                         {getBiasLabel(bias.bias_type)}
                       </h4>
-                      <Badge variant="outline" className={`${getBiasBadgeColor(bias.severity)} border-current font-bold px-2 py-0.5 uppercase text-[10px] tracking-widest`}>
+                      <Badge variant="outline" className={`${getBiasBadgeColor(bias.severity)} border-current font-bold px-2 py-0.5 uppercase text-[10px] tracking-widest rounded-full`}>
                         {bias.severity} severity
                       </Badge>
                     </div>
-                    <p className="text-slate-700 text-sm md:text-base leading-relaxed">
+                    <p className="text-slate-600 leading-relaxed text-[15px]">
                       {bias.description}
                     </p>
                   </div>
