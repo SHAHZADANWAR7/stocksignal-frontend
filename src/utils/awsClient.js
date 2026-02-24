@@ -34,6 +34,7 @@ const LAMBDA_KEY_MAPPING = {
   user_email: [
     "checkSubscription",
     "analyzeInvestmentBehavior",
+    "calculatePortfolioHealth", // <<<<<< ADDED AS REQUESTED
     "getHoldings",
     "createHolding",
     "updateHolding",
@@ -269,12 +270,12 @@ export const awsApi = {
   createPortalSession: (customerId) => invokeProxy("createPortalSession", { customerId }),
   optimizePortfolio: (data) => invokeProxy("optimizePortfolio", data),
   getUserPortfolio: () => invokeProxy("getUserPortfolio", {}),
-  // MODIFY analyzeInvestmentBehavior export as requested.
   analyzeInvestmentBehavior: (payload = {}) => invokeProxy("analyzeInvestmentBehavior", payload),
   generateMarketInsights: () => invokeProxy("generateMarketInsights", {}),
   cacheMarketInsights: (data) => invokeProxy("cacheMarketInsights", data),
   getUserTrades: () => invokeProxy("getUserTrades", {}),
   invokeLLM: (prompt, context) => invokeProxy("invokeLLM", { prompt, context }),
   sendEmail: (data) => invokeProxy("sendEmail", data),
-  getUserDashboardData: async () => { const response = await invokeProxy("getUserDashboardData", {}); return response; }
+  getUserDashboardData: async () => { const response = await invokeProxy("getUserDashboardData", {}); return response; },
+  calculatePortfolioHealth: (payload) => invokeProxy("calculatePortfolioHealth", payload) // <<<<<< ADDED AS REQUESTED
 };
