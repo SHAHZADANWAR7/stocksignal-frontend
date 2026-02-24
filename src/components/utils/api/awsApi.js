@@ -44,6 +44,7 @@ export const awsApi = {
   saveAnalysis: (data) => awsClient.saveAnalysis(data),
   optimizePortfolio: (data) => awsClient.optimizePortfolio(data),
   analyzeInvestmentBehavior: (data) => awsClient.analyzeInvestmentBehavior(data),
+  calculatePortfolioHealth: (data) => awsClient.calculatePortfolioHealth(data), // <-- ADDED AS INSTRUCTION
 
   // Shadow Portfolios
   getShadowPortfolios: () => awsClient.getShadowPortfolios(),
@@ -143,6 +144,7 @@ export const {
   saveAnalysis,
   optimizePortfolio,
   analyzeInvestmentBehavior,
+  calculatePortfolioHealth, // <-- ADDED TO EXPORT LIST
   getShadowPortfolios,
   saveInvestorScore,
   getCompanies,
