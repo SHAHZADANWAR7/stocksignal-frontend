@@ -367,10 +367,10 @@ export default function InvestorScore() {
               </Card>
             </div>
 
-          {/* BEHAVIORAL BIASES - FIXED CENTERING & PADDING */}
+         {/* Behavioral Biases - Professional Centered Version */}
 {score.biases_detected && score.biases_detected.length > 0 && (
-  <Card className="border-2 border-amber-200 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50 overflow-hidden">
-    <CardHeader className="pb-4">
+  <Card className="border-2 border-amber-200 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50">
+    <CardHeader>
       <CardTitle className="flex items-center gap-2 text-xl font-bold text-slate-900">
         <AlertTriangle className="w-6 h-6 text-amber-600" />
         Behavioral Biases Detected
@@ -382,9 +382,9 @@ export default function InvestorScore() {
           <motion.div key={idx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="border border-slate-200 bg-white shadow-sm rounded-xl overflow-hidden">
               <CardContent className="p-5">
-                {/* items-center + gap-4 prevents text from hugging boundaries */}
+                {/* items-center ensures the icon and text block are vertically centered */}
                 <div className="flex items-center gap-4"> 
-                  {/* Adding the background box here pushes the text away from the left edge */}
+                  {/* Icon container with background provides the necessary spacer */}
                   <div className={`p-2 rounded-lg shrink-0 ${bias.severity === 'high' ? 'bg-rose-50' : 'bg-amber-50'}`}>
                     {getBiasIcon(bias.severity)}
                   </div>
