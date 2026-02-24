@@ -327,7 +327,7 @@ Return ONLY JSON: {"diagnosis": "...", "prescription": "...", "weekly_summary": 
               >
                 <Card className="border-none shadow-2xl bg-slate-900 text-white overflow-hidden min-h-[160px] flex flex-col md:flex-row">
                   <div className="bg-blue-600 p-6 flex items-center justify-center md:w-32 shrink-0">
-                    <Brain className={`w-12 h-12 text-white ${isAnalyzing ? "animate-pulse shadow-[0_0_15px_rgba(255,255,255,0.5)]" : ""}`} />
+                    <Brain className={`w-12 h-12 text-white ${isAnalyzing ? "animate-pulse" : ""}`} />
                   </div>
                   <div className="p-8 flex-1 flex flex-col justify-center">
                     <div className="flex items-center gap-3 mb-4">
@@ -336,18 +336,18 @@ Return ONLY JSON: {"diagnosis": "...", "prescription": "...", "weekly_summary": 
                     </div>
                     <div className="grid md:grid-cols-2 gap-8">
                       <div>
-                        <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest mb-2">Clinical Observations</p>
+                        {/* FIX: Changed text color from blue-400 to white/70 for better visibility */}
+                        <p className="text-white/70 text-[10px] font-black uppercase tracking-widest mb-2">Clinical Observations</p>
                         <p className="text-lg font-medium italic text-white leading-snug">
-                          {currentHealth.ai_diagnosis && currentHealth.ai_diagnosis !== "..." 
-                            ? `"${currentHealth.ai_diagnosis}"` 
-                            : "Analysis pending..."}
+                          {/* FIX: Simplified check to ensure text shows up */}
+                          {currentHealth.ai_diagnosis ? `"${currentHealth.ai_diagnosis}"` : "Calculating clinical insights..."}
                         </p>
                       </div>
                       <div>
                         <p className="text-white/50 text-[10px] font-black uppercase tracking-widest mb-2">Recommended Treatment</p>
                         <div className="flex items-center gap-2 text-emerald-400">
                           <CheckCircle2 className="w-5 h-5 shrink-0" />
-                          <span className="text-lg font-bold leading-snug">{currentHealth.ai_prescription}</span>
+                          <span className="text-lg font-bold leading-snug">{currentHealth.ai_prescription || "Consulting Risk Framework..."}</span>
                         </div>
                       </div>
                     </div>
