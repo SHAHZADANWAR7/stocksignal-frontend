@@ -367,54 +367,39 @@ export default function InvestorScore() {
               </Card>
             </div>
 
-      {/* Behavioral Biases - Final Fixed Vertical Centering */}
+     {/* Behavioral Biases */}
 {score.biases_detected && score.biases_detected.length > 0 && (
-  <Card className="border-2 border-amber-200 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50 overflow-hidden">
-    <CardHeader className="pb-4">
-      <CardTitle className="flex items-center gap-2 text-xl font-bold text-slate-900">
+  <Card className="border-2 border-amber-200 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50">
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
         <AlertTriangle className="w-6 h-6 text-amber-600" />
         Behavioral Biases Detected
       </CardTitle>
     </CardHeader>
-    <CardContent className="p-6 pt-0">
+    <CardContent>
       <div className="grid gap-4">
         {score.biases_detected.map((bias, idx) => (
-          <motion.div key={idx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className="border border-slate-200 bg-white shadow-sm rounded-xl overflow-hidden min-h-[100px] flex h-full">
-              <CardContent className="p-5 flex items-center w-full h-full">
-                <div className="flex items-center gap-4 w-full h-full">
-                  {/* Icon Container - Centered vertically via parent flex */}
-                  <div className={`p-2 rounded-lg shrink-0 flex items-center justify-center ${
-                    bias.severity === 'high' ? 'bg-rose-50' : 
-                    bias.severity === 'medium' ? 'bg-amber-50' : 'bg-blue-50'
-                  }`}>
-                    {getBiasIcon(bias.severity)}
+          <Card key={idx} className="border border-slate-200 bg-white">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                {getBiasIcon(bias.severity)}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <h4 className="font-bold text-slate-900">
+                      {getBiasLabel(bias.bias_type)}
+                    </h4>
+                    <Badge
+                      variant="outline"
+                      className={`${getBiasBadgeColor(bias.severity)} border`}
+                    >
+                      {bias.severity} severity
+                    </Badge>
                   </div>
-
-                  {/* Text Block - Centered vertically via parent flex */}
-                  <div className="flex-1 flex flex-col justify-center h-full">
-                    <div className="flex items-center gap-3 mb-1">
-                      <h4 className="font-bold text-slate-900 text-lg leading-tight m-0">
-                        {getBiasLabel(bias.bias_type)}
-                      </h4>
-                      <Badge
-                        variant="outline"
-                        className={
-                          `${getBiasBadgeColor(bias.severity)} border-current font-bold px-2 py-0.5 uppercase text-[10px] tracking-widest rounded-full flex items-center`
-                        }
-                        style={{ lineHeight: "1.1", alignSelf: "center" }}
-                      >
-                        {bias.severity} severity
-                      </Badge>
-                    </div>
-                    <p className="text-slate-600 leading-normal text-[15px] m-0">
-                      {bias.description}
-                    </p>
-                  </div>
+                  <p className="text-sm text-slate-700">{bias.description}</p>
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </CardContent>
