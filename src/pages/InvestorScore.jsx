@@ -367,7 +367,7 @@ export default function InvestorScore() {
               </Card>
             </div>
 
-        {/* Behavioral Biases - Vertically Centered Version */}
+       {/* Behavioral Biases - Final Fixed Vertical Centering */}
 {score.biases_detected && score.biases_detected.length > 0 && (
   <Card className="border-2 border-amber-200 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50 overflow-hidden">
     <CardHeader className="pb-4">
@@ -380,25 +380,34 @@ export default function InvestorScore() {
       <div className="grid gap-4">
         {score.biases_detected.map((bias, idx) => (
           <motion.div key={idx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className="border border-slate-200 bg-white shadow-sm rounded-xl overflow-hidden">
-              <CardContent className="p-5">
-                {/* items-center is the critical fix for vertical centering */}
-                <div className="flex items-center gap-4"> 
-                  {/* The icon container provides the spacer to stop "hugging" */}
-                  <div className={`p-2 rounded-lg shrink-0 ${bias.severity === 'high' ? 'bg-rose-50' : 'bg-amber-50'}`}>
+            <Card className="border border-slate-200 bg-white shadow-sm rounded-xl overflow-hidden min-h-[100px] flex">
+              <CardContent className="p-5 flex items-center w-full"> 
+                {/* items-center here is the CRITICAL fix. 
+                   It forces the entire row (icon + text block) to the vertical middle. 
+                */}
+                <div className="flex items-center gap-4 w-full"> 
+                  {/* Icon Container - Centered vertically via parent flex */}
+                  <div className={`p-2 rounded-lg shrink-0 flex items-center justify-center ${
+                    bias.severity === 'high' ? 'bg-rose-50' : 
+                    bias.severity === 'medium' ? 'bg-amber-50' : 'bg-blue-50'
+                  }`}>
                     {getBiasIcon(bias.severity)}
                   </div>
-                  <div className="flex-1">
-                    {/* items-center here ensures the heading and badge line up perfectly */}
+                  
+                  {/* Text Block - Centered vertically via parent flex */}
+                  <div className="flex-1 flex flex-col justify-center">
                     <div className="flex items-center gap-3 mb-1"> 
-                      <h4 className="font-bold text-slate-900 text-lg leading-none">
+                      {/* leading-none removes the extra space above letters 
+                         that causes "hugging" the top. 
+                      */}
+                      <h4 className="font-bold text-slate-900 text-lg leading-none m-0">
                         {getBiasLabel(bias.bias_type)}
                       </h4>
-                      <Badge variant="outline" className={`${getBiasBadgeColor(bias.severity)} border-current font-bold px-3 py-0.5 uppercase text-[10px] tracking-widest rounded-full`}>
+                      <Badge variant="outline" className={`${getBiasBadgeColor(bias.severity)} border-current font-bold px-2 py-0.5 uppercase text-[10px] tracking-widest rounded-full`}>
                         {bias.severity} severity
                       </Badge>
                     </div>
-                    <p className="text-slate-600 leading-relaxed text-[15px]">
+                    <p className="text-slate-600 leading-normal text-[15px] m-0">
                       {bias.description}
                     </p>
                   </div>
