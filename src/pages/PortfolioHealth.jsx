@@ -22,6 +22,27 @@ import { checkUsageLimit, incrementUsage, getRemainingUsage } from "@/components
 import { format, differenceInDays } from "date-fns";
 import { Line, LineChart as RechartsLine, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
+// 5. HealthGauge Component
+const HealthGauge = ({ score, colorClass }) => {
+  const gaugeColor = score > 70 ? '#10b981' : score > 40 ? '#f59e0b' : '#ef4444';
+  
+  return (
+    <div className="relative w-32 h-16 overflow-hidden mb-4">
+      <div 
+        className="absolute top-0 left-0 w-32 h-32 rounded-full border-[10px] border-slate-100"
+        style={{
+          background: `conic-gradient(from 180deg at 50% 50%, ${gaugeColor} ${score * 1.8}deg, transparent 0deg)`,
+          maskImage: 'radial-gradient(transparent 58%, black 60%)',
+          WebkitMaskImage: 'radial-gradient(transparent 58%, black 60%)'
+        }}
+      />
+      <div className="absolute bottom-0 w-full text-center">
+        <span className={`text-2xl font-black ${colorClass}`}>{Math.round(score)}</span>
+      </div>
+    </div>
+  );
+};
+
 export default function PortfolioHealth() {
   const [healthRecords, setHealthRecords] = useState([]);
   const [currentHealth, setCurrentHealth] = useState(null);
@@ -81,23 +102,19 @@ export default function PortfolioHealth() {
       if (healthResponse && healthResponse.success) {
         const mathHealth = healthResponse.health;
 
-        // UPDATE: More detailed professional prompt
-        const prompt = `
-  As a Senior Portfolio Risk Manager, perform a 'Stress Test' on these metrics:
-  - Diversification: ${mathHealth.diversification_score}/100
-  - Fragility Index: ${mathHealth.fragility_index}/100
-  - Risk Level: ${mathHealth.risk_level}/100
-  - Total Value: $${portfolio.totalValue.toLocaleString()}
+        // Fixed prompt to remove CRO, TASK, etc
+        const prompt = `Perform a Stress Test as a risk manager on these metrics:
+- Diversification: ${mathHealth.diversification_score}/100
+- Fragility: ${mathHealth.fragility_index}/100
+- Risk Level: ${mathHealth.risk_level}/100
 
-  HOLDINGS DATA:
-  ${portfolio.assets.map(a => `${a.symbol}: ${((a.quantity * a.currentPrice)/portfolio.totalValue*100).toFixed(1)}%`).join('\n')}
+PORTFOLIO HOLDINGS:
+${portfolio.assets.map(a => `${a.symbol}: ${((a.quantity * a.currentPrice)/portfolio.totalValue*100).toFixed(1)}%`).join('\n')}
 
-  TASK:
-  1. Generate a "weekly_summary": A professional 3-4 sentence paragraph (like a clinical report) explaining the score improvements (or declines), mentions of specific concentration percentages (e.g. "Your largest holding is X%"), and overall resilience.
-  2. Provide a short "diagnosis" and "prescription".
-  
-  JSON format: {"weekly_summary": "...", "diagnosis": "...", "prescription": "..."}
-`;
+INSTRUCTIONS:
+1. Check if any asset exceeds 30%.
+2. Provide a one-sentence diagnosis and one-sentence prescription.
+Return ONLY JSON: {"diagnosis": "...", "prescription": "...", "weekly_summary": "..."}`;
 
         const aiResponse = await awsApi.invokeLLM(prompt);
         let docInsights = { weekly_summary: "", diagnosis: "", prescription: "" };
@@ -107,16 +124,16 @@ export default function PortfolioHealth() {
           const jsonMatch = raw.match(/\{[\s\S]*\}/);
           const cleanJson = jsonMatch ? jsonMatch[0] : raw;
           docInsights = typeof cleanJson === 'string' ? JSON.parse(cleanJson) : cleanJson;
+          docInsights.weekly_summary = docInsights.weekly_summary || "No summary generated.";
         } catch (e) {
-          // Fallback if AI fails
-          docInsights.weekly_summary = `Portfolio health is ${mathHealth.diversification_score > 70 ? 'Optimal' : 'Sub-optimal'}. Total value: $${portfolio.totalValue.toLocaleString()}.`;
+          docInsights.weekly_summary = docInsights.weekly_summary || "No summary generated.";
         }
 
         const finalHealthData = {
           ...mathHealth,
-          ai_diagnosis: docInsights.diagnosis,
-          ai_prescription: docInsights.prescription,
-          weekly_summary: docInsights.weekly_summary,
+          ai_diagnosis: docInsights.diagnosis || "No diagnosis provided.",
+          ai_prescription: docInsights.prescription || "Consult advisor.",
+          weekly_summary: docInsights.weekly_summary || "Portfolio metrics stabilized.",
           analysis_date: new Date().toISOString()
         };
 
@@ -140,28 +157,35 @@ export default function PortfolioHealth() {
   // ***** PDF Export Function *****
   const downloadHealthReport = () => {
     if (!currentHealth) return;
-    
-    const reportData = {
-      title: "Portfolio Health Clinical Report",
-      date: format(new Date(currentHealth.analysis_date), 'PPP'),
-      metrics: {
-        diversification: currentHealth.diversification_score,
-        fragility: currentHealth.fragility_index,
-        risk: currentHealth.risk_level
-      },
-      diagnosis: currentHealth.ai_diagnosis,
-      prescription: currentHealth.ai_prescription,
-      summary: currentHealth.weekly_summary
-    };
-
-    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Portfolio_Health_Report_${format(new Date(), 'yyyy-MM-dd')}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const printWindow = window.open('', '_blank');
+    const html = `
+      <html>
+        <head>
+          <title>Portfolio Health Report</title>
+          <style>
+            body { font-family: sans-serif; padding: 40px; color: #1e293b; line-height: 1.6; }
+            .header { border-bottom: 3px solid #3b82f6; padding-bottom: 10px; margin-bottom: 20px; }
+            .summary { background: #f0fdf4; padding: 20px; border-radius: 8px; border: 1px solid #bbf7d0; margin-bottom: 20px; }
+            .metrics { display: flex; gap: 20px; margin-bottom: 30px; }
+            .metric-box { flex: 1; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; text-align: center; background: #f8fafc; }
+            h2 { color: #3b82f6; font-size: 14px; text-transform: uppercase; margin-bottom: 5px; }
+          </style>
+        </head>
+        <body>
+          <div class="header"><h1>Clinical Portfolio Health Report</h1><p>${format(new Date(currentHealth.analysis_date), 'PPP p')}</p></div>
+          <div class="summary"><h2>Executive Summary</h2><p>${currentHealth.weekly_summary}</p></div>
+          <div class="metrics">
+            <div class="metric-box"><h2>Diversification</h2><strong>${currentHealth.diversification_score}/100</strong></div>
+            <div class="metric-box"><h2>Fragility Index</h2><strong>${currentHealth.fragility_index}/100</strong></div>
+            <div class="metric-box"><h2>Risk Level</h2><strong>${currentHealth.risk_level}/100</strong></div>
+          </div>
+          <h2>Clinical Diagnosis</h2><p><i>"${currentHealth.ai_diagnosis}"</i></p>
+          <h2>Recommended Treatment</h2><p style="color: #059669; font-weight: bold;">${currentHealth.ai_prescription}</p>
+        </body>
+      </html>`;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   // ***** START: INDUSTRIAL COLOR LOGIC SECTION *****
@@ -239,8 +263,8 @@ export default function PortfolioHealth() {
         <div className="mb-8">
           <Card className="border-2 border-slate-200 shadow-lg bg-white/80 backdrop-blur-xl">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col justify-center">
+              <div className="flex flex-col md:flex-row items-center justify-between w-full gap-4 min-h-[80px]">
+                <div className="flex flex-col justify-center text-center md:text-left">
                   <h3 className="font-bold text-slate-900 mb-1">Daily Health Check</h3>
                   <p className="text-sm text-slate-600">Monitor diversification, fragility, and risk drift</p>
                 </div>
@@ -296,7 +320,7 @@ export default function PortfolioHealth() {
               >
                 <Card className="border-none shadow-2xl bg-slate-900 text-white overflow-hidden min-h-[160px] flex flex-col md:flex-row">
                   <div className="bg-blue-600 p-6 flex items-center justify-center md:w-32 shrink-0">
-                    <Brain className="w-12 h-12 text-white" />
+                    <Brain className={`w-12 h-12 text-white ${isAnalyzing ? "animate-pulse shadow-[0_0_15px_rgba(255,255,255,0.5)]" : ""}`} />
                   </div>
                   <div className="p-8 flex-1 flex flex-col justify-center">
                     <div className="flex items-center gap-3 mb-4">
@@ -305,8 +329,12 @@ export default function PortfolioHealth() {
                     </div>
                     <div className="grid md:grid-cols-2 gap-8">
                       <div>
-                        <p className="text-white/50 text-[10px] font-black uppercase tracking-widest mb-2">Clinical Observations</p>
-                        <p className="text-lg font-medium italic text-white/90 leading-snug">"{currentHealth.ai_diagnosis}"</p>
+                        <p className="text-blue-400 text-[10px] font-black uppercase tracking-widest mb-2">Clinical Observations</p>
+                        <p className="text-lg font-medium italic text-white leading-snug">
+                          {currentHealth.ai_diagnosis && currentHealth.ai_diagnosis !== "..." 
+                            ? `"${currentHealth.ai_diagnosis}"` 
+                            : "Analysis pending..."}
+                        </p>
                       </div>
                       <div>
                         <p className="text-white/50 text-[10px] font-black uppercase tracking-widest mb-2">Recommended Treatment</p>
@@ -411,14 +439,12 @@ export default function PortfolioHealth() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card className={`border shadow-lg h-full flex flex-col ${getScoreBg(currentHealth.diversification_score)}`}>
-                <CardContent className="p-6 flex-1 flex flex-col">
+                <CardContent className="p-6 flex-1 flex flex-col items-center">
                   <div className="flex items-center gap-3 mb-4">
                     <Shield className={`w-6 h-6 ${getScoreColor(currentHealth.diversification_score)}`} />
                     <h4 className="font-bold text-slate-900">Diversification</h4>
                   </div>
-                  <p className={`text-4xl font-black mb-2 ${getScoreColor(currentHealth.diversification_score)}`}>
-                    {Math.round(currentHealth.diversification_score)}
-                  </p>
+                  <HealthGauge score={currentHealth.diversification_score} colorClass={getScoreColor(currentHealth.diversification_score)} />
                   <div className="mt-auto">
                     <Progress value={currentHealth.diversification_score} className="h-2 mb-2" />
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Well diversified</p>
@@ -427,14 +453,12 @@ export default function PortfolioHealth() {
               </Card>
 
               <Card className={`border shadow-lg h-full flex flex-col ${getScoreBg(currentHealth.fragility_index, true)}`}>
-                <CardContent className="p-6 flex-1 flex flex-col">
+                <CardContent className="p-6 flex-1 flex flex-col items-center">
                   <div className="flex items-center gap-3 mb-4">
                     <Activity className={`w-6 h-6 ${getScoreColor(currentHealth.fragility_index, true)}`} />
                     <h4 className="font-bold text-slate-900">Fragility Index</h4>
                   </div>
-                  <p className={`text-4xl font-black mb-2 ${getScoreColor(currentHealth.fragility_index, true)}`}>
-                    {Math.round(currentHealth.fragility_index)}
-                  </p>
+                  <HealthGauge score={currentHealth.fragility_index} colorClass={getScoreColor(currentHealth.fragility_index, true)} />
                   <div className="mt-auto">
                     <Progress value={currentHealth.fragility_index} className="h-2 mb-2" />
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Fragility Risk</p>
@@ -443,14 +467,12 @@ export default function PortfolioHealth() {
               </Card>
 
               <Card className={`border shadow-lg h-full flex flex-col ${getScoreBg(currentHealth.dependency_score, true)}`}>
-                <CardContent className="p-6 flex-1 flex flex-col">
+                <CardContent className="p-6 flex-1 flex flex-col items-center">
                   <div className="flex items-center gap-3 mb-4">
                     <AlertTriangle className={`w-6 h-6 ${getScoreColor(currentHealth.dependency_score, true)}`} />
                     <h4 className="font-bold text-slate-900">Dependency</h4>
                   </div>
-                  <p className={`text-4xl font-black mb-2 ${getScoreColor(currentHealth.dependency_score, true)}`}>
-                    {Math.round(currentHealth.dependency_score)}
-                  </p>
+                  <HealthGauge score={currentHealth.dependency_score} colorClass={getScoreColor(currentHealth.dependency_score, true)} />
                   <div className="mt-auto">
                     <Progress value={currentHealth.dependency_score} className="h-2 mb-2" />
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Sector Dependency</p>
