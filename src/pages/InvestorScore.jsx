@@ -367,7 +367,7 @@ export default function InvestorScore() {
               </Card>
             </div>
 
-     {/* Behavioral Biases */}
+    {/* Behavioral Biases */}
 {score.biases_detected && score.biases_detected.length > 0 && (
   <Card className="border-2 border-amber-200 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50">
     <CardHeader>
@@ -381,11 +381,13 @@ export default function InvestorScore() {
         {score.biases_detected.map((bias, idx) => (
           <Card key={idx} className="border border-slate-200 bg-white">
             <CardContent className="p-4">
-              <div className="flex items-start gap-3">
+              {/* CHANGE: flex items-center for vertical centering */}
+              <div className="flex items-center gap-3 min-h-[70px]">
                 {getBiasIcon(bias.severity)}
-                <div className="flex-1">
+                {/* flex-1 column with justify-center for vertical centering */}
+                <div className="flex-1 flex flex-col justify-center">
                   <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-bold text-slate-900">
+                    <h4 className="font-bold text-slate-900 m-0 leading-tight">
                       {getBiasLabel(bias.bias_type)}
                     </h4>
                     <Badge
@@ -395,7 +397,7 @@ export default function InvestorScore() {
                       {bias.severity} severity
                     </Badge>
                   </div>
-                  <p className="text-sm text-slate-700">{bias.description}</p>
+                  <p className="text-sm text-slate-700 m-0">{bias.description}</p>
                 </div>
               </div>
             </CardContent>
