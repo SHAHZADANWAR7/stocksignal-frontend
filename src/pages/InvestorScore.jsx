@@ -367,10 +367,10 @@ export default function InvestorScore() {
               </Card>
             </div>
 
-         {/* Behavioral Biases - Professional Centered Version */}
+        {/* Behavioral Biases - Vertically Centered Version */}
 {score.biases_detected && score.biases_detected.length > 0 && (
-  <Card className="border-2 border-amber-200 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50">
-    <CardHeader>
+  <Card className="border-2 border-amber-200 shadow-lg bg-gradient-to-br from-amber-50 to-orange-50 overflow-hidden">
+    <CardHeader className="pb-4">
       <CardTitle className="flex items-center gap-2 text-xl font-bold text-slate-900">
         <AlertTriangle className="w-6 h-6 text-amber-600" />
         Behavioral Biases Detected
@@ -382,18 +382,19 @@ export default function InvestorScore() {
           <motion.div key={idx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="border border-slate-200 bg-white shadow-sm rounded-xl overflow-hidden">
               <CardContent className="p-5">
-                {/* items-center ensures the icon and text block are vertically centered */}
+                {/* items-center is the critical fix for vertical centering */}
                 <div className="flex items-center gap-4"> 
-                  {/* Icon container with background provides the necessary spacer */}
+                  {/* The icon container provides the spacer to stop "hugging" */}
                   <div className={`p-2 rounded-lg shrink-0 ${bias.severity === 'high' ? 'bg-rose-50' : 'bg-amber-50'}`}>
                     {getBiasIcon(bias.severity)}
                   </div>
                   <div className="flex-1">
+                    {/* items-center here ensures the heading and badge line up perfectly */}
                     <div className="flex items-center gap-3 mb-1"> 
                       <h4 className="font-bold text-slate-900 text-lg leading-none">
                         {getBiasLabel(bias.bias_type)}
                       </h4>
-                      <Badge variant="outline" className={`${getBiasBadgeColor(bias.severity)} border-current font-bold px-2 py-0.5 uppercase text-[10px] tracking-widest rounded-full`}>
+                      <Badge variant="outline" className={`${getBiasBadgeColor(bias.severity)} border-current font-bold px-3 py-0.5 uppercase text-[10px] tracking-widest rounded-full`}>
                         {bias.severity} severity
                       </Badge>
                     </div>
