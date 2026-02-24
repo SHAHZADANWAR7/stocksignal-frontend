@@ -380,13 +380,14 @@ export default function InvestorScore() {
       <div className="grid gap-4">
         {score.biases_detected.map((bias, idx) => (
           <Card key={idx} className="border border-slate-200 bg-white">
-            <CardContent className="p-4">
-              {/* CHANGE: flex items-center for vertical centering */}
-              <div className="flex items-center gap-3 min-h-[70px]">
+            {/* Added min-h-[76px] for even cards + px for symmetric padding */}
+            <CardContent className="py-4 px-5">
+              {/* Vertically center: fix flex, use min-h & reduce mb */}
+              <div className="flex items-center gap-3 min-h-[76px]">
                 {getBiasIcon(bias.severity)}
-                {/* flex-1 column with justify-center for vertical centering */}
+                {/* Vertically center all text */}
                 <div className="flex-1 flex flex-col justify-center">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-bold text-slate-900 m-0 leading-tight">
                       {getBiasLabel(bias.bias_type)}
                     </h4>
@@ -397,7 +398,8 @@ export default function InvestorScore() {
                       {bias.severity} severity
                     </Badge>
                   </div>
-                  <p className="text-sm text-slate-700 m-0">{bias.description}</p>
+                  {/* Add mt-0.5 for some air below heading if single line, not needed if multi-line desc */}
+                  <p className="text-sm text-slate-700 m-0 mt-0.5">{bias.description}</p>
                 </div>
               </div>
             </CardContent>
