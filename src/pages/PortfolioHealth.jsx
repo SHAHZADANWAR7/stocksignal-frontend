@@ -14,13 +14,13 @@ import {
   AlertCircle,
   CheckCircle2,
   RefreshCw,
-  LineChart
+  LineChart,
+  Brain
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { checkUsageLimit, incrementUsage, getRemainingUsage } from "@/components/utils/usageLimit";
 import { format, differenceInDays } from "date-fns";
 import { Line, LineChart as RechartsLine, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { calculatePortfolioHealth } from "@/components/utils/calculations/portfolioHealthMetrics";
 
 export default function PortfolioHealth() {
   const [healthRecords, setHealthRecords] = useState([]);
@@ -29,6 +29,7 @@ export default function PortfolioHealth() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [previousHealth, setPreviousHealth] = useState(null);
   const [remainingUsage, setRemainingUsage] = useState(null);
+  const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
     loadData();
@@ -42,121 +43,131 @@ export default function PortfolioHealth() {
 
   const loadData = async () => {
     try {
-      const userId = localStorage.getItem('user_id');
-      const data = await awsApi.getStockBatch(userId);
-      
-      if (data && data.syncPortfolio) {
-        setPortfolio(data.syncPortfolio);
-        
+      const syncResponse = await awsApi.syncPortfolio(null);
+      if (syncResponse && syncResponse.portfolio) {
+        setPortfolio(syncResponse.portfolio);
+        const email = syncResponse.userEmail || "";
+        setUserEmail(email);
         const storedRecords = localStorage.getItem('portfolio_health_records');
         const records = storedRecords ? JSON.parse(storedRecords) : [];
-        
         setHealthRecords(records);
-        if (records && records.length > 0) {
+        if (records.length > 0) {
           setCurrentHealth(records[0]);
-          if (records.length > 1) {
-            setPreviousHealth(records[1]);
-          }
+          if (records.length > 1) setPreviousHealth(records[1]);
         }
       }
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Industrial Load Error:", error);
     }
   };
 
+  // ***** START: INDUSTRIAL AI ANALYSIS SECTION *****
   const analyzePortfolioHealth = async () => {
+    if (isAnalyzing) return;
     setIsAnalyzing(true);
 
     if (!portfolio || !portfolio.assets || portfolio.assets.length === 0) {
-      alert("No portfolio assets to analyze");
+      alert("No portfolio assets found. Execute a trade first.");
       setIsAnalyzing(false);
       return;
     }
 
-    const calculatedHealth = calculatePortfolioHealth(portfolio, previousHealth);
-
-    const holdingsList = portfolio.assets.map(h => ({
-      symbol: h.symbol,
-      value: h.quantity * h.currentPrice
-    }));
-
-    const totalValue = portfolio.totalValue || 0;
-    const daysSinceLastCheck = previousHealth 
-      ? differenceInDays(new Date(), new Date(previousHealth.analysis_date))
-      : null;
-
-    let weeklySummary = `Your portfolio shows `;
-    
-    if (calculatedHealth.diversification_score >= 70) {
-      weeklysummary += `strong diversification with ${holdingsList.length} holdings`;
-    } else if (calculatedHealth.diversification_score >= 40) {
-      weeklysSummary += `moderate diversification with ${holdingsList.length} holdings`;
-    } else {
-      weeklysSummary += `limited diversification with only ${holdingsList.length} holdings`;
-    }
-    
-    weeklysSummary += `, totaling $${totalValue.toLocaleString()}. `;
-    
-    if (calculatedHealth.metrics.maxConcentration > 30) {
-      weeklysSummary += `Your largest position represents ${calculatedHealth.metrics.maxConcentration.toFixed(0)}% of total value, creating significant fragility risk. `;
-    }
-    
-    if (calculatedHealth.fragility_index > 60) {
-      weeklysSummary += `Portfolio fragility is high. `;
-    }
-    
-    if (calculatedHealth.correlation_coefficient > 0.7) {
-      weeklysSummary += `Assets are highly correlated, reducing diversification benefits. `;
-    }
-    
-    weeklysSummary += `Risk level: ${Math.round(calculatedHealth.risk_level)}/100.`;
-
     try {
-      const healthData = {
-        ...calculatedHealth,
-        weekly_summary: weeklysSummary,
-        analysis_date: new Date().toISOString()
-      };
+      // 1. Call backend Health Lambda
+      const healthResponse = await awsApi.calculatePortfolioHealth({
+        userEmail: userEmail
+      });
 
-      const storedRecords = localStorage.getItem('portfolio_health_records');
-      const records = storedRecords ? JSON.parse(storedRecords) : [];
-      records.unshift(healthData);
-      localStorage.setItem('portfolio_health_records', JSON.stringify(records.slice(0, 100)));
+      if (healthResponse && healthResponse.success) {
+        const mathHealth = healthResponse.health;
 
-      setHealthRecords(records);
-      setCurrentHealth(healthData);
-      if (records.length > 1) {
-        setPreviousHealth(records[1]);
+        // 2. SUDO-INDUSTRIAL AI Stress Test - Prompt and parsing
+        const prompt = `
+  As a Chief Risk Officer (CRO), perform a 'Stress Test' on these metrics:
+  - Diversification: ${mathHealth.diversification_score}/100
+  - Fragility (Position Risk): ${mathHealth.fragility_index}/100
+  - Risk Level: ${mathHealth.risk_level}/100
+  
+  CURRENT HOLDINGS:
+  ${portfolio.assets.map(a => `${a.symbol}: ${((a.quantity * a.currentPrice)/portfolio.totalValue*100).toFixed(1)}%`).join('\n')}
+
+  TASK: 
+  1. Identify if any single asset exceeds 30% (Fragility).
+  2. If Risk > 70, use "URGENT" tone. 
+  3. Provide a one-sentence "Clinical Diagnosis" and one-sentence "Prescription" (Action).
+  JSON format: {"diagnosis": "...", "prescription": "..."}
+`;
+
+        const aiResponse = await awsApi.invokeLLM(prompt);
+        let docInsights = { diagnosis: "Analyzing...", prescription: "Run check." };
+        try {
+          const raw = aiResponse?.response || aiResponse?.analysis || "{}";
+          docInsights = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        } catch (e) {
+          docInsights = { diagnosis: mathHealth.weekly_summary, prescription: "Consult advisor." };
+        }
+
+        const finalHealthData = {
+          ...mathHealth,
+          ai_diagnosis: docInsights.diagnosis,
+          ai_prescription: docInsights.prescription,
+          analysis_date: new Date().toISOString()
+        };
+
+        // 3. Update Local Storage for Trend Chart
+        const records = JSON.parse(localStorage.getItem('portfolio_health_records') || '[]');
+        records.unshift(finalHealthData);
+        const updatedRecords = records.slice(0, 100);
+        localStorage.setItem('portfolio_health_records', JSON.stringify(updatedRecords));
+
+        // 4. Update UI
+        setHealthRecords(updatedRecords);
+        setCurrentHealth(finalHealthData);
+        if (updatedRecords.length > 1) setPreviousHealth(updatedRecords[1]);
       }
     } catch (error) {
-      console.error("Error analyzing health:", error);
-      alert("Error analyzing portfolio health. Please try again.");
+      console.error("Sophisticated Analysis Failed:", error);
+    } finally {
+      setIsAnalyzing(false);
     }
-
-    setIsAnalyzing(false);
   };
+  // ***** END: INDUSTRIAL AI ANALYSIS SECTION *****
 
+  // ***** START: INDUSTRIAL COLOR LOGIC SECTION *****
   const getScoreColor = (score, inverse = false) => {
+    const s = Math.round(score);
+    // If inverse is true, high numbers are BAD (like Fragility or Risk)
     if (inverse) {
-      if (score <= 30) return "text-emerald-600";
-      if (score <= 60) return "text-amber-600";
-      return "text-rose-600";
+      if (s <= 15) return "text-emerald-600";
+      if (s <= 35) return "text-blue-600";
+      if (s <= 60) return "text-amber-600";
+      if (s <= 80) return "text-rose-600";
+      return "text-red-700 font-black animate-pulse";
     }
-    if (score >= 70) return "text-emerald-600";
-    if (score >= 40) return "text-amber-600";
-    return "text-rose-600";
+    // Standard: High numbers are GOOD (like Diversification)
+    if (s >= 85) return "text-emerald-600 font-bold";
+    if (s >= 70) return "text-blue-600";
+    if (s >= 50) return "text-amber-600";
+    if (s >= 30) return "text-rose-600";
+    return "text-red-700 font-black animate-pulse";
   };
 
   const getScoreBg = (score, inverse = false) => {
+    const s = Math.round(score);
     if (inverse) {
-      if (score <= 30) return "bg-emerald-50 border-emerald-200";
-      if (score <= 60) return "bg-amber-50 border-amber-200";
-      return "bg-rose-50 border-rose-200";
+      if (s <= 15) return "bg-emerald-50 border-emerald-200";
+      if (s <= 35) return "bg-blue-50 border-blue-200";
+      if (s <= 60) return "bg-amber-50 border-amber-200";
+      if (s <= 80) return "bg-rose-50 border-rose-200";
+      return "bg-red-100 border-red-400 shadow-[0_0_15px_rgba(220,38,38,0.2)]";
     }
-    if (score >= 70) return "bg-emerald-50 border-emerald-200";
-    if (score >= 40) return "bg-amber-50 border-amber-200";
-    return "bg-rose-50 border-rose-200";
+    if (s >= 85) return "bg-emerald-50 border-emerald-200";
+    if (s >= 70) return "bg-blue-50 border-blue-200";
+    if (s >= 50) return "bg-amber-50 border-amber-200";
+    if (s >= 30) return "bg-rose-50 border-rose-200";
+    return "bg-red-100 border-red-400 shadow-[0_0_15px_rgba(220,38,38,0.2)]";
   };
+  // ***** END: INDUSTRIAL COLOR LOGIC SECTION *****
 
   const getAlertIcon = (severity) => {
     if (severity === "high") return <AlertTriangle className="w-5 h-5 text-rose-600" />;
@@ -242,6 +253,48 @@ export default function PortfolioHealth() {
           </Card>
         ) : (
           <div className="space-y-6">
+
+            {/* THE PORTFOLIO DOCTOR CARD - ENHANCED */}
+            {currentHealth && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-8"
+              >
+                <Card className="border-none shadow-2xl bg-slate-900 text-white overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="flex flex-col md:flex-row">
+                      <div className="bg-blue-600 p-8 flex flex-col items-center justify-center md:w-48 shrink-0">
+                        <Brain className="w-12 h-12 text-white mb-2" />
+                        <span className="text-[10px] font-black tracking-widest uppercase opacity-80">Core AI</span>
+                      </div>
+                      <div className="p-8 space-y-4 flex-1">
+                        <div className="flex items-center gap-3">
+                          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 rounded-full px-4">DIAGNOSIS</Badge>
+                          <h3 className="text-xl font-bold tracking-tight">Portfolio Stress Test Results</h3>
+                        </div>
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-blue-200 text-sm font-bold uppercase tracking-wider mb-1">Clinical Observations</p>
+                            <p className="text-xl font-medium leading-relaxed italic text-white/90">
+                              "{currentHealth.ai_diagnosis}"
+                            </p>
+                          </div>
+                          <div className="pt-4 border-t border-white/10">
+                            <p className="text-emerald-400 text-sm font-bold uppercase tracking-wider mb-1">Recommended Treatment</p>
+                            <div className="flex items-center gap-2 text-emerald-50 font-semibold">
+                              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                              {currentHealth.ai_prescription}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
             <Card className="border-2 border-emerald-200 shadow-xl bg-gradient-to-br from-emerald-50 to-teal-50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -395,7 +448,7 @@ export default function PortfolioHealth() {
                 <CardContent>
                   <div className="space-y-3">
                     {currentHealth.health_alerts.map((alert, idx) => (
-                      <div key={idx} className="flex items-start gap-3 bg-slate-50 rounded-lg p-4 border border-slate-200">
+                      <div key={idx} className="flex items-center gap-3 bg-slate-50 rounded-lg p-4 border border-slate-200">
                         {getAlertIcon(alert.severity)}
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
