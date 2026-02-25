@@ -3,7 +3,7 @@ import { awsApi } from "@/components/utils/api/awsApi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, RefreshCw, TrendingUp, AlertCircle, Clock, X, ShoppingCart, DollarSign, Loader2 } from "lucide-react";
+import { Plus, RefreshCw, TrendingUp, AlertCircle, Clock, X, ShoppingCart, DollarSign, Loader2, Target } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
@@ -246,159 +246,90 @@ export default function PracticeTrading() {
           </Card>
         </motion.div>
 
-        <div className="flex flex-wrap gap-3 mb-8">
-          <Button
-            onClick={() => setIsTradeModalOpen(true)}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Practice Trade
-          </Button>
-          <Button
-            onClick={handleSyncPortfolio}
-            disabled={isSyncing}
-            variant="outline"
-            className="border-2"
-          >
-            {isSyncing ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Syncing...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Sync Prices
-              </>
-            )}
-          </Button>
-          {lastSync && (
-            <div className="flex items-center gap-2 text-sm text-slate-600 ml-auto">
-              <Clock className="w-4 h-4" />
-              Last synced: {format(lastSync, 'MMM d, h:mm a')}
-            </div>
-          )}
-        </div>
-
-        {recommendedAllocations.length > 0 && (
-          <Card className="border-2 border-blue-500 shadow-xl bg-white mb-8">
-            <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 md:p-6">
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                <div className="flex-1">
-                  <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
-                    <TrendingUp className="w-6 h-6" />
-                    AI Scenario Suggestions
-                  </CardTitle>
-                  <p className="text-white/90 text-xs md:text-sm mt-2">
-                    Explore these simulated allocation scenarios for learning purposes
-                  </p>
-                </div>
-                <Badge className="bg-white text-blue-700 text-xs md:text-sm px-3 py-2 whitespace-nowrap">
-                  ✨ {recommendedAllocations.filter(a => a.quantity > 0).length} to explore
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                {recommendedAllocations.map((allocation, index) => (
-                  <Card key={index} className="border-2 border-slate-200 bg-slate-50">
-                    <CardContent className="p-4">
-                      <div className="flex flex-col sm:flex-row sm:items-start gap-3 md:gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <h4 className="font-bold text-lg text-slate-900">{allocation.symbol}</h4>
-                            <Badge className="bg-blue-100 text-blue-700 text-xs md:text-sm">
-                              ${allocation.price.toFixed(2)}/share
-                            </Badge>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4">
-                            <div>
-                              <Label className="text-xs md:text-sm text-slate-600">Quantity (shares)</Label>
-                              <Input
-                                type="number"
-                                min="0"
-                                step="1"
-                                value={allocation.quantity}
-                                onChange={(e) => updateAllocationQuantity(index, e.target.value)}
-                                className="mt-1 h-9 md:h-10 text-sm md:text-base"
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-xs md:text-sm text-slate-600">Estimated Cost</Label>
-                              <div className="mt-1 h-9 md:h-10 px-2 md:px-3 border border-slate-300 rounded-md bg-slate-100 flex items-center overflow-hidden">
-                                <DollarSign className="w-3 h-3 md:w-4 md:h-4 text-slate-500 mr-0.5 md:mr-1 flex-shrink-0" />
-                                <span className="font-semibold text-slate-900 text-sm md:text-base truncate">
-                                  {(allocation.quantity * allocation.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+        {/* INDUSTRIAL GRID: AI SUGGESTIONS & CHART SIDE-BY-SIDE */}
+        <div className="grid lg:grid-cols-2 gap-8 mb-8 items-start">
+          
+          {/* LEFT COLUMN: AI SUGGESTIONS */}
+          <div className="space-y-6">
+            {recommendedAllocations.length > 0 ? (
+              <Card className="border-2 border-blue-500 shadow-xl bg-white h-full">
+                <CardHeader className="bg-slate-900 text-white p-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-lg uppercase tracking-widest font-black">
+                      <TrendingUp className="w-5 h-5 text-blue-400" />
+                      Tactical Suggestions
+                    </CardTitle>
+                    <Badge className="bg-blue-600">{recommendedAllocations.length} Active</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 max-h-[500px] overflow-y-auto">
+                  <div className="space-y-3">
+                    {recommendedAllocations.map((allocation, index) => (
+                      <div key={index} className="p-3 rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="font-black text-slate-900">{allocation.symbol}</p>
+                          <p className="text-[10px] text-slate-500 uppercase font-bold">${allocation.price.toFixed(2)}/share</p>
                         </div>
-                        <div className="flex flex-col gap-2 sm:w-auto">
-                          <Button
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            value={allocation.quantity}
+                            onChange={(e) => updateAllocationQuantity(index, e.target.value)}
+                            className="w-20 h-8 text-xs font-bold border-slate-300"
+                          />
+                          <Button 
+                            size="sm" 
                             onClick={() => executeSingleAllocation(allocation, index)}
-                            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-xs md:text-sm"
-                            size="sm"
+                            className="h-8 bg-emerald-600 hover:bg-emerald-700 px-2"
                           >
-                            <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                            Execute
+                            <ShoppingCart className="w-3 h-3" />
                           </Button>
-                          <Button
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
                             onClick={() => removeAllocation(index)}
-                            variant="outline"
-                            size="sm"
-                            className="border-rose-300 text-rose-600 hover:bg-rose-50 text-xs md:text-sm"
+                            className="h-8 text-slate-400 hover:text-rose-600 px-1"
                           >
-                            <X className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                            Remove
+                            <X className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4 mt-6 pt-6 border-t border-slate-200">
-                <div className="text-base md:text-lg font-semibold text-slate-900 truncate">
-                  Total Cost: ${recommendedAllocations.reduce((sum, a) => sum + (a.quantity * a.price), 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2 md:gap-3 w-full sm:w-auto">
-                  <Button
-                    onClick={() => setRecommendedAllocations([])}
-                    variant="outline"
-                    className="border-2 text-xs md:text-sm"
-                  >
-                    Cancel All
-                  </Button>
-                  <Button
-                    onClick={executeAllAllocations}
-                    disabled={isExecutingBatch || recommendedAllocations.filter(a => a.quantity > 0).length === 0}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg text-xs md:text-sm"
-                  >
-                    {isExecutingBatch ? (
-                      <>
-                        <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 animate-spin" />
-                        Executing...
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-                        Execute All Trades
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {trades.length > 0 && portfolio && (
-          <div className="mb-8">
-            <PortfolioChart portfolio={portfolio} trades={trades} />
+                    ))}
+                  </div>
+                  
+                  {/* COMPACT BATCH FOOTER */}
+                  <div className="mt-4 pt-4 border-t border-slate-200 flex items-center justify-between">
+                    <span className="text-xs font-black text-slate-900 uppercase">Total: ${recommendedAllocations.reduce((sum, a) => sum + (a.quantity * a.price), 0).toLocaleString()}</span>
+                    <Button 
+                      size="sm" 
+                      onClick={executeAllAllocations}
+                      className="bg-blue-600 text-[10px] font-black uppercase tracking-tighter h-8"
+                    >
+                      Execute Batch
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="border-dashed border-2 border-slate-300 bg-slate-50/50 h-[300px] flex flex-col items-center justify-center text-center p-6">
+                <Target className="w-10 h-10 text-slate-300 mb-2" />
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No Active AI Suggestions</p>
+                <p className="text-[10px] text-slate-400 mt-1">Run a Portfolio Health check to generate scenarios.</p>
+              </Card>
+            )}
           </div>
-        )}
+
+          {/* RIGHT COLUMN: PORTFOLIO CHART */}
+          <div className="h-full">
+            {trades.length > 0 && portfolio ? (
+              <PortfolioChart portfolio={portfolio} trades={trades} />
+            ) : (
+              <Card className="h-[300px] flex items-center justify-center bg-slate-50 border-2 border-dashed border-slate-300">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Awaiting Trade Data for Charting</p>
+              </Card>
+            )}
+          </div>
+        </div>
 
         <Card className="border-2 border-slate-200 shadow-lg">
           <CardHeader>
