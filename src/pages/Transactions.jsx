@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   ArrowUpCircle, 
@@ -169,15 +169,21 @@ export default function Transactions() {
               <CardContent className="pt-6">
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="grid grid-cols-2 gap-4">
+                    {/* Transaction Type Select (manual render) */}
                     <div className="space-y-2">
                       <Label className="text-[10px] uppercase font-black text-slate-400">Type</Label>
                       <Select value={formData.type} onValueChange={(v) => setFormData({...formData, type: v})}>
-                        <SelectTrigger className="border-slate-300 bg-white text-slate-900 font-bold shadow-sm">
-                          <SelectValue>
-                            {formData.type ? formData.type.toUpperCase() : "Select Type"}
-                          </SelectValue>
+                        <SelectTrigger className="border-slate-300 bg-white text-slate-900 font-bold shadow-sm h-10 w-full px-3 flex justify-between items-center">
+                          {/* We manually display the state here so it CANNOT be invisible */}
+                          <span className="text-slate-900 uppercase">
+                            {formData.type === "buy"
+                              ? "BUY"
+                              : formData.type === "sell"
+                              ? "SELL"
+                              : "Select Type"}
+                          </span>
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white border-slate-200 shadow-xl">
                           <SelectItem value="buy">BUY</SelectItem>
                           <SelectItem value="sell">SELL</SelectItem>
                         </SelectContent>
@@ -210,21 +216,25 @@ export default function Transactions() {
                       <BookOpen className="w-3 h-3" /> Journaling
                     </div>
                     <Textarea className="bg-white border-slate-200 text-xs" placeholder="Rational for this execution..." value={formData.why_reason} onChange={(e) => setFormData({...formData, why_reason: e.target.value})} />
-                    <Select value={formData.emotional_state} onValueChange={(v) => setFormData({...formData, emotional_state: v})}>
-                      <SelectTrigger className="bg-white border-slate-300 text-xs text-slate-900 font-bold shadow-sm">
-                        <SelectValue>
-                          {formData.emotional_state
-                            ? formData.emotional_state.charAt(0).toUpperCase() + formData.emotional_state.slice(1)
-                            : "Select Emotion"}
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="confident">Confident</SelectItem>
-                        <SelectItem value="uncertain">Uncertain</SelectItem>
-                        <SelectItem value="fomo">FOMO / High Alert</SelectItem>
-                        <SelectItem value="neutral">Neutral / Balanced</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {/* Emotional State Select (manual render) */}
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase font-black text-slate-400">Emotional State</Label>
+                      <Select value={formData.emotional_state} onValueChange={(v) => setFormData({...formData, emotional_state: v})}>
+                        <SelectTrigger className="border-slate-300 bg-white text-slate-900 font-bold shadow-sm h-10 w-full px-3 flex justify-between items-center">
+                          <span className="text-slate-900 text-xs">
+                            {formData.emotional_state
+                              ? formData.emotional_state.charAt(0).toUpperCase() + formData.emotional_state.slice(1)
+                              : "Select Emotion"}
+                          </span>
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-slate-200 shadow-xl">
+                          <SelectItem value="confident">Confident</SelectItem>
+                          <SelectItem value="uncertain">Uncertain</SelectItem>
+                          <SelectItem value="fomo">FOMO / High Alert</SelectItem>
+                          <SelectItem value="neutral">Neutral / Balanced</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <Button type="submit" className="w-full bg-slate-900 text-white font-bold tracking-widest uppercase text-xs h-12 shadow-lg hover:bg-slate-800" disabled={isSubmitting}>
