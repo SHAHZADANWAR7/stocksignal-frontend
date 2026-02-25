@@ -100,15 +100,32 @@ export default function Transactions() {
     setIsSubmitting(false);
   };
 
+  // SWAPPED TO invokeLLM, industrial brutal audit prompt and LLM JSON parsing
   const generateBehavioralInsights = async () => {
     setIsGeneratingInsights(true);
     setShowJournalInsights(true);
     try {
       const recentJournals = journals.slice(0, 20);
-      const prompt = `Analyze behavioral patterns from this investor's journal entries:\n\n${JSON.stringify(recentJournals)}\n\nIdentify: 1) Chasing returns 2) Panic selling 3) Emotional biases. Return in bullet points.`;
-      const result = await awsApi.analyzeBehavioralPatterns(prompt);
-      setJournalInsights(result || { patterns: ["No patterns detected yet."], recommendations: [] });
+      // INDUSTRIAL PROMPT UPGRADE
+      const prompt = `Act as a Senior Behavioral Finance Analyst. Conduct a "Brutal Audit" on these 20 journal entries:
+    ${JSON.stringify(recentJournals)}
+
+    TASK:
+    1. Identify specific psychological biases (FOMO, Revenge Trading, Recency Bias).
+    2. Analyze the "Emotional State" vs. "Trade Rational" alignment.
+    3. Provide 3 high-precision protocol adjustments to fix these leaks.
+
+    RETURN ONLY VALID JSON:
+    {"patterns": ["pattern 1", "pattern 2"], "recommendations": ["rec 1", "rec 2"]}`;
+      const aiResponse = await awsApi.invokeLLM(prompt);
+      // Parsing logic to handle the LLM response
+      const raw = aiResponse?.response || aiResponse?.analysis || "{}";
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+
+      setJournalInsights(parsed || { patterns: ["No patterns detected yet."], recommendations: [] });
     } catch (error) {
+      console.error("Audit Failure:", error);
       setJournalInsights({ patterns: ["Unable to sync AI engine"], recommendations: [] });
     }
     setIsGeneratingInsights(false);
@@ -153,7 +170,7 @@ export default function Transactions() {
                     <div className="space-y-2">
                       <Label className="text-[10px] uppercase font-black text-slate-400">Type</Label>
                       <Select value={formData.type} onValueChange={(v) => setFormData({...formData, type: v})}>
-                        <SelectTrigger className="border-slate-200 shadow-sm focus:ring-slate-900 text-slate-900 font-bold">
+                        <SelectTrigger className="border-slate-200 shadow-sm focus:ring-slate-900 text-slate-900 font-bold bg-white">
                           <SelectValue placeholder="Select Type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -190,7 +207,7 @@ export default function Transactions() {
                     </div>
                     <Textarea className="bg-white border-slate-200 text-xs" placeholder="Rational for this execution..." value={formData.why_reason} onChange={(e) => setFormData({...formData, why_reason: e.target.value})} />
                     <Select value={formData.emotional_state} onValueChange={(v) => setFormData({...formData, emotional_state: v})}>
-                      <SelectTrigger className="bg-white border-slate-200 text-xs text-slate-900 font-medium">
+                      <SelectTrigger className="bg-white border-slate-200 text-xs text-slate-900 font-bold">
                         <SelectValue placeholder="Select Emotion" />
                       </SelectTrigger>
                       <SelectContent>
