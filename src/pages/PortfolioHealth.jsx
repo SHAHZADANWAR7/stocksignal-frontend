@@ -318,47 +318,66 @@ Return ONLY JSON: {"diagnosis": "...", "prescription": "...", "weekly_summary": 
         ) : (
           <div className="space-y-6">
 
-            {/* THE PORTFOLIO DOCTOR CARD - LIGHT THEME FIX */}
-            {currentHealth && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-8"
-              >
-                {/* Changed bg-slate-900 to bg-white and added a border for definition */}
-                <Card className="border-2 border-slate-100 shadow-2xl bg-white text-slate-900 overflow-hidden min-h-[160px] flex flex-col md:flex-row">
-                  <div className="bg-blue-600 p-6 flex items-center justify-center md:w-32 shrink-0">
-                    <Brain className={`w-12 h-12 text-white ${isAnalyzing ? "animate-pulse" : ""}`} />
-                  </div>
-                  <div className="p-8 flex-1 flex flex-col justify-center">
-                    <div className="flex items-center gap-3 mb-4">
-                      <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-3">DIAGNOSIS</Badge>
-                      <h3 className="text-xl font-bold tracking-tight uppercase text-slate-900">Portfolio Stress Test</h3>
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-8">
-                      <div>
-                        {/* Changed from white to slate-500 (muted black) for the label */}
-                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Clinical Observations</p>
-                        {/* Changed from white to slate-900 (solid black) for the diagnosis */}
-                        <p className="text-lg font-medium italic text-slate-900 leading-snug">
-                          {currentHealth.ai_diagnosis ? `"${currentHealth.ai_diagnosis}"` : "Calculating clinical insights..."}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Recommended Treatment</p>
-                        <div className="flex items-center gap-2 text-emerald-600">
-                          <CheckCircle2 className="w-5 h-5 shrink-0" />
-                          {/* Changed from white to slate-900 for the prescription */}
-                          <span className="text-lg font-bold leading-snug text-slate-900">
-                            {currentHealth.ai_prescription || "Consulting Risk Framework..."}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              </motion.div>
-            )}
+           {/* THE PORTFOLIO DOCTOR CARD - INDUSTRIAL REFINEMENT */}
+{currentHealth && (
+  <motion.div 
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    className="mb-8"
+  >
+    <Card className="border border-slate-200 shadow-sm bg-white overflow-hidden flex flex-col md:flex-row min-h-[180px]">
+      {/* Sidebar: Deep Professional Blue */}
+      <div className="bg-[#2B59C3] p-6 flex flex-col items-center justify-center md:w-24 shrink-0 border-r border-slate-100">
+        <Brain className={`w-10 h-10 text-white/90 ${isAnalyzing ? "animate-pulse" : ""}`} />
+      </div>
+
+      <div className="flex-1 flex flex-col">
+        {/* Top Header Bar */}
+        <div className="px-8 py-4 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
+          <div className="flex items-center gap-3">
+            <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" /> {/* Status Ping */}
+            <h3 className="text-[12px] font-black tracking-[0.15em] text-slate-800 uppercase">
+              System Stress Test Result
+            </h3>
+          </div>
+          <Badge className="bg-slate-200 text-slate-700 hover:bg-slate-200 border-none rounded-sm text-[10px] font-bold px-2 py-0">
+            ID: {currentHealth.analysis_date ? format(new Date(currentHealth.analysis_date), 'yyyy-MM-dd') : 'ST-001'}
+          </Badge>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="p-8 grid md:grid-cols-2 gap-10">
+          {/* Section 01: Observations */}
+          <div className="relative">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <span className="w-4 h-[1px] bg-slate-300" /> Clinical Observations
+            </p>
+            <div className="pl-6 border-l-2 border-slate-100">
+              <p className="text-[15px] font-medium text-slate-800 leading-relaxed font-serif italic text-pretty">
+                "{currentHealth.ai_diagnosis || "Awaiting system telemetry..."}"
+              </p>
+            </div>
+          </div>
+
+          {/* Section 02: Treatment */}
+          <div className="relative">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <span className="w-4 h-[1px] bg-slate-300" /> Prescribed Protocol
+            </p>
+            <div className="bg-slate-50 p-4 rounded-sm border border-slate-100">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+                <p className="text-[14px] font-bold text-slate-700 leading-tight">
+                  {currentHealth.ai_prescription || "Protocol initialization pending..."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Card>
+  </motion.div>
+)}
 
             {/* OVERALL PORTFOLIO HEALTH CARD (improved, as specified) */}
             <Card className="border-2 border-emerald-200 shadow-xl bg-gradient-to-br from-emerald-50 to-teal-50">
