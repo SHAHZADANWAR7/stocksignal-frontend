@@ -200,8 +200,15 @@ RETURN ONLY VALID JSON:
       const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
 
       // 6. Finalize Analysis Data
+     // --- INDUSTRIAL DECAY CALCULATION ---
+      const inflationRate = 0.032; // 3.2% average CPI
+      const yearsIdle = idleCashMonths / 12;
+      const purchasingPowerNow = idleCashAmount * Math.pow(1 - inflationRate, yearsIdle);
+      const inflationDecay = idleCashAmount - purchasingPowerNow;
+
       const analysisData = {
         ...calculatedCash,
+        inflation_decay: inflationDecay, // <--- New Metric Added
         deployment_signal: parsed.signal || "gradual_entry",
         market_uncertainty_score: marketUncertainty,
         deployment_reasoning: parsed.reasoning || "Analyzing optimal entry points...",
@@ -400,63 +407,50 @@ RETURN ONLY VALID JSON:
 
             <Card className="border-2 border-rose-200 shadow-xl bg-gradient-to-br from-rose-50 to-orange-50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="w-6 h-6 text-rose-600" />
-                  Opportunity Cost Tracker
+                <CardTitle className="flex items-center gap-2 text-rose-800">
+                  <AlertTriangle className="w-6 h-6" />
+                  Capital Erosion & Opportunity Audit
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
-                  <div className="bg-white rounded-xl p-4 md:p-6">
-                    <p className="text-xs md:text-sm text-slate-600 mb-2">Idle Cash Identified</p>
-                    <p className="text-3xl md:text-4xl font-bold text-rose-600 mb-2 break-words">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  {/* 1. IDLE VOLUME */}
+                  <div className="bg-white rounded-xl p-4 border border-rose-100 shadow-sm">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Asset Volume</p>
+                    <p className="text-2xl font-bold text-slate-900">
                       ${Math.round(analysis.idle_cash_amount || 0).toLocaleString()}
                     </p>
-                    <p className="text-xs md:text-sm text-slate-700">
-                      Cash sitting in low-yield accounts
-                    </p>
+                    <p className="text-[11px] text-slate-500 mt-1 italic">Idle liquid capital</p>
                   </div>
-                  <div className="bg-white rounded-xl p-4 md:p-6">
-                    <p className="text-xs md:text-sm text-slate-600 mb-2">Missed Returns (Time-Adjusted)</p>
-                    <p className="text-3xl md:text-4xl font-bold text-amber-600 mb-2 break-words">
+
+                  {/* 2. INFLATION DECAY */}
+                  <div className="bg-white rounded-xl p-4 border border-rose-100 shadow-sm">
+                    <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1">Inflation Decay</p>
+                    <p className="text-2xl font-bold text-rose-600">
+                      -${Math.round(analysis.inflation_decay || 0).toLocaleString()}
+                    </p>
+                    <p className="text-[11px] text-rose-400 mt-1 font-medium italic">Purchasing power lost</p>
+                  </div>
+
+                  {/* 3. MISSED RETURNS */}
+                  <div className="bg-white rounded-xl p-4 border border-amber-100 shadow-sm">
+                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Missed Yield</p>
+                    <p className="text-2xl font-bold text-amber-600">
                       ~${Math.round(analysis.missed_returns || 0).toLocaleString()}
                     </p>
-                    <p className="text-xs md:text-sm text-slate-700">
-                      Opportunity cost for {idleCashMonths} months idle
-                    </p>
+                    <p className="text-[11px] text-amber-500 mt-1 italic">Opportunity cost ({idleCashMonths}mo)</p>
                   </div>
                 </div>
 
-                {analysis.low_yield_assets && analysis.low_yield_assets.length > 0 && (
-                  <div>
-                    <h4 className="font-bold text-slate-900 mb-3">Low-Yield Assets</h4>
-                    <div className="grid gap-3">
-                      {analysis.low_yield_assets.map((asset, idx) => (
-                        <Card key={idx} className="border border-slate-200 bg-white">
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-bold text-slate-900">{asset.symbol}</p>
-                                <p className="text-sm text-slate-600">
-                                  Current Yield: {asset.current_yield?.toFixed(2) || 0}%
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-sm text-slate-600">Opportunity Cost</p>
-                                <p className="text-lg font-bold text-amber-600">
-                                  ${Math.round(asset.opportunity_cost || 0).toLocaleString()}
-                                </p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {/* TOTAL ECONOMIC LOSS BAR */}
+                <div className="bg-rose-600/10 border border-rose-200 rounded-lg p-3 flex items-center justify-between">
+                  <span className="text-xs font-bold text-rose-700 uppercase tracking-tight">Total Economic Drag:</span>
+                  <span className="text-lg font-black text-rose-700">
+                    ${Math.round((analysis.inflation_decay || 0) + (analysis.missed_returns || 0)).toLocaleString()}
+                  </span>
+                </div>
               </CardContent>
             </Card>
-
             <Card className={`border-2 shadow-xl ${getSignalColor(analysis.deployment_signal)}`}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
