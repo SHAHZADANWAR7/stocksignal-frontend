@@ -153,8 +153,8 @@ export default function Transactions() {
                     <div className="space-y-2">
                       <Label className="text-[10px] uppercase font-black text-slate-400">Type</Label>
                       <Select value={formData.type} onValueChange={(v) => setFormData({...formData, type: v})}>
-                        <SelectTrigger className="border-slate-200 shadow-sm focus:ring-slate-900">
-                          <SelectValue />
+                        <SelectTrigger className="border-slate-200 shadow-sm focus:ring-slate-900 text-slate-900 font-bold">
+                          <SelectValue placeholder="Select Type" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="buy">BUY</SelectItem>
@@ -190,8 +190,8 @@ export default function Transactions() {
                     </div>
                     <Textarea className="bg-white border-slate-200 text-xs" placeholder="Rational for this execution..." value={formData.why_reason} onChange={(e) => setFormData({...formData, why_reason: e.target.value})} />
                     <Select value={formData.emotional_state} onValueChange={(v) => setFormData({...formData, emotional_state: v})}>
-                      <SelectTrigger className="bg-white border-slate-200 text-xs">
-                        <SelectValue placeholder="Emotional State" />
+                      <SelectTrigger className="bg-white border-slate-200 text-xs text-slate-900 font-medium">
+                        <SelectValue placeholder="Select Emotion" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="confident">Confident</SelectItem>
@@ -277,8 +277,8 @@ export default function Transactions() {
                         <tr key={idx} className="hover:bg-slate-50/50 transition-colors group">
                           <td className="px-6 py-4">
                             <Badge className={tx.type === 'buy' 
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-100 shadow-none font-bold' 
-                              : 'bg-rose-50 text-rose-700 border-rose-100 shadow-none font-bold'}>
+                              ? 'bg-emerald-100 text-emerald-900 border-emerald-200 shadow-none font-black' 
+                              : 'bg-rose-100 text-rose-900 border-rose-200 shadow-none font-black'}>
                               {tx.type.toUpperCase()}
                             </Badge>
                           </td>
