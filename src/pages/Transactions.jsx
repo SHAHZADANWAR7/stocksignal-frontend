@@ -100,33 +100,30 @@ export default function Transactions() {
     setIsSubmitting(false);
   };
 
-  // SWAPPED TO invokeLLM, industrial brutal audit prompt and LLM JSON parsing
+  // Industrial "robust" behavioral audit function with strict JSON extraction
   const generateBehavioralInsights = async () => {
     setIsGeneratingInsights(true);
     setShowJournalInsights(true);
     try {
       const recentJournals = journals.slice(0, 20);
-      // INDUSTRIAL PROMPT UPGRADE
-      const prompt = `Act as a Senior Behavioral Finance Analyst. Conduct a "Brutal Audit" on these 20 journal entries:
-    ${JSON.stringify(recentJournals)}
-
-    TASK:
-    1. Identify specific psychological biases (FOMO, Revenge Trading, Recency Bias).
-    2. Analyze the "Emotional State" vs. "Trade Rational" alignment.
-    3. Provide 3 high-precision protocol adjustments to fix these leaks.
-
-    RETURN ONLY VALID JSON:
-    {"patterns": ["pattern 1", "pattern 2"], "recommendations": ["rec 1", "rec 2"]}`;
+      // Forced Zero-Entropy Prompt
+      const prompt = `[NO_PROSE]
+      Analyze behavioral patterns: ${JSON.stringify(recentJournals)}
+      Return ONLY a JSON object. No intro. No summary.
+      REQUIRED SCHEMA: {"patterns": ["bias 1", "bias 2"], "recommendations": ["action 1", "action 2"]}`;
+      
       const aiResponse = await awsApi.invokeLLM(prompt);
-      // Parsing logic to handle the LLM response
-      const raw = aiResponse?.response || aiResponse?.analysis || "{}";
-      const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
-
-      setJournalInsights(parsed || { patterns: ["No patterns detected yet."], recommendations: [] });
+      const raw = aiResponse?.response || aiResponse?.analysis || "";
+      // Industrial Grade JSON Extraction
+      const jsonStart = raw.indexOf('{');
+      const jsonEnd = raw.lastIndexOf('}') + 1;
+      const jsonString = raw.slice(jsonStart, jsonEnd);
+      
+      const parsed = JSON.parse(jsonString);
+      setJournalInsights(parsed);
     } catch (error) {
       console.error("Audit Failure:", error);
-      setJournalInsights({ patterns: ["Unable to sync AI engine"], recommendations: [] });
+      setJournalInsights({ patterns: ["Pattern analysis timeout"], recommendations: ["Ensure journals are populated"] });
     }
     setIsGeneratingInsights(false);
   };
@@ -170,7 +167,7 @@ export default function Transactions() {
                     <div className="space-y-2">
                       <Label className="text-[10px] uppercase font-black text-slate-400">Type</Label>
                       <Select value={formData.type} onValueChange={(v) => setFormData({...formData, type: v})}>
-                        <SelectTrigger className="border-slate-200 shadow-sm focus:ring-slate-900 text-slate-900 font-bold bg-white">
+                        <SelectTrigger className="border-slate-300 bg-white text-slate-900 font-bold shadow-sm ring-offset-white focus:ring-2 focus:ring-slate-950">
                           <SelectValue placeholder="Select Type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -207,7 +204,7 @@ export default function Transactions() {
                     </div>
                     <Textarea className="bg-white border-slate-200 text-xs" placeholder="Rational for this execution..." value={formData.why_reason} onChange={(e) => setFormData({...formData, why_reason: e.target.value})} />
                     <Select value={formData.emotional_state} onValueChange={(v) => setFormData({...formData, emotional_state: v})}>
-                      <SelectTrigger className="bg-white border-slate-200 text-xs text-slate-900 font-bold">
+                      <SelectTrigger className="border-slate-300 bg-white text-slate-900 font-bold text-xs shadow-sm">
                         <SelectValue placeholder="Select Emotion" />
                       </SelectTrigger>
                       <SelectContent>
@@ -238,29 +235,28 @@ export default function Transactions() {
                     </h4>
                     <span className="text-[10px] font-bold text-blue-400">AI-GENERATED REPORT</span>
                   </div>
-                  <CardContent className="p-6 grid md:grid-cols-2 gap-6">
+                  <CardContent className="p-6 grid md:grid-cols-2 gap-6 bg-white/80 backdrop-blur-sm">
                     <div className="space-y-3">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Detected Biases</p>
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Detected Biases</p>
                       <ul className="space-y-2">
                         {journalInsights.patterns.map((p, i) => (
-                          <li key={i} className="text-sm font-medium text-slate-800 flex items-center gap-2">
-                            <div className="h-1 w-1 bg-blue-600 rounded-full" /> {p}
+                          <li key={i} className="text-sm font-bold text-slate-900 flex items-start gap-2">
+                            <div className="h-1.5 w-1.5 bg-rose-500 rounded-full mt-1.5 shrink-0" />
+                            <span>{p}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
-                    {journalInsights.recommendations?.length > 0 && (
-                      <div className="space-y-3">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Protocol Adjustments</p>
-                        <ul className="space-y-2">
-                          {journalInsights.recommendations.map((r, i) => (
-                            <li key={i} className="text-sm font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded border border-emerald-100 italic">
-                              "{r}"
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    <div className="space-y-3">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Protocol Adjustments</p>
+                      <ul className="space-y-2">
+                        {journalInsights.recommendations.map((r, i) => (
+                          <li key={i} className="text-sm font-bold text-emerald-800 bg-emerald-50/50 px-3 py-2 rounded-lg border border-emerald-100 shadow-sm">
+                            {r}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>
