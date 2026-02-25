@@ -318,36 +318,40 @@ Return ONLY JSON: {"diagnosis": "...", "prescription": "...", "weekly_summary": 
         ) : (
           <div className="space-y-6">
 
-            {/* THE PORTFOLIO DOCTOR CARD - ENHANCED */}
+            {/* THE PORTFOLIO DOCTOR CARD - LIGHT THEME FIX */}
             {currentHealth && (
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mb-8"
               >
-                <Card className="border-none shadow-2xl bg-slate-900 text-white overflow-hidden min-h-[160px] flex flex-col md:flex-row">
+                {/* Changed bg-slate-900 to bg-white and added a border for definition */}
+                <Card className="border-2 border-slate-100 shadow-2xl bg-white text-slate-900 overflow-hidden min-h-[160px] flex flex-col md:flex-row">
                   <div className="bg-blue-600 p-6 flex items-center justify-center md:w-32 shrink-0">
                     <Brain className={`w-12 h-12 text-white ${isAnalyzing ? "animate-pulse" : ""}`} />
                   </div>
                   <div className="p-8 flex-1 flex flex-col justify-center">
                     <div className="flex items-center gap-3 mb-4">
-                      <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 px-3">DIAGNOSIS</Badge>
-                      <h3 className="text-xl font-bold tracking-tight uppercase">Portfolio Stress Test</h3>
+                      <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-3">DIAGNOSIS</Badge>
+                      <h3 className="text-xl font-bold tracking-tight uppercase text-slate-900">Portfolio Stress Test</h3>
                     </div>
                     <div className="grid md:grid-cols-2 gap-8">
                       <div>
-                        {/* FIX: Changed text color from blue-400 to white/70 for better visibility */}
-                        <p className="text-white/70 text-[10px] font-black uppercase tracking-widest mb-2">Clinical Observations</p>
-                        <p className="text-lg font-medium italic text-white leading-snug">
-                          {/* FIX: Simplified check to ensure text shows up */}
+                        {/* Changed from white to slate-500 (muted black) for the label */}
+                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Clinical Observations</p>
+                        {/* Changed from white to slate-900 (solid black) for the diagnosis */}
+                        <p className="text-lg font-medium italic text-slate-900 leading-snug">
                           {currentHealth.ai_diagnosis ? `"${currentHealth.ai_diagnosis}"` : "Calculating clinical insights..."}
                         </p>
                       </div>
                       <div>
-                        <p className="text-white/50 text-[10px] font-black uppercase tracking-widest mb-2">Recommended Treatment</p>
-                        <div className="flex items-center gap-2 text-emerald-400">
+                        <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Recommended Treatment</p>
+                        <div className="flex items-center gap-2 text-emerald-600">
                           <CheckCircle2 className="w-5 h-5 shrink-0" />
-                          <span className="text-lg font-bold leading-snug">{currentHealth.ai_prescription || "Consulting Risk Framework..."}</span>
+                          {/* Changed from white to slate-900 for the prescription */}
+                          <span className="text-lg font-bold leading-snug text-slate-900">
+                            {currentHealth.ai_prescription || "Consulting Risk Framework..."}
+                          </span>
                         </div>
                       </div>
                     </div>
