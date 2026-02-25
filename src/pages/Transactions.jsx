@@ -6,7 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowUpCircle, ArrowDownCircle, Plus, BookOpen, Loader2 } from "lucide-react";
+import { 
+  ArrowUpCircle, 
+  ArrowDownCircle, 
+  Plus, 
+  BookOpen, 
+  Loader2, 
+  Activity, 
+  History, 
+  Target,
+  Clock
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -43,8 +53,7 @@ export default function Transactions() {
         awsApi.getHoldings(),
         awsApi.getInvestmentJournals()
       ]);
-      const transactionArr = txData || []; // ✅ FIXED: removed double unwrapping
-      console.log('Transactions returned:', transactionArr);
+      const transactionArr = txData || [];
       setTransactions(
         transactionArr.sort((a, b) => new Date(b.transaction_date) - new Date(a.transaction_date))
       );
@@ -58,7 +67,6 @@ export default function Transactions() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
       const transactionData = {
         type: formData.type,
@@ -70,9 +78,7 @@ export default function Transactions() {
         transaction_date: formData.transaction_date,
         notes: formData.notes
       };
-
       const createdTx = await awsApi.createTransaction(transactionData);
-
       const journalData = {
         transaction_id: createdTx.id,
         symbol: formData.symbol,
@@ -81,53 +87,15 @@ export default function Transactions() {
         emotional_state: formData.emotional_state,
         entry_date: formData.transaction_date
       };
-
       await awsApi.createInvestmentJournal(journalData);
-
-      const existingHolding = holdings.find(h => h.symbol === formData.symbol);
-
-      if (formData.type === "buy") {
-        if (existingHolding) {
-          const newQuantity = existingHolding.quantity + parseFloat(formData.quantity);
-          const newCost = (existingHolding.quantity * existingHolding.average_cost) + 
-                         (parseFloat(formData.quantity) * parseFloat(formData.price)) +
-                         parseFloat(formData.fees || 0);
-          await awsApi.updateHolding(existingHolding.symbol, { quantity: newQuantity, average_cost: newCost / newQuantity });
-        } else {
-          await awsApi.createHolding({
-            symbol: formData.symbol,
-            name: formData.asset_name,
-            quantity: parseFloat(formData.quantity),
-            average_cost: parseFloat(formData.price),
-            current_price: parseFloat(formData.price)
-          });
-        }
-      } else if (formData.type === "sell" && existingHolding) {
-        const newQuantity = existingHolding.quantity - parseFloat(formData.quantity);
-        if (newQuantity > 0) {
-          await awsApi.updateHolding(existingHolding.symbol, { quantity: newQuantity });
-        } else {
-          await awsApi.deleteHolding(existingHolding.symbol);
-        }
-      }
-
-      setFormData({
-        type: "buy",
-        symbol: "",
-        asset_name: "",
-        quantity: "",
-        price: "",
-        transaction_date: format(new Date(), 'yyyy-MM-dd'),
-        fees: "0",
-        notes: "",
-        why_reason: "",
-        emotional_state: "neutral"
-      });
-
       loadData();
+      setFormData({
+        type: "buy", symbol: "", asset_name: "", quantity: "", price: "",
+        transaction_date: format(new Date(), 'yyyy-MM-dd'), fees: "0",
+        notes: "", why_reason: "", emotional_state: "neutral"
+      });
     } catch (error) {
-      console.error("Error submitting transaction:", error);
-      alert('Error: ' + error.message);
+      console.error("Submission error:", error);
     }
     setIsSubmitting(false);
   };
@@ -135,224 +103,208 @@ export default function Transactions() {
   const generateBehavioralInsights = async () => {
     setIsGeneratingInsights(true);
     setShowJournalInsights(true);
-
     try {
       const recentJournals = journals.slice(0, 20);
-      const prompt = `Analyze behavioral patterns from this investor's journal entries:\n\n${JSON.stringify(recentJournals)}\n\nIdentify: 1) Chasing returns after green days 2) Panic selling 3) Emotional patterns 4) Time patterns 5) Other biases`;
-      
+      const prompt = `Analyze behavioral patterns from this investor's journal entries:\n\n${JSON.stringify(recentJournals)}\n\nIdentify: 1) Chasing returns 2) Panic selling 3) Emotional biases. Return in bullet points.`;
       const result = await awsApi.analyzeBehavioralPatterns(prompt);
-      setJournalInsights(result || { patterns: ["Unable to generate"], recommendations: [] });
+      setJournalInsights(result || { patterns: ["No patterns detected yet."], recommendations: [] });
     } catch (error) {
-      console.error("Error generating insights:", error);
-      setJournalInsights({ patterns: ["Unable to generate insights"], recommendations: [] });
+      setJournalInsights({ patterns: ["Unable to sync AI engine"], recommendations: [] });
     }
     setIsGeneratingInsights(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Transactions</h1>
-          <p className="text-slate-500 mb-8">Record your buy and sell orders</p>
-        </motion.div>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-10">
+      <div className="max-w-7xl mx-auto">
+        <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge className="bg-slate-900 text-[10px] tracking-widest uppercase">System Ledger</Badge>
+              <div className="h-1 w-1 rounded-full bg-slate-400" />
+              <span className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Real-Time Sync</span>
+            </div>
+            <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Execution History</h1>
+            <p className="text-slate-500 text-sm mt-1 font-medium">Internal log of verified buy and sell orders.</p>
+          </motion.div>
+          
+          <Button 
+            onClick={generateBehavioralInsights} 
+            disabled={isGeneratingInsights}
+            className="bg-white border-slate-200 border text-slate-900 hover:bg-slate-50 shadow-sm"
+          >
+            {isGeneratingInsights ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Activity className="w-4 h-4 mr-2" />}
+            Behavioral Audit
+          </Button>
+        </header>
 
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-1">
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="w-5 h-5" />
-                  New Transaction
+        <div className="grid lg:grid-cols-12 gap-8">
+          {/* Sidebar Entry Form */}
+          <div className="lg:col-span-4">
+            <Card className="border-slate-200 shadow-xl bg-white sticky top-10">
+              <CardHeader className="border-b border-slate-50 bg-slate-50/50">
+                <CardTitle className="text-sm font-black uppercase tracking-widest flex items-center gap-2 text-slate-800">
+                  <Plus className="w-4 h-4" /> Order Entry
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label>Transaction Type</Label>
-                    <Select value={formData.type} onValueChange={(value) => setFormData({...formData, type: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
+              <CardContent className="pt-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase font-black text-slate-400">Type</Label>
+                      <Select value={formData.type} onValueChange={(v) => setFormData({...formData, type: v})}>
+                        <SelectTrigger className="border-slate-200 shadow-sm focus:ring-slate-900">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="buy">BUY</SelectItem>
+                          <SelectItem value="sell">SELL</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase font-black text-slate-400">Symbol</Label>
+                      <Input className="border-slate-200 uppercase font-bold" placeholder="TSLA" value={formData.symbol} onChange={(e) => setFormData({...formData, symbol: e.target.value})} required />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase font-black text-slate-400">Asset Full Name</Label>
+                    <Input className="border-slate-200" placeholder="Tesla, Inc." value={formData.asset_name} onChange={(e) => setFormData({...formData, asset_name: e.target.value})} required />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase font-black text-slate-400">Quantity</Label>
+                      <Input type="number" step="any" className="border-slate-200" value={formData.quantity} onChange={(e) => setFormData({...formData, quantity: e.target.value})} required />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase font-black text-slate-400">Entry Price</Label>
+                      <Input type="number" step="any" className="border-slate-200" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} required />
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 space-y-4">
+                    <div className="flex items-center gap-2 text-slate-800 text-[10px] font-black uppercase tracking-widest">
+                      <BookOpen className="w-3 h-3" /> Journaling
+                    </div>
+                    <Textarea className="bg-white border-slate-200 text-xs" placeholder="Rational for this execution..." value={formData.why_reason} onChange={(e) => setFormData({...formData, why_reason: e.target.value})} />
+                    <Select value={formData.emotional_state} onValueChange={(v) => setFormData({...formData, emotional_state: v})}>
+                      <SelectTrigger className="bg-white border-slate-200 text-xs">
+                        <SelectValue placeholder="Emotional State" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="buy">Buy</SelectItem>
-                        <SelectItem value="sell">Sell</SelectItem>
+                        <SelectItem value="confident">Confident</SelectItem>
+                        <SelectItem value="uncertain">Uncertain</SelectItem>
+                        <SelectItem value="fomo">FOMO / High Alert</SelectItem>
+                        <SelectItem value="neutral">Neutral / Balanced</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  <div>
-                    <Label>Symbol</Label>
-                    <Input placeholder="AAPL, BTC, etc." value={formData.symbol} onChange={(e) => setFormData({...formData, symbol: e.target.value.toUpperCase()})} required />
-                  </div>
-
-                  <div>
-                    <Label>Asset Name</Label>
-                    <Input placeholder="Apple Inc., Bitcoin, etc." value={formData.asset_name} onChange={(e) => setFormData({...formData, asset_name: e.target.value})} required />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Quantity</Label>
-                      <Input type="number" step="0.0001" placeholder="10" value={formData.quantity} onChange={(e) => setFormData({...formData, quantity: e.target.value})} required />
-                    </div>
-                    <div>
-                      <Label>Price</Label>
-                      <Input type="number" step="0.01" placeholder="150.00" value={formData.price} onChange={(e) => setFormData({...formData, price: e.target.value})} required />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label>Date</Label>
-                      <Input type="date" value={formData.transaction_date} onChange={(e) => setFormData({...formData, transaction_date: e.target.value})} required />
-                    </div>
-                    <div>
-                      <Label>Fees</Label>
-                      <Input type="number" step="0.01" placeholder="0.00" value={formData.fees} onChange={(e) => setFormData({...formData, fees: e.target.value})} />
-                    </div>
-                  </div>
-
-                  <div className="border-t border-slate-200 pt-4 mt-4">
-                    <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                      <BookOpen className="w-4 h-4" />
-                      Investment Journal
-                    </h4>
-                    <div className="space-y-3">
-                      <div>
-                        <Label>Why this trade?</Label>
-                        <Textarea placeholder="e.g., Strong earnings, market dip..." value={formData.why_reason} onChange={(e) => setFormData({...formData, why_reason: e.target.value})} rows={2} />
-                      </div>
-                      <div>
-                        <Label>Emotional State</Label>
-                        <Select value={formData.emotional_state} onValueChange={(value) => setFormData({...formData, emotional_state: value})}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="confident">😌 Confident</SelectItem>
-                            <SelectItem value="uncertain">🤔 Uncertain</SelectItem>
-                            <SelectItem value="excited">🤩 Excited</SelectItem>
-                            <SelectItem value="fearful">😰 Fearful</SelectItem>
-                            <SelectItem value="neutral">😐 Neutral</SelectItem>
-                            <SelectItem value="fomo">😱 FOMO</SelectItem>
-                            <SelectItem value="panic">😨 Panic</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Notes (Optional)</Label>
-                    <Textarea placeholder="Add any notes..." value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} rows={2} />
-                  </div>
-
-                  <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-900" disabled={isSubmitting}>
-                    {isSubmitting ? "Processing..." : "Add Transaction"}
+                  <Button type="submit" className="w-full bg-slate-900 text-white font-bold tracking-widest uppercase text-xs h-12 shadow-lg hover:bg-slate-800" disabled={isSubmitting}>
+                    {isSubmitting ? "Submitting Order..." : "Commit Transaction"}
                   </Button>
                 </form>
               </CardContent>
             </Card>
           </div>
 
-          <div className="lg:col-span-2">
-            {journals.length > 0 && (
-              <Card className="border-2 border-blue-200 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 mb-6">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <BookOpen className="w-5 h-5 text-blue-600" />
-                      AI Investment Journal
-                    </CardTitle>
-                    <Button onClick={generateBehavioralInsights} disabled={isGeneratingInsights} size="sm" variant="outline" className="border-blue-200 hover:bg-blue-100">
-                      {isGeneratingInsights ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Analyzing...
-                        </>
-                      ) : (
-                        "View Patterns"
-                      )}
-                    </Button>
+          {/* Main Content Ledger */}
+          <div className="lg:col-span-8 space-y-6">
+            {showJournalInsights && journalInsights && (
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                <Card className="border border-blue-100 shadow-sm bg-blue-50/30 overflow-hidden">
+                  <div className="px-6 py-4 border-b border-blue-100 flex items-center justify-between">
+                    <h4 className="text-[10px] font-black text-blue-900 uppercase tracking-widest flex items-center gap-2">
+                      <Target className="w-3 h-3" /> Strategic Behavioral Audit
+                    </h4>
+                    <span className="text-[10px] font-bold text-blue-400">AI-GENERATED REPORT</span>
                   </div>
-                </CardHeader>
-                {showJournalInsights && journalInsights && (
-                  <CardContent>
-                    <div className="bg-white rounded-lg p-4 space-y-4">
-                      <div>
-                        <h4 className="font-semibold text-slate-900 mb-2">Detected Patterns:</h4>
+                  <CardContent className="p-6 grid md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Detected Biases</p>
+                      <ul className="space-y-2">
+                        {journalInsights.patterns.map((p, i) => (
+                          <li key={i} className="text-sm font-medium text-slate-800 flex items-center gap-2">
+                            <div className="h-1 w-1 bg-blue-600 rounded-full" /> {p}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    {journalInsights.recommendations?.length > 0 && (
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Protocol Adjustments</p>
                         <ul className="space-y-2">
-                          {journalInsights.patterns.map((pattern, idx) => (
-                            <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
-                              <span className="text-blue-600 font-bold">•</span>
-                              {pattern}
+                          {journalInsights.recommendations.map((r, i) => (
+                            <li key={i} className="text-sm font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded border border-emerald-100 italic">
+                              "{r}"
                             </li>
                           ))}
                         </ul>
                       </div>
-                      {journalInsights.recommendations && journalInsights.recommendations.length > 0 && (
-                        <div className="pt-3 border-t border-slate-200">
-                          <h4 className="font-semibold text-slate-900 mb-2">Recommendations:</h4>
-                          <ul className="space-y-2">
-                            {journalInsights.recommendations.map((rec, idx) => (
-                              <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
-                                <span className="text-emerald-600 font-bold">✓</span>
-                                {rec}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </CardContent>
-                )}
-              </Card>
+                </Card>
+              </motion.div>
             )}
 
-            <Card className="border-slate-200 shadow-sm">
-              <CardHeader>
-                <CardTitle>Transaction History</CardTitle>
+            <Card className="border-slate-200 shadow-xl bg-white overflow-hidden">
+              <CardHeader className="border-b border-slate-50 flex flex-row items-center justify-between">
+                <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
+                  <History className="w-4 h-4" /> Logged Executions
+                </CardTitle>
+                <div className="flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-slate-400" />
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">Sorted by Recency</span>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="text-left p-4 font-semibold">Type</th>
-                        <th className="text-left p-4 font-semibold">Symbol</th>
-                        <th className="text-left p-4 font-semibold">Asset</th>
-                        <th className="text-right p-4 font-semibold">Quantity</th>
-                        <th className="text-right p-4 font-semibold">Price</th>
-                        <th className="text-right p-4 font-semibold">Total</th>
-                        <th className="text-left p-4 font-semibold">Date</th>
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50/50 border-b border-slate-100">
+                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Identifier</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Qty</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Price</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Total (Net)</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      {transactions.map((tx) => (
-                        <tr key={`${tx.user_email}-${tx.transaction_date}-${tx.symbol}`} className="border-b border-slate-100">
-                          <td className="p-4">
-                            <Badge className={tx.type === 'buy' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}>
-                              {tx.type === 'buy' ? <ArrowUpCircle className="w-3 h-3 mr-1" /> : <ArrowDownCircle className="w-3 h-3 mr-1" />}
+                    <tbody className="divide-y divide-slate-100">
+                      {transactions.map((tx, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50/50 transition-colors group">
+                          <td className="px-6 py-4">
+                            <Badge className={tx.type === 'buy' 
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-100 shadow-none font-bold' 
+                              : 'bg-rose-50 text-rose-700 border-rose-100 shadow-none font-bold'}>
                               {tx.type.toUpperCase()}
                             </Badge>
                           </td>
-                          <td className="p-4 font-semibold text-slate-900">{tx.symbol}</td>
-                          <td className="p-4 text-slate-600">{tx.asset_name}</td>
-                          <td className="p-4 text-right text-slate-900">{tx.quantity}</td>
-                          <td className="p-4 text-right text-slate-900">${tx.price.toFixed(2)}</td>
-                          <td className="p-4 text-right font-semibold text-slate-900">${(tx.quantity * tx.price + (tx.fees || 0)).toFixed(2)}</td>
-                          <td className="p-4 text-slate-600">{format(new Date(tx.transaction_date), "MMM d, yyyy")}</td>
+                          <td className="px-6 py-4">
+                            <div className="font-black text-slate-900 leading-none">{tx.symbol}</div>
+                            <div className="text-[10px] text-slate-400 font-medium mt-1">{tx.asset_name}</div>
+                          </td>
+                          <td className="px-6 py-4 text-right font-mono text-sm text-slate-600">{tx.quantity}</td>
+                          <td className="px-6 py-4 text-right font-mono text-sm text-slate-600">${tx.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                          <td className="px-6 py-4 text-right">
+                            <span className="font-bold text-slate-900">${(tx.quantity * tx.price + (tx.fees || 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                          </td>
+                          <td className="px-6 py-4 text-slate-500 text-[11px] font-bold">
+                            {format(new Date(tx.transaction_date), "dd MMM yyyy").toUpperCase()}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
+                  {transactions.length === 0 && (
+                    <div className="py-20 text-center">
+                      <History className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                      <p className="text-slate-400 text-sm font-medium uppercase tracking-widest">Ledger is currently empty</p>
+                    </div>
+                  )}
                 </div>
-                {transactions.length === 0 && (
-                  <div className="text-center py-12">
-                    <p className="text-slate-400">No transactions yet</p>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
