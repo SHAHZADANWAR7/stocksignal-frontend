@@ -540,52 +540,70 @@ RETURN ONLY VALID JSON:
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-slate-200 shadow-lg bg-white">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-6 h-6 text-blue-600" />
-                  Signal Guide
+           {/* TACTICAL EXECUTION FRAMEWORK - ROE */}
+            <Card className="border-2 border-slate-200 shadow-lg bg-white overflow-hidden mt-8 mb-12">
+              <CardHeader className="bg-slate-50 border-b border-slate-100">
+                <CardTitle className="flex items-center gap-2 text-slate-800 text-sm font-black uppercase tracking-[0.15em]">
+                  <Activity className="w-5 h-5 text-blue-600" />
+                  Deployment Rules of Engagement (ROE)
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <PlayCircle className="w-5 h-5 text-emerald-600" />
-                      <h5 className="font-bold text-emerald-900">Invest Now</h5>
+              <CardContent className="p-0">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                  
+                  {/* Invest Now */}
+                  <div className="p-5 hover:bg-emerald-50/30 transition-colors">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                      <h5 className="font-bold text-slate-900 text-[12px] uppercase tracking-wider">Aggressive Entry</h5>
                     </div>
-                    <p className="text-sm text-slate-700">
-                      Market conditions favorable. Deploy available capital at current levels.
+                    <p className="text-[11px] leading-relaxed text-slate-600 mb-2">
+                      <span className="font-bold text-slate-700">Condition:</span> VIX &lt; 18 | Low Uncertainty.
+                    </p>
+                    <p className="text-[11px] text-slate-500 italic leading-snug">
+                      Deploy 100% of allocated capital immediately to capture compound growth and minimize cash drag.
                     </p>
                   </div>
-                  
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="w-5 h-5 text-blue-600" />
-                      <h5 className="font-bold text-blue-900">Gradual Entry</h5>
+
+                  {/* Gradual Entry */}
+                  <div className="p-5 hover:bg-blue-50/30 transition-colors">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      <h5 className="font-bold text-slate-900 text-[12px] uppercase tracking-wider">Phased Accumulation</h5>
                     </div>
-                    <p className="text-sm text-slate-700">
-                      Dollar-cost average over 3-6 months to reduce timing risk.
+                    <p className="text-[11px] leading-relaxed text-slate-600 mb-2">
+                      <span className="font-bold text-slate-700">Condition:</span> VIX 18–28 | Trending Volatility.
+                    </p>
+                    <p className="text-[11px] text-slate-500 italic leading-snug">
+                      Implement 3-6 month DCA protocol to mitigate sequence-of-returns risk and smooth entry basis.
                     </p>
                   </div>
-                  
-                  <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <PauseCircle className="w-5 h-5 text-amber-600" />
-                      <h5 className="font-bold text-amber-900">Pause DCA</h5>
+
+                  {/* Pause DCA */}
+                  <div className="p-5 hover:bg-amber-50/30 transition-colors">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-2 h-2 rounded-full bg-amber-500" />
+                      <h5 className="font-bold text-slate-900 text-[12px] uppercase tracking-wider">Strategic Hold</h5>
                     </div>
-                    <p className="text-sm text-slate-700">
-                      Markets overvalued. Temporarily pause regular contributions.
+                    <p className="text-[11px] leading-relaxed text-slate-600 mb-2">
+                      <span className="font-bold text-slate-700">Condition:</span> High Delta | Overextended.
+                    </p>
+                    <p className="text-[11px] text-slate-500 italic leading-snug">
+                      Cease recurring inflows. Monitor for mean reversion before resuming systematic accumulation.
                     </p>
                   </div>
-                  
-                  <div className="bg-rose-50 rounded-lg p-4 border border-rose-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertCircle className="w-5 h-5 text-rose-600" />
-                      <h5 className="font-bold text-rose-900">Hold Cash</h5>
+
+                  {/* Hold Cash */}
+                  <div className="p-5 hover:bg-rose-50/30 transition-colors">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-2 h-2 rounded-full bg-rose-500" />
+                      <h5 className="font-bold text-slate-900 text-[12px] uppercase tracking-wider">Capital Preservation</h5>
                     </div>
-                    <p className="text-sm text-slate-700">
-                      High uncertainty. Keep powder dry for better opportunities.
+                    <p className="text-[11px] leading-relaxed text-slate-600 mb-2">
+                      <span className="font-bold text-slate-700">Condition:</span> VIX &gt; 30 | Systemic Risk.
+                    </p>
+                    <p className="text-[11px] text-slate-500 italic leading-snug">
+                      Maintain maximum liquidity. Await stabilization of volatility telemetry before capital deployment.
                     </p>
                   </div>
                 </div>
