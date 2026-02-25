@@ -40,13 +40,13 @@ export default function CashIntelligence() {
     setRemainingUsage(usage);
   };
 
-  const loadData = async () => {
+ const loadData = async () => {
     try {
-      const userId = localStorage.getItem('user_id');
-      const data = await awsApi.getStockBatch(userId);
+      // Professional approach: Use syncPortfolio to get fresh prices on load
+      const response = await awsApi.syncPortfolio(null);
       
-      if (data && data.syncPortfolio && data.syncPortfolio.assets) {
-        setHoldings(data.syncPortfolio.assets);
+      if (response && response.portfolio) {
+        setHoldings(response.portfolio.assets || []);
       }
 
       const storedAnalysis = localStorage.getItem('cash_intelligence_analysis');
@@ -54,7 +54,7 @@ export default function CashIntelligence() {
         setAnalysis(JSON.parse(storedAnalysis));
       }
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Industrial Load Failure:", error);
     }
   };
 
@@ -152,74 +152,73 @@ export default function CashIntelligence() {
     };
   };
 
-  const analyzeCashOpportunity = async () => {
+ const analyzeCashOpportunity = async () => {
     if (!idleCashAmount || !idleCashMonths) {
-      alert("Please enter idle cash amount and duration");
+      alert("Executive Input Error: Define capital volume and duration.");
       return;
     }
 
     setIsAnalyzing(true);
 
     try {
-      // STEP 1: Fetch real-time VIX data from Lambda
-      console.log('📊 Step 1: Fetching VIX data...');
+      // 1. Sync Portfolio for mark-to-market live valuations
+      const syncResponse = await awsApi.syncPortfolio(null);
+      const livePortfolio = syncResponse?.portfolio || { assets: holdings, totalValue: 0 };
+      
+      // 2. Telemetry: Fetch Market Volatility (VIX)
       const vixLevel = await fetchVIXData();
       
-      // STEP 2: Calculate cash opportunity metrics (with time adjustment)
-      console.log('💰 Step 2: Calculating cash opportunity...');
+      // 3. Quantitative Math
       const calculatedCash = calculateCashOpportunityMetrics(
         idleCashAmount, 
         idleCashMonths, 
-        holdings,
-        10 // 10% default market return
+        livePortfolio.assets, 
+        10 // Benchmark expected return
       );
-
-      // STEP 3: Estimate market uncertainty (with VIX if available)
-      console.log('📈 Step 3: Estimating market uncertainty...');
       const marketUncertainty = estimateMarketUncertainty(vixLevel);
 
-      console.log('✅ Analysis complete:', {
-        vixLevel,
-        marketUncertainty,
-        cashCalculation: calculatedCash
-      });
+      // 4. INDUSTRIAL AI PROMPT (Senior Strategist Level)
+      const prompt = `Act as a Senior Capital Strategist. Analyze this $${calculatedCash.idle_cash_amount} deployment scenario.
+CONTEXT:
+- Opportunity Cost Incurred: $${calculatedCash.missed_returns}
+- Market Uncertainty Score: ${marketUncertainty}%
+- Current VIX Level: ${vixData?.currentVIX || 'Unavailable'}
+- Asset Map: ${livePortfolio.assets.map(a => `${a.symbol} ($${(a.quantity * a.currentPrice).toFixed(0)})`).join(', ')}
 
-      // STEP 4: Generate recommendations
-      const recommendation = generateStaticRecommendation(
-        calculatedCash, 
-        marketUncertainty,
-        vixData
-      );
+TASK:
+1. Assign Signal: [invest_now | gradual_entry | pause_dca | hold_cash].
+2. Executive Summary (3 sentences): Quantitative reasoning based on VIX and portfolio concentration.
+3. Strategic Directives: 3 specific, high-precision optimal actions.
 
-      // STEP 5: Build analysis data
+RETURN ONLY VALID JSON: 
+{"signal": "...", "reasoning": "...", "actions": ["...", "...", "..."]}`;
+
+      // 5. Invoke LLM and Parse
+      const aiResponse = await awsApi.invokeLLM(prompt);
+      const raw = aiResponse?.response || aiResponse?.analysis || "{}";
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+
+      // 6. Finalize Analysis Data
       const analysisData = {
-        idle_cash_amount: calculatedCash.idle_cash_amount,
-        missed_returns: calculatedCash.missed_returns,
-        low_yield_assets: calculatedCash.low_yield_assets,
-        total_opportunity_cost: calculatedCash.total_opportunity_cost,
-        total_missed: calculatedCash.total_missed,
-        deployment_signal: recommendation.deployment_signal,
+        ...calculatedCash,
+        deployment_signal: parsed.signal || "gradual_entry",
         market_uncertainty_score: marketUncertainty,
-        deployment_reasoning: recommendation.deployment_reasoning,
-        optimal_actions: recommendation.optimal_actions,
-        analysis_date: format(new Date(), 'yyyy-MM-dd'),
-        vix_data: vixData ? {
-          currentVIX: vixData.currentVIX,
-          regime: vixData.regime,
-          riskLevel: vixData.riskLevel,
-          dataSource: vixData.dataSource
-        } : null
+        deployment_reasoning: parsed.reasoning || "Analyzing optimal entry points...",
+        optimal_actions: parsed.actions || ["Deploy capital systematically."],
+        analysis_date: new Date().toISOString(),
+        vix_data: vixData
       };
 
-      localStorage.setItem('cash_intelligence_analysis', JSON.stringify(analysisData));
       setAnalysis(analysisData);
+      localStorage.setItem('cash_intelligence_analysis', JSON.stringify(analysisData));
       
     } catch (error) {
-      console.error("Error analyzing:", error);
-      alert("Error analyzing cash opportunity. Please try again.");
+      console.error("Critical Strategic Analysis Failure:", error);
+      alert("Analysis engine timeout. Please retry.");
+    } finally {
+      setIsAnalyzing(false);
     }
-
-    setIsAnalyzing(false);
   };
 
   const getSignalIcon = (signal) => {
