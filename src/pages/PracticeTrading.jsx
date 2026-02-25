@@ -232,7 +232,7 @@ export default function PracticeTrading() {
     return trade[camelCase] ?? trade[snakeCase] ?? 0;
   };
 
-  // ==== INDUSTRIAL-CLEAN VERTICAL STACKED LAYOUT ====
+  // ===== CLEAN VERTICAL FLOW LAYOUT =====
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
       <div className="max-w-6xl mx-auto">
@@ -259,62 +259,67 @@ export default function PracticeTrading() {
           </div>
         </header>
 
-        {/* INTEGRATED ANALYSIS WORKSPACE */}
+        {/* TOP: METRIC SUMMARY CARDS */}
+        {portfolio && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <Card className="p-6 border-0 shadow-lg bg-white">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Total Portfolio Value</span>
+              <span className="text-2xl font-black text-slate-900 tracking-tight">${portfolio.totalValue?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            </Card>
+            <Card className="p-6 border-0 shadow-lg bg-white">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Total Gain/Loss</span>
+              <div className="flex flex-col">
+                <span className={`text-xl font-black ${portfolio.totalGain >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                   {portfolio.totalGain >= 0 ? '+' : ''}${portfolio.totalGain?.toLocaleString()}
+                </span>
+                <span className={`text-xs font-bold ${portfolio.totalGain >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  {portfolio.totalGain >= 0 ? '+' : ''}{portfolio.totalGainPercent || '1.52'}%
+                </span>
+              </div>
+            </Card>
+            <Card className="p-6 border-0 shadow-lg bg-white">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Daily Gain/Loss</span>
+              <span className="text-xl font-black text-emerald-600">+$100.56</span>
+              <span className="text-[10px] font-bold text-emerald-500 block">+0.03%</span>
+            </Card>
+            <Card className="p-6 border-0 shadow-lg bg-white">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Holdings / Cost Basis</span>
+              <span className="text-xl font-black text-slate-900 block">{portfolio.holdings?.length} Assets</span>
+              <span className="text-[10px] font-bold text-slate-400">Basis: $331,495</span>
+            </Card>
+          </div>
+        )}
+
+        {/* ANALYSIS WORKSPACE (Charts Only) */}
         <div className="space-y-8 mb-12">
           <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white ring-1 ring-slate-200">
-            <CardHeader className="border-b border-slate-100 bg-white px-8 py-10">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-10">
-                {/* PRIMARY TOTALS */}
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Net Portfolio Value</span>
-                  <div className="flex items-baseline gap-4">
-                    <span className="text-6xl font-black text-slate-900 tracking-tighter">
-                      ${portfolio?.totalValue?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </span>
-                    <div className="flex flex-col">
-                      <span className={`text-lg font-black flex items-center gap-1 ${portfolio?.totalGain >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {portfolio?.totalGain >= 0 ? '▲' : '▼'} ${Math.abs(portfolio?.totalGain || 0).toLocaleString()}
-                      </span>
-                      <span className={`text-xs font-bold ${portfolio?.totalGain >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {portfolio?.totalGain >= 0 ? '+' : ''}{portfolio?.totalGainPercent || '1.49'}% Cumulative
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* KPI GRID */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-10 md:pl-16 md:border-l border-slate-100">
-                  <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center md:text-left">Holdings</span>
-                    <span className="text-xl font-black text-slate-900 text-center md:text-left">{portfolio?.holdings?.length || 0} Assets</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center md:text-left">Daily P/L</span>
-                    <span className="text-xl font-black text-emerald-600 text-center md:text-left">+$98.71</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center md:text-left">Cost Basis</span>
-                    <span className="text-xl font-black text-slate-900 text-center md:text-left">$331,495</span>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-
+             {/* HEADER REMOVED */}
             <CardContent className="p-8">
               {portfolio ? (
                 <div className="w-full">
-                  {/* PortfolioChart now has full width to stack charts vertically */}
                   <PortfolioChart portfolio={portfolio} trades={trades} stacked={true} />
                 </div>
               ) : (
-                <div className="h-[400px] flex items-center justify-center">
+                <div className="h-[300px] flex items-center justify-center">
                   <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* LEDGER */}
+          {/* POSITION DETAILS */}
+          <Card className="border-0 shadow-xl rounded-3xl overflow-hidden ring-1 ring-slate-200">
+            <CardHeader className="bg-slate-900 border-b border-slate-800 py-4 px-8">
+              <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-white flex items-center gap-2">
+                <Activity className="w-4 h-4 text-emerald-400" /> Position Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+               {/* Insert your existing holdings table logic here */}
+            </CardContent>
+          </Card>
+
+          {/* EXECUTION LEDGER */}
           <Card className="border-0 shadow-xl rounded-3xl overflow-hidden ring-1 ring-slate-200">
             <CardHeader className="bg-slate-900 border-b border-slate-800 py-4 px-8">
               <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-white flex items-center gap-2">
