@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Loader2, TrendingUp, TrendingDown } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -123,8 +123,14 @@ export default function TradeModal({ isOpen, onClose, onExecuteTrade, initialSym
                 value={tradeData.side} 
                 onValueChange={(value) => setTradeData({...tradeData, side: value})}
               >
-                <SelectTrigger>
-                  <SelectValue />
+                <SelectTrigger className="border-slate-300 bg-white text-slate-900 font-bold shadow-sm h-10 px-3">
+                  <span className="text-slate-900 uppercase">
+                    {tradeData.side === "buy"
+                      ? "BUY"
+                      : tradeData.side === "sell"
+                      ? "SELL"
+                      : "Select Side"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="buy">
@@ -149,8 +155,14 @@ export default function TradeModal({ isOpen, onClose, onExecuteTrade, initialSym
                 value={tradeData.orderType} 
                 onValueChange={(value) => setTradeData({...tradeData, orderType: value})}
               >
-                <SelectTrigger>
-                  <SelectValue />
+                <SelectTrigger className="border-slate-300 bg-white text-slate-900 font-bold shadow-sm h-10 px-3">
+                  <span className="text-slate-900 uppercase">
+                    {tradeData.orderType === "market"
+                      ? "MARKET"
+                      : tradeData.orderType === "limit"
+                      ? "LIMIT"
+                      : "Select Type"}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="market">Market Order</SelectItem>
