@@ -201,17 +201,31 @@ RETURN ONLY VALID JSON:
 
       // 6. Finalize Analysis Data
      // --- INDUSTRIAL DECAY CALCULATION ---
-      const inflationRate = 0.032; // 3.2% average CPI
-      const yearsIdle = idleCashMonths / 12;
-      const purchasingPowerNow = idleCashAmount * Math.pow(1 - inflationRate, yearsIdle);
-      const inflationDecay = idleCashAmount - purchasingPowerNow;
+      // --- INDUSTRIAL AUDIT CALCULATIONS ---
+      const inflationRate = 0.032; 
+      const taxRate = 0.20; // 20% Estimated Capital Gains
+      
+      const months = parseFloat(idleCashMonths) || 0;
+      const amount = parseFloat(idleCashAmount) || 0;
+      const yearsIdle = months / 12;
+      
+      // Inflation Decay
+      const purchasingPowerNow = amount * Math.pow(1 - inflationRate, yearsIdle);
+      const inflationDecay = amount - purchasingPowerNow;
+      
+      // Tax-Adjusted Missed Yield (Tax Drag)
+      const grossMissedYield = calculatedCash.missed_returns || 0;
+      const taxDrag = grossMissedYield * taxRate;
+      const netMissedYield = grossMissedYield - taxDrag;
 
       const analysisData = {
         ...calculatedCash,
-        inflation_decay: inflationDecay, // <--- New Metric Added
+        inflation_decay: inflationDecay,
+        tax_drag: taxDrag,
+        net_missed_yield: netMissedYield,
         deployment_signal: parsed.signal || "gradual_entry",
         market_uncertainty_score: marketUncertainty,
-        deployment_reasoning: parsed.reasoning || "Analyzing optimal entry points...",
+        deployment_reasoning: parsed.reasoning || "Analyzing entry points...",
         optimal_actions: parsed.actions || ["Deploy capital systematically."],
         analysis_date: new Date().toISOString(),
         vix_data: vixData
@@ -412,41 +426,45 @@ RETURN ONLY VALID JSON:
                   Capital Erosion & Opportunity Audit
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  {/* 1. IDLE VOLUME */}
-                  <div className="bg-white rounded-xl p-4 border border-rose-100 shadow-sm">
+             <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  {/* 1. ASSET VOLUME */}
+                  <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Asset Volume</p>
-                    <p className="text-2xl font-bold text-slate-900">
-                      ${Math.round(analysis.idle_cash_amount || 0).toLocaleString()}
-                    </p>
-                    <p className="text-[11px] text-slate-500 mt-1 italic">Idle liquid capital</p>
+                    <p className="text-xl font-bold text-slate-900">${Math.round(analysis.idle_cash_amount || 0).toLocaleString()}</p>
+                    <p className="text-[10px] text-slate-500 mt-1 italic">Idle capital</p>
                   </div>
 
                   {/* 2. INFLATION DECAY */}
                   <div className="bg-white rounded-xl p-4 border border-rose-100 shadow-sm">
                     <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1">Inflation Decay</p>
-                    <p className="text-2xl font-bold text-rose-600">
-                      -${Math.round(analysis.inflation_decay || 0).toLocaleString()}
-                    </p>
-                    <p className="text-[11px] text-rose-400 mt-1 font-medium italic">Purchasing power lost</p>
+                    <p className="text-xl font-bold text-rose-600">-${Math.round(analysis.inflation_decay || 0).toLocaleString()}</p>
+                    <p className="text-[10px] text-rose-400 mt-1 italic">Purchasing power lost</p>
                   </div>
 
-                  {/* 3. MISSED RETURNS */}
-                  <div className="bg-white rounded-xl p-4 border border-amber-100 shadow-sm">
-                    <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Missed Yield</p>
-                    <p className="text-2xl font-bold text-amber-600">
-                      ~${Math.round(analysis.missed_returns || 0).toLocaleString()}
-                    </p>
-                    <p className="text-[11px] text-amber-500 mt-1 italic">Opportunity cost ({idleCashMonths}mo)</p>
+                  {/* 3. TAX DRAG */}
+                  <div className="bg-white rounded-xl p-4 border border-blue-100 shadow-sm">
+                    <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Tax Drag (20%)</p>
+                    <p className="text-xl font-bold text-blue-600">-${Math.round(analysis.tax_drag || 0).toLocaleString()}</p>
+                    <p className="text-[10px] text-blue-400 mt-1 italic">Est. capital gains tax</p>
+                  </div>
+
+                  {/* 4. NET MISSED YIELD */}
+                  <div className="bg-white rounded-xl p-4 border border-emerald-100 shadow-sm">
+                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Net Missed Yield</p>
+                    <p className="text-xl font-bold text-emerald-600">+${Math.round(analysis.net_missed_yield || 0).toLocaleString()}</p>
+                    <p className="text-[10px] text-emerald-500 mt-1 italic">After-tax opportunity</p>
                   </div>
                 </div>
 
-                {/* TOTAL ECONOMIC LOSS BAR */}
-                <div className="bg-rose-600/10 border border-rose-200 rounded-lg p-3 flex items-center justify-between">
-                  <span className="text-xs font-bold text-rose-700 uppercase tracking-tight">Total Economic Drag:</span>
-                  <span className="text-lg font-black text-rose-700">
-                    ${Math.round((analysis.inflation_decay || 0) + (analysis.missed_returns || 0)).toLocaleString()}
+                {/* TOTAL REAL LOSS BAR - INDUSTRIAL DARK THEME */}
+                <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 flex items-center justify-between text-white shadow-inner">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                    <span className="text-xs font-bold uppercase tracking-widest opacity-80">Total Real Economic Drag:</span>
+                  </div>
+                  <span className="text-xl font-black text-white">
+                    ${Math.round((analysis.inflation_decay || 0) + (analysis.net_missed_yield || 0)).toLocaleString()}
                   </span>
                 </div>
               </CardContent>
