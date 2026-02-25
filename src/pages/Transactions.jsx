@@ -15,7 +15,8 @@ import {
   Activity, 
   History, 
   Target,
-  Clock
+  Clock,
+  RefreshCw
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
@@ -145,10 +146,14 @@ export default function Transactions() {
           <Button 
             onClick={generateBehavioralInsights} 
             disabled={isGeneratingInsights}
-            className="bg-white border-slate-200 border text-slate-900 hover:bg-slate-50 shadow-sm"
+            className="bg-[#4353FF] hover:bg-[#3544CC] text-white font-medium px-6 py-2 rounded-lg transition-all flex items-center gap-2 shadow-md border-0"
           >
-            {isGeneratingInsights ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Activity className="w-4 h-4 mr-2" />}
-            Behavioral Audit
+            {isGeneratingInsights ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <RefreshCw className="w-5 h-5" />
+            )}
+            <span className="text-[16px]">Behavioral Audit</span>
           </Button>
         </header>
 
@@ -167,8 +172,10 @@ export default function Transactions() {
                     <div className="space-y-2">
                       <Label className="text-[10px] uppercase font-black text-slate-400">Type</Label>
                       <Select value={formData.type} onValueChange={(v) => setFormData({...formData, type: v})}>
-                        <SelectTrigger className="border-slate-300 bg-white text-slate-900 font-bold shadow-sm ring-offset-white focus:ring-2 focus:ring-slate-950">
-                          <SelectValue placeholder="Select Type" />
+                        <SelectTrigger className="border-slate-300 bg-white text-slate-900 font-bold shadow-sm">
+                          <SelectValue>
+                            {formData.type ? formData.type.toUpperCase() : "Select Type"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="buy">BUY</SelectItem>
@@ -204,8 +211,12 @@ export default function Transactions() {
                     </div>
                     <Textarea className="bg-white border-slate-200 text-xs" placeholder="Rational for this execution..." value={formData.why_reason} onChange={(e) => setFormData({...formData, why_reason: e.target.value})} />
                     <Select value={formData.emotional_state} onValueChange={(v) => setFormData({...formData, emotional_state: v})}>
-                      <SelectTrigger className="border-slate-300 bg-white text-slate-900 font-bold text-xs shadow-sm">
-                        <SelectValue placeholder="Select Emotion" />
+                      <SelectTrigger className="bg-white border-slate-300 text-xs text-slate-900 font-bold shadow-sm">
+                        <SelectValue>
+                          {formData.emotional_state
+                            ? formData.emotional_state.charAt(0).toUpperCase() + formData.emotional_state.slice(1)
+                            : "Select Emotion"}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="confident">Confident</SelectItem>
