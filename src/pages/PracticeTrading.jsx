@@ -20,6 +20,8 @@ export default function PracticeTrading() {
   const [recommendedAllocations, setRecommendedAllocations] = useState([]);
   const [isExecutingBatch, setIsExecutingBatch] = useState(false);
   const [isGeneratingScenarios, setIsGeneratingScenarios] = useState(false);
+  // COLLAPSIBLE STATE
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -236,7 +238,6 @@ export default function PracticeTrading() {
     return trade[camelCase] ?? trade[snakeCase] ?? 0;
   };
 
-  // ---- INDUSTRIAL CLEAN ROOM LAYOUT ----
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
       <div className="max-w-7xl mx-auto">
@@ -261,17 +262,19 @@ export default function PracticeTrading() {
           </div>
         </header>
 
-        {/* TOP: PERFORMANCE RIBBON */}
+        {/* TOP: PERFORMANCE RIBBON (Real Values) */}
         {portfolio && (
           <div className="flex items-center justify-between bg-slate-900 text-white rounded-xl p-4 px-8 mb-8 shadow-2xl overflow-x-auto gap-12 border border-slate-800">
             <div className="flex flex-col">
               <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Net Value</span>
-              <span className="text-lg font-black tracking-tight">${portfolio.totalValue?.toLocaleString()}</span>
+              <span className="text-lg font-black tracking-tight text-white">
+                ${portfolio.totalValue?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </span>
             </div>
             <div className="flex flex-col">
               <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Total P/L</span>
               <span className={`text-lg font-black tracking-tight ${portfolio.totalGain >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {portfolio.totalGain >= 0 ? '+' : ''}${portfolio.totalGain?.toLocaleString()}
+                {portfolio.totalGain >= 0 ? '+' : ''}${portfolio.totalGain?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </span>
             </div>
             <div className="flex flex-col">
@@ -280,84 +283,91 @@ export default function PracticeTrading() {
             </div>
             <div className="flex flex-col">
               <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Holdings</span>
-              <span className="text-lg font-black">{portfolio.holdings?.length} Assets</span>
+              <span className="text-lg font-black text-white">{portfolio.holdings?.length} Assets</span>
             </div>
           </div>
         )}
 
-        <div className="grid lg:grid-cols-12 gap-8 mb-8">
-          {/* LEFT: TACTICAL EXECUTION (Collapsible-ready) */}
-          <div className="lg:col-span-4 h-full">
-            <Card className="border-0 shadow-2xl flex flex-col h-full bg-slate-900 text-white rounded-2xl overflow-hidden border border-slate-800">
+        <div className="grid lg:grid-cols-12 gap-8 mb-8 items-start">
+          {/* LEFT: COLLAPSIBLE TACTICAL SIDEBAR */}
+          <div className={`transition-all duration-300 ${isSidebarCollapsed ? 'lg:col-span-1' : 'lg:col-span-4'}`}>
+            <Card className="border-0 shadow-2xl bg-slate-900 text-white rounded-2xl overflow-hidden border border-slate-800">
               <CardHeader className="bg-slate-800/50 border-b border-slate-700 py-4 px-5 flex flex-row items-center justify-between">
-                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 text-blue-400">
-                  <TrendingUp className="w-4 h-4" /> Tactical Scenarios
-                </CardTitle>
-                <Badge className="bg-blue-600 text-white border-0 text-[10px]">{recommendedAllocations.length}</Badge>
-              </CardHeader>
-              <CardContent className="p-4 flex-grow overflow-y-auto max-h-[600px] bg-slate-900">
-                {recommendedAllocations.length > 0 ? (
-                  <div className="space-y-4">
-                    {recommendedAllocations.map((allocation, index) => (
-                      <div key={index} className="bg-slate-800/40 p-4 rounded-xl border border-slate-700 hover:border-blue-500 transition-all group">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <p className="font-black text-white text-base leading-none">{allocation.symbol}</p>
-                            <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">Est. ${allocation.price?.toFixed(2)}/sh</p>
-                          </div>
-                          <Button variant="ghost" size="sm" onClick={() => removeAllocation(index)} className="h-6 w-6 p-0 text-slate-600 hover:text-rose-500">
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <p className="text-[10px] text-blue-300 italic mb-4 leading-relaxed font-medium">
-                          "{allocation.thesis || "Strategic Portfolio Rebalance"}"
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <Input 
-                            type="number" 
-                            value={allocation.quantity} 
-                            onChange={(e) => updateAllocationQuantity(index, e.target.value)} 
-                            className="h-8 bg-slate-950 border-slate-700 text-white text-xs font-bold" 
-                          />
-                          <Button size="sm" onClick={() => executeSingleAllocation(allocation, index)} className="h-8 bg-blue-600 hover:bg-blue-500 px-4 flex-1 font-bold text-[10px]">
-                            EXECUTE
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                    <Button onClick={executeAllAllocations} className="w-full bg-blue-600 hover:bg-blue-500 text-[10px] font-black uppercase py-6 mt-4">
-                       Execute Batch Sequence
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-center py-20">
-                    <AlertCircle className="w-12 h-12 text-slate-800 mb-4" />
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">No Scenarios Queued</p>
-                    <Button 
-                      onClick={generateExecutionScenarios} 
-                      disabled={isGeneratingScenarios}
-                      className="bg-slate-800 border border-slate-700 text-blue-400 font-black text-[10px] uppercase tracking-widest hover:bg-slate-700 px-8 py-5"
-                    >
-                      {isGeneratingScenarios ? <Loader2 className="animate-spin mr-2 h-3 w-3" /> : <Activity className="mr-2 h-3 w-3" />}
-                      Compute AI Trades
-                    </Button>
-                  </div>
+                {!isSidebarCollapsed && (
+                  <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 text-blue-400">
+                    <TrendingUp className="w-4 h-4" /> Tactical Scenarios
+                  </CardTitle>
                 )}
-              </CardContent>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-slate-400 hover:text-white p-0 h-6 w-6" 
+                  onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                >
+                  {isSidebarCollapsed ? <Plus className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                </Button>
+              </CardHeader>
+              
+              {!isSidebarCollapsed && (
+                <CardContent className="p-4 bg-slate-900 min-h-[400px]">
+                  {recommendedAllocations.length > 0 ? (
+                    <div className="space-y-4">
+                      {recommendedAllocations.map((allocation, index) => (
+                        <div key={index} className="bg-slate-800/40 p-4 rounded-xl border border-slate-700 hover:border-blue-500 transition-all group">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <p className="font-black text-white text-base leading-none">{allocation.symbol}</p>
+                              <p className="text-[9px] font-bold text-slate-500 uppercase mt-1">Est. ${allocation.price?.toFixed(2)}/sh</p>
+                            </div>
+                          </div>
+                          <p className="text-[10px] text-blue-300 italic mb-4 leading-relaxed font-medium line-clamp-2">
+                            "{allocation.thesis || "Neutralize concentration risk."}"
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Input 
+                              type="number" 
+                              value={allocation.quantity} 
+                              onChange={(e) => updateAllocationQuantity(index, e.target.value)} 
+                              className="h-8 bg-slate-950 border-slate-700 text-white text-xs font-bold" 
+                            />
+                            <Button size="sm" onClick={() => executeSingleAllocation(allocation, index)} className="h-8 bg-blue-600 hover:bg-blue-500 px-4 flex-1 font-bold text-[10px]">
+                              EXECUTE
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      <Button onClick={executeAllAllocations} className="w-full bg-blue-600 hover:bg-blue-500 text-[10px] font-black uppercase py-6 mt-4">
+                         Execute Batch Sequence
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center py-20">
+                      <AlertCircle className="w-12 h-12 text-slate-800 mb-4" />
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6">Queue Empty</p>
+                      <Button onClick={generateExecutionScenarios} className="bg-slate-800 border border-slate-700 text-blue-400 font-black text-[10px] uppercase tracking-widest px-8 py-5">
+                        Compute AI Trades
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              )}
             </Card>
           </div>
 
-          {/* RIGHT: STACKED ANALYSIS CENTER (8 Cols) */}
-          <div className="lg:col-span-8 space-y-8">
+          {/* RIGHT: ANALYSIS WORKSPACE (Charts stacked) */}
+          <div className={`space-y-8 transition-all duration-300 ${isSidebarCollapsed ? 'lg:col-span-11' : 'lg:col-span-8'}`}>
             <Card className="border-slate-200 shadow-xl rounded-2xl overflow-hidden bg-white">
               <CardHeader className="border-b border-slate-50 px-6 py-4 bg-slate-50/30">
                 <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                  <Activity className="w-3 h-3 text-blue-600" /> Live Execution Telemetry
+                  <Activity className="w-3 h-3 text-blue-600" /> Portfolio Performance & Allocation
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-8">
                 {portfolio ? (
-                  <PortfolioChart portfolio={portfolio} trades={trades} />
+                  <div className="flex flex-col gap-12">
+                     {/* Your PortfolioChart handles both Asset Allocation and Performance internally */}
+                    <PortfolioChart portfolio={portfolio} trades={trades} />
+                  </div>
                 ) : (
                   <div className="h-[400px] flex items-center justify-center text-slate-300 font-black text-[10px] tracking-widest uppercase">
                     Awaiting Telemetry...
@@ -393,7 +403,7 @@ export default function PracticeTrading() {
                      const executedPrice = getTradeField(trade, 'executedPrice', 'executed_price');
                      return (
                        <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                         <td className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase">{formatTradeDate(trade.timestamp)}</td>
+                         <td className="px-6 py-4 text-[10px] font-bold text-slate-500 uppercase font-mono">{formatTradeDate(trade.timestamp)}</td>
                          <td className="px-6 py-4 font-black text-slate-900 tracking-tight">{trade.symbol}</td>
                          <td className="px-6 py-4">
                             <Badge className={trade.side === 'buy' ? 'bg-emerald-100 text-emerald-900 font-bold border-0' : 'bg-rose-100 text-rose-900 font-bold border-0'}>
@@ -414,7 +424,6 @@ export default function PracticeTrading() {
           </CardContent>
         </Card>
       </div>
-
       <TradeModal isOpen={isTradeModalOpen} onClose={() => setIsTradeModalOpen(false)} onExecuteTrade={handleExecuteTrade} />
     </div>
   );
