@@ -20,6 +20,7 @@ export default function PracticeTrading() {
   const [lastSync, setLastSync] = useState(null);
   const [recommendedAllocations, setRecommendedAllocations] = useState([]);
   const [isExecutingBatch, setIsExecutingBatch] = useState(false);
+  const [isGeneratingScenarios, setIsGeneratingScenarios] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -62,6 +63,28 @@ export default function PracticeTrading() {
       setTrades([]);
     }
     setIsLoadingTrades(false);
+  };
+
+  // === 1. Add the "Auto-Generate" AI Logic ===
+  const generateExecutionScenarios = async () => {
+    if (!portfolio) return;
+    setIsGeneratingScenarios(true);
+    try {
+      const prompt = `Act as an Institutional Execution Trader. Analyze this portfolio: ${JSON.stringify(portfolio)}. 
+      Identify 3-5 immediate "Paper Trades" to improve diversification or capture momentum.
+
+      RETURN ONLY VALID JSON ARRAY:
+      [{"symbol": "TICKER", "quantity": 10, "side": "buy", "price": 150.00}]`;
+
+      const aiResponse = await awsApi.invokeLLM(prompt);
+      const raw = aiResponse?.response || aiResponse?.analysis || "[]";
+      const jsonMatch = raw.match(/\[[\s\S]*\]/);
+      const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : "[]");
+      setRecommendedAllocations(parsed);
+    } catch (error) {
+      console.error("Scenario Generation Failed:", error);
+    }
+    setIsGeneratingScenarios(false);
   };
 
   const handleExecuteTrade = async (tradeData) => {
@@ -211,18 +234,18 @@ export default function PracticeTrading() {
     return trade[camelCase] ?? trade[snakeCase] ?? 0;
   };
 
-  // ---- BEGIN INDUSTRIAL LAYOUT REPLACEMENT ----
+  // ---- INDUSTRIAL-SCALE RETURN BLOCK ----
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
       <div className="max-w-7xl mx-auto">
-        {/* HEADER: INDUSTRIAL ACTIONS */}
+        {/* HEADER SECTION */}
         <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 pb-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Execution Lab</h1>
               <Badge className="bg-emerald-600 text-[10px] tracking-widest px-3 py-1">PRACTICE MODE</Badge>
             </div>
-            <p className="text-slate-500 font-medium italic text-sm">Real-time simulated order flow for institutional-grade testing.</p>
+            <p className="text-slate-500 font-medium">Risk-free institutional-grade order execution simulator.</p>
           </div>
           
           <div className="flex items-center gap-3">
@@ -230,85 +253,110 @@ export default function PracticeTrading() {
               <Plus className="w-5 h-5 mr-2" /> NEW ORDER
             </Button>
             <Button onClick={handleSyncPortfolio} disabled={isSyncing} variant="outline" className="border-slate-200 bg-white font-bold h-12 text-slate-700">
-              {isSyncing ? <Loader2 className="animate-spin h-4 w-4" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+              {isSyncing ? <Loader2 className="animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
               SYNC PRICES
             </Button>
           </div>
         </header>
 
-        {/* MAIN DASHBOARD GRID */}
+        {/* TOP ROW GRID */}
         <div className="grid lg:grid-cols-12 gap-8 mb-8">
           
-          {/* LEFT COLUMN: TACTICAL SCENARIOS (4 Cols) */}
-          <div className="lg:col-span-4 space-y-6">
-            <Card className={`border-2 h-full ${recommendedAllocations.length > 0 ? 'border-blue-500 shadow-xl' : 'border-dashed border-slate-200'}`}>
+          {/* LEFT: TACTICAL SCENARIOS (4 Cols) */}
+          <div className="lg:col-span-4 flex flex-col gap-6">
+            <Card className={`border-2 flex-grow flex flex-col overflow-hidden ${recommendedAllocations.length > 0 ? 'border-blue-500 shadow-xl' : 'border-slate-200'}`}>
               <CardHeader className="bg-slate-900 text-white py-4 px-5">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                  <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-blue-400" /> Tactical Scenarios
                   </CardTitle>
+                  {recommendedAllocations.length > 0 && <Badge className="bg-blue-600 text-[10px]">{recommendedAllocations.length}</Badge>}
                 </div>
               </CardHeader>
-              <CardContent className="p-4 bg-slate-50/50 min-h-[400px]">
+              <CardContent className="p-4 bg-slate-50 flex-grow min-h-[350px]">
                 {recommendedAllocations.length > 0 ? (
                   <div className="space-y-3">
                     {recommendedAllocations.map((allocation, index) => (
                       <div key={index} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div>
+                        <div className="min-w-0">
                           <p className="font-black text-slate-900 leading-none">{allocation.symbol}</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">${allocation.price.toFixed(2)}/sh</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1">${allocation.price?.toFixed(2) || '0.00'}/sh</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            value={allocation.quantity}
-                            onChange={(e) => updateAllocationQuantity(index, e.target.value)}
-                            className="w-16 h-8 text-[11px] font-bold"
-                          />
-                          <Button size="sm" onClick={() => executeSingleAllocation(allocation, index)} className="h-8 bg-emerald-600 px-2">
-                            <ShoppingCart className="w-3 h-3" />
-                          </Button>
+                          <Input type="number" value={allocation.quantity} onChange={(e) => updateAllocationQuantity(index, e.target.value)} className="w-16 h-8 text-[11px] font-bold" />
+                          <Button size="sm" onClick={() => executeSingleAllocation(allocation, index)} className="h-8 bg-emerald-600 px-2"><ShoppingCart className="w-3 h-3" /></Button>
+                          <Button variant="ghost" size="sm" onClick={() => removeAllocation(index)} className="h-8 text-slate-300 hover:text-rose-600 px-1"><X className="w-4 h-4" /></Button>
                         </div>
                       </div>
                     ))}
-                    <Button onClick={executeAllAllocations} className="w-full bg-blue-600 text-[10px] font-black uppercase mt-4">Execute Batch</Button>
+                    <Button onClick={executeAllAllocations} className="w-full bg-blue-600 text-[10px] font-black uppercase mt-4 py-6 shadow-md">Execute Batch Portfolio Update</Button>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-center py-20">
-                    <AlertCircle className="w-8 h-8 text-slate-200 mb-2" />
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No Tactical Scenarios Queued</p>
+                  <div className="flex flex-col items-center justify-center h-full text-center py-10">
+                    <AlertCircle className="w-10 h-10 text-slate-200 mb-4" />
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">No Scenarios Queued</p>
+                    <Button 
+                      onClick={generateExecutionScenarios} 
+                      disabled={isGeneratingScenarios}
+                      variant="outline" 
+                      className="border-slate-300 text-slate-600 font-bold text-[10px] uppercase tracking-widest"
+                    >
+                      {isGeneratingScenarios ? <Loader2 className="animate-spin mr-2 h-3 w-3" /> : <Activity className="mr-2 h-3 w-3" />}
+                      Generate AI Trades
+                    </Button>
                   </div>
                 )}
               </CardContent>
             </Card>
           </div>
 
-          {/* RIGHT COLUMN: PORTFOLIO SUMMARY & CHARTS (8 Cols) */}
-          <div className="lg:col-span-8 space-y-8">
-             {/* PERFORMANCE CHART AREA */}
-             <Card className="border-slate-200 shadow-lg overflow-hidden bg-white">
-                <CardHeader className="border-b border-slate-100 bg-slate-50/30 px-6 py-4">
-                   <CardTitle className="text-[10px] font-black uppercase tracking-widest flex items-center justify-between">
-                      <span className="flex items-center gap-2 text-slate-800"><Activity className="w-4 h-4 text-blue-600" /> Portfolio Performance</span>
-                      <span className="text-slate-400">Live Telemetry</span>
-                   </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  {portfolio ? (
-                    <PortfolioChart portfolio={portfolio} trades={trades} />
-                  ) : (
-                    <div className="h-[300px] flex flex-col items-center justify-center text-slate-400 italic">
-                      <RefreshCw className="w-8 h-8 mb-2 animate-pulse opacity-20" />
-                      Awaiting execution data for mapping...
-                    </div>
-                  )}
-                </CardContent>
-             </Card>
+          {/* RIGHT: PERFORMANCE & SUMMARY (8 Cols) */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+            {/* QUANT SUMMARY CARDS */}
+            {portfolio && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Portfolio Value</p>
+                  <p className="text-xl font-bold text-slate-900">${portfolio.totalValue?.toLocaleString() || '0'}</p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Gain/Loss</p>
+                  <p className={`text-xl font-bold ${portfolio.totalGain >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {portfolio.totalGain >= 0 ? '+' : ''}${portfolio.totalGain?.toLocaleString() || '0'}
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Daily Change</p>
+                  <p className="text-xl font-bold text-slate-900">+$97.03</p>
+                </div>
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Active Assets</p>
+                  <p className="text-xl font-bold text-slate-900">{portfolio.holdings?.length || 0}</p>
+                </div>
+              </div>
+            )}
+
+            {/* MAIN CHART CARD */}
+            <Card className="border-slate-200 shadow-lg flex-grow overflow-hidden bg-white">
+              <CardHeader className="border-b border-slate-50 px-6 py-4 flex flex-row items-center justify-between">
+                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-800 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-blue-600" /> Live Execution Telemetry
+                </CardTitle>
+                {lastSync && <span className="text-[10px] text-slate-400 font-bold">UPDATED: {format(lastSync, 'HH:mm:ss')}</span>}
+              </CardHeader>
+              <CardContent className="p-6">
+                {portfolio ? (
+                  <PortfolioChart portfolio={portfolio} trades={trades} />
+                ) : (
+                  <div className="h-[350px] flex items-center justify-center text-slate-400 italic">Awaiting Telemetry Data...</div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
 
-        {/* BOTTOM ROW: FULL HISTORY LEDGER */}
-        <Card className="border-slate-200 shadow-xl overflow-hidden mb-12">
+        {/* LEDGER TABLE */}
+        <Card className="border-slate-200 shadow-2xl overflow-hidden mb-12">
           <CardHeader className="bg-slate-900 border-b border-slate-800">
             <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-white flex items-center gap-2">
               <History className="w-4 h-4 text-blue-400" /> Order Fulfillment Ledger
@@ -316,14 +364,14 @@ export default function PracticeTrading() {
           </CardHeader>
           <CardContent className="p-0">
              <div className="overflow-x-auto">
-               <table className="w-full text-left border-collapse">
+               <table className="w-full text-left">
                  <thead className="bg-slate-50 border-b border-slate-200">
                    <tr>
-                     <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                     <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Execution Date</th>
                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Asset</th>
                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Side</th>
                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Qty</th>
-                     <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Total Net</th>
+                     <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Cost Basis</th>
                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
                    </tr>
                  </thead>
@@ -335,7 +383,7 @@ export default function PracticeTrading() {
                          <td className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase">{formatTradeDate(trade.timestamp)}</td>
                          <td className="px-6 py-4 font-black text-slate-900">{trade.symbol}</td>
                          <td className="px-6 py-4">
-                            <Badge className={trade.side === 'buy' ? 'bg-emerald-100 text-emerald-900 font-bold border-0' : 'bg-rose-100 text-rose-900 font-bold border-0'}>
+                            <Badge className={trade.side === 'buy' ? 'bg-emerald-100 text-emerald-900 font-bold border-0 shadow-none' : 'bg-rose-100 text-rose-900 font-bold border-0 shadow-none'}>
                                 {trade.side.toUpperCase()}
                             </Badge>
                          </td>
@@ -354,10 +402,7 @@ export default function PracticeTrading() {
         </Card>
       </div>
 
-      <TradeModal
-        isOpen={isTradeModalOpen}
-        onClose={() => setIsTradeModalOpen(false)}
-        onExecuteTrade={handleExecuteTrade}
-      />
+      <TradeModal isOpen={isTradeModalOpen} onClose={() => setIsTradeModalOpen(false)} onExecuteTrade={handleExecuteTrade} />
     </div>
   );
+}
