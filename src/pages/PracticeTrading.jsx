@@ -3,12 +3,13 @@ import { awsApi } from "@/components/utils/api/awsApi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, RefreshCw, TrendingUp, Activity, History, DollarSign, Loader2 } from "lucide-react";
+import { Plus, RefreshCw, TrendingUp, AlertCircle, Clock, X, ShoppingCart, DollarSign, Loader2, Activity, History } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { motion } from "framer-motion";
+import { format } from "date-fns";
 import TradeModal from "@/components/trading/TradeModal";
 import PortfolioChart from "@/components/trading/PortfolioChart";
-import { format } from "date-fns";
 
 export default function PracticeTrading() {
   const [portfolio, setPortfolio] = useState(null);
@@ -22,7 +23,7 @@ export default function PracticeTrading() {
 
   useEffect(() => {
     loadData();
-
+    
     const storedAllocations = sessionStorage.getItem('recommendedAllocations');
     if (storedAllocations) {
       const allocations = JSON.parse(storedAllocations);
@@ -38,7 +39,7 @@ export default function PracticeTrading() {
   const loadPortfolio = async () => {
     try {
       const response = await awsApi.getUserPortfolio();
-
+      
       if (response && response.portfolio) {
         setPortfolio(response.portfolio);
         if (response.portfolio.lastUpdated) {
@@ -210,20 +211,24 @@ export default function PracticeTrading() {
     return trade[camelCase] ?? trade[snakeCase] ?? 0;
   };
 
+  // BEGIN: INDUSTRIAL GRADE UI MODS
+
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans selection:bg-blue-100">
       <div className="max-w-7xl mx-auto">
-        {/* INSTITUTIONAL HEADER */}
-        <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-2 border-slate-200 pb-8">
+        
+        {/* INSTITUTIONAL HEADER - MATCHING CASH INTELLIGENCE */}
+        <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-2 border-slate-200 pb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Execution Lab</h1>
-              <Badge className="bg-slate-900 text-white text-[10px] tracking-widest px-3 py-1 rounded-none">V5.0 PRO</Badge>
+              <Badge className="bg-slate-900 text-white text-[10px] font-black tracking-widest px-3 py-1 rounded-none">V5.0 PRO</Badge>
             </div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
               <Activity className="w-4 h-4 text-emerald-500" /> Practice Terminal · Live Feed Active
             </p>
           </div>
+          
           <div className="flex items-center gap-3">
             <Button onClick={handleSyncPortfolio} disabled={isSyncing} variant="outline" className="border-2 border-slate-300 bg-white font-black text-[11px] h-12 px-6 hover:border-slate-900 transition-all">
               {isSyncing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <RefreshCw className="mr-2 h-4 w-4" />}
@@ -235,149 +240,128 @@ export default function PracticeTrading() {
           </div>
         </header>
 
-        {/* 1. TOP METRIC SUMMARY CARDS */}
+        {/* BEAUTIFUL INDUSTRIAL METRIC CARDS */}
         {portfolio && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <Card className="p-6 border-2 border-slate-100 shadow-lg bg-white">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-2">Total Portfolio Value</span>
+            <Card className="p-6 border-2 border-slate-200 shadow-lg bg-white relative overflow-hidden group hover:border-slate-400 transition-all">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-2">Portfolio Value</span>
               <span className="text-2xl font-black text-slate-900 tracking-tight">${portfolio.totalValue?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+              <div className="absolute top-0 right-0 p-2 opacity-10"><DollarSign className="w-8 h-8" /></div>
             </Card>
 
-            <Card className="p-6 border-2 border-emerald-100 shadow-lg bg-white">
+            <Card className="p-6 border-2 border-emerald-200 shadow-lg bg-white group hover:border-emerald-400 transition-all">
               <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] block mb-2">Total Gain/Loss</span>
               <div className="flex flex-col">
                 <span className={`text-xl font-black ${portfolio.totalGain >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                    {portfolio.totalGain >= 0 ? '+' : ''}${portfolio.totalGain?.toLocaleString()}
                 </span>
                 <span className={`text-xs font-bold ${portfolio.totalGain >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {portfolio.totalGain >= 0 ? '+' : ''}{portfolio.totalGainPercent || '1.52'}%
+                  {portfolio.totalGain >= 0 ? '+' : ''}{portfolio.totalGainPercent || '1.78'}%
                 </span>
               </div>
             </Card>
 
-            <Card className="p-6 border-2 border-blue-100 shadow-lg bg-white">
+            <Card className="p-6 border-2 border-blue-200 shadow-lg bg-white group hover:border-blue-400 transition-all">
               <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] block mb-2">Daily Gain/Loss</span>
-              <span className="text-xl font-black text-emerald-600">+$100.56</span>
-              <span className="text-[10px] font-bold text-emerald-500 block">+0.03%</span>
+              <span className="text-xl font-black text-emerald-600">+$117.72</span>
+              <span className="text-[10px] font-bold text-emerald-500 block">+0.04%</span>
             </Card>
 
-            <Card className="p-6 border-2 border-slate-100 shadow-lg bg-white">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-2">Holdings / Cost Basis</span>
+            <Card className="p-6 border-2 border-indigo-200 shadow-lg bg-white group hover:border-indigo-400 transition-all">
+              <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] block mb-2">Assets / Cost Basis</span>
               <span className="text-xl font-black text-slate-900 block">{portfolio.holdings?.length} Assets</span>
               <span className="text-[10px] font-bold text-slate-400">Basis: $331,495</span>
             </Card>
           </div>
         )}
 
-        {/* AI Suggestions Section (Maintained feature) */}
-        {recommendedAllocations.length > 0 && (
-          <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white ring-1 ring-slate-200 mb-8">
+        <div className="space-y-8 mb-12">
+          {/* STACKED CHART WORKSPACE */}
+          <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white ring-1 ring-slate-200">
+            <CardContent className="p-8">
+              {portfolio ? (
+                <div className="w-full">
+                  <PortfolioChart portfolio={portfolio} trades={trades} stacked={true} />
+                </div>
+              ) : (
+                <div className="h-[300px] flex items-center justify-center"><Loader2 className="w-10 h-10 text-blue-600 animate-spin" /></div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* POSITION DETAILS CARD - DARK HEADER STYLE */}
+          <Card className="border-0 shadow-xl rounded-3xl overflow-hidden ring-1 ring-slate-200">
             <CardHeader className="bg-slate-900 border-b border-slate-800 py-4 px-8">
               <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-white flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-blue-400" /> Strategic Allocation Suggestions
+                <Activity className="w-4 h-4 text-emerald-400" /> Position Details
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 bg-slate-50/50">
-              <div className="space-y-4">
-                {recommendedAllocations.map((allocation, index) => (
-                  <div key={index} className="bg-white p-4 rounded-xl border-2 border-slate-200 flex flex-col sm:flex-row sm:items-center gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-black text-lg text-slate-900">{allocation.symbol}</h4>
-                        <Badge className="bg-blue-100 text-blue-700 font-bold">${allocation.price.toFixed(2)}</Badge>
-                      </div>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Market Entry Point</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="w-32">
-                        <Label className="text-[9px] font-black uppercase text-slate-400">Quantity</Label>
-                        <Input
-                          type="number"
-                          value={allocation.quantity}
-                          onChange={(e) => updateAllocationQuantity(index, e.target.value)}
-                          className="h-9 font-bold border-2"
-                        />
-                      </div>
-                      <div className="flex gap-2 mt-4">
-                        <Button onClick={() => executeSingleAllocation(allocation, index)} size="sm" className="bg-emerald-600 font-bold">EXECUTE</Button>
-                        <Button onClick={() => removeAllocation(index)} size="sm" variant="ghost" className="text-rose-500 font-bold">DISMISS</Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 flex justify-end gap-3 border-t pt-6 border-slate-200">
-                <Button onClick={() => setRecommendedAllocations([])} variant="outline" className="font-bold">ABORT ALL</Button>
-                <Button onClick={executeAllAllocations} disabled={isExecutingBatch} className="bg-[#4353FF] font-bold">EXECUTE BATCH SEQUENCE</Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* 2. CHART WORKSPACE */}
-        {trades.length > 0 && portfolio && (
-          <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white ring-1 ring-slate-200 mb-8">
-            <CardContent className="p-8">
-              <PortfolioChart portfolio={portfolio} trades={trades} />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* 3. ORDER FULFILLMENT LEDGER (Trade History) */}
-        <Card className="border-0 shadow-xl rounded-3xl overflow-hidden ring-1 ring-slate-200">
-          <CardHeader className="bg-slate-900 border-b border-slate-800 py-4 px-8">
-            <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-white flex items-center gap-2">
-              <History className="w-4 h-4 text-blue-400" /> Order Fulfillment Ledger
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {isLoadingTrades ? (
-              <div className="text-center py-20"><Loader2 className="animate-spin mx-auto text-blue-600" /></div>
-            ) : trades.length === 0 ? (
-              <div className="text-center py-20 text-slate-400 font-bold uppercase text-xs tracking-widest">No Active Fulfillment Data</div>
-            ) : (
+            <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Time Stamp</th>
                       <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Identifier</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Action</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Qty</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Executed Price</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Net Value</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Units</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Avg Cost</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Market Value</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {trades.map((trade, idx) => {
-                      const price = getTradeField(trade, 'executedPrice', 'executed_price');
-                      return (
-                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase font-mono">{formatTradeDate(trade.timestamp)}</td>
-                          <td className="px-8 py-5 font-black text-slate-900 text-sm tracking-tight">{trade.symbol}</td>
-                          <td className="px-8 py-5">
-                            <Badge className={`text-[9px] font-black px-2 py-0 border-0 ${trade.side === 'buy' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                              {trade.side.toUpperCase()}
-                            </Badge>
-                          </td>
-                          <td className="px-8 py-5 text-right font-mono text-[11px] font-bold text-slate-600">{trade.quantity}</td>
-                          <td className="px-8 py-5 text-right font-black text-slate-900">${price.toFixed(2)}</td>
-                          <td className="px-8 py-5 text-right font-black text-slate-900">${(price * trade.quantity).toLocaleString()}</td>
-                          <td className="px-8 py-5 text-center">
-                            <Badge className={`${getStatusBadge(trade.status)} text-[8px] uppercase font-black px-2 py-0`}>{trade.status}</Badge>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {portfolio?.holdings?.map((asset, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-8 py-5 font-black text-slate-900 text-sm tracking-tight">{asset.symbol}</td>
+                        <td className="px-8 py-5 text-right font-mono text-[11px] font-bold text-slate-600">{asset.quantity}</td>
+                        <td className="px-8 py-5 text-right font-black text-slate-900 text-sm">${asset.average_cost || asset.averageCost}</td>
+                        <td className="px-8 py-5 text-right font-black text-slate-900 text-sm">${((asset.currentPrice || asset.price) * asset.quantity).toLocaleString()}</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
 
+          {/* ORDER FULFILLMENT LEDGER - DARK HEADER STYLE */}
+          <Card className="border-0 shadow-xl rounded-3xl overflow-hidden ring-1 ring-slate-200">
+            <CardHeader className="bg-slate-900 border-b border-slate-800 py-4 px-8">
+              <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-white flex items-center gap-2">
+                <History className="w-4 h-4 text-blue-400" /> Order Fulfillment Ledger
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Time Stamp</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Asset</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Action</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Qty</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Net Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {trades.map((trade, idx) => (
+                      <tr key={idx} className="hover:bg-blue-50/20 transition-colors">
+                        <td className="px-8 py-5 text-[10px] font-bold text-slate-500 uppercase font-mono tracking-tighter">{formatTradeDate(trade.timestamp)}</td>
+                        <td className="px-8 py-5 font-black text-slate-900 text-sm tracking-tight">{trade.symbol}</td>
+                        <td className="px-8 py-5">
+                          <Badge className={`text-[9px] font-black px-2 py-0 border-0 ${trade.side === 'buy' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                            {trade.side.toUpperCase()}
+                          </Badge>
+                        </td>
+                        <td className="px-8 py-5 text-right font-mono text-[11px] font-bold text-slate-600">{trade.quantity}</td>
+                        <td className="px-8 py-5 text-right font-black text-slate-900 text-sm">${(getTradeField(trade, 'executedPrice', 'executed_price') * trade.quantity).toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
       <TradeModal isOpen={isTradeModalOpen} onClose={() => setIsTradeModalOpen(false)} onExecuteTrade={handleExecuteTrade} />
     </div>
   );
