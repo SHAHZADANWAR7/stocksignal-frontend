@@ -3,7 +3,7 @@ import { awsApi } from "@/components/utils/api/awsApi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, RefreshCw, TrendingUp, AlertCircle, Clock, X, ShoppingCart, DollarSign, Loader2 } from "lucide-react";
+import { Plus, RefreshCw, TrendingUp, AlertCircle, Clock, X, ShoppingCart, DollarSign, Loader2, Activity, History } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
@@ -212,276 +212,184 @@ export default function PracticeTrading() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 md:p-8">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-3">
-                Practice Trading
-              </h1>
-              <p className="text-lg text-slate-600">
-                Practice trading with live market prices - zero risk
-              </p>
+        {/* INSTITUTIONAL HEADER */}
+        <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-200 pb-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">Execution Lab</h1>
+              <Badge className="bg-emerald-600 text-[10px] tracking-widest px-3 py-1">PRACTICE MODE</Badge>
             </div>
-            <Badge className="bg-emerald-600 text-white text-sm px-4 py-2">
-              🎓 PRACTICE MODE
-            </Badge>
+            <p className="text-slate-500 font-medium italic">Risk-free institutional-grade order execution simulator.</p>
           </div>
+          
+          <div className="flex items-center gap-3">
+            <Button onClick={() => setIsTradeModalOpen(true)} className="bg-[#4353FF] hover:bg-[#3544CC] text-white font-bold px-6 shadow-lg h-12">
+              <Plus className="w-5 h-5 mr-2" /> NEW ORDER
+            </Button>
+            <Button onClick={handleSyncPortfolio} disabled={isSyncing} variant="outline" className="border-slate-200 bg-white font-bold h-12 text-slate-700">
+              {isSyncing ? <Loader2 className="animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+              SYNC PRICES
+            </Button>
+          </div>
+        </header>
 
-          <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                <p className="text-sm text-slate-700">
-                  <strong>Practice Mode:</strong> All trades are simulated using live market data. 
-                  No real money or securities are involved. Perfect for learning and testing strategies.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <div className="flex flex-wrap gap-3 mb-8">
-          <Button
-            onClick={() => setIsTradeModalOpen(true)}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Practice Trade
-          </Button>
-          <Button
-            onClick={handleSyncPortfolio}
-            disabled={isSyncing}
-            variant="outline"
-            className="border-2"
-          >
-            {isSyncing ? (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Syncing...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Sync Prices
-              </>
-            )}
-          </Button>
-          {lastSync && (
-            <div className="flex items-center gap-2 text-sm text-slate-600 ml-auto">
-              <Clock className="w-4 h-4" />
-              Last synced: {format(lastSync, 'MMM d, h:mm a')}
-            </div>
-          )}
-        </div>
-
-        {recommendedAllocations.length > 0 && (
-          <Card className="border-2 border-blue-500 shadow-xl bg-white mb-8">
-            <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 md:p-6">
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                <div className="flex-1">
-                  <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
-                    <TrendingUp className="w-6 h-6" />
-                    AI Scenario Suggestions
+        <div className="grid lg:grid-cols-12 gap-8 mb-8">
+          {/* LEFT: TACTICAL EXECUTION SIDEBAR (4 Cols) */}
+          <div className="lg:col-span-4 h-full">
+            <Card className="border-0 shadow-2xl flex flex-col h-full bg-slate-900 text-white rounded-2xl overflow-hidden">
+              <CardHeader className="bg-slate-800/50 border-b border-slate-700 py-4 px-5">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2 text-blue-400">
+                    <TrendingUp className="w-4 h-4" /> Tactical Scenarios
                   </CardTitle>
-                  <p className="text-white/90 text-xs md:text-sm mt-2">
-                    Explore these simulated allocation scenarios for learning purposes
-                  </p>
+                  {recommendedAllocations.length > 0 && (
+                    <Badge className="bg-blue-600 text-white border-0 text-[10px]">{recommendedAllocations.length}</Badge>
+                  )}
                 </div>
-                <Badge className="bg-white text-blue-700 text-xs md:text-sm px-3 py-2 whitespace-nowrap">
-                  ✨ {recommendedAllocations.filter(a => a.quantity > 0).length} to explore
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                {recommendedAllocations.map((allocation, index) => (
-                  <Card key={index} className="border-2 border-slate-200 bg-slate-50">
-                    <CardContent className="p-4">
-                      <div className="flex flex-col sm:flex-row sm:items-start gap-3 md:gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <h4 className="font-bold text-lg text-slate-900">{allocation.symbol}</h4>
-                            <Badge className="bg-blue-100 text-blue-700 text-xs md:text-sm">
-                              ${allocation.price.toFixed(2)}/share
-                            </Badge>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4">
-                            <div>
-                              <Label className="text-xs md:text-sm text-slate-600">Quantity (shares)</Label>
-                              <Input
-                                type="number"
-                                min="0"
-                                step="1"
-                                value={allocation.quantity}
-                                onChange={(e) => updateAllocationQuantity(index, e.target.value)}
-                                className="mt-1 h-9 md:h-10 text-sm md:text-base"
-                              />
-                            </div>
-                            <div>
-                              <Label className="text-xs md:text-sm text-slate-600">Estimated Cost</Label>
-                              <div className="mt-1 h-9 md:h-10 px-2 md:px-3 border border-slate-300 rounded-md bg-slate-100 flex items-center overflow-hidden">
-                                <DollarSign className="w-3 h-3 md:w-4 md:h-4 text-slate-500 mr-0.5 md:mr-1 flex-shrink-0" />
-                                <span className="font-semibold text-slate-900 text-sm md:text-base truncate">
-                                  {(allocation.quantity * allocation.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+              </CardHeader>
+              <CardContent className="p-4 flex-grow overflow-y-auto max-h-[500px]">
+                {recommendedAllocations.length > 0 ? (
+                  <div className="space-y-3">
+                    {recommendedAllocations.map((allocation, index) => (
+                      <div key={index} className="bg-slate-800/50 p-3 rounded-xl border border-slate-700 flex items-center justify-between group hover:border-blue-500 transition-colors">
+                        <div className="min-w-0">
+                          <p className="font-black text-white text-sm">{allocation.symbol}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">${allocation.price?.toFixed(2)}/sh</p>
                         </div>
-                        <div className="flex flex-col gap-2 sm:w-auto">
-                          <Button
-                            onClick={() => executeSingleAllocation(allocation, index)}
-                            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-xs md:text-sm"
-                            size="sm"
-                          >
-                            <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                            Execute
-                          </Button>
-                          <Button
-                            onClick={() => removeAllocation(index)}
-                            variant="outline"
-                            size="sm"
-                            className="border-rose-300 text-rose-600 hover:bg-rose-50 text-xs md:text-sm"
-                          >
-                            <X className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                            Remove
+                        <div className="flex items-center gap-2">
+                          <Input 
+                            type="number" 
+                            value={allocation.quantity} 
+                            onChange={(e) => updateAllocationQuantity(index, e.target.value)} 
+                            className="w-16 h-8 text-[11px] font-bold bg-slate-900 border-slate-700 text-white" 
+                          />
+                          <Button size="sm" onClick={() => executeSingleAllocation(allocation, index)} className="h-8 bg-blue-600 hover:bg-blue-500 px-2 shadow-lg">
+                            <ShoppingCart className="w-3 h-3" />
                           </Button>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4 mt-6 pt-6 border-t border-slate-200">
-                <div className="text-base md:text-lg font-semibold text-slate-900 truncate">
-                  Total Cost: ${recommendedAllocations.reduce((sum, a) => sum + (a.quantity * a.price), 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-center py-20">
+                    <AlertCircle className="w-10 h-10 text-slate-700 mb-4" />
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-6 text-center">Execution Queue Empty</p>
+                    <p className="text-[11px] text-slate-400 mb-6 px-4">AI suggests trades based on your portfolio gaps. No scenarios currently active.</p>
+                  </div>
+                )}
+              </CardContent>
+              {recommendedAllocations.length > 0 && (
+                <div className="p-4 bg-slate-800 border-t border-slate-700 mt-auto">
+                   <Button onClick={executeAllAllocations} className="w-full bg-blue-600 hover:bg-blue-500 text-[10px] font-black uppercase py-6">
+                      Execute Batch Sequence
+                   </Button>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2 md:gap-3 w-full sm:w-auto">
-                  <Button
-                    onClick={() => setRecommendedAllocations([])}
-                    variant="outline"
-                    className="border-2 text-xs md:text-sm"
-                  >
-                    Cancel All
-                  </Button>
-                  <Button
-                    onClick={executeAllAllocations}
-                    disabled={isExecutingBatch || recommendedAllocations.filter(a => a.quantity > 0).length === 0}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg text-xs md:text-sm"
-                  >
-                    {isExecutingBatch ? (
-                      <>
-                        <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 animate-spin" />
-                        Executing...
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-                        Execute All Trades
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {trades.length > 0 && portfolio && (
-          <div className="mb-8">
-            <PortfolioChart portfolio={portfolio} trades={trades} />
+              )}
+            </Card>
           </div>
-        )}
 
-        <Card className="border-2 border-slate-200 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
-              Trade History
+          {/* RIGHT: PERFORMANCE & SUMMARY (8 Cols) */}
+          <div className="lg:col-span-8 flex flex-col gap-6">
+            {/* INDUSTRIAL PERFORMANCE RIBBON */}
+            {portfolio && (
+              <div className="flex items-center justify-between bg-white border border-slate-200 rounded-2xl p-2 px-6 shadow-sm overflow-x-auto gap-8">
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Net Value</span>
+                  <span className="text-sm font-black text-slate-900">${portfolio.totalValue?.toLocaleString()}</span>
+                </div>
+                <div className="h-8 w-[1px] bg-slate-100 hidden md:block" />
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total P/L</span>
+                  <span className={`text-sm font-black ${portfolio.totalGain >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {portfolio.totalGain >= 0 ? '+' : ''}${portfolio.totalGain?.toLocaleString()}
+                  </span>
+                </div>
+                <div className="h-8 w-[1px] bg-slate-100 hidden md:block" />
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">24H Change</span>
+                  <span className="text-sm font-black text-emerald-500">+$97.03 (0.03%)</span>
+                </div>
+                <div className="h-8 w-[1px] bg-slate-100 hidden md:block" />
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Positions</span>
+                  <span className="text-sm font-black text-slate-900">{portfolio.holdings?.length} Assets</span>
+                </div>
+              </div>
+            )}
+
+            {/* LIVE TELEMETRY CENTER */}
+            <Card className="border-slate-200 shadow-xl rounded-2xl overflow-hidden bg-white flex-grow">
+              <CardHeader className="border-b border-slate-50 px-6 py-3 flex flex-row items-center justify-between bg-slate-50/30">
+                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 flex items-center gap-2">
+                  <Activity className="w-3 h-3 text-blue-600" /> Execution Telemetry
+                </CardTitle>
+                {lastSync && <Badge variant="outline" className="text-[9px] font-bold text-slate-400 border-slate-200">LAST SYNC: {format(lastSync, 'HH:mm:ss')}</Badge>}
+              </CardHeader>
+              <CardContent className="p-4 md:p-8">
+                {portfolio ? (
+                  <div className="w-full">
+                    <PortfolioChart portfolio={portfolio} trades={trades} />
+                  </div>
+                ) : (
+                  <div className="h-[400px] flex items-center justify-center text-slate-300 uppercase font-black text-[10px] tracking-widest">
+                    Awaiting System Handshake...
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* LEDGER TABLE */}
+        <Card className="border-slate-200 shadow-2xl overflow-hidden mb-12">
+          <CardHeader className="bg-slate-900 border-b border-slate-800">
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-white flex items-center gap-2">
+              <History className="w-4 h-4 text-blue-400" /> Order Fulfillment Ledger
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            {isLoadingTrades ? (
-              <div className="text-center py-12">
-                <Loader2 className="w-12 h-12 mx-auto mb-4 text-blue-600 animate-spin" />
-                <p className="text-slate-500">Loading trades...</p>
-              </div>
-            ) : trades.length === 0 ? (
-              <div className="text-center py-12">
-                <TrendingUp className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">No trades yet</h3>
-                <p className="text-slate-500 mb-6">Execute your first practice trade to get started</p>
-                <Button
-                  onClick={() => setIsTradeModalOpen(true)}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Place First Trade
-                </Button>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-slate-200">
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">Date</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">Symbol</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">Side</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Quantity</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Price</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Total</th>
-                      <th className="text-center py-3 px-4 font-semibold text-slate-700">Status</th>
+          <CardContent className="p-0">
+             <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Execution Date</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Asset</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Side</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Qty</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Cost Basis</th>
+                      <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {trades.map((trade) => {
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {trades.map((trade, idx) => {
                       const executedPrice = getTradeField(trade, 'executedPrice', 'executed_price');
                       return (
-                        <tr key={trade.id || trade.timestamp} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="py-3 px-4 text-sm text-slate-600">
-                            {formatTradeDate(trade.timestamp)}
+                        <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase">{formatTradeDate(trade.timestamp)}</td>
+                          <td className="px-6 py-4 font-black text-slate-900">{trade.symbol}</td>
+                          <td className="px-6 py-4">
+                             <Badge className={trade.side === 'buy' ? 'bg-emerald-100 text-emerald-900 font-bold border-0 shadow-none' : 'bg-rose-100 text-rose-900 font-bold border-0 shadow-none'}>
+                                {trade.side.toUpperCase()}
+                             </Badge>
                           </td>
-                          <td className="py-3 px-4 font-semibold text-slate-900">{trade.symbol}</td>
-                          <td className="py-3 px-4">
-                            <Badge className={trade.side === 'buy' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}>
-                              {trade.side.toUpperCase()}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4 text-right text-slate-700">{trade.quantity}</td>
-                          <td className="py-3 px-4 text-right text-slate-700">
-                            ${executedPrice.toFixed(2)}
-                          </td>
-                          <td className="py-3 px-4 text-right font-semibold text-slate-900">
-                            ${(executedPrice * trade.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <Badge className={`${getStatusBadge(trade.status)} border`}>
-                              {trade.status}
-                            </Badge>
+                          <td className="px-6 py-4 text-right font-mono text-xs text-slate-600">{trade.quantity}</td>
+                          <td className="px-6 py-4 text-right font-black text-slate-900">${(executedPrice * trade.quantity).toLocaleString()}</td>
+                          <td className="px-6 py-4 text-center">
+                             <Badge className={`${getStatusBadge(trade.status)} text-[10px] uppercase font-black`}>{trade.status}</Badge>
                           </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
-              </div>
-            )}
+             </div>
           </CardContent>
         </Card>
       </div>
 
-      <TradeModal
-        isOpen={isTradeModalOpen}
-        onClose={() => setIsTradeModalOpen(false)}
-        onExecuteTrade={handleExecuteTrade}
-      />
+      <TradeModal isOpen={isTradeModalOpen} onClose={() => setIsTradeModalOpen(false)} onExecuteTrade={handleExecuteTrade} />
     </div>
   );
 }
