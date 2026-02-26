@@ -363,3 +363,4 @@ export default function PracticeTrading() {
       <TradeModal isOpen={isTradeModalOpen} onClose={() => setIsTradeModalOpen(false)} onExecuteTrade={handleExecuteTrade} />
     </div>
   );
+}
