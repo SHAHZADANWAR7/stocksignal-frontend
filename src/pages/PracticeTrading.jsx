@@ -3,7 +3,17 @@ import { awsApi } from "@/components/utils/api/awsApi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, RefreshCw, TrendingUp, AlertCircle, Clock, X, ShoppingCart, DollarSign, Loader2, Activity, History } from "lucide-react";
+import {
+  Plus,
+  RefreshCw,
+  TrendingUp,
+  AlertCircle,
+  Clock,
+  X,
+  ShoppingCart,
+  DollarSign,
+  Loader2,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
@@ -23,12 +33,12 @@ export default function PracticeTrading() {
 
   useEffect(() => {
     loadData();
-    
-    const storedAllocations = sessionStorage.getItem('recommendedAllocations');
+
+    const storedAllocations = sessionStorage.getItem("recommendedAllocations");
     if (storedAllocations) {
       const allocations = JSON.parse(storedAllocations);
       setRecommendedAllocations(allocations);
-      sessionStorage.removeItem('recommendedAllocations');
+      sessionStorage.removeItem("recommendedAllocations");
     }
   }, []);
 
@@ -39,7 +49,7 @@ export default function PracticeTrading() {
   const loadPortfolio = async () => {
     try {
       const response = await awsApi.getUserPortfolio();
-      
+
       if (response && response.portfolio) {
         setPortfolio(response.portfolio);
         if (response.portfolio.lastUpdated) {
@@ -55,7 +65,8 @@ export default function PracticeTrading() {
     setIsLoadingTrades(true);
     try {
       const response = await awsApi.getUserTrades();
-      const tradesArray = response?.trades?.trades || response?.trades || [];
+      const tradesArray =
+        response?.trades?.trades || response?.trades || [];
       setTrades(Array.isArray(tradesArray) ? tradesArray : []);
     } catch (error) {
       console.error("Error loading trades:", error);
@@ -66,20 +77,17 @@ export default function PracticeTrading() {
 
   const handleExecuteTrade = async (tradeData) => {
     try {
-      console.log('🔵 Calling executePaperTrade with:', tradeData);
       const response = await awsApi.executePaperTrade(tradeData);
-
-      console.log('📦 Trade response:', response);
 
       if (response.success) {
         await loadData();
         alert(response.message);
       } else {
-        alert(response.error || response.message || 'Trade was rejected');
+        alert(response.error || response.message || "Trade was rejected");
       }
     } catch (error) {
-      console.error('❌ Trade error:', error);
-      alert('Error executing trade: ' + (error.message || 'Unknown error'));
+      console.error("❌ Trade error:", error);
+      alert("Error executing trade: " + (error.message || "Unknown error"));
     }
   };
 
@@ -90,13 +98,15 @@ export default function PracticeTrading() {
   };
 
   const removeAllocation = (index) => {
-    setRecommendedAllocations(prev => prev.filter((_, i) => i !== index));
+    setRecommendedAllocations((prev) => prev.filter((_, i) => i !== index));
   };
 
   const executeAllAllocations = async () => {
     if (recommendedAllocations.length === 0) return;
 
-    const validAllocations = recommendedAllocations.filter(a => a.quantity > 0);
+    const validAllocations = recommendedAllocations.filter(
+      (a) => a.quantity > 0
+    );
     if (validAllocations.length === 0) {
       alert("No valid trades to execute");
       return;
@@ -104,7 +114,12 @@ export default function PracticeTrading() {
 
     const confirmed = confirm(
       `Execute ${validAllocations.length} trades?\n\n` +
-      validAllocations.map(t => `${t.symbol}: ${t.quantity} shares @ $${t.price.toFixed(2)}`).join('\n')
+        validAllocations
+          .map(
+            (t) =>
+              `${t.symbol}: ${t.quantity} shares @ $${t.price.toFixed(2)}`
+          )
+          .join("\n")
     );
 
     if (!confirmed) return;
@@ -118,8 +133,8 @@ export default function PracticeTrading() {
         const response = await awsApi.executePaperTrade({
           symbol: allocation.symbol,
           quantity: allocation.quantity,
-          side: 'buy',
-          orderType: 'market'
+          side: "buy",
+          orderType: "market",
         });
 
         if (response.success) {
@@ -128,7 +143,7 @@ export default function PracticeTrading() {
           failCount++;
         }
       } catch (error) {
-        console.error('❌ Batch trade error:', error);
+        console.error("❌ Batch trade error:", error);
         failCount++;
       }
     }
@@ -137,7 +152,11 @@ export default function PracticeTrading() {
     setIsExecutingBatch(false);
     setRecommendedAllocations([]);
 
-    alert(`Batch execution complete!\n✓ ${successCount} successful\n${failCount > 0 ? `✗ ${failCount} failed` : ''}`);
+    alert(
+      `Batch execution complete!\n✓ ${successCount} successful\n${
+        failCount > 0 ? `✗ ${failCount} failed` : ""
+      }`
+    );
   };
 
   const executeSingleAllocation = async (allocation, index) => {
@@ -150,8 +169,8 @@ export default function PracticeTrading() {
       const response = await awsApi.executePaperTrade({
         symbol: allocation.symbol,
         quantity: allocation.quantity,
-        side: 'buy',
-        orderType: 'market'
+        side: "buy",
+        orderType: "market",
       });
 
       if (response.success) {
@@ -159,11 +178,13 @@ export default function PracticeTrading() {
         await loadData();
         removeAllocation(index);
       } else {
-        alert(response.error || response.message || 'Trade was rejected');
+        alert(
+          response.error || response.message || "Trade was rejected"
+        );
       }
     } catch (error) {
-      console.error('❌ Trade error:', error);
-      alert('Error executing trade: ' + error.message);
+      console.error("❌ Trade error:", error);
+      alert("Error executing trade: " + error.message);
     }
   };
 
@@ -172,20 +193,18 @@ export default function PracticeTrading() {
     try {
       const response = await awsApi.syncPortfolio({});
 
-      console.log('📦 Sync response:', response);
-
       if (response.success) {
-        setPortfolio(prev => ({
+        setPortfolio((prev) => ({
           ...prev,
-          ...response.portfolio
+          ...response.portfolio,
         }));
         setLastSync(new Date());
       } else {
-        alert(response.error || 'Sync failed');
+        alert(response.error || "Sync failed");
       }
     } catch (error) {
-      console.error('❌ Sync error:', error);
-      alert('Error syncing portfolio: ' + error.message);
+      console.error("❌ Sync error:", error);
+      alert("Error syncing portfolio: " + error.message);
     }
     setIsSyncing(false);
   };
@@ -194,173 +213,370 @@ export default function PracticeTrading() {
     const styles = {
       filled: "bg-emerald-100 text-emerald-700 border-emerald-200",
       pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
-      rejected: "bg-rose-100 text-rose-700 border-rose-200"
+      rejected: "bg-rose-100 text-rose-700 border-rose-200",
     };
     return styles[status] || styles.pending;
   };
 
   const formatTradeDate = (timestamp) => {
-    if (!timestamp) return 'N/A';
+    if (!timestamp) return "N/A";
     const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return 'N/A';
-    return format(date, 'MMM d, h:mm a');
+    if (isNaN(date.getTime())) return "N/A";
+    return format(date, "MMM d, h:mm a");
   };
 
-  // Helper function to get trade field value (supports both camelCase and snake_case)
+  // get field value (supports both camelCase and snake_case)
   const getTradeField = (trade, camelCase, snakeCase) => {
     return trade[camelCase] ?? trade[snakeCase] ?? 0;
   };
 
-  // --- Replace the entire return block below with the requested new layout ---
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans selection:bg-blue-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        
-        {/* 1. INDUSTRIAL HEADER - CASH INTELLIGENCE STYLE */}
-        <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-2 border-slate-200 pb-8">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
-              Practice Trading
-            </h1>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-emerald-500" /> Professional Practice Terminal · Live Feed Active
-            </p>
+        {/* Header Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-2 md:mb-3">
+                Practice Trading Terminal
+              </h1>
+              <p className="text-sm md:text-base lg:text-lg text-slate-600">
+                Simulate trading in real-time with industrial-grade portfolio UX
+              </p>
+            </div>
+            <Badge className="bg-emerald-600 text-white text-sm px-4 py-2 shadow-md rounded">
+              🎓 PRACTICE MODE
+            </Badge>
           </div>
-          
-          <div className="flex items-center gap-3">
-            <Button onClick={handleSyncPortfolio} disabled={isSyncing} variant="outline" className="border-2 border-slate-300 bg-white font-black text-[11px] h-12 px-6 hover:border-slate-900 transition-all">
-              {isSyncing ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-              REFRESH TELEMETRY
-            </Button>
-            <Button onClick={() => setIsTradeModalOpen(true)} className="bg-[#4353FF] hover:bg-[#3544CC] text-white font-black text-[11px] px-8 h-12 shadow-xl active:scale-95 transition-all">
-              <Plus className="w-5 h-5 mr-2" /> EXECUTE NEW ORDER
-            </Button>
-          </div>
-        </header>
 
-        {/* 2. THE FOUR FASCINATING METRIC CARDS */}
-        {portfolio && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <Card className="p-6 border-2 border-slate-200 shadow-lg bg-white relative overflow-hidden group hover:border-slate-400 transition-all">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-2 font-mono">Total Portfolio Value</span>
-              <span className="text-2xl font-black text-slate-900 tracking-tight">${portfolio.totalValue?.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-              <div className="absolute top-0 right-0 p-2 opacity-5"><DollarSign className="w-8 h-8" /></div>
-            </Card>
+          {/* Simulation Info Callout */}
+          <Card className="border-2 border-emerald-200 shadow-lg bg-white/80 backdrop-blur-xl">
+            <CardContent className="p-5 flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+              <p className="text-sm text-slate-700">
+                <strong>Simulation Only:</strong> All practice trades use live market prices, but are risk-free. Use this environment to sharpen your skills with real data and instant results!
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-            <Card className="p-6 border-2 border-emerald-200 shadow-lg bg-white group hover:border-emerald-400 transition-all">
-              <span className="text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em] block mb-2 font-mono">Total Gain/Loss</span>
-              <div className="flex flex-col">
-                <span className={`text-xl font-black ${portfolio.totalGain >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                   {portfolio.totalGain >= 0 ? '+' : ''}${portfolio.totalGain?.toLocaleString()}
-                </span>
-                <span className={`text-xs font-bold ${portfolio.totalGain >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  +1.78%
-                </span>
+        {/* Quick Actions Row */}
+        <div className="flex flex-wrap gap-3 mb-8 items-center">
+          <Button
+            onClick={() => setIsTradeModalOpen(true)}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg text-base md:text-base"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Place Trade
+          </Button>
+          <Button
+            onClick={handleSyncPortfolio}
+            disabled={isSyncing}
+            variant="outline"
+            className="border-2"
+          >
+            {isSyncing ? (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                Syncing...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Sync Prices
+              </>
+            )}
+          </Button>
+          {lastSync && (
+            <div className="flex items-center gap-2 text-sm text-slate-600 ml-auto">
+              <Clock className="w-4 h-4" />
+              Last synced: {format(lastSync, "MMM d, h:mm a")}
+            </div>
+          )}
+        </div>
+
+        {/* AI Scenario Allocations Card */}
+        {recommendedAllocations.length > 0 && (
+          <Card className="border-2 border-blue-500 shadow-xl bg-white/90 mb-8">
+            <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 md:p-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div className="flex-1">
+                  <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
+                    <TrendingUp className="w-6 h-6" />
+                    Suggested Allocations
+                  </CardTitle>
+                  <p className="text-white/90 text-xs md:text-sm mt-2 font-normal opacity-80">
+                    Explore these simulated allocation scenarios as recommended by market AI models.
+                  </p>
+                </div>
+                <Badge className="bg-white text-blue-700 text-xs md:text-sm px-3 py-2 whitespace-nowrap shadow border">
+                  {recommendedAllocations.filter((a) => a.quantity > 0).length} scenarios
+                </Badge>
               </div>
-            </Card>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {recommendedAllocations.map((allocation, index) => (
+                  <Card
+                    key={index}
+                    className="border-2 border-slate-200 bg-slate-50 shadow-sm"
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start gap-3 md:gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <h4 className="font-bold text-lg text-slate-900">
+                              {allocation.symbol}
+                            </h4>
+                            <Badge className="bg-blue-100 text-blue-700 text-xs md:text-sm">
+                              ${allocation.price.toFixed(2)}/share
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4">
+                            <div>
+                              <Label className="text-xs md:text-sm text-slate-600">
+                                Quantity (shares)
+                              </Label>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={allocation.quantity}
+                                onChange={(e) =>
+                                  updateAllocationQuantity(index, e.target.value)
+                                }
+                                className="mt-1 h-9 md:h-10 text-sm md:text-base"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs md:text-sm text-slate-600">
+                                Estimated Cost
+                              </Label>
+                              <div className="mt-1 h-9 md:h-10 px-2 md:px-3 border border-slate-300 rounded-md bg-slate-100 flex items-center overflow-hidden">
+                                <DollarSign className="w-3 h-3 md:w-4 md:h-4 text-slate-500 mr-0.5 md:mr-1 flex-shrink-0" />
+                                <span className="font-semibold text-slate-900 text-sm md:text-base truncate">
+                                  {(
+                                    allocation.quantity * allocation.price
+                                  ).toLocaleString("en-US", {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2,
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2 sm:w-auto">
+                          <Button
+                            onClick={() =>
+                              executeSingleAllocation(allocation, index)
+                            }
+                            className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-xs md:text-sm"
+                            size="sm"
+                          >
+                            <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                            Run Trade
+                          </Button>
+                          <Button
+                            onClick={() => removeAllocation(index)}
+                            variant="outline"
+                            size="sm"
+                            className="border-rose-300 text-rose-600 hover:bg-rose-50 text-xs md:text-sm"
+                          >
+                            <X className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
 
-            <Card className="p-6 border-2 border-blue-200 shadow-lg bg-white group hover:border-blue-400 transition-all">
-              <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] block mb-2 font-mono">Daily Gain/Loss</span>
-              <span className="text-xl font-black text-emerald-600">+$117.72</span>
-              <span className="text-[10px] font-bold text-emerald-500 block">+0.04%</span>
-            </Card>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4 mt-6 pt-6 border-t border-slate-200">
+                <div className="text-base md:text-lg font-semibold text-slate-900 truncate">
+                  Total Cost: $
+                  {recommendedAllocations
+                    .reduce((sum, a) => sum + a.quantity * a.price, 0)
+                    .toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 md:gap-3 w-full sm:w-auto">
+                  <Button
+                    onClick={() => setRecommendedAllocations([])}
+                    variant="outline"
+                    className="border-2 text-xs md:text-sm"
+                  >
+                    Cancel All
+                  </Button>
+                  <Button
+                    onClick={executeAllAllocations}
+                    disabled={
+                      isExecutingBatch ||
+                      recommendedAllocations.filter((a) => a.quantity > 0)
+                        .length === 0
+                    }
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg text-xs md:text-sm"
+                  >
+                    {isExecutingBatch ? (
+                      <>
+                        <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                        Run All Trades
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-            <Card className="p-6 border-2 border-indigo-200 shadow-lg bg-white group hover:border-indigo-400 transition-all">
-              <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] block mb-2 font-mono">Current Assets</span>
-              <span className="text-xl font-black text-slate-900 block">{portfolio.holdings?.length} Assets</span>
-              <span className="text-[10px] font-bold text-slate-400 tracking-tight">Cost Basis: $331,495</span>
-            </Card>
+        {/* Portfolio Chart */}
+        {trades.length > 0 && portfolio && (
+          <div className="mb-8">
+            <PortfolioChart portfolio={portfolio} trades={trades} />
           </div>
         )}
 
-        <div className="space-y-8 mb-12">
-          {/* 3. CHART WORKSPACE */}
-          <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white ring-1 ring-slate-200">
-            <CardContent className="p-8">
-              {portfolio ? (
-                <div className="w-full">
-                  <PortfolioChart portfolio={portfolio} trades={trades} stacked={true} />
-                </div>
-              ) : (
-                <div className="h-[300px] flex items-center justify-center font-black text-slate-300 uppercase tracking-widest text-xs">Awaiting Telemetry...</div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* 4. POSITION DETAILS - PORTFOLIO HOLDINGS */}
-          <Card className="border-0 shadow-xl rounded-3xl overflow-hidden ring-1 ring-slate-200">
-            <CardHeader className="bg-slate-900 border-b border-slate-800 py-4 px-8">
-              <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-white flex items-center gap-2">
-                <Activity className="w-4 h-4 text-emerald-400" /> Position Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
+        {/* Trade History Table */}
+        <Card className="border-2 border-slate-200 shadow-lg bg-white/95">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-blue-600" />
+              Trade History
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoadingTrades ? (
+              <div className="text-center py-12">
+                <Loader2 className="w-12 h-12 mx-auto mb-4 text-blue-600 animate-spin" />
+                <p className="text-slate-500">Loading trades...</p>
+              </div>
+            ) : trades.length === 0 ? (
+              <div className="text-center py-12">
+                <TrendingUp className="w-16 h-16 mx-auto mb-4 text-slate-300" />
+                <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                  No trades yet
+                </h3>
+                <p className="text-slate-500 mb-6">
+                  Execute your first practice trade to get started
+                </p>
+                <Button
+                  onClick={() => setIsTradeModalOpen(true)}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Place Trade
+                </Button>
+              </div>
+            ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200">
-                    <tr>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">Identifier</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono text-right">Units</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono text-right">Avg Cost</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono text-right">Market Value</th>
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-slate-200">
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700">
+                        Date
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700">
+                        Symbol
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700">
+                        Side
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-slate-700">
+                        Quantity
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-slate-700">
+                        Price
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-slate-700">
+                        Total
+                      </th>
+                      <th className="text-center py-3 px-4 font-semibold text-slate-700">
+                        Status
+                      </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {portfolio?.holdings?.map((asset, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-8 py-5 font-black text-slate-900 text-sm tracking-tight">{asset.symbol}</td>
-                        <td className="px-8 py-5 text-right font-mono text-[11px] font-bold text-slate-600">{asset.quantity}</td>
-                        <td className="px-8 py-5 text-right font-black text-slate-900 text-sm">${(asset.averageCost || asset.average_cost || 0).toLocaleString()}</td>
-                        <td className="px-8 py-5 text-right font-black text-slate-900 text-sm">${((asset.currentPrice || asset.price || 0) * asset.quantity).toLocaleString()}</td>
-                      </tr>
-                    ))}
+                  <tbody>
+                    {trades.map((trade) => {
+                      const executedPrice = getTradeField(
+                        trade,
+                        "executedPrice",
+                        "executed_price"
+                      );
+                      return (
+                        <tr
+                          key={trade.id || trade.timestamp}
+                          className="border-b border-slate-100 hover:bg-slate-50"
+                        >
+                          <td className="py-3 px-4 text-sm text-slate-600">
+                            {formatTradeDate(trade.timestamp)}
+                          </td>
+                          <td className="py-3 px-4 font-semibold text-slate-900">
+                            {trade.symbol}
+                          </td>
+                          <td className="py-3 px-4">
+                            <Badge
+                              className={
+                                trade.side === "buy"
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "bg-rose-100 text-rose-700"
+                              }
+                            >
+                              {trade.side?.toUpperCase()}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-4 text-right text-slate-700">
+                            {trade.quantity}
+                          </td>
+                          <td className="py-3 px-4 text-right text-slate-700">
+                            ${executedPrice.toFixed(2)}
+                          </td>
+                          <td className="py-3 px-4 text-right font-semibold text-slate-900">
+                            $
+                            {(executedPrice * trade.quantity).toLocaleString(
+                              "en-US",
+                              {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                              }
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <Badge
+                              className={`${getStatusBadge(trade.status)} border`}
+                            >
+                              {trade.status}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* 5. ORDER FULFILLMENT LEDGER - TRADE HISTORY */}
-          <Card className="border-0 shadow-xl rounded-3xl overflow-hidden ring-1 ring-slate-200">
-            <CardHeader className="bg-slate-900 border-b border-slate-800 py-4 px-8">
-              <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-white flex items-center gap-2">
-                <History className="w-4 h-4 text-blue-400" /> Order Fulfillment Ledger
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-50 border-b border-slate-200">
-                    <tr>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">Timestamp</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">Asset</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">Side</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono text-right">Qty</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono text-right">Net Value</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 bg-white">
-                    {trades.map((trade, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-8 py-5 text-[10px] font-bold text-slate-500 font-mono tracking-tighter uppercase">{formatTradeDate(trade.timestamp)}</td>
-                        <td className="px-8 py-5 font-black text-slate-900 text-sm tracking-tight">{trade.symbol}</td>
-                        <td className="px-8 py-5">
-                          <Badge className={`text-[9px] font-black px-2 py-0 border-0 ${trade.side === 'buy' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                            {trade.side.toUpperCase()}
-                          </Badge>
-                        </td>
-                        <td className="px-8 py-5 text-right font-mono text-[11px] font-bold text-slate-600">{trade.quantity}</td>
-                        <td className="px-8 py-5 text-right font-black text-slate-900 text-sm">${(getTradeField(trade, 'executedPrice', 'executed_price') * trade.quantity).toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-      <TradeModal isOpen={isTradeModalOpen} onClose={() => setIsTradeModalOpen(false)} onExecuteTrade={handleExecuteTrade} />
+
+      {/* Trade Modal */}
+      <TradeModal
+        isOpen={isTradeModalOpen}
+        onClose={() => setIsTradeModalOpen(false)}
+        onExecuteTrade={handleExecuteTrade}
+      />
     </div>
   );
 }
