@@ -216,19 +216,14 @@ export default function PracticeTrading() {
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans selection:bg-blue-100">
       <div className="max-w-7xl mx-auto">
         
-        {/* INDUSTRIAL HEADER */}
+        {/* 1. INDUSTRIAL HEADER - CASH INTELLIGENCE STYLE */}
         <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b-2 border-slate-200 pb-8">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
-                Execution Lab
-              </h1>
-              <Badge className="bg-slate-900 text-white text-[10px] font-black tracking-widest px-3 py-1 rounded-none border-none">
-                ACTIVE MODE
-              </Badge>
-            </div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] flex items-center gap-2">
-              <Activity className="w-4 h-4 text-emerald-500" /> Professional Practice Terminal · Live Feed
+            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">
+              Practice Trading
+            </h1>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-emerald-500" /> Professional Practice Terminal · Live Feed Active
             </p>
           </div>
           
@@ -243,7 +238,7 @@ export default function PracticeTrading() {
           </div>
         </header>
 
-        {/* 4 BEAUTIFUL INDUSTRIAL METRIC CARDS */}
+        {/* 2. THE FOUR FASCINATING METRIC CARDS */}
         {portfolio && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
             <Card className="p-6 border-2 border-slate-200 shadow-lg bg-white relative overflow-hidden group hover:border-slate-400 transition-all">
@@ -271,15 +266,15 @@ export default function PracticeTrading() {
             </Card>
 
             <Card className="p-6 border-2 border-indigo-200 shadow-lg bg-white group hover:border-indigo-400 transition-all">
-              <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] block mb-2 font-mono">Assets Count</span>
-              <span className="text-xl font-black text-slate-900 block">9 Assets</span>
+              <span className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.2em] block mb-2 font-mono">Current Assets</span>
+              <span className="text-xl font-black text-slate-900 block">{portfolio.holdings?.length} Assets</span>
               <span className="text-[10px] font-bold text-slate-400 tracking-tight">Cost Basis: $331,495</span>
             </Card>
           </div>
         )}
 
         <div className="space-y-8 mb-12">
-          {/* CHART WORKSPACE */}
+          {/* 3. CHART WORKSPACE */}
           <Card className="border-0 shadow-2xl rounded-3xl overflow-hidden bg-white ring-1 ring-slate-200">
             <CardContent className="p-8">
               {portfolio ? (
@@ -287,12 +282,12 @@ export default function PracticeTrading() {
                   <PortfolioChart portfolio={portfolio} trades={trades} stacked={true} />
                 </div>
               ) : (
-                <div className="h-[300px] flex items-center justify-center font-black text-slate-300 uppercase tracking-widest text-xs">Awaiting Handshake...</div>
+                <div className="h-[300px] flex items-center justify-center font-black text-slate-300 uppercase tracking-widest text-xs">Awaiting Telemetry...</div>
               )}
             </CardContent>
           </Card>
 
-          {/* POSITION DETAILS - DARK HEADER STYLE */}
+          {/* 4. POSITION DETAILS - PORTFOLIO HOLDINGS */}
           <Card className="border-0 shadow-xl rounded-3xl overflow-hidden ring-1 ring-slate-200">
             <CardHeader className="bg-slate-900 border-b border-slate-800 py-4 px-8">
               <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-white flex items-center gap-2">
@@ -304,10 +299,10 @@ export default function PracticeTrading() {
                 <table className="w-full text-left">
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Identifier</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Units</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Avg Cost</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Market Value</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">Identifier</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono text-right">Units</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono text-right">Avg Cost</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono text-right">Market Value</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -315,12 +310,8 @@ export default function PracticeTrading() {
                       <tr key={idx} className="hover:bg-slate-50 transition-colors">
                         <td className="px-8 py-5 font-black text-slate-900 text-sm tracking-tight">{asset.symbol}</td>
                         <td className="px-8 py-5 text-right font-mono text-[11px] font-bold text-slate-600">{asset.quantity}</td>
-                        <td className="px-8 py-5 text-right font-black text-slate-900 text-sm">
-                          ${(asset.averageCost || asset.average_cost || 0).toLocaleString()}
-                        </td>
-                        <td className="px-8 py-5 text-right font-black text-slate-900 text-sm">
-                          ${((asset.currentPrice || asset.price || 0) * asset.quantity).toLocaleString()}
-                        </td>
+                        <td className="px-8 py-5 text-right font-black text-slate-900 text-sm">${(asset.averageCost || asset.average_cost || 0).toLocaleString()}</td>
+                        <td className="px-8 py-5 text-right font-black text-slate-900 text-sm">${((asset.currentPrice || asset.price || 0) * asset.quantity).toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -329,7 +320,7 @@ export default function PracticeTrading() {
             </CardContent>
           </Card>
 
-          {/* ORDER FULFILLMENT LEDGER - DARK HEADER STYLE */}
+          {/* 5. ORDER FULFILLMENT LEDGER - TRADE HISTORY */}
           <Card className="border-0 shadow-xl rounded-3xl overflow-hidden ring-1 ring-slate-200">
             <CardHeader className="bg-slate-900 border-b border-slate-800 py-4 px-8">
               <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-white flex items-center gap-2">
@@ -341,11 +332,11 @@ export default function PracticeTrading() {
                 <table className="w-full text-left">
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Timestamp</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Asset</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Side</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Qty</th>
-                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Net Value</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">Timestamp</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">Asset</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">Side</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono text-right">Qty</th>
+                      <th className="px-8 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono text-right">Net Value</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 bg-white">
@@ -359,9 +350,7 @@ export default function PracticeTrading() {
                           </Badge>
                         </td>
                         <td className="px-8 py-5 text-right font-mono text-[11px] font-bold text-slate-600">{trade.quantity}</td>
-                        <td className="px-8 py-5 text-right font-black text-slate-900 text-sm">
-                          ${(getTradeField(trade, 'executedPrice', 'executed_price') * trade.quantity).toLocaleString()}
-                        </td>
+                        <td className="px-8 py-5 text-right font-black text-slate-900 text-sm">${(getTradeField(trade, 'executedPrice', 'executed_price') * trade.quantity).toLocaleString()}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -374,4 +363,3 @@ export default function PracticeTrading() {
       <TradeModal isOpen={isTradeModalOpen} onClose={() => setIsTradeModalOpen(false)} onExecuteTrade={handleExecuteTrade} />
     </div>
   );
-}
