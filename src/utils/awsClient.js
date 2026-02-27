@@ -18,7 +18,6 @@ const LAMBDA_KEY_MAPPING = {
   user_id: [
     "getUserPortfolio",
     "getUserTrades",
-    "getShadowPortfolios",
     "saveInvestorScore",
     "getPortfolioAnalyses",
     "syncPortfolioData",
@@ -33,6 +32,9 @@ const LAMBDA_KEY_MAPPING = {
   ],
   user_email: [
     "checkSubscription",
+    "getShadowPortfolios",
+    "createShadowPortfolio",
+    "deleteShadowPortfolio",
     "analyzeInvestmentBehavior",
     "calculatePortfolioHealth", // <<<<<< ADDED AS REQUESTED
     "getHoldings",
@@ -214,7 +216,9 @@ export const awsApi = {
   sendMonthlyReport: () => invokeProxy("sendMonthlyReport", {}),
   sendNewsletter: () => invokeProxy("sendNewsletter", {}),
   sendSupportEmail: (data) => invokeProxy("sendSupportEmail", data),
-  getShadowPortfolios: () => invokeProxy("getShadowPortfolios", {}),
+  getShadowPortfolios: (email) => invokeProxy("getShadowPortfolios", { email }),
+  createShadowPortfolio: (data) => invokeProxy("createShadowPortfolio", data),
+  deleteShadowPortfolio: (userEmail, id) => invokeProxy("deleteShadowPortfolio", { userEmail, id }),
   saveInvestorScore: (scoreData) => invokeProxy("saveInvestorScore", { scoreData }),
   getCompanies: async () => { try { const response = await invokeProxy("getCompanies", {}); return response?.Items || response?.items || []; } catch { return []; } },
   getPortfolioAnalyses: async () => { const response = await invokeProxy("getPortfolioAnalyses", {}); return response?.Items || response?.items || []; },
