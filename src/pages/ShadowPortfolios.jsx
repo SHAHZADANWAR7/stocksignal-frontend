@@ -89,12 +89,17 @@ export default function ShadowPortfolios() {
     setSimulationResults(savedResults);
   }, [scenarios]);
 
-  const loadScenarios = async () => {
-    const userId = localStorage.getItem('user_id');
-    if (!userId) return;
+ const loadScenarios = async () => {
+    const userEmail = localStorage.getItem('user_email');
+    if (!userEmail) return;
     
-    const data = await awsApi.getShadowPortfolios(userId);
-    setScenarios(data || []);
+    try {
+      const response = await awsApi.getShadowPortfolios(userEmail);
+      // Accessing the nested data from your specific Lambda response
+      setScenarios(response.data?.shadow_portfolios || []);
+    } catch (error) {
+      console.error("Error loading scenarios:", error);
+    }
   };
 
   const loadCurrentPortfolio = async () => {
@@ -121,29 +126,32 @@ export default function ShadowPortfolios() {
     }
   };
 
-  const handleSubmit = async () => {
-    const userId = localStorage.getItem('user_id');
+ const handleSubmit = async () => {
+    const userEmail = localStorage.getItem('user_email');
+    if (!userEmail) {
+      alert("User email not found. Please log in again.");
+      return;
+    }
+
     const data = {
       ...formData,
+      id: editingId || undefined, 
       total_value: parseFloat(formData.total_value) || 0,
       monthly_income: parseFloat(formData.monthly_income) || 0,
       monthly_expenses: parseFloat(formData.monthly_expenses) || 0,
-      userId
+      userEmail // Maps to user_email partition key
     };
 
     try {
-      if (editingId) {
-        await awsApi.syncPortfolio(userId, editingId, data);
-      } else {
-        await awsApi.syncPortfolio(data);
-      }
+      // Use the dedicated shadow portfolio function
+      await awsApi.createShadowPortfolio(data);
 
       setShowDialog(false);
       resetForm();
-      loadScenarios();
+      await loadScenarios();
     } catch (error) {
       console.error("Error saving shadow portfolio:", error);
-      alert("Error: This portfolio may have been deleted. Refreshing...");
+      alert("Error saving scenario. Please try again.");
       setShowDialog(false);
       resetForm();
       loadScenarios();
@@ -491,8 +499,11 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
       await incrementUsage('premium');
 
       // Save simulation results to database
-      const userId = localStorage.getItem('user_id');
-      await awsApi.syncPortfolio(userId, scenario.id, {
+      // Save simulation results to the shadow portfolio table
+      const userEmail = localStorage.getItem('user_email');
+      await awsApi.createShadowPortfolio({
+        ...scenario,
+        userEmail,
         simulation_results: finalResult
       });
 
@@ -1460,3 +1471,4 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
