@@ -35,6 +35,7 @@ const LAMBDA_KEY_MAPPING = {
     "getShadowPortfolios",
     "createShadowPortfolio",
     "deleteShadowPortfolio",
+    "getSimulationLabData",
     "analyzeInvestmentBehavior",
     "calculatePortfolioHealth", // <<<<<< ADDED AS REQUESTED
     "getHoldings",
