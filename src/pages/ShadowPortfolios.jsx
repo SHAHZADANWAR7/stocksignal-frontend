@@ -107,12 +107,16 @@ export default function ShadowPortfolios() {
       const userId = localStorage.getItem('user_id');
       if (!userId) return;
 
-      const portfolio = await awsApi.getPortfolio(userId);
+      // CHANGE: Use syncPortfolio instead of getPortfolio
+      const response = await awsApi.syncPortfolio(); 
       
-      if (portfolio && portfolio.assets) {
-        const assets = portfolio.assets || [];
-        const totalValue = portfolio.totalValue || 0;
-        const totalCost = assets.reduce((sum, a) => sum + (a.quantity * a.avgCost), 0);
+      // Access the portfolio from the response body (syncPortfolio returns { success, portfolio: { assets, totalValue } })
+      if (response && response.portfolio) {
+        const assets = response.portfolio.assets || [];
+        const totalValue = response.portfolio.totalValue || 0;
+        
+        // Calculate cost based on avgCost stored in DynamoDB
+        const totalCost = assets.reduce((sum, a) => sum + (a.quantity * (a.avgCost || 0)), 0);
         
         setCurrentPortfolio({
           value: totalValue,
@@ -122,7 +126,7 @@ export default function ShadowPortfolios() {
         });
       }
     } catch (error) {
-      console.error("Error loading portfolio:", error);
+      console.error("Error loading actual portfolio via syncPortfolio:", error);
     }
   };
 
@@ -1478,5 +1482,6 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
