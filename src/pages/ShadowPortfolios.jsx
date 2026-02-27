@@ -1270,8 +1270,9 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
         setShowDialog(open);
         if (!open) resetForm();
       }}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto border-0 shadow-2xl rounded-3xl p-0 ring-1 ring-slate-200">
-          <DialogHeader className="bg-slate-900 p-8">
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto border-0 shadow-2xl rounded-[32px] p-0 ring-1 ring-slate-200">
+          {/* ROUNDED BLACK HEADER */}
+          <DialogHeader className="bg-slate-900 p-8 rounded-t-[30px]">
             <DialogTitle className="text-xs font-black uppercase tracking-[0.3em] text-white flex items-center gap-2">
               <GitBranch className="w-4 h-4 text-indigo-400" /> 
               {editingId ? "Modify Simulation Parameters" : "Initialize New Shadow Portfolio"}
@@ -1297,7 +1298,6 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
                   onValueChange={(value) => setFormData({...formData, scenario_type: value})}
                 >
                   <SelectTrigger className="border-2 border-slate-200 bg-white text-slate-900 font-bold shadow-sm h-12 w-full px-4 flex justify-between items-center focus:ring-slate-900">
-                    {/* MANUAL RENDER FIX: This ensures text is ALWAYS visible */}
                     <span className="uppercase text-[11px] tracking-wider text-slate-900">
                       {formData.scenario_type === "career_change" ? "Career Change" :
                        formData.scenario_type === "relocation" ? "Relocation" :
@@ -1321,7 +1321,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Strategic Description</Label>
               <Textarea
-                className="border-2 focus:border-slate-900 transition-all font-medium min-h-[100px]"
+                className="border-2 focus:border-slate-900 transition-all font-medium min-h-[80px]"
                 placeholder="Detail the parameters of this scenario..."
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
@@ -1361,42 +1361,62 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
               </div>
             </div>
 
+            {/* HYPOTHETICAL HOLDINGS - 3 COLUMNS + ACTION */}
             <div className="space-y-4 pt-4 border-t-2 border-slate-100">
               <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Hypothetical Holdings (Optional)</Label>
               <div className="space-y-3">
                 {formData.hypothetical_holdings.map((holding, idx) => (
-                  <div key={idx} className="flex gap-2 items-center bg-slate-50 p-2 rounded-xl border-2 border-slate-100">
-                    <Input
-                      placeholder="Symbol"
-                      className="w-24 h-9 font-black border-none bg-transparent uppercase"
-                      value={holding.symbol || ""}
-                      onChange={(e) => {
-                        const updated = [...formData.hypothetical_holdings];
-                        updated[idx] = { ...updated[idx], symbol: e.target.value.toUpperCase() };
-                        setFormData({...formData, hypothetical_holdings: updated});
-                      }}
-                    />
-                    <Input
-                      placeholder="Asset Name"
-                      className="flex-1 h-9 font-bold border-none bg-transparent"
-                      value={holding.name || ""}
-                      onChange={(e) => {
-                        const updated = [...formData.hypothetical_holdings];
-                        updated[idx] = { ...updated[idx], name: e.target.value };
-                        setFormData({...formData, hypothetical_holdings: updated});
-                      }}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        const updated = formData.hypothetical_holdings.filter((_, i) => i !== idx);
-                        setFormData({...formData, hypothetical_holdings: updated});
-                      }}
-                      className="h-8 w-8 text-rose-500 hover:bg-rose-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                  <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-slate-50 p-2 rounded-xl border-2 border-slate-100">
+                    <div className="col-span-3">
+                      <Input
+                        placeholder="Symbol"
+                        className="h-9 font-black border-none bg-transparent uppercase text-xs"
+                        value={holding.symbol || ""}
+                        onChange={(e) => {
+                          const updated = [...formData.hypothetical_holdings];
+                          updated[idx] = { ...updated[idx], symbol: e.target.value.toUpperCase() };
+                          setFormData({...formData, hypothetical_holdings: updated});
+                        }}
+                      />
+                    </div>
+                    <div className="col-span-5">
+                      <Input
+                        placeholder="Asset Name"
+                        className="h-9 font-bold border-none bg-transparent text-xs"
+                        value={holding.name || ""}
+                        onChange={(e) => {
+                          const updated = [...formData.hypothetical_holdings];
+                          updated[idx] = { ...updated[idx], name: e.target.value };
+                          setFormData({...formData, hypothetical_holdings: updated});
+                        }}
+                      />
+                    </div>
+                    <div className="col-span-3">
+                      <Input
+                        type="number"
+                        placeholder="Qty"
+                        className="h-9 font-black border-none bg-transparent text-xs text-right"
+                        value={holding.quantity || ""}
+                        onChange={(e) => {
+                          const updated = [...formData.hypothetical_holdings];
+                          updated[idx] = { ...updated[idx], quantity: parseFloat(e.target.value) || 0 };
+                          setFormData({...formData, hypothetical_holdings: updated});
+                        }}
+                      />
+                    </div>
+                    <div className="col-span-1 flex justify-center">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const updated = formData.hypothetical_holdings.filter((_, i) => i !== idx);
+                          setFormData({...formData, hypothetical_holdings: updated});
+                        }}
+                        className="h-8 w-8 text-rose-500 hover:bg-rose-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
                 <Button
@@ -1408,18 +1428,29 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
                       hypothetical_holdings: [...formData.hypothetical_holdings, { symbol: "", name: "", quantity: 0 }]
                     });
                   }}
-                  className="w-full border-2 border-dashed border-slate-300 font-black text-[10px] tracking-widest text-slate-500 h-10 hover:border-slate-900 hover:text-slate-900"
+                  className="w-full border-2 border-dashed border-slate-300 font-black text-[10px] tracking-widest text-slate-500 h-10 hover:border-slate-900 hover:text-slate-900 uppercase"
                 >
-                  <Plus className="w-3 h-3 mr-2" /> ADD STRATEGIC ASSET
+                  <Plus className="w-3 h-3 mr-2" /> Add Strategic Asset
                 </Button>
               </div>
             </div>
 
+            {/* NOTES SECTION */}
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Notes</Label>
+              <Textarea
+                className="border-2 focus:border-slate-900 transition-all font-medium h-20"
+                placeholder="Additional scenario considerations or local market data..."
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              />
+            </div>
+
             <div className="flex justify-end gap-3 pt-6 border-t-2 border-slate-100">
-              <Button variant="ghost" onClick={() => setShowDialog(false)} className="font-black text-xs text-slate-500">
-                CANCEL
+              <Button variant="ghost" onClick={() => setShowDialog(false)} className="font-black text-xs text-slate-500 uppercase tracking-widest">
+                Cancel
               </Button>
-              <Button onClick={handleSubmit} className="bg-slate-900 text-white font-black text-xs px-10 h-12 uppercase tracking-widest shadow-xl">
+              <Button onClick={handleSubmit} className="bg-[#4353FF] hover:bg-[#3544CC] text-white font-black text-xs px-10 h-12 uppercase tracking-widest shadow-xl rounded-xl">
                 {editingId ? "Update Parameters" : "Commit Scenario"}
               </Button>
             </div>
