@@ -76,6 +76,8 @@ export const awsApi = {
   generateChallengeReports: () => awsClient.generateChallengeReports(),
 
   // Simulation
+  // Simulation
+  getSimulationLabData: () => awsClient.getSimulationLabData(), // ADD THIS LINE
   createSimulationPortfolio: (data) => awsClient.createSimulationPortfolio(data),
   updateSimulationPortfolio: (portfolioId, data) => awsClient.updateSimulationPortfolio(portfolioId, data),
   deleteSimulationPortfolio: (portfolioId) => awsClient.deleteSimulationPortfolio(portfolioId),
@@ -167,6 +169,7 @@ export const {
   syncChallengePortfolios,
   generateChallengeReports,
   createSimulationPortfolio,
+  getSimulationLabData,
   updateSimulationPortfolio,
   deleteSimulationPortfolio,
   createSimulationChallenge,
