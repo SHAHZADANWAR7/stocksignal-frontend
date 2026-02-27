@@ -176,12 +176,19 @@ export default function ShadowPortfolios() {
   const handleDelete = async (id) => {
     if (confirm("Delete this shadow portfolio?")) {
       try {
-        const userId = localStorage.getItem('user_id');
-        await awsApi.syncPortfolio(userId, id);
-        loadScenarios();
+        const userEmail = localStorage.getItem('user_email');
+        if (!userEmail) {
+          alert("User email not found. Please log in again.");
+          return;
+        }
+
+        // Correctly calls the dedicated delete Lambda
+        await awsApi.deleteShadowPortfolio(userEmail, id);
+        
+        await loadScenarios();
       } catch (error) {
         console.error("Error deleting shadow portfolio:", error);
-        alert("Error: Portfolio may already be deleted. Refreshing...");
+        alert("Error: Portfolio could not be deleted. Refreshing list...");
         loadScenarios();
       }
     }
@@ -1471,4 +1478,5 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
