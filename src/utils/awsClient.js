@@ -279,6 +279,7 @@ export const awsApi = {
   cacheMarketInsights: (data) => invokeProxy("cacheMarketInsights", data),
   getUserTrades: () => invokeProxy("getUserTrades", {}),
   invokeLLM: (prompt, context) => invokeProxy("invokeLLM", { prompt, context }),
+  getSimulationLabData: (userEmail) => invokeProxy("getSimulationLabData", { user_email: userEmail }),
   sendEmail: (data) => invokeProxy("sendEmail", data),
   getUserDashboardData: async () => { const response = await invokeProxy("getUserDashboardData", {}); return response; },
   calculatePortfolioHealth: (payload) => invokeProxy("calculatePortfolioHealth", payload) // <<<<<< ADDED AS REQUESTED
