@@ -1270,114 +1270,121 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
         setShowDialog(open);
         if (!open) resetForm();
       }}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingId ? "Edit Shadow Portfolio" : "Create Shadow Portfolio"}</DialogTitle>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto border-0 shadow-2xl rounded-3xl p-0 ring-1 ring-slate-200">
+          <DialogHeader className="bg-slate-900 p-8">
+            <DialogTitle className="text-xs font-black uppercase tracking-[0.3em] text-white flex items-center gap-2">
+              <GitBranch className="w-4 h-4 text-indigo-400" /> 
+              {editingId ? "Modify Simulation Parameters" : "Initialize New Shadow Portfolio"}
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Scenario Name</Label>
-              <Input
-                placeholder="e.g., If I moved to Canada"
-                value={formData.scenario_name}
-                onChange={(e) => setFormData({...formData, scenario_name: e.target.value})}
-              />
-            </div>
 
-            <div>
-              <Label>Scenario Type</Label>
-              <Select
-                value={formData.scenario_type}
-                onValueChange={(value) => setFormData({...formData, scenario_type: value})}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="career_change">Career Change</SelectItem>
-                  <SelectItem value="relocation">Relocation</SelectItem>
-                  <SelectItem value="early_retirement">Early Retirement</SelectItem>
-                  <SelectItem value="lifestyle_change">Lifestyle Change</SelectItem>
-                  <SelectItem value="custom">Custom</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Description</Label>
-              <Textarea
-                placeholder="Describe this scenario..."
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                rows={3}
-              />
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <Label>Portfolio Value</Label>
+          <div className="p-8 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Scenario Name</Label>
                 <Input
-                  type="number"
-                  placeholder="500000"
-                  value={formData.total_value}
-                  onChange={(e) => setFormData({...formData, total_value: e.target.value})}
+                  className="border-2 focus:border-slate-900 transition-all font-bold h-12"
+                  placeholder="e.g., Relocation to Tokyo"
+                  value={formData.scenario_name}
+                  onChange={(e) => setFormData({...formData, scenario_name: e.target.value})}
                 />
               </div>
-              <div>
-                <Label>Monthly Income</Label>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Scenario Type</Label>
+                <Select
+                  value={formData.scenario_type}
+                  onValueChange={(value) => setFormData({...formData, scenario_type: value})}
+                >
+                  <SelectTrigger className="border-2 border-slate-200 bg-white text-slate-900 font-bold shadow-sm h-12 w-full px-4 flex justify-between items-center focus:ring-slate-900">
+                    {/* MANUAL RENDER FIX: This ensures text is ALWAYS visible */}
+                    <span className="uppercase text-[11px] tracking-wider text-slate-900">
+                      {formData.scenario_type === "career_change" ? "Career Change" :
+                       formData.scenario_type === "relocation" ? "Relocation" :
+                       formData.scenario_type === "early_retirement" ? "Early Retirement" :
+                       formData.scenario_type === "lifestyle_change" ? "Lifestyle Change" :
+                       formData.scenario_type === "custom" ? "Custom Scenario" : 
+                       "Select Type"}
+                    </span>
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-2 border-slate-200 shadow-2xl rounded-xl">
+                    <SelectItem value="career_change" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Career Change</SelectItem>
+                    <SelectItem value="relocation" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Relocation</SelectItem>
+                    <SelectItem value="early_retirement" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Early Retirement</SelectItem>
+                    <SelectItem value="lifestyle_change" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Lifestyle Change</SelectItem>
+                    <SelectItem value="custom" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Strategic Description</Label>
+              <Textarea
+                className="border-2 focus:border-slate-900 transition-all font-medium min-h-[100px]"
+                placeholder="Detail the parameters of this scenario..."
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Portfolio Value</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-4 h-4 w-4 text-slate-400" />
+                  <Input
+                    type="number"
+                    className="pl-9 border-2 font-black h-12"
+                    value={formData.total_value}
+                    onChange={(e) => setFormData({...formData, total_value: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Monthly Income</Label>
                 <Input
                   type="number"
-                  placeholder="8000"
+                  className="border-2 font-black text-emerald-600 h-12"
                   value={formData.monthly_income}
                   onChange={(e) => setFormData({...formData, monthly_income: e.target.value})}
                 />
               </div>
-              <div>
-                <Label>Monthly Expenses</Label>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Monthly Expenses</Label>
                 <Input
                   type="number"
-                  placeholder="5000"
+                  className="border-2 font-black text-rose-600 h-12"
                   value={formData.monthly_expenses}
                   onChange={(e) => setFormData({...formData, monthly_expenses: e.target.value})}
                 />
               </div>
             </div>
 
-            <div>
-              <Label>Hypothetical Holdings (Optional)</Label>
-              <div className="space-y-2">
+            <div className="space-y-4 pt-4 border-t-2 border-slate-100">
+              <Label className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Hypothetical Holdings (Optional)</Label>
+              <div className="space-y-3">
                 {formData.hypothetical_holdings.map((holding, idx) => (
-                  <div key={idx} className="flex gap-2 items-center">
+                  <div key={idx} className="flex gap-2 items-center bg-slate-50 p-2 rounded-xl border-2 border-slate-100">
                     <Input
-                      placeholder="Symbol (e.g., AAPL)"
+                      placeholder="Symbol"
+                      className="w-24 h-9 font-black border-none bg-transparent uppercase"
                       value={holding.symbol || ""}
                       onChange={(e) => {
                         const updated = [...formData.hypothetical_holdings];
-                        updated[idx] = { ...updated[idx], symbol: e.target.value };
+                        updated[idx] = { ...updated[idx], symbol: e.target.value.toUpperCase() };
                         setFormData({...formData, hypothetical_holdings: updated});
                       }}
-                      className="flex-1"
                     />
                     <Input
-                      placeholder="Name"
+                      placeholder="Asset Name"
+                      className="flex-1 h-9 font-bold border-none bg-transparent"
                       value={holding.name || ""}
                       onChange={(e) => {
                         const updated = [...formData.hypothetical_holdings];
                         updated[idx] = { ...updated[idx], name: e.target.value };
                         setFormData({...formData, hypothetical_holdings: updated});
                       }}
-                      className="flex-1"
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Qty"
-                      value={holding.quantity || ""}
-                      onChange={(e) => {
-                        const updated = [...formData.hypothetical_holdings];
-                        updated[idx] = { ...updated[idx], quantity: parseFloat(e.target.value) || 0 };
-                        setFormData({...formData, hypothetical_holdings: updated});
-                      }}
-                      className="w-24"
                     />
                     <Button
                       variant="ghost"
@@ -1386,49 +1393,34 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
                         const updated = formData.hypothetical_holdings.filter((_, i) => i !== idx);
                         setFormData({...formData, hypothetical_holdings: updated});
                       }}
-                      className="hover:bg-rose-50"
+                      className="h-8 w-8 text-rose-500 hover:bg-rose-50"
                     >
-                      <Trash2 className="w-4 h-4 text-rose-600" />
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 ))}
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
                   onClick={() => {
                     setFormData({
                       ...formData,
-                      hypothetical_holdings: [
-                        ...formData.hypothetical_holdings,
-                        { symbol: "", name: "", quantity: 0 }
-                      ]
+                      hypothetical_holdings: [...formData.hypothetical_holdings, { symbol: "", name: "", quantity: 0 }]
                     });
                   }}
-                  className="w-full"
+                  className="w-full border-2 border-dashed border-slate-300 font-black text-[10px] tracking-widest text-slate-500 h-10 hover:border-slate-900 hover:text-slate-900"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Holding
+                  <Plus className="w-3 h-3 mr-2" /> ADD STRATEGIC ASSET
                 </Button>
               </div>
             </div>
 
-            <div>
-              <Label>Notes</Label>
-              <Textarea
-                placeholder="Additional thoughts..."
-                value={formData.notes}
-                onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                rows={2}
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" onClick={() => setShowDialog(false)}>
-                Cancel
+            <div className="flex justify-end gap-3 pt-6 border-t-2 border-slate-100">
+              <Button variant="ghost" onClick={() => setShowDialog(false)} className="font-black text-xs text-slate-500">
+                CANCEL
               </Button>
-              <Button onClick={handleSubmit} className="bg-gradient-to-r from-purple-600 to-indigo-600">
-                {editingId ? "Update" : "Create"} Portfolio
+              <Button onClick={handleSubmit} className="bg-slate-900 text-white font-black text-xs px-10 h-12 uppercase tracking-widest shadow-xl">
+                {editingId ? "Update Parameters" : "Commit Scenario"}
               </Button>
             </div>
           </div>
