@@ -47,7 +47,10 @@ export const awsApi = {
   calculatePortfolioHealth: (data) => awsClient.calculatePortfolioHealth(data), // <-- ADDED AS INSTRUCTION
 
   // Shadow Portfolios
-  getShadowPortfolios: () => awsClient.getShadowPortfolios(),
+  // Shadow Portfolios
+  getShadowPortfolios: (email) => awsClient.getShadowPortfolios(email),
+  createShadowPortfolio: (data) => awsClient.createShadowPortfolio(data),
+  deleteShadowPortfolio: (userEmail, id) => awsClient.deleteShadowPortfolio(userEmail, id),
 
   // Investor Score
   saveInvestorScore: (data) => awsClient.saveInvestorScore(data),
@@ -146,6 +149,8 @@ export const {
   analyzeInvestmentBehavior,
   calculatePortfolioHealth, // <-- ADDED TO EXPORT LIST
   getShadowPortfolios,
+  createShadowPortfolio, // Add this line
+  deleteShadowPortfolio, // Add this line
   saveInvestorScore,
   getCompanies,
   getUser,
