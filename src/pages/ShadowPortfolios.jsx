@@ -49,6 +49,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export default function ShadowPortfolios({ user, userAttributes }) {
+  console.log("💎 Component Received Props:", { user, userAttributes });
   const [scenarios, setScenarios] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -131,14 +132,22 @@ export default function ShadowPortfolios({ user, userAttributes }) {
   };
 
 const handleSubmit = async () => {
-    // Now these variables actually exist because of the change in Step 1!
-    const userEmail = user?.email || userAttributes?.email || localStorage.getItem('user_email');
-    
+    // Check props, check attributes, check localStorage, and check user object
+    let userEmail = user?.email || 
+                    userAttributes?.email || 
+                    user?.username || 
+                    localStorage.getItem('user_email');
+
+    // If still null, check if 'user' exists and use the username (ShahzadAnwar) as the fallback
+    if (!userEmail && user) {
+      userEmail = user.userId || user.username;
+    }
+
     if (!userEmail) {
+      console.log("🔍 Auth Debug:", { user, userAttributes });
       alert("Still syncing your profile. Please wait a moment and try again.");
       return;
     }
-
     // Now proceed with the actual submission...
     const data = {
       ...formData,
@@ -1489,6 +1498,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
 
