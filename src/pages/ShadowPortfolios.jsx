@@ -91,19 +91,15 @@ export default function ShadowPortfolios() {
     setSimulationResults(savedResults);
   }, [scenarios]);
 
- const loadScenarios = async () => {
-    // 1. Get the email (GoalIntelligence pattern)
-    const userEmail = localStorage.getItem('user_email') || 
-                     JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.email;
-    if (!userEmail) return;
-    
+const loadScenarios = async () => {
     try {
-      const response = await awsApi.getShadowPortfolios(userEmail);
+      // 1. We pass an empty object. 
+      // awsClient.js (Line 118) will automatically inject { email: "your@email.com" } into the body.
+      const response = await awsApi.getShadowPortfolios({}); 
       
-      // 📡 DEBUG: This will tell us EXACTLY what the Lambda sent back
       console.log("📡 getShadowPortfolios RAW Response:", response);
 
-      // 2. Check every possible path for the data list
+      // 2. Extract the list using the path defined in your Lambda (Line 158)
       const list = response?.data?.shadow_portfolios || 
                    response?.shadow_portfolios || 
                    response?.data || 
@@ -1497,6 +1493,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
 
