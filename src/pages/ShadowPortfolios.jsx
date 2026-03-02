@@ -183,7 +183,7 @@ const handleSubmit = async () => {
   const handleDelete = async (id) => {
     if (confirm("Delete this shadow portfolio?")) {
       try {
-        // Use the authenticated email from the session first
+        // Now that Line 53 has { user, userAttributes }, these variables work!
         const userEmail = user?.email || userAttributes?.email || localStorage.getItem('user_email');
         
         if (!userEmail) {
@@ -191,8 +191,10 @@ const handleSubmit = async () => {
           return;
         }
 
-        // Correctly calls the dedicated delete Lambda
+        // The API call now has a valid email to send to the Lambda
         await awsApi.deleteShadowPortfolio(userEmail, id);
+        
+        // ... rest of your success logic (filtering state, etc.)
         
         await loadScenarios();
       } catch (error) {
@@ -1487,6 +1489,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
 
