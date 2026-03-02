@@ -130,14 +130,23 @@ export default function ShadowPortfolios() {
     }
   };
 
- const handleSubmit = async () => {
-    // Check multiple sources for the email to ensure we find it
-    const userEmail = user?.email || userAttributes?.email || localStorage.getItem('user_email');
+const handleSubmit = async () => {
+    // 1. Try every possible attribute source
+    let userEmail = user?.email || 
+                    userAttributes?.email || 
+                    user?.username || 
+                    userAttributes?.preferred_username ||
+                    localStorage.getItem('user_email');
     
+    // 2. Logging for troubleshooting (Check your browser console if it fails)
+    console.log("🔍 handleSubmit - Identity found:", userEmail, { user, userAttributes });
+
     if (!userEmail) {
-      alert("Authentication session is still loading. Please wait a second and try again.");
+      alert("Profile sync in progress. Please wait a moment and click Create again.");
       return;
     }
+
+    // Now proceed with the actual submission...
     const data = {
       ...formData,
       id: editingId || undefined, 
@@ -1485,6 +1494,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
 
