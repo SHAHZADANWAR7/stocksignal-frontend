@@ -131,12 +131,13 @@ export default function ShadowPortfolios() {
   };
 
  const handleSubmit = async () => {
-    const userEmail = localStorage.getItem('user_email');
+    // Check multiple sources for the email to ensure we find it
+    const userEmail = user?.email || userAttributes?.email || localStorage.getItem('user_email');
+    
     if (!userEmail) {
-      alert("User email not found. Please log in again.");
+      alert("Authentication session is still loading. Please wait a second and try again.");
       return;
     }
-
     const data = {
       ...formData,
       id: editingId || undefined, 
@@ -180,9 +181,11 @@ export default function ShadowPortfolios() {
   const handleDelete = async (id) => {
     if (confirm("Delete this shadow portfolio?")) {
       try {
-        const userEmail = localStorage.getItem('user_email');
+        // Use the authenticated email from the session first
+        const userEmail = user?.email || userAttributes?.email || localStorage.getItem('user_email');
+        
         if (!userEmail) {
-          alert("User email not found. Please log in again.");
+          alert("Authentication session not ready. Please wait a moment or refresh.");
           return;
         }
 
@@ -1482,6 +1485,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
 
