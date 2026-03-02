@@ -48,8 +48,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
-export default function ShadowPortfolios({ user, userAttributes }) {
-  console.log("💎 Component Received Props:", { user, userAttributes });
+export default function ShadowPortfolios() {
   const [scenarios, setScenarios] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -132,34 +131,23 @@ export default function ShadowPortfolios({ user, userAttributes }) {
   };
 
 const handleSubmit = async () => {
-    // Check props, check attributes, check localStorage, and check user object
-    let userEmail = user?.email || 
-                    userAttributes?.email || 
-                    user?.username || 
-                    localStorage.getItem('user_email');
+    // 1. Get the email (GoalIntelligence pattern)
+    const userEmail = localStorage.getItem('user_email') || 
+                     JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.email;
 
-    // If still null, check if 'user' exists and use the username (ShahzadAnwar) as the fallback
-    if (!userEmail && user) {
-      userEmail = user.userId || user.username;
-    }
-
-    if (!userEmail) {
-      console.log("🔍 Auth Debug:", { user, userAttributes });
-      alert("Still syncing your profile. Please wait a moment and try again.");
-      return;
-    }
-    // Now proceed with the actual submission...
+    // 2. Prepare the data (One single, clean definition)
     const data = {
       ...formData,
       id: editingId || undefined, 
       total_value: parseFloat(formData.total_value) || 0,
       monthly_income: parseFloat(formData.monthly_income) || 0,
       monthly_expenses: parseFloat(formData.monthly_expenses) || 0,
-      userEmail // Maps to user_email partition key
+      user_email: userEmail 
     };
-
+    
     try {
-      // Use the dedicated shadow portfolio function
+      setIsLoading(true);
+      // 3. Send to AWS
       await awsApi.createShadowPortfolio(data);
 
       setShowDialog(false);
@@ -168,12 +156,12 @@ const handleSubmit = async () => {
     } catch (error) {
       console.error("Error saving shadow portfolio:", error);
       alert("Error saving scenario. Please try again.");
-      setShowDialog(false);
-      resetForm();
-      loadScenarios();
+    } finally {
+      setIsLoading(false);
     }
   };
 
+ 
   const handleEdit = (scenario) => {
     setFormData({
       scenario_name: scenario.scenario_name,
@@ -192,23 +180,20 @@ const handleSubmit = async () => {
   const handleDelete = async (id) => {
     if (confirm("Delete this shadow portfolio?")) {
       try {
-        // Now that Line 53 has { user, userAttributes }, these variables work!
-        const userEmail = user?.email || userAttributes?.email || localStorage.getItem('user_email');
-        
-        if (!userEmail) {
-          alert("Authentication session not ready. Please wait a moment or refresh.");
-          return;
-        }
+        // 1. Check storage for email (matches GoalIntelligence logic)
+        const userEmail = localStorage.getItem('user_email') || 
+                         JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.email;
 
-        // The API call now has a valid email to send to the Lambda
+        // 2. Call the API immediately. 
+        // We REMOVED the alert check because awsClient.js will 
+        // automatically inject the real email from the session if this is null.
         await awsApi.deleteShadowPortfolio(userEmail, id);
         
-        // ... rest of your success logic (filtering state, etc.)
-        
+        // 3. Refresh list
         await loadScenarios();
       } catch (error) {
-        console.error("Error deleting shadow portfolio:", error);
-        alert("Error: Portfolio could not be deleted. Refreshing list...");
+        console.error("❌ Delete failed:", error);
+        alert("Failed to delete portfolio. Refreshing list...");
         loadScenarios();
       }
     }
@@ -1498,6 +1483,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
 
