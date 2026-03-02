@@ -51,6 +51,8 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 export default function ShadowPortfolios() {
   const [scenarios, setScenarios] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // ADD THIS LINE
+  // ... rest of your states
   const [editingId, setEditingId] = useState(null);
   const [currentPortfolio, setCurrentPortfolio] = useState(null);
   const [simulationResults, setSimulationResults] = useState({});
@@ -1483,6 +1485,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
 
