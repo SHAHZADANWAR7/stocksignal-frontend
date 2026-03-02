@@ -48,7 +48,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
-export default function ShadowPortfolios() {
+export default function ShadowPortfolios({ user, userAttributes }) {
   const [scenarios, setScenarios] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -131,18 +131,11 @@ export default function ShadowPortfolios() {
   };
 
 const handleSubmit = async () => {
-    // 1. Try every possible attribute source
-    let userEmail = user?.email || 
-                    userAttributes?.email || 
-                    user?.username || 
-                    userAttributes?.preferred_username ||
-                    localStorage.getItem('user_email');
+    // Now these variables actually exist because of the change in Step 1!
+    const userEmail = user?.email || userAttributes?.email || localStorage.getItem('user_email');
     
-    // 2. Logging for troubleshooting (Check your browser console if it fails)
-    console.log("🔍 handleSubmit - Identity found:", userEmail, { user, userAttributes });
-
     if (!userEmail) {
-      alert("Profile sync in progress. Please wait a moment and click Create again.");
+      alert("Still syncing your profile. Please wait a moment and try again.");
       return;
     }
 
@@ -1494,6 +1487,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
 
