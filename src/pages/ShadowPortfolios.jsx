@@ -92,13 +92,25 @@ export default function ShadowPortfolios() {
   }, [scenarios]);
 
  const loadScenarios = async () => {
-    const userEmail = localStorage.getItem('user_email');
+    // 1. Get the email (GoalIntelligence pattern)
+    const userEmail = localStorage.getItem('user_email') || 
+                     JSON.parse(localStorage.getItem('stocksignal_user_attributes'))?.email;
     if (!userEmail) return;
     
     try {
       const response = await awsApi.getShadowPortfolios(userEmail);
-      // Accessing the nested data from your specific Lambda response
-      setScenarios(response.data?.shadow_portfolios || []);
+      
+      // 📡 DEBUG: This will tell us EXACTLY what the Lambda sent back
+      console.log("📡 getShadowPortfolios RAW Response:", response);
+
+      // 2. Check every possible path for the data list
+      const list = response?.data?.shadow_portfolios || 
+                   response?.shadow_portfolios || 
+                   response?.data || 
+                   (Array.isArray(response) ? response : []);
+                   
+      console.log("✅ Final Processed List:", list);
+      setScenarios(list);
     } catch (error) {
       console.error("Error loading scenarios:", error);
     }
@@ -1485,6 +1497,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
 
