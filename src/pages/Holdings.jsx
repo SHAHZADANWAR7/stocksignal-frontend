@@ -206,67 +206,90 @@ export default function Holdings() {
             </CardContent>
           </Card>
         )}
-        <Card className="border-slate-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50">
-                  <TableHead className="font-semibold">Symbol</TableHead>
-                  <TableHead className="font-semibold text-right">Quantity</TableHead>
-                  <TableHead className="font-semibold text-right">Avg Cost</TableHead>
-                  <TableHead className="font-semibold text-right">Current Price</TableHead>
-                  <TableHead className="font-semibold text-right">Total Value</TableHead>
-                  <TableHead className="font-semibold text-right">Gain/Loss</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={6}>
-                      <TableSkeleton rows={5} columns={6} />
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  <AnimatePresence>
-                    {filteredHoldings.map((asset, index) => {
-                      const { currentValue, gainLoss, gainLossPercent } = calculateMetrics(asset);
-                      const isPositive = gainLoss >= 0;
-                      return (
-                        <motion.tr key={index} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                          <TableCell className="font-semibold text-slate-900">{asset.symbol}</TableCell>
-                          <TableCell className="text-right text-slate-900">{asset.quantity}</TableCell>
-                          <TableCell className="text-right text-slate-900">${asset.avgCost.toFixed(2)}</TableCell>
-                          <TableCell className="text-right text-slate-900">${asset.currentPrice.toFixed(2)}</TableCell>
-                          <TableCell className="text-right font-semibold text-slate-900">${currentValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              {isPositive ? <TrendingUp className="w-4 h-4 text-emerald-600" /> : <TrendingDown className="w-4 h-4 text-rose-600" />}
-                              <div>
-                                <p className={`font-semibold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>{isPositive ? '+' : ''}${Math.abs(gainLoss).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                                <p className={`text-xs ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>{isPositive ? '+' : ''}{gainLossPercent.toFixed(2)}%</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                        </motion.tr>
-                      );
-                    })}
-                  </AnimatePresence>
-                )}
-              </TableBody>
-            </Table>
+        {/* INDUSTRIAL ASSET DATABASE */}
+        <Card className="border-2 border-slate-200 shadow-xl bg-white overflow-hidden rounded-none">
+          <div className="bg-slate-900 py-3 px-6 flex items-center justify-between border-b border-slate-800">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-white flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-blue-400" />
+              Active Holdings: Asset Inventory
+            </h3>
+            <Badge variant="outline" className="rounded-none border-slate-700 text-slate-400 font-mono text-[9px]">
+              {filteredHoldings.length} Assets Logged
+            </Badge>
           </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-slate-100/50 border-b border-slate-200">
+                  <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-6 text-left border-r border-slate-200 text-slate-500">Symbol</th>
+                  <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-right border-r border-slate-200 text-slate-500">Qty</th>
+                  <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-right border-r border-slate-200 text-slate-500">Avg Cost</th>
+                  <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-right border-r border-slate-200 text-slate-500">Market Price</th>
+                  <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-right border-r border-slate-200 text-slate-500">Total Value</th>
+                  <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-6 text-center text-slate-500">Performance</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center">
+                      <Loader2 className="w-8 h-8 mx-auto animate-spin text-blue-500 opacity-20" />
+                    </td>
+                  </tr>
+                ) : (
+                  filteredHoldings.map((asset, index) => {
+                    const { currentValue, gainLoss, gainLossPercent } = calculateMetrics(asset);
+                    const isPositive = gainLoss >= 0;
+                    return (
+                      <tr key={index} className="hover:bg-blue-50/40 transition-colors font-mono text-[11px]">
+                        <td className="py-4 px-6 font-bold text-slate-900 border-r border-slate-100 uppercase tracking-tighter">
+                          {asset.symbol}
+                        </td>
+                        <td className="py-4 px-4 text-right text-slate-700 border-r border-slate-100">
+                          {asset.quantity}
+                        </td>
+                        <td className="py-4 px-4 text-right text-slate-700 border-r border-slate-100 font-medium">
+                          ${asset.avgCost.toFixed(2)}
+                        </td>
+                        <td className="py-4 px-4 text-right text-slate-700 border-r border-slate-100 font-medium">
+                          ${asset.currentPrice.toFixed(2)}
+                        </td>
+                        <td className="py-4 px-4 text-right font-bold text-slate-900 border-r border-slate-100">
+                          ${currentValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-4 px-6 text-center">
+                          <div className={`inline-block px-3 py-1.5 text-[10px] font-black rounded-none border-l-4 ${
+                            isPositive 
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-500' 
+                            : 'bg-rose-50 text-rose-700 border-rose-500'
+                          }`}>
+                            <div className="flex flex-col items-center leading-none gap-1">
+                              <span>{isPositive ? '+' : ''}{gainLossPercent.toFixed(2)}%</span>
+                              <span className="text-[8px] opacity-60 font-mono">
+                                {isPositive ? '+' : '-'}${Math.abs(gainLoss).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+          
           {filteredHoldings.length === 0 && !isLoading && (
-            <div className="text-center py-12">
-              <TrendingUp className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No positions yet</h3>
-              <p className="text-slate-500 mb-6">{searchQuery ? "No holdings match" : "Start trading on Paper Trading"}</p>
-              {!searchQuery && (
-                <Link to={createPageUrl("PracticeTrading")}>
-                  <Button className="bg-gradient-to-r from-blue-600 to-indigo-600">
-                    <TrendingUp className="w-4 h-4 mr-2" />Start Paper Trading
-                  </Button>
-                </Link>
-              )}
+            <div className="text-center py-20 bg-slate-50/50">
+              <TrendingUp className="w-16 h-16 mx-auto mb-4 text-slate-300 opacity-30" />
+              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-900 mb-2">No Active Positions</h3>
+              <p className="text-[11px] font-mono text-slate-500 mb-8 max-w-xs mx-auto leading-relaxed uppercase uppercase tracking-widest">Initiate acquisitions in the Paper Trading module to populate database.</p>
+              <Link to={createPageUrl("PracticeTrading")}>
+                <Button className="bg-slate-900 text-white rounded-none text-[9px] font-black uppercase tracking-[0.2em] px-8 h-10 hover:bg-black border-b-2 border-blue-600 shadow-lg">
+                  Initialize Trade
+                </Button>
+              </Link>
             </div>
           )}
         </Card>
