@@ -641,30 +641,38 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
         </div>
 
         {scenarios.length === 0 ? (
-          <Card className="border-2 border-slate-200 shadow-lg bg-white">
-            <CardContent className="p-12 text-center">
-              <GitBranch className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-              <h3 className="text-xl font-semibold text-slate-900 mb-2">No Shadow Portfolios Yet</h3>
-              <p className="text-slate-500 mb-6">
-                Create hypothetical scenarios to explore different life paths
+          <Card className="border-2 border-dashed border-slate-300 bg-slate-50/50 rounded-none overflow-hidden">
+            <CardContent className="p-16 text-center">
+              {/* INDUSTRIAL RADAR ASSEMBLY */}
+              <div className="relative w-24 h-24 mx-auto mb-8">
+                <div className="absolute inset-0 border-2 border-slate-200 rounded-full animate-[spin_10s_linear_infinite]" />
+                <div className="absolute inset-2 border border-dashed border-slate-300 rounded-full" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <GitBranch className="w-10 h-10 text-slate-400" />
+                </div>
+              </div>
+
+              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-900 mb-2">
+                System Standby: No Scenarios Detected
+              </h3>
+              <p className="text-[11px] font-mono text-slate-500 mb-10 max-w-md mx-auto leading-relaxed">
+                Initialize hypothetical modeling parameters to begin strategic life-path projection.
               </p>
-              <div className="grid md:grid-cols-4 gap-3 max-w-2xl mx-auto">
-                <div className="bg-slate-50 rounded-lg p-3 text-left">
-                  <p className="text-sm font-semibold text-slate-900">Career Change</p>
-                  <p className="text-xs text-slate-600">New job, different income</p>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-3 text-left">
-                  <p className="text-sm font-semibold text-slate-900">Relocation</p>
-                  <p className="text-xs text-slate-600">Move to another country</p>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-3 text-left">
-                  <p className="text-sm font-semibold text-slate-900">Early Retirement</p>
-                  <p className="text-xs text-slate-600">Retire at 45, 50, or 55</p>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-3 text-left">
-                  <p className="text-sm font-semibold text-slate-900">Custom</p>
-                  <p className="text-xs text-slate-600">Any scenario you imagine</p>
-                </div>
+
+              {/* TECHNICAL MODULE GRID */}
+              <div className="grid md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                {[
+                  { title: "Career Change", desc: "Delta: Income Shift", code: "MOD-01" },
+                  { title: "Relocation", desc: "Delta: Geo-Arbitrage", code: "MOD-02" },
+                  { title: "Early Retirement", desc: "Delta: Asset Burn", code: "MOD-03" },
+                  { title: "Custom Logic", desc: "Delta: User Defined", code: "MOD-04" }
+                ].map((mod, i) => (
+                  <div key={i} className="bg-white border border-slate-200 p-4 text-left group hover:border-slate-900 transition-colors cursor-default">
+                    <p className="text-[9px] font-mono font-bold text-slate-400 mb-2">{mod.code}</p>
+                    <p className="text-[11px] font-black uppercase tracking-tight text-slate-900 mb-1">{mod.title}</p>
+                    <p className="text-[10px] text-slate-500 font-medium">{mod.desc}</p>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -1520,6 +1528,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
 
