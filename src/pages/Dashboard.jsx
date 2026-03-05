@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { awsApi } from "@/components/utils/awsClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LineChart, TrendingUp, Building2, Target } from "lucide-react";
+import { LineChart, TrendingUp, Building2, Target, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
@@ -97,24 +97,41 @@ export default function Dashboard() {
           transition={{ delay: 0.1 }}
           className="mb-8"
         >
-          <Card className="border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <TrendingUp className="w-6 h-6 text-white" />
+          {/* INDUSTRIAL DISCLAIMER PROTOCOL */}
+          <Card className="border-t-4 border-t-amber-500 border-x border-b border-slate-200 shadow-2xl bg-white overflow-hidden rounded-none">
+            <CardContent className="p-0">
+              <div className="flex flex-col md:flex-row">
+                {/* STATUS INDICATOR */}
+                <div className="bg-slate-900 text-white p-6 md:w-64 flex flex-col justify-center items-center text-center space-y-3 border-r border-slate-800">
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full border border-amber-500/30 flex items-center justify-center animate-pulse">
+                      <AlertCircle className="w-6 h-6 text-amber-500" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-slate-900 shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+                  </div>
+                  <div>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-0.5">Classification</h3>
+                    <p className="text-lg font-mono font-bold text-white tracking-tighter uppercase">Non-Commercial</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Educational Platform Only</h3>
-                  <p className="text-slate-700 leading-relaxed">
-                    This platform is a portfolio management and financial analytics tool developed solely for <strong>educational, research, and demonstration purposes</strong>. 
-                    It is not intended for commercial use, investment advice, or monetary transactions. All analyses and simulations are provided for learning, portfolio management practice, and academic exploration.
-                  </p>
+
+                {/* DISCLAIMER LOG */}
+                <div className="flex-1 p-6 flex items-center bg-slate-50/50">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-mono font-bold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded uppercase">Edu-Sandbox</span>
+                      <div className="h-[1px] w-12 bg-slate-200" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Educational Platform Only</p>
+                    </div>
+                    <p className="text-xs md:text-sm text-slate-700 leading-relaxed font-medium">
+                      <span className="font-bold text-slate-900 uppercase tracking-tight">System Notice:</span> This platform is a portfolio management and financial analytics tool developed solely for <span className="text-slate-900 font-bold underline decoration-amber-500/50 italic">educational, research, and demonstration purposes</span>. It is not intended for commercial use, investment advice, or monetary transactions. All analyses and simulations are provided for learning and academic exploration.
+                    </p>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </motion.div>
-
         {portfolioSummary && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
