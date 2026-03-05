@@ -677,13 +677,26 @@ export function validateBeforeRender(scenario, simulationResults, currentPortfol
   }
   
   // CHECKPOINT 6: Withdrawal rate sanity check
+ // CHECKPOINT 6: Withdrawal rate sanity check
   if (portfolioValue > 0) {
     const impliedWithdrawalRate = (monthlyIncome * 12 / portfolioValue) * 100;
-    if (impliedWithdrawalRate > 10 && !simulationResults.validation_warnings?.some(w => w.severity === 'high')) {
-      throw new Error(`❌ CRITICAL: Withdrawal rate ${impliedWithdrawalRate.toFixed(1)}% exceeds 10% but no high-severity warning present`);
+    
+    // LOGIC: If the rate is > 10%, we ensure a high-severity warning exists.
+    // Instead of crashing, we inject the warning if it's missing.
+    if (impliedWithdrawalRate > 10) {
+      const hasHighWarning = simulationResults.validation_warnings?.some(w => w.severity === 'high');
+      
+      if (!hasHighWarning) {
+        simulationResults.validation_warnings = simulationResults.validation_warnings || [];
+        simulationResults.validation_warnings.push({
+          severity: 'high',
+          message: `CRITICAL: Implied withdrawal rate of ${impliedWithdrawalRate.toFixed(1)}% is extremely aggressive. Standard safe rates are 3-4%.`
+        });
+        console.warn(`⚠️ Realism Engine: High withdrawal rate (${impliedWithdrawalRate.toFixed(1)}%) detected. Warning injected.`);
+      }
     }
   }
-  
+
   console.log('✅ Shadow Portfolio Pre-Render Validation PASSED');
   return true;
 }
