@@ -275,7 +275,7 @@ export default function PracticeTrading() {
             className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
           >
             <Plus className="w-4 h-4 mr-2" />
-            New Practice Trade
+            Initialize Execution
           </Button>
           <Button
             onClick={handleSyncPortfolio}
@@ -291,7 +291,7 @@ export default function PracticeTrading() {
             ) : (
               <>
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Sync Prices
+                Synchronize Portfolio Assets
               </>
             )}
           </Button>
@@ -463,6 +463,7 @@ export default function PracticeTrading() {
                   </Button>
                 </div>
               </div>
+            ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
