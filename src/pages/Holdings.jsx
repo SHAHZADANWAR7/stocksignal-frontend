@@ -213,7 +213,7 @@ export default function Holdings() {
               <Building2 className="w-4 h-4 text-blue-400" />
               Active Holdings: Asset Inventory
             </h3>
-            <Badge variant="outline" className="rounded-none border-blue-500/50 text-blue-400 font-mono text-[10px] bg-blue-500/10 shadow-[0_0_10px_rgba(59,130,246,0.1)]">
+            <Badge variant="outline" className="rounded-none border-slate-700 text-white font-mono text-[10px] bg-blue-600/20 shadow-[0_0_8px_rgba(37,99,235,0.2)]">
               {filteredHoldings.length} Assets Logged
             </Badge>
           </div>
