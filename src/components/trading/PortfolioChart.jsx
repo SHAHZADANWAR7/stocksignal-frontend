@@ -47,71 +47,29 @@ export default function PortfolioChart({ portfolio, trades }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid md:grid-cols-4 gap-4">
-        <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <DollarSign className="w-8 h-8 text-blue-600" />
-              <Badge className="bg-blue-600">Total</Badge>
+      {/* INDUSTRIAL METRIC GRID */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Portfolio Value", value: `$${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, icon: <DollarSign className="w-4 h-4 text-blue-400" />, sub: "Total Balance" },
+          { label: "Total Gain/Loss", value: `${totalGainLoss >= 0 ? '+' : ''}$${Math.abs(totalGainLoss).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, icon: totalGainLoss >= 0 ? <TrendingUp className="w-4 h-4 text-emerald-400" /> : <TrendingDown className="w-4 h-4 text-rose-400" />, sub: `${totalGainLossPercent.toFixed(2)}%`, color: totalGainLoss >= 0 ? 'text-emerald-500' : 'text-rose-500' },
+          { label: "Daily Change", value: `${totalGainLoss >= 0 ? '+' : ''}$${Math.abs(totalGainLoss * 0.02).toLocaleString('en-US', { minimumFractionDigits: 2 })}`, icon: <Activity className="w-4 h-4 text-blue-400" />, sub: `${(totalGainLossPercent * 0.02).toFixed(2)}%`, color: 'text-blue-500' },
+          { label: "Asset Count", value: portfolio.assets.length, icon: <Target className="w-4 h-4 text-purple-400" />, sub: `Basis: $${totalCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}` }
+        ].map((item, i) => (
+          <Card key={i} className="border-2 border-slate-200 shadow-sm rounded-none overflow-hidden bg-white">
+            <div className="bg-slate-900 py-2 px-4 flex items-center justify-between border-b border-slate-800">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{item.label}</span>
+              {item.icon}
             </div>
-            <p className="text-sm text-slate-600 mb-1">Portfolio Value</p>
-            <p className="text-3xl font-bold text-slate-900">
-              ${totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className={`border-2 ${totalGainLoss >= 0 ? 'border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100' : 'border-rose-200 bg-gradient-to-br from-rose-50 to-rose-100'}`}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              {totalGainLoss >= 0 ? (
-                <TrendingUp className="w-8 h-8 text-emerald-600" />
-              ) : (
-                <TrendingDown className="w-8 h-8 text-rose-600" />
-              )}
-              <Badge className={totalGainLoss >= 0 ? "bg-emerald-600" : "bg-rose-600"}>
-                {totalGainLoss >= 0 ? 'Gain' : 'Loss'}
-              </Badge>
-            </div>
-            <p className="text-sm text-slate-600 mb-1">Total Gain/Loss</p>
-            <p className={`text-3xl font-bold ${totalGainLoss >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-              {totalGainLoss >= 0 ? '+' : ''}${Math.abs(totalGainLoss).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-            <p className={`text-sm ${totalGainLoss >= 0 ? 'text-emerald-600' : 'text-rose-600'} mt-1`}>
-              {totalGainLoss >= 0 ? '+' : ''}{totalGainLossPercent.toFixed(2)}%
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className={`border-2 ${totalGainLoss >= 0 ? 'border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-100' : 'border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100'}`}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Activity className="w-8 h-8 text-blue-600" />
-              <Badge className="bg-blue-600">Daily</Badge>
-            </div>
-            <p className="text-sm text-slate-600 mb-1">Daily Gain/Loss</p>
-            <p className={`text-3xl font-bold ${totalGainLoss >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
-              {totalGainLoss >= 0 ? '+' : ''}${Math.abs(totalGainLoss * 0.02).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </p>
-            <p className={`text-sm ${totalGainLoss >= 0 ? 'text-blue-600' : 'text-orange-600'} mt-1`}>
-              {totalGainLoss >= 0 ? '+' : ''}{(totalGainLossPercent * 0.02).toFixed(2)}%
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Target className="w-8 h-8 text-purple-600" />
-              <Badge className="bg-purple-600">Holdings</Badge>
-            </div>
-            <p className="text-sm text-slate-600 mb-1">Assets</p>
-            <p className="text-3xl font-bold text-slate-900">{portfolio.assets.length}</p>
-            <p className="text-sm text-slate-600 mt-1">
-              Cost Basis: ${totalCost.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-            </p>
-          </CardContent>
-        </Card>
+            <CardContent className="p-4 bg-slate-50/50">
+              <p className={`text-xl md:text-2xl font-mono font-bold tracking-tighter ${item.color || 'text-slate-900'}`}>
+                {item.value}
+              </p>
+              <p className="text-[10px] font-mono text-slate-500 uppercase mt-1 tracking-tight">
+                {item.sub}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
