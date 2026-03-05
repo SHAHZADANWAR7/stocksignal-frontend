@@ -417,9 +417,39 @@ export default function PracticeTrading() {
           </Card>
         )}
 
-        {trades.length > 0 && portfolio && (
+        {trades.length > 0 && portfolio ? (
           <div className="mb-8">
             <PortfolioChart portfolio={portfolio} trades={trades} />
+          </div>
+        ) : (
+          <div className="bg-slate-900 border-x border-b border-t-4 border-t-blue-600 p-12 text-center shadow-2xl rounded-none relative overflow-hidden group mb-8">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-600/10 blur-3xl -mr-16 -mt-16 group-hover:bg-blue-600/20 transition-all duration-700" />
+            <div className="relative z-10">
+              <div className="w-16 h-16 bg-white/5 border border-white/10 mx-auto mb-6 flex items-center justify-center rotate-45 group-hover:rotate-90 transition-transform duration-500">
+                <ShoppingCart className="w-8 h-8 text-blue-400 -rotate-45 group-hover:-rotate-90 transition-transform duration-500" />
+              </div>
+              <h3 className="text-[11px] font-black uppercase tracking-[0.6em] text-white mb-3">
+                Asset Database: Empty
+              </h3>
+              <div className="flex items-center justify-center gap-3 mb-8">
+                <div className="h-[1px] w-8 bg-slate-700" />
+                <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">
+                  Awaiting Initial Acquisition
+                </p>
+                <div className="h-[1px] w-8 bg-slate-700" />
+              </div>
+              <p className="text-xs text-slate-400 mb-10 max-w-xs mx-auto leading-relaxed italic">
+                System is operational. Market feeds connected. No simulated assets detected in current environment.
+              </p>
+              <Button
+                onClick={() => setIsTradeModalOpen(true)}
+                className="bg-white hover:bg-blue-50 text-slate-900 rounded-none px-10 h-11 font-black text-[10px] tracking-[0.2em] uppercase transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-blue-500/20"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Initialize First Acquisition
+              </Button>
+            </div>
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
           </div>
         )}
 
