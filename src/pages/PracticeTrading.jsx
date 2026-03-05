@@ -233,18 +233,40 @@ export default function PracticeTrading() {
             </Badge>
           </div>
 
-          <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                <p className="text-sm text-slate-700">
-                  <strong>Practice Mode:</strong> All trades are simulated using live market data. 
-                  No real money or securities are involved. Perfect for learning and testing strategies.
-                </p>
+         {/* INDUSTRIAL PRACTICE MODE PROTOCOL */}
+        <Card className="border-t-4 border-t-emerald-600 border-x border-b border-slate-200 shadow-2xl bg-white mb-8 overflow-hidden rounded-none">
+          <CardContent className="p-0">
+            <div className="flex flex-col md:flex-row">
+              {/* STATUS INDICATOR */}
+              <div className="bg-slate-900 text-white p-6 md:w-64 flex flex-col justify-center items-center text-center space-y-3 border-r border-slate-800">
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full border border-emerald-500/30 flex items-center justify-center animate-pulse">
+                    <AlertCircle className="w-6 h-6 text-emerald-500" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-slate-900 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                </div>
+                <div>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-0.5">Environment</h3>
+                  <p className="text-lg font-mono font-bold text-white tracking-tighter uppercase">Simulated</p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+
+              {/* DATA LOG */}
+              <div className="flex-1 p-6 flex items-center bg-slate-50/50">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-mono font-bold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">SYS-AUTH</span>
+                    <div className="h-[1px] w-12 bg-slate-200" />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Security Clearance: Sandbox</p>
+                  </div>
+                  <p className="text-xs md:text-sm text-slate-700 leading-relaxed font-medium">
+                    <span className="font-bold text-slate-900 uppercase tracking-tight">Active Protocol:</span> All executions are mirrored against live market feeds. Zero-capital exposure. No actual securities or currency will be transferred. Optimized for algorithmic strategy validation and tactical education.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="flex flex-wrap gap-3 mb-8">
           <Button
