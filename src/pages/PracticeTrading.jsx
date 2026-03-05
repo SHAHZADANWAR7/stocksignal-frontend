@@ -436,20 +436,33 @@ export default function PracticeTrading() {
                 <Loader2 className="w-12 h-12 mx-auto mb-4 text-blue-600 animate-spin" />
                 <p className="text-slate-500">Loading trades...</p>
               </div>
-            ) : trades.length === 0 ? (
-              <div className="text-center py-12">
-                <TrendingUp className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">No trades yet</h3>
-                <p className="text-slate-500 mb-6">Execute your first practice trade to get started</p>
-                <Button
-                  onClick={() => setIsTradeModalOpen(true)}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Place First Trade
-                </Button>
+           ) : trades.length === 0 ? (
+              <div className="text-center py-20 bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-none relative overflow-hidden">
+                {/* BACKGROUND GRID ELEMENT */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+                     style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+                
+                <div className="relative z-10">
+                  <div className="w-20 h-20 bg-slate-900 rounded-none mx-auto mb-6 flex items-center justify-center border-b-4 border-b-blue-600 shadow-xl">
+                    <TrendingUp className="w-10 h-10 text-white opacity-20 animate-pulse" />
+                  </div>
+                  
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-900 mb-3">
+                    System Idle: No Active Logs
+                  </h3>
+                  <p className="text-[11px] font-mono text-slate-500 mb-10 max-w-xs mx-auto leading-relaxed">
+                    Awaiting primary execution command. Initialize a new trade protocol to generate portfolio data.
+                  </p>
+                  
+                  <Button
+                    onClick={() => setIsTradeModalOpen(true)}
+                    className="bg-slate-900 hover:bg-black text-white rounded-none px-12 h-12 font-black text-[10px] tracking-[0.2em] uppercase transition-all border-b-2 border-blue-600 shadow-2xl"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Begin Execution
+                  </Button>
+                </div>
               </div>
-            ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
