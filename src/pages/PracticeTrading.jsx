@@ -40,14 +40,18 @@ export default function PracticeTrading() {
     try {
       const response = await awsApi.getUserPortfolio();
       
-      if (response && response.portfolio) {
-        setPortfolio(response.portfolio);
-        if (response.portfolio.lastUpdated) {
-          setLastSync(new Date(response.portfolio.lastUpdated));
-        }
+      // Industrial Fix: Ensure we never have a 'null' portfolio after loading
+      // This stops the "ghost" cards from flashing
+      const portfolioData = response?.portfolio || { holdings: {} };
+      setPortfolio(portfolioData);
+      
+      if (portfolioData.lastUpdated) {
+        setLastSync(new Date(portfolioData.lastUpdated));
       }
     } catch (error) {
       console.error("Error loading portfolio:", error);
+      // Fallback to empty holdings so the UI stays in the 'Asset Database: Empty' state
+      setPortfolio({ holdings: {} });
     }
   };
 
