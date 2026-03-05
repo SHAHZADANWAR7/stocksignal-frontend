@@ -462,76 +462,63 @@ export default function PracticeTrading() {
           </CardHeader>
           <CardContent>
             {isLoadingTrades ? (
-              <div className="text-center py-12">
-                <Loader2 className="w-12 h-12 mx-auto mb-4 text-blue-600 animate-spin" />
-                <p className="text-slate-500">Loading trades...</p>
+              <div className="text-center py-20 bg-slate-50/30">
+                <Loader2 className="w-8 h-8 mx-auto mb-4 text-slate-400 animate-spin opacity-40" />
+                <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-400">Accessing Archives...</p>
               </div>
-           ) : trades.length === 0 ? (
-              <div className="text-center py-20 bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-none relative overflow-hidden">
-                {/* BACKGROUND GRID ELEMENT */}
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-                     style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-                
-                <div className="relative z-10">
-                  <div className="w-20 h-20 bg-slate-900 rounded-none mx-auto mb-6 flex items-center justify-center border-b-4 border-b-blue-600 shadow-xl">
-                    <TrendingUp className="w-10 h-10 text-white opacity-20 animate-pulse" />
-                  </div>
-                  
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-900 mb-3">
-                    System Idle: No Active Logs
-                  </h3>
-                  <p className="text-[11px] font-mono text-slate-500 mb-10 max-w-xs mx-auto leading-relaxed">
-                    Awaiting primary execution command. Initialize a new trade protocol to generate portfolio data.
-                  </p>
-                  
-                  <Button
-                    onClick={() => setIsTradeModalOpen(true)}
-                    className="bg-slate-900 hover:bg-black text-white rounded-none px-12 h-12 font-black text-[10px] tracking-[0.2em] uppercase transition-all border-b-2 border-blue-600 shadow-2xl"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Begin Execution
-                  </Button>
+            ) : trades.length === 0 ? (
+              <div className="text-center py-20 bg-slate-50/50 border-t border-slate-100">
+                <div className="w-12 h-12 bg-slate-100 rounded-none mx-auto mb-4 flex items-center justify-center border border-slate-200">
+                  <Clock className="w-5 h-5 text-slate-400" />
                 </div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-900 mb-2">No Historical Logs</h3>
+                <p className="text-[11px] font-mono text-slate-500 mb-8 max-w-xs mx-auto leading-relaxed">System awaiting first data entry point. All executions will be archived here.</p>
+                <Button
+                  onClick={() => setIsTradeModalOpen(true)}
+                  className="bg-slate-900 text-white rounded-none text-[9px] font-black uppercase tracking-[0.2em] px-8 h-10 hover:bg-black transition-all border-b-2 border-blue-600 shadow-lg"
+                >
+                  Place First Trade
+                </Button>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200">
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">Date</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">Symbol</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">Side</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Quantity</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Price</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-700">Total</th>
-                      <th className="text-center py-3 px-4 font-semibold text-slate-700">Status</th>
+                    <tr className="bg-slate-900 text-white border-b border-slate-800">
+                      <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-left border-r border-slate-800">Timestamp</th>
+                      <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-left border-r border-slate-800">Asset</th>
+                      <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-left border-r border-slate-800">Side</th>
+                      <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-right border-r border-slate-800">Units</th>
+                      <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-right border-r border-slate-800">Price</th>
+                      <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-right border-r border-slate-800">Total (USD)</th>
+                      <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-center">Status</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-200">
                     {trades.map((trade) => {
                       const executedPrice = getTradeField(trade, 'executedPrice', 'executed_price');
                       return (
-                        <tr key={trade.id || trade.timestamp} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="py-3 px-4 text-sm text-slate-600">
+                        <tr key={trade.id || trade.timestamp} className="hover:bg-blue-50/40 transition-colors font-mono text-[11px]">
+                          <td className="py-4 px-4 text-slate-500 border-r border-slate-100 whitespace-nowrap">
                             {formatTradeDate(trade.timestamp)}
                           </td>
-                          <td className="py-3 px-4 font-semibold text-slate-900">{trade.symbol}</td>
-                          <td className="py-3 px-4">
-                            <Badge className={trade.side === 'buy' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}>
-                              {trade.side.toUpperCase()}
-                            </Badge>
+                          <td className="py-4 px-4 font-bold text-slate-900 border-r border-slate-100 uppercase tracking-tighter">{trade.symbol}</td>
+                          <td className="py-4 px-4 border-r border-slate-100">
+                            <span className={`px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter ${trade.side === 'buy' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                              {trade.side}
+                            </span>
                           </td>
-                          <td className="py-3 px-4 text-right text-slate-700">{trade.quantity}</td>
-                          <td className="py-3 px-4 text-right text-slate-700">
+                          <td className="py-4 px-4 text-right text-slate-700 border-r border-slate-100">{trade.quantity}</td>
+                          <td className="py-4 px-4 text-right text-slate-700 border-r border-slate-100 font-medium">
                             ${executedPrice.toFixed(2)}
                           </td>
-                          <td className="py-3 px-4 text-right font-semibold text-slate-900">
-                            ${(executedPrice * trade.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          <td className="py-4 px-4 text-right font-bold text-slate-900 border-r border-slate-100">
+                            ${(executedPrice * trade.quantity).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                           </td>
-                          <td className="py-3 px-4 text-center">
-                            <Badge className={`${getStatusBadge(trade.status)} border`}>
+                          <td className="py-4 px-4 text-center">
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500 border border-slate-200 px-2 py-1 bg-slate-50">
                               {trade.status}
-                            </Badge>
+                            </span>
                           </td>
                         </tr>
                       );
