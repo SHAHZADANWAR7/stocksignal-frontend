@@ -216,43 +216,60 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <Card className="border-2 border-slate-200 shadow-xl bg-white/80 backdrop-blur-sm rounded-3xl">
-          <CardHeader>
-            <CardTitle className="text-2xl">Recent Analyses</CardTitle>
+       {/* INDUSTRIAL ANALYSES LOG */}
+        <Card className="border-2 border-slate-200 shadow-xl bg-white overflow-hidden rounded-none">
+          <CardHeader className="bg-slate-900 text-white rounded-none border-b border-slate-800 py-4 px-6">
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-blue-400" />
+              Recent Analyses: Data Archives
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             {analyses.length === 0 ? (
-              <div className="text-center py-12">
-                <TrendingUp className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                <h3 className="text-xl font-semibold text-slate-900 mb-2">No analyses yet</h3>
-                <p className="text-slate-500 mb-6">Start by browsing investments and running your first AI analysis</p>
+              <div className="text-center py-20 bg-slate-50/50">
+                <TrendingUp className="w-16 h-16 mx-auto mb-4 text-slate-300 opacity-40" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-900 mb-2">No Historical Logs Found</h3>
+                <p className="text-[11px] font-mono text-slate-500 mb-8 max-w-xs mx-auto leading-relaxed uppercase">System awaiting first data entry point. All AI simulations will be archived here.</p>
                 <Link to={createPageUrl("Companies")}>
-                  <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                    Get Started
+                  <Button className="bg-slate-900 text-white rounded-none text-[9px] font-black uppercase tracking-[0.2em] px-8 h-10 hover:bg-black transition-all border-b-2 border-blue-600 shadow-lg">
+                    Initialize First Analysis
                   </Button>
                 </Link>
               </div>
             ) : (
-              <div className="space-y-4">
-                {analyses.map((analysis) => (
-                  <Link key={analysis.id} to={`${createPageUrl("Analysis")}?id=${analysis.id}`}>
-                    <Card className="border border-slate-200 hover:shadow-md transition-shadow cursor-pointer hover:border-blue-300 rounded-2xl">
-                      <CardContent className="p-4 md:p-6">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-slate-900 mb-2 break-words">
-                              {(analysis.selectedCompanies || []).join(', ')}
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs md:text-sm text-slate-600">
-                              <span className="break-words">Investment: ${(analysis.totalInvestment || 0).toLocaleString()}</span>
-                              <span className="break-words">Date: {format(new Date(analysis.analysisDate), 'MMM d, yyyy')}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100/50 border-b border-slate-200">
+                      <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-6 text-left border-r border-slate-200 text-slate-500">Asset Cluster</th>
+                      <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-right border-r border-slate-200 text-slate-500">Allocation (USD)</th>
+                      <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-right border-r border-slate-200 text-slate-500">Timestamp</th>
+                      <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-6 text-center text-slate-500">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {analyses.map((analysis) => (
+                      <tr key={analysis.id} className="hover:bg-blue-50/40 transition-colors font-mono text-[11px] group">
+                        <td className="py-4 px-6 font-bold text-slate-900 border-r border-slate-100 truncate max-w-[200px] uppercase tracking-tighter">
+                          {(analysis.selectedCompanies || []).join(', ')}
+                        </td>
+                        <td className="py-4 px-4 text-right text-slate-700 border-r border-slate-100 font-bold">
+                          ${(analysis.totalInvestment || 0).toLocaleString()}
+                        </td>
+                        <td className="py-4 px-4 text-right text-slate-500 border-r border-slate-100">
+                          {format(new Date(analysis.analysisDate), 'MMM d, yyyy')}
+                        </td>
+                        <td className="py-4 px-6 text-center">
+                          <Link to={`${createPageUrl("Analysis")}?id=${analysis.id}`}>
+                            <Button variant="outline" size="sm" className="h-7 rounded-none border-slate-300 text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all">
+                              View Report
+                            </Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </CardContent>
