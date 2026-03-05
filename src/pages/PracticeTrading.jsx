@@ -267,6 +267,7 @@ export default function PracticeTrading() {
             </div>
           </CardContent>
         </Card>
+      </motion.div>
 
         <div className="flex flex-wrap gap-3 mb-8">
           <Button
