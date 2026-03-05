@@ -164,26 +164,46 @@ export default function Holdings() {
             </div>
           </div>
         </motion.div>
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
-          <Card className="border-slate-200 shadow-sm p-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <Input placeholder="Search by symbol or name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 border-slate-300" />
+        {/* INDUSTRIAL CONTROL PANEL */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          {/* SEARCH MODULE */}
+          <Card className="border-2 border-slate-200 shadow-sm rounded-none overflow-hidden bg-white">
+            <div className="bg-slate-900 py-2 px-4 border-b border-slate-800 flex items-center justify-between">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Search Protocol</span>
+              <Search className="w-3 h-3 text-slate-400" />
             </div>
+            <CardContent className="p-4 bg-slate-50/50">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input 
+                  placeholder="INPUT SYMBOL..." 
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)} 
+                  className="pl-10 border-slate-300 rounded-none bg-white font-mono text-xs focus-visible:ring-1 focus-visible:ring-blue-500 uppercase text-slate-900" 
+                />
+              </div>
+            </CardContent>
           </Card>
-          {/* Always show the Explain button, even if holdings are empty */}
-          <Card className="border-2 border-purple-200 shadow-sm p-4 bg-gradient-to-br from-purple-50 to-pink-50">
-            <Button
-              onClick={explainPortfolio}
-              disabled={isExplaining || holdings.length === 0}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-            >
-              {isExplaining ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Explaining...</>
-              ) : (
-                <><Lightbulb className="w-4 h-4 mr-2" />Explain My Portfolio Like I'm 10</>
-              )}
-            </Button>
+
+          {/* AI EXPLAINER MODULE */}
+          <Card className="border-2 border-slate-200 shadow-sm rounded-none overflow-hidden bg-white">
+            <div className="bg-slate-900 py-2 px-4 border-b border-slate-800 flex items-center justify-between">
+              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">AI Logic Core</span>
+              <Lightbulb className="w-3 h-3 text-purple-400" />
+            </div>
+            <CardContent className="p-4 bg-slate-50/50">
+              <Button
+                onClick={explainPortfolio}
+                disabled={isExplaining || holdings.length === 0}
+                className="w-full bg-slate-900 text-white hover:bg-black rounded-none h-10 text-[10px] font-black uppercase tracking-widest border-b-2 border-purple-500 shadow-lg group transition-all"
+              >
+                {isExplaining ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin text-purple-400" />Parsing Data...</>
+                ) : (
+                  <><Lightbulb className="w-4 h-4 mr-2 text-purple-400 group-hover:scale-110 transition-transform" />Interpret Portfolio Asset Mix</>
+                )}
+              </Button>
+            </CardContent>
           </Card>
         </div>
         {showExplanation && explanation && (
@@ -213,7 +233,7 @@ export default function Holdings() {
               <Building2 className="w-4 h-4 text-blue-400" />
               Active Holdings: Asset Inventory
             </h3>
-            <Badge variant="outline" className="rounded-none border-slate-700 text-slate-400 font-mono text-[9px]">
+            <Badge variant="outline" className="rounded-none border-blue-500/50 text-blue-400 font-mono text-[10px] bg-blue-500/10 shadow-[0_0_10px_rgba(59,130,246,0.1)]">
               {filteredHoldings.length} Assets Logged
             </Badge>
           </div>
