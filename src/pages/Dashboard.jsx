@@ -177,48 +177,43 @@ export default function Dashboard() {
           </motion.div>
         )}
 
+        {/* INDUSTRIAL NAVIGATION GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="h-full">
-            <Link to={createPageUrl("Companies")} className="h-full block">
-              <Card className="border-2 border-blue-200 hover:border-blue-400 transition-all cursor-pointer bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-xl group rounded-3xl h-full">
-                <CardContent className="p-6 md:p-8 text-center h-full flex flex-col justify-center">
-                  <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 bg-white rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                    <Building2 className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-1 md:mb-2">Browse Investments</h3>
-                  <p className="text-sm md:text-base text-slate-600">Select stocks and index funds for analysis</p>
-                </CardContent>
-              </Card>
-            </Link>
-          </motion.div>
+          {[
+            { title: "Browse Investments", sub: "Select stocks and index funds for analysis", icon: <Building2 className="w-5 h-5 text-blue-400" />, link: "Companies", color: "border-t-blue-500" },
+            { title: "AI Analysis", sub: "Get intelligent investment recommendations", icon: <LineChart className="w-5 h-5 text-purple-400" />, link: "Analysis", color: "border-t-purple-500" },
+            { title: "My Portfolio", sub: "Track your current investments", icon: <Target className="w-5 h-5 text-emerald-400" />, link: "Holdings", color: "border-t-emerald-500" }
+          ].map((item, i) => (
+            <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 * (i + 2) }} className="h-full">
+              <Link to={createPageUrl(item.link)} className="h-full block group">
+                <Card className={`h-full border-t-4 ${item.color} border-x border-b border-slate-200 shadow-lg hover:shadow-2xl transition-all duration-300 rounded-none bg-white overflow-hidden relative flex flex-col`}>
+                  <CardContent className="p-0 h-full flex flex-col">
+                    {/* TOP STATUS BAR */}
+                    <div className="bg-slate-900 py-3 px-6 flex items-center justify-between border-b border-slate-800">
+                      <span className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">System Link: 0{i + 1}</span>
+                      {item.icon}
+                    </div>
+                    
+                    {/* CONTENT BODY */}
+                    <div className="p-8 flex-1 bg-slate-50/30 group-hover:bg-white transition-colors">
+                      <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors uppercase tracking-tight">
+                        {item.title}
+                      </h3>
+                      <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                        {item.sub}
+                      </p>
+                    </div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="h-full">
-            <Link to={createPageUrl("Analysis")} className="h-full block">
-              <Card className="border-2 border-purple-200 hover:border-purple-400 transition-all cursor-pointer bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-xl group rounded-3xl h-full">
-                <CardContent className="p-6 md:p-8 text-center h-full flex flex-col justify-center">
-                  <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 bg-white rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                    <LineChart className="w-6 h-6 md:w-8 md:h-8 text-purple-600" />
-                  </div>
-                  <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-1 md:mb-2">AI Analysis</h3>
-                  <p className="text-sm md:text-base text-slate-600">Get intelligent investment recommendations</p>
-                </CardContent>
-              </Card>
-            </Link>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="h-full">
-            <Link to={createPageUrl("Holdings")} className="h-full block">
-              <Card className="border-2 border-emerald-200 hover:border-emerald-400 transition-all cursor-pointer bg-gradient-to-br from-emerald-50 to-emerald-100 hover:shadow-xl group rounded-3xl h-full">
-                <CardContent className="p-6 md:p-8 text-center h-full flex flex-col justify-center">
-                  <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-4 bg-white rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
-                    <Target className="w-6 h-6 md:w-8 md:h-8 text-emerald-600" />
-                  </div>
-                  <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-1 md:mb-2">My Portfolio</h3>
-                  <p className="text-sm md:text-base text-slate-600">Track your current investments</p>
-                </CardContent>
-              </Card>
-            </Link>
-          </motion.div>
+                    {/* ACTION FOOTER */}
+                    <div className="px-6 py-3 bg-slate-100/50 border-t border-slate-200 flex items-center justify-between mt-auto">
+                      <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest">Execute Protocol</span>
+                      <div className="w-2 h-2 bg-slate-300 rounded-full group-hover:bg-blue-500 group-hover:animate-ping transition-all" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            </motion.div>
+          ))}
         </div>
 
         <Card className="border-2 border-slate-200 shadow-xl bg-white/80 backdrop-blur-sm rounded-3xl">
