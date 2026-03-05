@@ -172,44 +172,62 @@ export default function PortfolioChart({ portfolio, trades }) {
         </Card>
       </div>
 
-      <Card className="border-2 border-slate-200">
-        <CardHeader>
-          <CardTitle>Position Details</CardTitle>
+      <Card className="border-2 border-slate-200 shadow-lg overflow-hidden rounded-none">
+        <CardHeader className="bg-slate-900 text-white rounded-none border-b border-slate-800 py-4 px-6">
+          <CardTitle className="text-[10px] font-black uppercase tracking-[0.4em] flex items-center gap-2">
+            <Activity className="w-4 h-4 text-blue-400" />
+            Position Details: Asset Database
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Symbol</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-700">Quantity</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-700">Avg Cost</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-700">Current</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-700">Value</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-700">Gain/Loss</th>
+                <tr className="bg-slate-100/50 border-b border-slate-200">
+                  <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-6 text-left border-r border-slate-200 text-slate-500">Symbol</th>
+                  <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-right border-r border-slate-200 text-slate-500">Quantity</th>
+                  <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-right border-r border-slate-200 text-slate-500">Avg Cost</th>
+                  <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-right border-r border-slate-200 text-slate-500">Current</th>
+                  <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-4 text-right border-r border-slate-200 text-slate-500">Value</th>
+                  <th className="text-[9px] font-black uppercase tracking-[0.2em] py-4 px-6 text-center text-slate-500">Gain/Loss</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-200">
                 {portfolio.assets.map((asset, index) => {
                   const currentValue = asset.quantity * asset.currentPrice;
                   const costBasis = asset.quantity * asset.avgCost;
                   const gainLoss = currentValue - costBasis;
                   const gainLossPercent = costBasis > 0 ? (gainLoss / costBasis) * 100 : 0;
+                  const isPositive = gainLoss >= 0;
 
                   return (
-                    <tr key={index} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="py-3 px-4 font-semibold text-slate-900">{asset.symbol}</td>
-                      <td className="py-3 px-4 text-right text-slate-700">{asset.quantity}</td>
-                      <td className="py-3 px-4 text-right text-slate-700">${asset.avgCost.toFixed(2)}</td>
-                      <td className="py-3 px-4 text-right text-slate-700">${asset.currentPrice.toFixed(2)}</td>
-                      <td className="py-3 px-4 text-right font-semibold text-slate-900">
-                        ${currentValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <tr key={index} className="hover:bg-blue-50/40 transition-colors font-mono text-[11px]">
+                      <td className="py-4 px-6 font-bold text-slate-900 border-r border-slate-100 uppercase tracking-tighter">
+                        {asset.symbol}
                       </td>
-                      <td className="py-3 px-4 text-right">
-                        <div className={`font-semibold ${gainLoss >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                          {gainLoss >= 0 ? '+' : ''}${Math.abs(gainLoss).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          <div className="text-xs">
-                            {gainLoss >= 0 ? '+' : ''}{gainLossPercent.toFixed(2)}%
+                      <td className="py-4 px-4 text-right text-slate-700 border-r border-slate-100">
+                        {asset.quantity}
+                      </td>
+                      <td className="py-4 px-4 text-right text-slate-700 border-r border-slate-100">
+                        ${asset.avgCost.toFixed(2)}
+                      </td>
+                      <td className="py-4 px-4 text-right text-slate-700 border-r border-slate-100">
+                        ${asset.currentPrice.toFixed(2)}
+                      </td>
+                      <td className="py-4 px-4 text-right font-bold text-slate-900 border-r border-slate-100">
+                        ${currentValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="py-4 px-6 text-center">
+                        <div className={`inline-block px-3 py-1.5 text-[10px] font-black rounded-none border-l-4 ${
+                          isPositive 
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-500' 
+                          : 'bg-rose-50 text-rose-700 border-rose-500'
+                        }`}>
+                          <div className="flex flex-col items-center leading-none gap-1">
+                            <span>{isPositive ? '+' : ''}{gainLossPercent.toFixed(2)}%</span>
+                            <span className="text-[8px] opacity-60">
+                              {isPositive ? '+' : '-'}${Math.abs(gainLoss).toLocaleString('en-US', { maximumFractionDigits: 0 })}
+                            </span>
                           </div>
                         </div>
                       </td>
