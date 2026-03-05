@@ -114,18 +114,17 @@ const loadScenarios = async () => {
 
   const loadCurrentPortfolio = async () => {
     try {
-      const userId = localStorage.getItem('user_id');
-      if (!userId) return;
-
-      // CHANGE: Use syncPortfolio instead of getPortfolio
+      // 📡 Calling syncPortfolio. 
+      // awsClient.js will automatically inject the userId/cognitoSub from your session.
       const response = await awsApi.syncPortfolio(); 
       
-      // Access the portfolio from the response body (syncPortfolio returns { success, portfolio: { assets, totalValue } })
+      console.log("📡 syncPortfolio Response:", response);
+
       if (response && response.portfolio) {
         const assets = response.portfolio.assets || [];
         const totalValue = response.portfolio.totalValue || 0;
         
-        // Calculate cost based on avgCost stored in DynamoDB
+        // Calculate cost based on avgCost
         const totalCost = assets.reduce((sum, a) => sum + (a.quantity * (a.avgCost || 0)), 0);
         
         setCurrentPortfolio({
@@ -134,12 +133,17 @@ const loadScenarios = async () => {
           gain: totalValue - totalCost,
           holdings: assets
         });
+      } else {
+        // Fallback to $0 baseline so simulations don't crash
+        console.log("ℹ️ No actual portfolio found. Setting baseline to $0.");
+        setCurrentPortfolio({ value: 0, cost: 0, gain: 0, holdings: [] });
       }
     } catch (error) {
-      console.error("Error loading actual portfolio via syncPortfolio:", error);
+      console.error("Error loading actual portfolio:", error);
+      // Ensure the state is at least an empty object with 0 value
+      setCurrentPortfolio({ value: 0, cost: 0, gain: 0, holdings: [] });
     }
   };
-
 const handleSubmit = async () => {
     // 1. Get the email (GoalIntelligence pattern)
     const userEmail = localStorage.getItem('user_email') || 
@@ -1493,6 +1497,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
 
