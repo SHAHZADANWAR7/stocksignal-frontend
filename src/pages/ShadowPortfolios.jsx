@@ -471,7 +471,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
         projection_data: projectionData.projection,
         projection_assumptions: projectionData.assumptions,
         projection_summary: projectionData.summary,
-        portfolio_change_percent: currentPortfolio 
+       portfolio_change_percent: currentPortfolio && currentPortfolio.value > 0
           ? ((scenario.total_value - currentPortfolio.value) / currentPortfolio.value * 100)
           : 0
       };
@@ -1497,6 +1497,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
 
