@@ -579,28 +579,51 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
           </div>
         </motion.div>
 
-        {/* Privacy Notice */}
-        <Card className="border-2 border-blue-200 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50 mb-8">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Eye className="w-6 h-6 text-white" />
+        {/* INDUSTRIAL PRIVACY PROTOCOL NOTICE */}
+        <Card className="border-t-4 border-t-slate-900 border-x border-b border-slate-200 shadow-2xl bg-white mb-12 overflow-hidden rounded-none">
+          <CardContent className="p-0">
+            <div className="flex flex-col md:flex-row">
+              {/* STATUS SIDEBAR */}
+              <div className="bg-slate-900 text-white p-8 md:w-72 flex flex-col justify-center items-center text-center space-y-4 border-r border-slate-800">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full border border-amber-500/30 flex items-center justify-center animate-pulse">
+                    <Eye className="w-8 h-8 text-amber-500" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900 shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                </div>
+                <div>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-500 mb-1">Security Status</h3>
+                  <p className="text-2xl font-mono font-bold text-white tracking-tighter uppercase">Enforced</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h3 className="font-bold text-slate-900 mb-2">Privacy-First Platform</h3>
-                <div className="grid md:grid-cols-3 gap-3 text-sm">
-                  <div className="bg-white rounded-lg p-3">
-                    <p className="font-semibold text-slate-900 mb-1">Zero Integration</p>
-                    <p className="text-slate-600">No bank linking, no Plaid, manual input only</p>
+
+              {/* PROTOCOL GRID */}
+              <div className="flex-1 grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                <div className="p-8 group hover:bg-slate-50 transition-all duration-300">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-[10px] font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-500">PRT-01</span>
+                    <div className="h-[1px] flex-1 bg-slate-100 group-hover:bg-amber-200 transition-colors" />
                   </div>
-                  <div className="bg-white rounded-lg p-3">
-                    <p className="font-semibold text-slate-900 mb-1">No Data Selling</p>
-                    <p className="text-slate-600">Your financial data stays private</p>
+                  <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest mb-2">Zero Integration</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">No bank linking. No Plaid hooks. Absolute manual isolation. Your actual accounts remain invisible to the engine.</p>
+                </div>
+
+                <div className="p-8 group hover:bg-slate-50 transition-all duration-300 border-slate-100">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-[10px] font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-500">PRT-02</span>
+                    <div className="h-[1px] flex-1 bg-slate-100 group-hover:bg-amber-200 transition-colors" />
                   </div>
-                  <div className="bg-white rounded-lg p-3">
-                    <p className="font-semibold text-slate-900 mb-1">Local Control</p>
-                    <p className="text-slate-600">You own your data, encrypted storage</p>
+                  <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest mb-2">Non-Monetized Data</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">Shadow scenarios are used for simulation only. We do not aggregate or sell user financial models to third-party brokers.</p>
+                </div>
+
+                <div className="p-8 group hover:bg-slate-50 transition-all duration-300">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-[10px] font-mono font-bold bg-slate-100 px-2 py-0.5 rounded text-slate-500">PRT-03</span>
+                    <div className="h-[1px] flex-1 bg-slate-100 group-hover:bg-amber-200 transition-colors" />
                   </div>
+                  <h4 className="font-black text-slate-900 text-xs uppercase tracking-widest mb-2">Local Governance</h4>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">Encrypted storage at rest. You retain complete ownership and deletion rights over every hypothetical data point created.</p>
                 </div>
               </div>
             </div>
@@ -1497,6 +1520,7 @@ For each holding, provide: symbol, short_term_outlook (1 sentence), long_term_ou
     </div>
   );
 }
+
 
 
 
