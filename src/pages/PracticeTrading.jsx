@@ -417,8 +417,13 @@ export default function PracticeTrading() {
           </Card>
         )}
 
-        {/* ASSET DATABASE SECTION */}
-        {portfolio && portfolio.holdings && Object.keys(portfolio.holdings).length > 0 ? (
+       {/* ASSET DATABASE SECTION */}
+        {!portfolio ? (
+          <div className="bg-slate-900 border-x border-b border-t-4 border-t-blue-600 p-20 text-center shadow-2xl rounded-none mb-8">
+            <Loader2 className="w-8 h-8 mx-auto mb-4 text-blue-500 animate-spin opacity-40" />
+            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-400">Syncing Asset Database...</p>
+          </div>
+        ) : portfolio.holdings && Object.keys(portfolio.holdings).length > 0 ? (
           <div className="mb-8">
             <PortfolioChart portfolio={portfolio} trades={trades} />
           </div>
