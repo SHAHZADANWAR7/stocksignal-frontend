@@ -72,26 +72,23 @@ export default function PortfolioChart({ portfolio, trades }) {
         ))}
       </div>
 
+     {/* INDUSTRIAL CHART SECTION */}
       <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="border-2 border-slate-200">
-          <CardHeader>
-            <CardTitle>Asset Allocation</CardTitle>
+        <Card className="border-2 border-slate-200 shadow-lg rounded-none overflow-hidden bg-white">
+          <CardHeader className="bg-slate-900 text-white border-b border-slate-800 py-4 px-6">
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2">
+              <Activity className="w-4 h-4 text-blue-400" />
+              Asset Allocation: Weightings
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6 bg-slate-50/30">
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart 
-                data={pieData.sort((a, b) => b.value - a.value)} 
-                layout="vertical"
-                margin={{ left: 10, right: 30 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+              <BarChart data={pieData.sort((a, b) => b.value - a.value)} layout="vertical" margin={{ left: -20, right: 40 }}>
+                <CartesianGrid strokeDasharray="2 2" horizontal={false} stroke="#e2e8f0" />
                 <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" width={60} />
-                <Tooltip 
-                  formatter={(value) => `$${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
-                  labelFormatter={(label) => `${label}`}
-                />
-                <Bar dataKey="value" radius={[0, 8, 8, 0]} label={{ position: 'right', formatter: (value) => `${((value / totalValue) * 100).toFixed(1)}%` }}>
+                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ borderRadius: '0px', border: '2px solid #e2e8f0', fontFamily: 'monospace', fontSize: '10px' }} />
+                <Bar dataKey="value" radius={0} barSize={20}>
                   {pieData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
@@ -101,25 +98,21 @@ export default function PortfolioChart({ portfolio, trades }) {
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-slate-200">
-          <CardHeader>
-            <CardTitle>Performance by Asset</CardTitle>
+        <Card className="border-2 border-slate-200 shadow-lg rounded-none overflow-hidden bg-white">
+          <CardHeader className="bg-slate-900 text-white border-b border-slate-800 py-4 px-6">
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-emerald-400" />
+              Performance: Yield Analytics
+            </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-6 bg-slate-50/30">
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="symbol" />
-                <YAxis tickFormatter={(value) => `${value.toFixed(0)}%`} />
-                <Tooltip 
-                  formatter={(value, name) => {
-                    if (name === "gainLossPercent") {
-                      return [`${value.toFixed(2)}%`, "Return"];
-                    }
-                    return value;
-                  }}
-                />
-                <Bar dataKey="gainLossPercent" fill="#3b82f6" name="Return %" radius={[10, 10, 0, 0]}>
+              <BarChart data={barData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="2 2" stroke="#e2e8f0" vertical={false} />
+                <XAxis dataKey="symbol" tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                <YAxis tickFormatter={(v) => `${v}%`} tick={{ fontSize: 10, fontFamily: 'monospace' }} axisLine={false} tickLine={false} />
+                <Tooltip cursor={{ fill: '#f1f5f9' }} contentStyle={{ borderRadius: '0px', border: '2px solid #e2e8f0', fontFamily: 'monospace', fontSize: '10px' }} />
+                <Bar dataKey="gainLossPercent" radius={0} barSize={30}>
                   {barData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.gainLossPercent >= 0 ? '#10b981' : '#ef4444'} />
                   ))}
