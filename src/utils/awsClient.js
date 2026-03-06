@@ -148,9 +148,10 @@ const invokeProxy = async (functionName, payload = {}) => {
       enhancedPayload.userId = cognitoSub;
     } else if (keyType === 'cognito_sub' && cognitoSub) {
       enhancedPayload.cognitoSub = cognitoSub;
-    } else if (keyType === 'user_email' && userEmail) {
+   } else if (keyType === 'user_email' && userEmail) {
       enhancedPayload.userEmail = userEmail;
-      enhancedPayload.email = userEmail; // Ensure the 'email' key required by DynamoDB is present
+      enhancedPayload.email = userEmail; 
+      enhancedPayload.user_email = userEmail; // Only added to support the Simulation Lab Lambda naming convention
     }
     
     console.log(`📡 invokeProxy - Request details for ${functionName}:`, {
@@ -280,7 +281,7 @@ export const awsApi = {
   cacheMarketInsights: (data) => invokeProxy("cacheMarketInsights", data),
   getUserTrades: () => invokeProxy("getUserTrades", {}),
   invokeLLM: (prompt, context) => invokeProxy("invokeLLM", { prompt, context }),
-  getSimulationLabData: (userEmail) => invokeProxy("getSimulationLabData", { user_email: userEmail }),
+  getSimulationLabData: (payload = {}) => invokeProxy("getSimulationLabData", payload),
   sendEmail: (data) => invokeProxy("sendEmail", data),
   getUserDashboardData: async () => { const response = await invokeProxy("getUserDashboardData", {}); return response; },
   calculatePortfolioHealth: (payload) => invokeProxy("calculatePortfolioHealth", payload) // <<<<<< ADDED AS REQUESTED
