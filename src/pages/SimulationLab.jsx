@@ -128,12 +128,9 @@ export default function SimulationLab() {
 
   const loadUser = async () => {
     try {
-      const userId = localStorage.getItem('user_id');
-      if (!userId) return;
-      const data = await awsApi.getUser({ userId });
-      if (data && data.user) {
-        setUser(data.user);
-      }
+      // Universal call: awsClient.js now injects the userId automatically
+      const data = await awsApi.getUser({}); 
+      if (data && data.user) setUser(data.user);
     } catch (error) {
       console.error("Error loading user:", error);
     }
@@ -146,14 +143,17 @@ export default function SimulationLab() {
 
  const loadData = async () => {
     try {
-      const userId = localStorage.getItem('user_id');
-      if (!userId) return;
-      // Passing { userId } here is what satisfies the API's requirements
-      const data = await awsApi.getSimulationLabData({ userId });
-      setPortfolios(data.portfolios || []);
-      setChallenges(data.challenges || []);
+      // Universal call: awsClient.js now injects user_email automatically!
+      const response = await awsApi.getSimulationLabData({}); 
+      
+      // Accessing the specific paths defined in your Lambda (Line 368-372)
+      const portfolioList = response?.data?.lab_summary?.portfolios || [];
+      const challengeList = response?.data?.challenges || [];
+      
+      setPortfolios(portfolioList);
+      setChallenges(challengeList);
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Error loading simulation data:", error);
     }
   };
 
