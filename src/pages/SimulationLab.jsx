@@ -67,6 +67,7 @@ import {
 } from "recharts";
 
 export default function SimulationLab() {
+ const [user, setUser] = useState(null);
   const [portfolios, setPortfolios] = useState([]);
   const [selectedPortfolios, setSelectedPortfolios] = useState([]);
   const [challenges, setChallenges] = useState([]);
@@ -116,16 +117,23 @@ export default function SimulationLab() {
     badge_reward: ""
   });
 
-  useEffect(() => {
-    loadUser();
-    loadData();
-    loadRemainingUsage();
+ useEffect(() => {
+    const userId = localStorage.getItem('user_id');
+    if (userId) {
+      loadUser();
+      loadData();
+      loadRemainingUsage();
+    }
   }, []);
 
   const loadUser = async () => {
     try {
-      const data = await awsApi.getUser();
-      setUser(data.user);
+      const userId = localStorage.getItem('user_id');
+      if (!userId) return;
+      const data = await awsApi.getUser({ userId });
+      if (data && data.user) {
+        setUser(data.user);
+      }
     } catch (error) {
       console.error("Error loading user:", error);
     }
@@ -136,9 +144,12 @@ export default function SimulationLab() {
     setRemainingUsage(usage);
   };
 
-  const loadData = async () => {
+ const loadData = async () => {
     try {
-      const data = await awsApi.getSimulationLabData();
+      const userId = localStorage.getItem('user_id');
+      if (!userId) return;
+      // Passing { userId } here is what satisfies the API's requirements
+      const data = await awsApi.getSimulationLabData({ userId });
       setPortfolios(data.portfolios || []);
       setChallenges(data.challenges || []);
     } catch (error) {
