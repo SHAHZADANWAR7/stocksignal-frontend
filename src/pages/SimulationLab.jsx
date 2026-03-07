@@ -157,28 +157,14 @@ export default function SimulationLab() {
     }
   };
 
-  const addAssetToPortfolio = () => {
-    if (!newAsset.symbol || newAsset.allocation_percent <= 0) {
-      alert("Please enter valid asset details");
-      return;
-    }
-
-    const totalAllocation = newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0);
-    if (totalAllocation + newAsset.allocation_percent > 100) {
-      alert("Total allocation cannot exceed 100%");
-      return;
-    }
-
+ const addAssetToPortfolio = () => {
+    // This just adds a blank row. No more alerts or gatekeepers here.
     setNewPortfolio({
       ...newPortfolio,
-      assets: [...newPortfolio.assets, { ...newAsset }]
-    });
-
-    setNewAsset({
-      symbol: "",
-      name: "",
-      asset_class: "stock",
-      allocation_percent: 0
+      assets: [
+        ...newPortfolio.assets, 
+        { symbol: "", name: "", asset_class: "stock", allocation_percent: 0 }
+      ]
     });
   };
 
@@ -189,11 +175,33 @@ export default function SimulationLab() {
     });
   };
 
+  // This is the "Magic" function that makes your typing visible in the list
+  const handleAssetChange = (index, field, value) => {
+    const updatedAssets = [...newPortfolio.assets];
+    
+    // Ensure symbols are always uppercase for DynamoDB consistency
+    let finalValue = value;
+    if (field === 'symbol') finalValue = value.toUpperCase();
+    if (field === 'allocation_percent') finalValue = parseFloat(value) || 0;
+
+    updatedAssets[index][field] = finalValue;
+    setNewPortfolio({ ...newPortfolio, assets: updatedAssets });
+  };
   const createPortfolio = async () => {
-    if (!newPortfolio.name || newPortfolio.assets.length === 0) {
-      alert("Please enter portfolio name and add at least one asset");
+    // 1. Clean the data: filter out any asset rows where the symbol is blank
+    const validAssets = newPortfolio.assets.filter(asset => asset.symbol && asset.symbol.trim() !== "");
+
+    // 2. Perform the strict validation check
+    if (!newPortfolio.name || validAssets.length === 0) {
+      alert("Please enter a portfolio name and add at least one asset with a ticker symbol.");
       return;
     }
+
+    // 3. Update the local state with only the valid assets before sending to AWS
+    const cleanedPortfolio = {
+      ...newPortfolio,
+      assets: validAssets
+    };
 
     const totalAllocation = newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0);
     if (Math.abs(totalAllocation - 100) > 0.01) {
@@ -1052,36 +1060,44 @@ Target: ${selectedChallenge.target_metric}`;
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Strategy Type</Label>
-                  <Select
-                    value={newPortfolio.strategy_type}
-                    onValueChange={(value) => setNewPortfolio({ ...newPortfolio, strategy_type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="aggressive_growth">Aggressive Growth</SelectItem>
-                      <SelectItem value="balanced">Balanced</SelectItem>
-                      <SelectItem value="income_focused">Income Focused</SelectItem>
-                      <SelectItem value="thematic">Thematic</SelectItem>
-                      <SelectItem value="custom">Custom</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+             <div className="grid grid-cols-2 gap-4">
+  <div className="space-y-2">
+    <Label className="text-[10px] uppercase font-black text-slate-500 tracking-widest">Strategy Type</Label>
+    <Select
+      value={newPortfolio.strategy_type}
+      onValueChange={(value) => setNewPortfolio({ ...newPortfolio, strategy_type: value })}
+    >
+      <SelectTrigger className="border-2 border-slate-200 bg-white text-slate-900 font-bold shadow-sm h-12 w-full px-4 flex justify-between items-center focus:ring-slate-900">
+        {/* MANUAL RENDER: This ensures the selection is ALWAYS visible */}
+        <span className="uppercase text-[11px] tracking-wider text-slate-900">
+          {newPortfolio.strategy_type === "aggressive_growth" ? "Aggressive Growth" :
+           newPortfolio.strategy_type === "balanced" ? "Balanced" :
+           newPortfolio.strategy_type === "income_focused" ? "Income Focused" :
+           newPortfolio.strategy_type === "thematic" ? "Thematic" :
+           newPortfolio.strategy_type === "custom" ? "Custom" : 
+           "Select Strategy"}
+        </span>
+      </SelectTrigger>
+      <SelectContent className="bg-white border-2 border-slate-200 shadow-2xl rounded-xl">
+        <SelectItem value="aggressive_growth" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Aggressive Growth</SelectItem>
+        <SelectItem value="balanced" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Balanced</SelectItem>
+        <SelectItem value="income_focused" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Income Focused</SelectItem>
+        <SelectItem value="thematic" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Thematic</SelectItem>
+        <SelectItem value="custom" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Custom</SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
 
-                <div>
-                  <Label>Total Value ($)</Label>
-                  <Input
-                    type="number"
-                    value={newPortfolio.total_value}
-                    onChange={(e) => setNewPortfolio({ ...newPortfolio, total_value: parseFloat(e.target.value) })}
-                  />
-                </div>
-              </div>
-
+  <div className="space-y-2">
+    <Label className="text-[10px] uppercase font-black text-slate-500 tracking-widest">Total Value ($)</Label>
+    <Input
+      type="number"
+      className="border-2 border-slate-200 font-bold h-12"
+      value={newPortfolio.total_value}
+      onChange={(e) => setNewPortfolio({ ...newPortfolio, total_value: parseFloat(e.target.value) || 0 })}
+    />
+  </div>
+</div>
               <div className="border-t pt-4">
                 <h3 className="font-bold text-lg mb-3">Add Assets</h3>
                 <div className="grid grid-cols-4 gap-3 mb-3">
