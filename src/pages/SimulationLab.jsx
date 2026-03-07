@@ -143,17 +143,21 @@ export default function SimulationLab() {
 
  const loadData = async () => {
     try {
-      // Universal call: awsClient.js now injects user_email automatically!
-      const response = await awsApi.getSimulationLabData({}); 
+      // 1. Portfolio Management: Fetch raw portfolios to ensure field visibility
+      const response = await awsApi.getSimulationPortfolio({}); 
+      const portfolioList = response?.data || [];
       
-      // Accessing the specific paths defined in your Lambda (Line 368-372)
-      const portfolioList = response?.data?.lab_summary?.portfolios || [];
-      const challengeList = response?.data?.challenges || [];
+      // 2. Core Data: Fetch challenges and trends from the Lab Summary
+      const labResponse = await awsApi.getSimulationLabData({});
+      const challengeList = labResponse?.data?.challenges || 
+                            labResponse?.data?.lab_summary?.challenges || [];
       
       setPortfolios(portfolioList);
       setChallenges(challengeList);
+      
+      console.log(`✅ Sync Success: ${portfolioList.length} Portfolios Loaded`);
     } catch (error) {
-      console.error("Error loading simulation data:", error);
+      console.error("❌ Sync Error in loadData:", error);
     }
   };
 
