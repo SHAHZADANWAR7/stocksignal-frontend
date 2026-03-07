@@ -1190,7 +1190,7 @@ Target: ${selectedChallenge.target_metric}`;
                     </div>
                   </div>
                 )}
-              </div>
+              
 
               <Button 
                 onClick={createPortfolio} 
