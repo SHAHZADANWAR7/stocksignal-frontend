@@ -36,6 +36,7 @@ const LAMBDA_KEY_MAPPING = {
     "createShadowPortfolio",
     "deleteShadowPortfolio",
     "getSimulationLabData",
+    "getSimulationPortfolio",
     "analyzeInvestmentBehavior",
     "calculatePortfolioHealth", // <<<<<< ADDED AS REQUESTED
     "getHoldings",
@@ -262,6 +263,7 @@ export const awsApi = {
   syncChallengePortfolios: () => invokeProxy("syncChallengePortfolios", {}),
   generateChallengeReports: () => invokeProxy("generateChallengeReports", {}),
   createSimulationPortfolio: (data) => invokeProxy("createSimulationPortfolio", data),
+  getSimulationPortfolio: (payload = {}) => invokeProxy("getSimulationPortfolio", payload),
   updateSimulationPortfolio: (portfolioId, data) => invokeProxy("updateSimulationPortfolio", { portfolioId, ...data }),
   deleteSimulationPortfolio: (portfolioId) => invokeProxy("deleteSimulationPortfolio", { portfolioId }),
   createSimulationChallenge: (data) => invokeProxy("createSimulationChallenge", data),
