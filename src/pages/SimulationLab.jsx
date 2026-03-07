@@ -1181,26 +1181,25 @@ Target: ${selectedChallenge.target_metric}`;
                       </div>
                     ))}
                     
-                    {/* Visual indicator for the total allocation */}
+                   {/* Visual indicator for the total allocation */}
                     <div className="flex justify-between items-center px-4 py-3 bg-slate-900 rounded-lg text-white shadow-inner">
                       <span className="text-[10px] font-black uppercase tracking-[0.2em]">Total Weight</span>
                       <span className={`font-mono font-bold text-sm ${newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0) > 100 ? 'text-rose-400' : 'text-emerald-400'}`}>
                         {newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0).toFixed(1)}%
                       </span>
                     </div>
-                  </div>
+                  </div> // This closes the 'space-y-3 mt-6' div
                 )}
-              
 
-              <Button 
-                onClick={createPortfolio} 
-                className="w-full bg-[#4353FF] hover:bg-[#3544CC] text-white font-black uppercase tracking-widest text-xs h-12 shadow-xl transition-all"
-              >
-                Create Simulation Portfolio
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+                <Button 
+                  onClick={createPortfolio} 
+                  className="w-full bg-[#4353FF] hover:bg-[#3544CC] text-white font-black uppercase tracking-widest text-xs h-12 shadow-xl transition-all mt-6"
+                >
+                  Create Simulation Portfolio
+                </Button>
+              </div> {/* This closes the 'space-y-4/6 mt-4' wrapper */}
+            </DialogContent>
+          </Dialog>
 
         <Dialog open={showCreateChallengeDialog} onOpenChange={setShowCreateChallengeDialog}>
           <DialogContent className="max-w-xl">
