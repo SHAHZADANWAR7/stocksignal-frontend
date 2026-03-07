@@ -1065,14 +1065,16 @@ Target: ${selectedChallenge.target_metric}`;
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Strategy Type</Label>
-                  <Select
+                 <Select
                     value={newPortfolio.strategy_type}
                     onValueChange={(value) => setNewPortfolio({ ...newPortfolio, strategy_type: value })}
                   >
-                    <SelectTrigger>
-                      <SelectValue />
+                    <SelectTrigger className="border-slate-300 bg-white text-slate-900 font-bold shadow-sm h-10 w-full px-3 flex justify-between items-center">
+                      <span className="text-slate-900 uppercase text-[10px] tracking-widest font-black">
+                        {newPortfolio.strategy_type ? newPortfolio.strategy_type.replace(/_/g, ' ') : "Select Strategy"}
+                      </span>
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border-slate-200 shadow-xl">
                       <SelectItem value="aggressive_growth">Aggressive Growth</SelectItem>
                       <SelectItem value="balanced">Balanced</SelectItem>
                       <SelectItem value="income_focused">Income Focused</SelectItem>
@@ -1098,14 +1100,17 @@ Target: ${selectedChallenge.target_metric}`;
                     <Badge variant="outline" className="text-[9px] font-bold">Total: {newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0).toFixed(1)}%</Badge>
                   </div>
                   
-                  <Button 
-                    type="button"
-                    variant="outline" 
-                    onClick={addAssetToPortfolio}
-                    className="w-full border-2 border-dashed border-slate-300 py-6 hover:bg-slate-50 transition-all font-bold text-slate-600 uppercase tracking-widest text-[10px] mb-6"
-                  >
-                    <Plus className="w-4 h-4 mr-2" /> Add Asset Row
-                  </Button>
+                 <Button 
+                  type="button"
+                  variant="outline" 
+                  onClick={() => setNewPortfolio({
+                    ...newPortfolio,
+                    assets: [...newPortfolio.assets, { symbol: "", name: "", asset_class: "stock", allocation_percent: 0 }]
+                  })} 
+                  className="w-full border-2 border-dashed border-slate-300 py-6 hover:bg-slate-50 transition-all font-bold text-slate-600 uppercase tracking-widest text-[10px] mb-6"
+                >
+                  <Plus className="w-4 h-4 mr-2" /> Add Asset Row
+                </Button>
 
                 {newPortfolio.assets.length > 0 && (
                   <div className="space-y-2">
