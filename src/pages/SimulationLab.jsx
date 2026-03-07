@@ -157,14 +157,28 @@ export default function SimulationLab() {
     }
   };
 
- const addAssetToPortfolio = () => {
-    // This just adds a blank row. No more alerts or gatekeepers here.
+  const addAssetToPortfolio = () => {
+    if (!newAsset.symbol || newAsset.allocation_percent <= 0) {
+      alert("Please enter valid asset details");
+      return;
+    }
+
+    const totalAllocation = newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0);
+    if (totalAllocation + newAsset.allocation_percent > 100) {
+      alert("Total allocation cannot exceed 100%");
+      return;
+    }
+
     setNewPortfolio({
       ...newPortfolio,
-      assets: [
-        ...newPortfolio.assets, 
-        { symbol: "", name: "", asset_class: "stock", allocation_percent: 0 }
-      ]
+      assets: [...newPortfolio.assets, { ...newAsset }]
+    });
+
+    setNewAsset({
+      symbol: "",
+      name: "",
+      asset_class: "stock",
+      allocation_percent: 0
     });
   };
 
@@ -175,33 +189,11 @@ export default function SimulationLab() {
     });
   };
 
-  // This is the "Magic" function that makes your typing visible in the list
-  const handleAssetChange = (index, field, value) => {
-    const updatedAssets = [...newPortfolio.assets];
-    
-    // Ensure symbols are always uppercase for DynamoDB consistency
-    let finalValue = value;
-    if (field === 'symbol') finalValue = value.toUpperCase();
-    if (field === 'allocation_percent') finalValue = parseFloat(value) || 0;
-
-    updatedAssets[index][field] = finalValue;
-    setNewPortfolio({ ...newPortfolio, assets: updatedAssets });
-  };
   const createPortfolio = async () => {
-    // 1. Clean the data: filter out any asset rows where the symbol is blank
-    const validAssets = newPortfolio.assets.filter(asset => asset.symbol && asset.symbol.trim() !== "");
-
-    // 2. Perform the strict validation check
-    if (!newPortfolio.name || validAssets.length === 0) {
-      alert("Please enter a portfolio name and add at least one asset with a ticker symbol.");
+    if (!newPortfolio.name || newPortfolio.assets.length === 0) {
+      alert("Please enter portfolio name and add at least one asset");
       return;
     }
-
-    // 3. Update the local state with only the valid assets before sending to AWS
-    const cleanedPortfolio = {
-      ...newPortfolio,
-      assets: validAssets
-    };
 
     const totalAllocation = newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0);
     if (Math.abs(totalAllocation - 100) > 0.01) {
@@ -1060,44 +1052,36 @@ Target: ${selectedChallenge.target_metric}`;
                 />
               </div>
 
-             <div className="grid grid-cols-2 gap-4">
-  <div className="space-y-2">
-    <Label className="text-[10px] uppercase font-black text-slate-500 tracking-widest">Strategy Type</Label>
-    <Select
-      value={newPortfolio.strategy_type}
-      onValueChange={(value) => setNewPortfolio({ ...newPortfolio, strategy_type: value })}
-    >
-      <SelectTrigger className="border-2 border-slate-200 bg-white text-slate-900 font-bold shadow-sm h-12 w-full px-4 flex justify-between items-center focus:ring-slate-900">
-        {/* MANUAL RENDER: This ensures the selection is ALWAYS visible */}
-        <span className="uppercase text-[11px] tracking-wider text-slate-900">
-          {newPortfolio.strategy_type === "aggressive_growth" ? "Aggressive Growth" :
-           newPortfolio.strategy_type === "balanced" ? "Balanced" :
-           newPortfolio.strategy_type === "income_focused" ? "Income Focused" :
-           newPortfolio.strategy_type === "thematic" ? "Thematic" :
-           newPortfolio.strategy_type === "custom" ? "Custom" : 
-           "Select Strategy"}
-        </span>
-      </SelectTrigger>
-      <SelectContent className="bg-white border-2 border-slate-200 shadow-2xl rounded-xl">
-        <SelectItem value="aggressive_growth" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Aggressive Growth</SelectItem>
-        <SelectItem value="balanced" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Balanced</SelectItem>
-        <SelectItem value="income_focused" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Income Focused</SelectItem>
-        <SelectItem value="thematic" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Thematic</SelectItem>
-        <SelectItem value="custom" className="font-bold py-3 uppercase text-[10px] tracking-widest cursor-pointer">Custom</SelectItem>
-      </SelectContent>
-    </Select>
-  </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Strategy Type</Label>
+                  <Select
+                    value={newPortfolio.strategy_type}
+                    onValueChange={(value) => setNewPortfolio({ ...newPortfolio, strategy_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="aggressive_growth">Aggressive Growth</SelectItem>
+                      <SelectItem value="balanced">Balanced</SelectItem>
+                      <SelectItem value="income_focused">Income Focused</SelectItem>
+                      <SelectItem value="thematic">Thematic</SelectItem>
+                      <SelectItem value="custom">Custom</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-  <div className="space-y-2">
-    <Label className="text-[10px] uppercase font-black text-slate-500 tracking-widest">Total Value ($)</Label>
-    <Input
-      type="number"
-      className="border-2 border-slate-200 font-bold h-12"
-      value={newPortfolio.total_value}
-      onChange={(e) => setNewPortfolio({ ...newPortfolio, total_value: parseFloat(e.target.value) || 0 })}
-    />
-  </div>
-</div>
+                <div>
+                  <Label>Total Value ($)</Label>
+                  <Input
+                    type="number"
+                    value={newPortfolio.total_value}
+                    onChange={(e) => setNewPortfolio({ ...newPortfolio, total_value: parseFloat(e.target.value) })}
+                  />
+                </div>
+              </div>
+
               <div className="border-t pt-4">
                 <h3 className="font-bold text-lg mb-3">Add Assets</h3>
                 <div className="grid grid-cols-4 gap-3 mb-3">
@@ -1136,70 +1120,39 @@ Target: ${selectedChallenge.target_metric}`;
                 <Button onClick={addAssetToPortfolio} variant="outline" size="sm" className="w-full mb-4">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Asset
-                <Button 
-                  type="button"
-                  variant="outline" 
-                  onClick={addAssetToPortfolio}
-                  className="w-full border-2 border-dashed border-slate-300 py-6 hover:bg-slate-50 transition-all font-bold text-slate-600 uppercase tracking-widest text-[10px]"
-                >
-                  <Plus className="w-4 h-4 mr-2" /> Add Asset Row
                 </Button>
 
                 {newPortfolio.assets.length > 0 && (
-                  <div className="space-y-3 mt-6">
+                  <div className="space-y-2">
                     {newPortfolio.assets.map((asset, index) => (
-                      <div key={index} className="grid grid-cols-12 gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200 items-end shadow-sm">
-                        <div className="col-span-5 space-y-1">
-                          <Label className="text-[9px] uppercase font-black text-slate-400">Ticker</Label>
-                          <Input
-                            className="border-slate-300 bg-white font-black uppercase text-slate-900 h-10"
-                            placeholder="AAPL"
-                            value={asset.symbol} // This makes your typing VISIBLE
-                            onChange={(e) => handleAssetChange(index, 'symbol', e.target.value)}
-                          />
+                      <div key={index} className="flex items-center justify-between bg-slate-50 rounded p-3">
+                        <div className="flex-1">
+                          <p className="font-semibold text-slate-900">{asset.symbol} - {asset.name}</p>
+                          <p className="text-sm text-slate-600">{asset.asset_class} • {asset.allocation_percent}%</p>
                         </div>
-                        <div className="col-span-5 space-y-1">
-                          <Label className="text-[9px] uppercase font-black text-slate-400">Alloc %</Label>
-                          <Input
-                            type="number"
-                            className="border-slate-300 bg-white font-bold text-slate-900 h-10"
-                            value={asset.allocation_percent}
-                            onChange={(e) => handleAssetChange(index, 'allocation_percent', e.target.value)}
-                          />
-                        </div>
-                        <div className="col-span-2 flex justify-center pb-1">
-                          <Button 
-                            type="button"
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-rose-500 hover:bg-rose-100 rounded-full h-10 w-10"
-                            onClick={() => removeAsset(index)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        <Button
+                          onClick={() => removeAsset(index)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-rose-600"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     ))}
-                    
-                   {/* Visual indicator for the total allocation */}
-                    <div className="flex justify-between items-center px-4 py-3 bg-slate-900 rounded-lg text-white shadow-inner">
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">Total Weight</span>
-                      <span className={`font-mono font-bold text-sm ${newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0) > 100 ? 'text-rose-400' : 'text-emerald-400'}`}>
-                        {newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0).toFixed(1)}%
-                      </span>
-                    </div>
-                  </div> // This closes the 'space-y-3 mt-6' div
+                    <p className="text-sm text-slate-600 text-right">
+                      Total: {newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0).toFixed(1)}%
+                    </p>
+                  </div>
                 )}
+              </div>
 
-                <Button 
-                  onClick={createPortfolio} 
-                  className="w-full bg-[#4353FF] hover:bg-[#3544CC] text-white font-black uppercase tracking-widest text-xs h-12 shadow-xl transition-all mt-6"
-                >
-                  Create Simulation Portfolio
-                </Button>
-              </div> {/* This closes the 'space-y-4/6 mt-4' wrapper */}
-            </DialogContent>
-          </Dialog>
+              <Button onClick={createPortfolio} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600">
+                Create Portfolio
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={showCreateChallengeDialog} onOpenChange={setShowCreateChallengeDialog}>
           <DialogContent className="max-w-xl">
@@ -1443,6 +1396,7 @@ Target: ${selectedChallenge.target_metric}`;
                     <Play className="w-4 h-4 mr-2" />
                     Run Simulation
                   </>
+                )}
               </Button>
             </div>
           </DialogContent>
