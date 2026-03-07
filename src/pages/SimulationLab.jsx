@@ -172,24 +172,7 @@ export default function SimulationLab() {
     });
   };
 
-    const totalAllocation = newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0);
-    if (totalAllocation + newAsset.allocation_percent > 100) {
-      alert("Total allocation cannot exceed 100%");
-      return;
-    }
-
-    setNewPortfolio({
-      ...newPortfolio,
-      assets: [...newPortfolio.assets, { ...newAsset }]
-    });
-
-    setNewAsset({
-      symbol: "",
-      name: "",
-      asset_class: "stock",
-      allocation_percent: 0
-    });
-  };
+    
 
 const removeAsset = (index) => {
     setNewPortfolio({
