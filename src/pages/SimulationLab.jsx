@@ -1093,44 +1093,19 @@ Target: ${selectedChallenge.target_metric}`;
               </div>
 
               <div className="border-t pt-4">
-                <h3 className="font-bold text-lg mb-3">Add Assets</h3>
-                <div className="grid grid-cols-4 gap-3 mb-3">
-                  <Input
-                    placeholder="Symbol"
-                    value={newAsset.symbol}
-                    onChange={(e) => setNewAsset({ ...newAsset, symbol: e.target.value.toUpperCase() })}
-                  />
-                  <Input
-                    placeholder="Name"
-                    value={newAsset.name}
-                    onChange={(e) => setNewAsset({ ...newAsset, name: e.target.value })}
-                  />
-                  <Select
-                    value={newAsset.asset_class}
-                    onValueChange={(value) => setNewAsset({ ...newAsset, asset_class: value })}
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Portfolio Composition</h3>
+                    <Badge variant="outline" className="text-[9px] font-bold">Total: {newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0).toFixed(1)}%</Badge>
+                  </div>
+                  
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    onClick={addAssetToPortfolio}
+                    className="w-full border-2 border-dashed border-slate-300 py-6 hover:bg-slate-50 transition-all font-bold text-slate-600 uppercase tracking-widest text-[10px] mb-6"
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="stock">Stock</SelectItem>
-                      <SelectItem value="etf">ETF</SelectItem>
-                      <SelectItem value="crypto">Crypto</SelectItem>
-                      <SelectItem value="commodity">Commodity</SelectItem>
-                      <SelectItem value="bond">Bond</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    type="number"
-                    placeholder="Allocation %"
-                    value={newAsset.allocation_percent || ""}
-                    onChange={(e) => setNewAsset({ ...newAsset, allocation_percent: parseFloat(e.target.value) })}
-                  />
-                </div>
-                <Button onClick={addAssetToPortfolio} variant="outline" size="sm" className="w-full mb-4">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Asset
-                </Button>
+                    <Plus className="w-4 h-4 mr-2" /> Add Asset Row
+                  </Button>
 
                 {newPortfolio.assets.length > 0 && (
                   <div className="space-y-2">
