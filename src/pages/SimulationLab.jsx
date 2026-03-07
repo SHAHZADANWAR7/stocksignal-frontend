@@ -162,10 +162,15 @@ export default function SimulationLab() {
   };
 
   const addAssetToPortfolio = () => {
-    if (!newAsset.symbol || newAsset.allocation_percent <= 0) {
-      alert("Please enter valid asset details");
-      return;
-    }
+    // We simply add a blank row to the assets array so you can type directly into it
+    setNewPortfolio({
+      ...newPortfolio,
+      assets: [
+        ...newPortfolio.assets, 
+        { symbol: "", name: "", asset_class: "stock", allocation_percent: 0 }
+      ]
+    });
+  };
 
     const totalAllocation = newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0);
     if (totalAllocation + newAsset.allocation_percent > 100) {
