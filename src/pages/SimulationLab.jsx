@@ -1443,7 +1443,6 @@ Target: ${selectedChallenge.target_metric}`;
                     <Play className="w-4 h-4 mr-2" />
                     Run Simulation
                   </>
-                )}
               </Button>
             </div>
           </DialogContent>
