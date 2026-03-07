@@ -182,11 +182,21 @@ export default function SimulationLab() {
     });
   };
 
-  const removeAsset = (index) => {
+const removeAsset = (index) => {
     setNewPortfolio({
       ...newPortfolio,
       assets: newPortfolio.assets.filter((_, i) => i !== index)
     });
+  };
+
+  const handleAssetChange = (index, field, value) => {
+    const updatedAssets = [...newPortfolio.assets];
+    let finalValue = value;
+    if (field === 'symbol') finalValue = value.toUpperCase();
+    if (field === 'allocation_percent') finalValue = parseFloat(value) || 0;
+
+    updatedAssets[index][field] = finalValue;
+    setNewPortfolio({ ...newPortfolio, assets: updatedAssets });
   };
 
   const createPortfolio = async () => {
