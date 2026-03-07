@@ -1135,30 +1135,55 @@ Target: ${selectedChallenge.target_metric}`;
                 {newPortfolio.assets.length > 0 && (
                   <div className="space-y-2">
                     {newPortfolio.assets.map((asset, index) => (
-                      <div key={index} className="flex items-center justify-between bg-slate-50 rounded p-3">
-                        <div className="flex-1">
-                          <p className="font-semibold text-slate-900">{asset.symbol} - {asset.name}</p>
-                          <p className="text-sm text-slate-600">{asset.asset_class} • {asset.allocation_percent}%</p>
+                      <div key={index} className="grid grid-cols-12 gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200 items-end shadow-sm">
+                        <div className="col-span-5 space-y-1">
+                          <Label className="text-[9px] uppercase font-black text-slate-400">Ticker</Label>
+                          <Input
+                            className="border-slate-300 bg-white font-black uppercase text-slate-900 h-10"
+                            placeholder="AAPL"
+                            value={asset.symbol} 
+                            onChange={(e) => handleAssetChange(index, 'symbol', e.target.value)}
+                          />
                         </div>
-                        <Button
-                          onClick={() => removeAsset(index)}
-                          variant="ghost"
-                          size="sm"
-                          className="text-rose-600"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="col-span-5 space-y-1">
+                          <Label className="text-[9px] uppercase font-black text-slate-400">Alloc %</Label>
+                          <Input
+                            type="number"
+                            className="border-slate-300 bg-white font-bold text-slate-900 h-10"
+                            value={asset.allocation_percent}
+                            onChange={(e) => handleAssetChange(index, 'allocation_percent', e.target.value)}
+                          />
+                        </div>
+                        <div className="col-span-2 flex justify-center pb-1">
+                          <Button 
+                            type="button"
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-rose-500 hover:bg-rose-100 rounded-full h-10 w-10"
+                            onClick={() => removeAsset(index)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
-                    <p className="text-sm text-slate-600 text-right">
-                      Total: {newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0).toFixed(1)}%
-                    </p>
+                    
+                    {/* Visual indicator for the total allocation */}
+                    <div className="flex justify-between items-center px-4 py-3 bg-slate-900 rounded-lg text-white shadow-inner">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em]">Total Weight</span>
+                      <span className={`font-mono font-bold text-sm ${newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0) > 100 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                        {newPortfolio.assets.reduce((sum, a) => sum + a.allocation_percent, 0).toFixed(1)}%
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
 
-              <Button onClick={createPortfolio} className="w-full bg-gradient-to-r from-indigo-600 to-purple-600">
-                Create Portfolio
+              <Button 
+                onClick={createPortfolio} 
+                className="w-full bg-[#4353FF] hover:bg-[#3544CC] text-white font-black uppercase tracking-widest text-xs h-12 shadow-xl transition-all"
+              >
+                Create Simulation Portfolio
               </Button>
             </div>
           </DialogContent>
