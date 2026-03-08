@@ -126,16 +126,16 @@ useEffect(() => {
 
   const loadUser = async () => {
     try {
-      // 1. Add a small delay so Auth can initialize
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // 1. Brief delay to ensure awsClient.js can grab the session
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // 2. Call the API
       const data = await awsApi.getUser({}); 
       
-      // 3. FIX: Your Lambda returns the object directly { email: '...', ... }
-      // So we check for 'data.email' instead of 'data.user'
+      // 3. Since the Lambda returns the profile directly, check for the email
       if (data && data.email) {
-        setUser(data); // Set the whole object as the user
+        setUser(data); // Set the whole object
+        console.log("✅ User profile loaded successfully");
       }
     } catch (error) {
       console.error("Error loading user:", error);
