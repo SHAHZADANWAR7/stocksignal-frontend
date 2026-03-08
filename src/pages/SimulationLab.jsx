@@ -256,7 +256,12 @@ const loadData = async () => {
     try {
       const portfoliosToSimulate = portfolios.filter(p => selectedPortfolios.includes(p.id));
       
-      const dateRange = getScenarioDateRange(customScenario.name);
+      // NEW: Collect all unique symbols from selected portfolios
+      const allSelectedSymbols = [...new Set(portfoliosToSimulate.flatMap(p => (p.assets || []).map(a => a.symbol)))];
+      
+      // FIX: Pass the array of symbols instead of the scenario name string
+      const dateRange = getScenarioDateRange(allSelectedSymbols);
+
       let validationSummary = "";
       let allValidAssets = [];
       let allInvalidAssets = [];
@@ -266,8 +271,8 @@ const loadData = async () => {
         portfoliosToSimulate.forEach(portfolio => {
           const validation = validateAssetsForPeriod(
             portfolio.assets || [],
-            dateRange.start,
-            dateRange.end
+            dateRange.startDate, // Note: utility returns startDate/endDate
+            dateRange.endDate
           );
           
           allValidAssets.push(...validation.validAssets.map(a => ({ ...a, portfolio: portfolio.name })));
