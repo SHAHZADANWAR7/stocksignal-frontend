@@ -125,24 +125,25 @@ useEffect(() => {
   }, []);
 
  const loadUser = async () => {
-    try {
-      // 1. Give Amplify Auth a moment to initialize
-      await new Promise(resolve => setTimeout(resolve, 500));
+  try {
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-      // 2. Pass userId explicitly to satisfy the Lambda's payload check
-      const userId = localStorage.getItem('user_id');
-      const data = await awsApi.getUser({ userId }); 
-      
-      // 3. Map the flat Lambda response directly to state
-      // (Your Lambda returns the object directly, not wrapped in a 'user' key)
-      if (data && data.email) {
-        setUser(data); 
-        console.log("✅ User profile loaded successfully");
+    // All identifiers must be inside the 'payload' object for Lambda compatibility
+    const data = await awsApi.getUser({ 
+      payload: { 
+        userId: localStorage.getItem('user_id'),
+        cognitoSub: localStorage.getItem('user_id')
       }
-    } catch (error) {
-      console.error("Error loading user:", error);
+    }); 
+    
+    if (data && data.email) {
+      setUser(data);
+      console.log("✅ User profile synced with explicit payload");
     }
-  };
+  } catch (error) {
+    console.error("Error loading user:", error);
+  }
+};
 
   const loadRemainingUsage = async () => {
     const usage = await getRemainingUsage();
