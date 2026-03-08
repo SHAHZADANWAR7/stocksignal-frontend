@@ -222,19 +222,44 @@ export function getMaxLookbackPeriod(symbols) {
  * @param {string} endDate - End date (YYYY-MM-DD)
  * @returns {Object} Validation results
  */
+/**
+ * Validate if assets existed during the specified period
+ * @param {Array} symbols - Array of stock symbols
+ * @param {string} startDate - Start date (YYYY-MM-DD)
+ * @param {string} endDate - End date (YYYY-MM-DD)
+ * @returns {Object} Validation results with arrays for UI feedback
+ */
 export function validateAssetsForPeriod(symbols, startDate, endDate) {
-  const results = {};
-  
+  const validAssets = [];
+  const invalidAssets = [];
+  const warnings = [];
+
   // FIX: Safety check to handle strings, arrays, or null inputs
   (Array.isArray(symbols) ? symbols : [symbols].filter(Boolean)).forEach(symbol => {
-    const inceptionDate = ASSET_INCEPTION_DATES[symbol];
-    results[symbol] = {
-      existed: inceptionDate ? new Date(inceptionDate) <= new Date(startDate) : false,
-      inceptionDate: inceptionDate || null
+    const inception = ASSET_INCEPTION_DATES[symbol];
+    // If we don't know the date, we assume it existed to avoid blocking the user
+    const existed = inception ? new Date(inception) <= new Date(startDate) : true;
+
+    const assetData = { 
+      symbol, 
+      inceptionDate: inception || 'unknown'
     };
+
+    if (existed) {
+      validAssets.push(assetData);
+    } else {
+      invalidAssets.push(assetData);
+      warnings.push({
+        symbol,
+        severity: 'critical',
+        message: `Asset created on ${inception}, which is after scenario start (${startDate})`
+      });
+    }
   });
-  return results;
+
+  return { validAssets, invalidAssets, warnings };
 }
+
 /**
  * Get valid date range for scenario based on assets
  * @param {Array} symbols - Array of stock symbols
@@ -261,7 +286,6 @@ export function getScenarioDateRange(symbols) {
     endDate: endDate.toISOString().split('T')[0]
   };
 }
-
 /**
  * Check if an asset existed at a specific date
  * @param {string} symbol - Stock symbol
