@@ -1094,7 +1094,10 @@ Target: ${selectedChallenge.target_metric}`;
                   <Input
                     type="number"
                     value={newPortfolio.total_value}
-                    onChange={(e) => setNewPortfolio({ ...newPortfolio, total_value: parseFloat(e.target.value) })}
+                    onChange={(e) => setNewPortfolio({ 
+                      ...newPortfolio, 
+                      total_value: e.target.value === "" ? 0 : parseFloat(e.target.value) 
+                    })}
                   />
                 </div>
               </div>
@@ -1234,7 +1237,10 @@ Target: ${selectedChallenge.target_metric}`;
                 <Input
                   type="number"
                   value={newChallenge.target_metric}
-                  onChange={(e) => setNewChallenge({ ...newChallenge, target_metric: parseFloat(e.target.value) })}
+                  onChange={(e) => setNewChallenge({ 
+                    ...newChallenge, 
+                    target_metric: e.target.value === "" ? 0 : parseFloat(e.target.value) 
+                  })}
                   placeholder={
                     newChallenge.challenge_type === "highest_return" ? "e.g., 15 for 15% return" :
                     newChallenge.challenge_type === "lowest_drawdown" ? "e.g., -10 for max 10% loss" :
@@ -1368,7 +1374,10 @@ Target: ${selectedChallenge.target_metric}`;
                   <Input
                     type="number"
                     value={customScenario.market_crash_percent}
-                    onChange={(e) => setCustomScenario({ ...customScenario, market_crash_percent: parseFloat(e.target.value) })}
+                    onChange={(e) => setCustomScenario({ 
+                      ...customScenario, 
+                      market_crash_percent: e.target.value === "" ? 0 : parseFloat(e.target.value) 
+                    })}
                     placeholder="-30"
                   />
                 </div>
@@ -1377,7 +1386,10 @@ Target: ${selectedChallenge.target_metric}`;
                   <Input
                     type="number"
                     value={customScenario.interest_rate_change}
-                    onChange={(e) => setCustomScenario({ ...customScenario, interest_rate_change: parseFloat(e.target.value) })}
+                    onChange={(e) => setCustomScenario({ 
+                      ...customScenario, 
+                      interest_rate_change: e.target.value === "" ? 0 : parseFloat(e.target.value) 
+                    })}
                     placeholder="+2"
                   />
                 </div>
@@ -1386,7 +1398,10 @@ Target: ${selectedChallenge.target_metric}`;
                   <Input
                     type="number"
                     value={customScenario.inflation_rate}
-                    onChange={(e) => setCustomScenario({ ...customScenario, inflation_rate: parseFloat(e.target.value) })}
+                    onChange={(e) => setCustomScenario({ 
+                      ...customScenario, 
+                      inflation_rate: e.target.value === "" ? 0 : parseFloat(e.target.value) 
+                    })}
                     placeholder="8"
                   />
                 </div>
@@ -1395,7 +1410,10 @@ Target: ${selectedChallenge.target_metric}`;
                   <Input
                     type="number"
                     value={customScenario.duration_months}
-                    onChange={(e) => setCustomScenario({ ...customScenario, duration_months: parseInt(e.target.value) })}
+                    onChange={(e) => setCustomScenario({ 
+                      ...customScenario, 
+                      duration_months: e.target.value === "" ? 0 : parseInt(e.target.value) 
+                    })}
                     placeholder="12"
                   />
                 </div>
