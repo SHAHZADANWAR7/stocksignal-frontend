@@ -117,13 +117,11 @@ export default function SimulationLab() {
     badge_reward: ""
   });
 
- useEffect(() => {
-    const userId = localStorage.getItem('user_id');
-    if (userId) {
-      loadUser();
-      loadData();
-      loadRemainingUsage();
-    }
+useEffect(() => {
+    // We call these directly. awsClient.js handles the security/session.
+    loadUser();
+    loadData();
+    loadRemainingUsage();
   }, []);
 
   const loadUser = async () => {
