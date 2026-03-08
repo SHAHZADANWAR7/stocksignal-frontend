@@ -124,7 +124,8 @@ export function assetExistedOn(symbol, date) {
 export function getEarliestCommonDate(symbols) {
   let latestInception = null;
   
-  symbols.forEach(symbol => {
+  // FIX: Added (symbols || []) to prevent "forEach is not a function" crash
+  (Array.isArray(symbols) ? symbols : [symbols].filter(Boolean)).forEach(symbol => {
     const inception = ASSET_INCEPTION_DATES[symbol];
     
     if (inception) {
@@ -156,7 +157,8 @@ export function validateBacktestPeriod(symbols, startDate, endDate) {
   const start = new Date(startDate);
   const end = new Date(endDate);
   
-  symbols.forEach(symbol => {
+  // FIX: Added safety check to ensure 'symbols' is treated as an array
+  (Array.isArray(symbols) ? symbols : [symbols].filter(Boolean)).forEach(symbol => {
     if (!assetExistedOn(symbol, startDate)) {
       const inception = ASSET_INCEPTION_DATES[symbol];
       issues.push({
@@ -222,7 +224,9 @@ export function getMaxLookbackPeriod(symbols) {
  */
 export function validateAssetsForPeriod(symbols, startDate, endDate) {
   const results = {};
-  symbols.forEach(symbol => {
+  
+  // FIX: Safety check to handle strings, arrays, or null inputs
+  (Array.isArray(symbols) ? symbols : [symbols].filter(Boolean)).forEach(symbol => {
     const inceptionDate = ASSET_INCEPTION_DATES[symbol];
     results[symbol] = {
       existed: inceptionDate ? new Date(inceptionDate) <= new Date(startDate) : false,
@@ -231,7 +235,6 @@ export function validateAssetsForPeriod(symbols, startDate, endDate) {
   });
   return results;
 }
-
 /**
  * Get valid date range for scenario based on assets
  * @param {Array} symbols - Array of stock symbols
@@ -239,7 +242,9 @@ export function validateAssetsForPeriod(symbols, startDate, endDate) {
  */
 export function getScenarioDateRange(symbols) {
   let latestInception = new Date('1970-01-01');
-  symbols.forEach(symbol => {
+  
+  // FIX: Safety check to handle strings, arrays, or null inputs
+  (Array.isArray(symbols) ? symbols : [symbols].filter(Boolean)).forEach(symbol => {
     const inceptionDate = ASSET_INCEPTION_DATES[symbol];
     if (inceptionDate && new Date(inceptionDate) > latestInception) {
       latestInception = new Date(inceptionDate);
