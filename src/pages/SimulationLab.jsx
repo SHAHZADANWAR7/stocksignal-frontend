@@ -139,23 +139,29 @@ useEffect(() => {
     setRemainingUsage(usage);
   };
 
- const loadData = async () => {
+const loadData = async () => {
     try {
-      // 1. Portfolio Management: Fetch raw portfolios to ensure field visibility
+      // 1. Fetch portfolios (Working: Status 200)
       const response = await awsApi.getSimulationPortfolio({}); 
       const portfolioList = response?.data || [];
       
-      // 2. Core Data: Fetch challenges and trends from the Lab Summary
-      const labResponse = await awsApi.getSimulationLabData({});
-      const challengeList = labResponse?.data?.challenges || 
-                            labResponse?.data?.lab_summary?.challenges || [];
-      
+      // ✅ UPDATE STATE IMMEDIATELY - This makes the portfolios appear!
       setPortfolios(portfolioList);
-      setChallenges(challengeList);
+
+      // 2. Fetch challenges/summary (Failing: Status 400)
+      // Wrap this in a separate try/catch so its failure doesn't affect the portfolios
+      try {
+        const labResponse = await awsApi.getSimulationLabData({});
+        const challengeList = labResponse?.data?.challenges || 
+                              labResponse?.data?.lab_summary?.challenges || [];
+        setChallenges(challengeList);
+      } catch (labError) {
+        console.warn("⚠️ Lab Summary failed to load, but portfolios are safe.", labError);
+      }
       
       console.log(`✅ Sync Success: ${portfolioList.length} Portfolios Loaded`);
     } catch (error) {
-      console.error("❌ Sync Error in loadData:", error);
+      console.error("❌ Critical Sync Error in loadData:", error);
     }
   };
 
