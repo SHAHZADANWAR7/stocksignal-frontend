@@ -124,26 +124,26 @@ useEffect(() => {
     loadRemainingUsage();
   }, []);
 
- const loadUser = async () => {
-  try {
-    await new Promise(resolve => setTimeout(resolve, 500));
+const loadUser = async () => {
+    try {
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-    // All identifiers must be inside the 'payload' object for Lambda compatibility
-    const data = await awsApi.getUser({ 
-      payload: { 
+      // We send a flat object. 
+      // awsClient.js will wrap this into event.body.payload
+      // Then Lambda will see event.body.payload.userId
+      const data = await awsApi.getUser({ 
         userId: localStorage.getItem('user_id'),
-        cognitoSub: localStorage.getItem('user_id')
+        cognitoSub: localStorage.getItem('user_id') 
+      }); 
+      
+      if (data && data.email) {
+        setUser(data);
+        console.log("✅ Profile Sync Successful");
       }
-    }); 
-    
-    if (data && data.email) {
-      setUser(data);
-      console.log("✅ User profile synced with explicit payload");
+    } catch (error) {
+      console.error("Error loading user:", error);
     }
-  } catch (error) {
-    console.error("Error loading user:", error);
-  }
-};
+  };
 
   const loadRemainingUsage = async () => {
     const usage = await getRemainingUsage();
