@@ -983,69 +983,80 @@ Target: ${selectedChallenge.target_metric}`;
                   </Card>
 
                   <div className="grid md:grid-cols-2 gap-6">
-                    {scenarioResults.portfolios?.map((result, index) => (
-                      <Card key={index} className="border-2 border-slate-200">
-                        <CardHeader>
-                          <CardTitle className="text-lg">{result.portfolio_name}</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-blue-50 rounded p-3">
-                              <p className="text-xs text-slate-600 mb-1">Initial Value</p>
-                              <p className="text-lg font-bold text-slate-900">
-                                ${result.initial_value?.toLocaleString()}
-                              </p>
-                            </div>
-                            <div className="bg-indigo-50 rounded p-3">
-                              <p className="text-xs text-slate-600 mb-1">Final Value</p>
-                              <p className="text-lg font-bold text-slate-900">
-                                ${result.final_value?.toLocaleString()}
-                              </p>
-                            </div>
-                            <div className={`rounded p-3 ${(result.total_return_percent || 0) >= 0 ? 'bg-emerald-50' : 'bg-rose-50'}`}>
-                              <p className="text-xs text-slate-600 mb-1">Total Return</p>
-                              <p className={`text-lg font-bold ${(result.total_return_percent || 0) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                {(result.total_return_percent || 0) >= 0 ? '+' : ''}{(result.total_return_percent || 0).toFixed(2)}%
-                              </p>
-                            </div>
-                            <div className="bg-orange-50 rounded p-3">
-                              <p className="text-xs text-slate-600 mb-1">Max Drawdown</p>
-                              <p className="text-lg font-bold text-orange-600">
-                                {(result.max_drawdown_percent || 0).toFixed(2)}%
-                              </p>
-                            </div>
-                          </div>
+                    {/* Support both new single 'data' object and old 'portfolios' array */}
+                    {(scenarioResults.data ? [scenarioResults.data] : scenarioResults.portfolios || [])?.map((result, index) => {
+                      // Standardize data source: New backend uses 'outcome', old uses the root object
+                      const outcome = result.outcome || result;
+                      const analysisText = result.analysis?.scenario_analysis || result.ai_analysis || result.recommendations || "Analysis processing...";
+                      const isPositive = Number(outcome.total_impact_percent || outcome.total_return_percent || 0) >= 0;
 
-                          <div>
-                            <p className="text-sm font-semibold text-slate-700 mb-2">Best Performers</p>
-                            <div className="flex flex-wrap gap-2">
-                              {result.best_performing_assets?.map((asset, i) => (
-                                <Badge key={i} className="bg-emerald-100 text-emerald-700">
-                                  <TrendingUp className="w-3 h-3 mr-1" />
-                                  {asset}
-                                </Badge>
-                              ))}
+                      return (
+                        <Card key={index} className="border-2 border-slate-200 overflow-hidden">
+                          <div className={`h-1.5 ${isPositive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-lg flex justify-between items-center">
+                              {result.portfolio_name || (outcome.scenario_type ? outcome.scenario_type.replace('_', ' ').toUpperCase() : "Portfolio Simulation")}
+                              <Badge variant="secondary" className="font-mono text-[10px]">
+                                {result.model || 'CLAUDE-3.5'}
+                              </Badge>
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="bg-blue-50/50 border border-blue-100 rounded p-3">
+                                <p className="text-[10px] uppercase tracking-wider text-blue-600 font-bold mb-1">Initial Value</p>
+                                <p className="text-lg font-bold text-slate-900">
+                                  ${Number(outcome.base_portfolio_value || outcome.initial_value || 0).toLocaleString()}
+                                </p>
+                              </div>
+                              <div className="bg-indigo-50/50 border border-indigo-100 rounded p-3">
+                                <p className="text-[10px] uppercase tracking-wider text-indigo-600 font-bold mb-1">Final Value</p>
+                                <p className="text-lg font-bold text-slate-900">
+                                  ${Number(outcome.scenario_portfolio_value || outcome.final_value || 0).toLocaleString()}
+                                </p>
+                              </div>
+                              <div className={`border rounded p-3 ${isPositive ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
+                                <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>Total Return</p>
+                                <p className={`text-lg font-bold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                  {isPositive ? '+' : ''}{Number(outcome.total_impact_percent || outcome.total_return_percent || 0).toFixed(2)}%
+                                </p>
+                              </div>
+                              <div className="bg-orange-50/50 border border-orange-100 rounded p-3">
+                                <p className="text-[10px] uppercase tracking-wider text-orange-600 font-bold mb-1">Stress Factor</p>
+                                <p className="text-lg font-bold text-orange-600">
+                                  {outcome.correlation_impact || outcome.max_drawdown_percent || "0"}%
+                                </p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div>
-                            <p className="text-sm font-semibold text-slate-700 mb-2">Worst Performers</p>
-                            <div className="flex flex-wrap gap-2">
-                              {result.worst_performing_assets?.map((asset, i) => (
-                                <Badge key={i} className="bg-rose-100 text-rose-700">
-                                  <TrendingDown className="w-3 h-3 mr-1" />
-                                  {asset}
-                                </Badge>
-                              ))}
+                            {/* AI ANALYSIS BLOCK */}
+                            <div className="bg-slate-900 rounded-lg p-4 shadow-inner">
+                              <div className="flex items-center mb-2">
+                                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse mr-2" />
+                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">AI Market Intelligence</p>
+                              </div>
+                              <p className="text-sm text-slate-200 leading-relaxed font-serif italic">
+                                "{analysisText}"
+                              </p>
                             </div>
-                          </div>
 
-                          <div className="pt-3 border-t border-slate-200">
-                            <p className="text-sm text-slate-700">{result.recommendations}</p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                            <div className="space-y-3">
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">Portfolio Impact Summary</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {(outcome.worst_affected_assets || outcome.best_performing_assets || []).map((asset, i) => (
+                                    <Badge key={i} variant="outline" className="border-rose-200 text-rose-600 bg-rose-50/30">
+                                      <TrendingDown className="w-3 h-3 mr-1" />
+                                      {asset.symbol || asset} {asset.impact_percent ? `(${asset.impact_percent}%)` : ''}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
@@ -1053,7 +1064,6 @@ Target: ${selectedChallenge.target_metric}`;
           </TabsContent>
         </Tabs>
       </motion.div>
-
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
             <DialogHeader>
