@@ -172,9 +172,7 @@ export default function SimulationLab() {
     });
   };
 
-    
-
-const removeAsset = (index) => {
+  const removeAsset = (index) => {
     setNewPortfolio({
       ...newPortfolio,
       assets: newPortfolio.assets.filter((_, i) => i !== index)
