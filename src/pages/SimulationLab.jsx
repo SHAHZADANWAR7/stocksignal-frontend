@@ -124,17 +124,19 @@ useEffect(() => {
     loadRemainingUsage();
   }, []);
 
-  const loadUser = async () => {
+ const loadUser = async () => {
     try {
-      // 1. Brief delay to ensure awsClient.js can grab the session
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // 1. Give Amplify Auth a moment to initialize
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // 2. Call the API
-      const data = await awsApi.getUser({}); 
+      // 2. Pass userId explicitly to satisfy the Lambda's payload check
+      const data = await awsApi.getUser({ 
+        userId: localStorage.getItem('user_id') 
+      }); 
       
-      // 3. Since the Lambda returns the profile directly, check for the email
+      // 3. Map the flat Lambda response directly to state
       if (data && data.email) {
-        setUser(data); // Set the whole object
+        setUser(data); 
         console.log("✅ User profile loaded successfully");
       }
     } catch (error) {
