@@ -126,19 +126,19 @@ useEffect(() => {
 
   const loadUser = async () => {
     try {
-      // 1. Brief pause to ensure Amplify Auth session is fully initialized 
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // 1. Add a small delay so Auth can initialize
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // 2. Call getUser - awsClient.js handles the injection
+      // 2. Call the API
       const data = await awsApi.getUser({}); 
       
-      // 3. Since your Lambda returns the profile directly (e.g., { email: '...' }),
-      // we check for data.email and set the whole object to the user state.
+      // 3. FIX: Your Lambda returns the object directly { email: '...', ... }
+      // So we check for 'data.email' instead of 'data.user'
       if (data && data.email) {
-        setUser(data);
+        setUser(data); // Set the whole object as the user
       }
     } catch (error) {
-      console.error("Error loading user profile:", error);
+      console.error("Error loading user:", error);
     }
   };
 
