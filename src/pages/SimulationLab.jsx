@@ -304,7 +304,7 @@ const loadData = async () => {
           }
         }
         
-        validationSummary = `\n\n📊 DATA VALIDATION (${dateRange.start.toISOString().split('T')[0]} to ${dateRange.end.toISOString().split('T')[0]}):\n` +
+       validationSummary = `\n\n📊 DATA VALIDATION (${dateRange.startDate} to ${dateRange.endDate}):\n` +
           `- Valid assets: ${allValidAssets.length}\n` +
           `- Assets excluded: ${allInvalidAssets.length}\n` +
           `- Warnings: ${allWarnings.length}\n`;
