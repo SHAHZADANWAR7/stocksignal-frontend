@@ -348,11 +348,10 @@ Return JSON with detailed metrics for each portfolio.`;
 
      // Bundling your data into one object so the Backend can parse it
       const result = await awsApi.runScenarioSimulation({
+        portfolio_id: selectedPortfolios[0],
+        scenario_type: "custom",
         prompt: prompt,
-        customScenario: customScenario,
-        portfoliosToSimulate: portfoliosToSimulate,
-        portfolio_id: selectedPortfolios[0], // Required by the backend validation
-        scenario_type: "market_crash"        // Required fallback for backend logic
+        customScenario: customScenario
       });
 
       setScenarioResults(result);
