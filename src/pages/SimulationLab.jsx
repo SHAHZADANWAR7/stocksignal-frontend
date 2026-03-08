@@ -130,11 +130,11 @@ useEffect(() => {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // 2. Pass userId explicitly to satisfy the Lambda's payload check
-      const data = await awsApi.getUser({ 
-        userId: localStorage.getItem('user_id') 
-      }); 
+      const userId = localStorage.getItem('user_id');
+      const data = await awsApi.getUser({ userId }); 
       
       // 3. Map the flat Lambda response directly to state
+      // (Your Lambda returns the object directly, not wrapped in a 'user' key)
       if (data && data.email) {
         setUser(data); 
         console.log("✅ User profile loaded successfully");
