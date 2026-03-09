@@ -562,42 +562,65 @@ Target: ${selectedChallenge.target_metric}`;
             </Button>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
-            <Card className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-indigo-100">
-              <CardContent className="p-4 md:p-6 text-center">
-                <FlaskConical className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 text-indigo-600" />
-                <p className="text-2xl md:text-3xl font-bold text-slate-900 break-words">{portfolios.length}</p>
-                <p className="text-xs md:text-sm text-slate-600">Experimental Portfolios</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100">
-              <CardContent className="p-6 text-center">
-                <Trophy className="w-10 h-10 mx-auto mb-2 text-purple-600" />
-                <p className="text-3xl font-bold text-slate-900">{challenges.length}</p>
-                <p className="text-sm text-slate-600">Active Challenges</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-100">
-              <CardContent className="p-6 text-center">
-                <Zap className="w-10 h-10 mx-auto mb-2 text-emerald-600" />
-                <p className="text-3xl font-bold text-slate-900">{selectedPortfolios.length}</p>
-                <p className="text-sm text-slate-600">Selected for Compare</p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-amber-100">
-              <CardContent className="p-6 text-center">
-                <Award className="w-10 h-10 mx-auto mb-2 text-amber-600" />
-                <p className="text-3xl font-bold text-slate-900">
-                  {portfolios.filter(p => p.is_challenge_entry).length}
+          {/* 🚀 INDUSTRIAL SUMMARY CARDS */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            {[
+              { 
+                label: "Experimental Portfolios", 
+                value: portfolios.length, 
+                icon: FlaskConical, 
+                color: "text-indigo-600", 
+                border: "border-indigo-600", 
+                bg: "bg-indigo-50/50" 
+              },
+              { 
+                label: "Active Challenges", 
+                value: challenges.length, 
+                icon: Trophy, 
+                color: "text-purple-600", 
+                border: "border-purple-600", 
+                bg: "bg-purple-50/50" 
+              },
+              { 
+                label: "Selected for Compare", 
+                value: selectedPortfolios.length, 
+                icon: Zap, 
+                color: "text-emerald-600", 
+                border: "border-emerald-600", 
+                bg: "bg-emerald-50/50" 
+              },
+              { 
+                label: "Challenge Entries", 
+                value: portfolios.filter(p => p.is_challenge_entry).length, 
+                icon: Award, 
+                color: "text-amber-600", 
+                border: "border-amber-600", 
+                bg: "bg-amber-50/50" 
+              },
+            ].map((stat, i) => (
+              <motion.div 
+                key={i}
+                whileHover={{ y: -2 }}
+                className={`bg-white border border-slate-200 ${stat.border} border-l-4 rounded-xl p-5 shadow-sm relative overflow-hidden group transition-all hover:shadow-md`}
+              >
+                {/* Ghost Background Icon for Industrial Depth */}
+                <stat.icon className="absolute -right-2 -bottom-2 w-16 h-16 opacity-[0.03] group-hover:scale-110 transition-transform" />
+                
+                <p className="text-[10px] uppercase font-black text-slate-400 tracking-[0.15em] mb-1 relative z-10">
+                  {stat.label}
                 </p>
-                <p className="text-sm text-slate-600">Challenge Entries</p>
-              </CardContent>
-            </Card>
+                
+                <div className="flex items-center justify-between relative z-10">
+                  <span className="text-3xl font-black text-slate-900 tracking-tighter">
+                    {stat.value}
+                  </span>
+                  <div className={`p-2 rounded-lg ${stat.bg}`}>
+                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
-
         {selectedPortfolios.length > 0 && (
           <Card className="border-2 border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 mb-8">
             <CardContent className="p-6">
