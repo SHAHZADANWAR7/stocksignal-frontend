@@ -817,170 +817,168 @@ Target: ${selectedChallenge.target_metric}`;
           </TabsContent>
 
           <TabsContent value="challenges" className="space-y-6 mt-6">
-            <Card className="border-2 border-purple-200 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-3">
-                    <Trophy className="w-6 h-6" />
-                    My Challenges
-                  </CardTitle>
-                  <Button
-                    onClick={() => setShowCreateChallengeDialog(true)}
-                    className="bg-white text-purple-600 hover:bg-purple-50"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Challenge
-                  </Button>
+  {/* Tactical Operations (My Challenges) */}
+  <Card className="border-2 border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white">
+    {/* Dark Industrial Accent */}
+    <div className="h-1.5 w-full bg-slate-900" />
+    <CardHeader className="bg-slate-50 border-b border-slate-100">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-slate-900 rounded-lg">
+            <Trophy className="w-5 h-5 text-white" />
+          </div>
+          <CardTitle className="text-xl font-black uppercase tracking-tighter text-slate-900">
+            Tactical Operations
+          </CardTitle>
+        </div>
+        <Button
+          onClick={() => setShowCreateChallengeDialog(true)}
+          className="bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-[10px] px-6 py-5 rounded-xl transition-all shadow-lg active:translate-y-0.5"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Initialize Challenge
+        </Button>
+      </div>
+    </CardHeader>
+    <CardContent className="p-6">
+      {challenges.filter(c => c.created_by_email === user?.email).length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
+          <div className="p-4 bg-white rounded-full shadow-sm mb-4">
+            <Shield className="w-8 h-8 text-slate-300" />
+          </div>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+            Status: No Active Deployments
+          </p>
+          <p className="text-sm text-slate-400 mt-1 font-medium">Create a challenge to stress-test regional strategy resilience.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {challenges.filter(c => c.created_by_email === user?.email).map(challenge => {
+            const sortedEntries = (challenge.entries || []).sort((a, b) => b.score - a.score);
+            return (
+              <Card key={challenge.id} className="border-2 border-slate-100 hover:border-indigo-200 transition-all rounded-xl overflow-hidden group">
+                <CardContent className="p-5">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1">
+                        <h3 className="font-black text-slate-900 uppercase tracking-tight text-lg group-hover:text-indigo-600 transition-colors">
+                          {challenge.name}
+                        </h3>
+                        <Badge variant="outline" className="text-[9px] uppercase font-black border-slate-200 text-slate-500 bg-slate-50">
+                          {challenge.challenge_type.replace(/_/g, ' ')}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-slate-500 line-clamp-1 mb-4 font-medium">{challenge.description}</p>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
+                          <Activity className="w-3 h-3 text-slate-400" />
+                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
+                            {challenge.duration_months} Months
+                          </span>
+                        </div>
+                        <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
+                          <Target className="w-3 h-3 text-slate-400" />
+                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
+                            Target: {challenge.target_metric}
+                          </span>
+                        </div>
+                        {challenge.badge_reward && (
+                          <div className="px-2.5 py-1 bg-amber-50 rounded border border-amber-100 flex items-center gap-2">
+                            <Award className="w-3 h-3 text-amber-600" />
+                            <span className="text-[10px] font-black text-amber-700 uppercase tracking-tighter">
+                              Reward: {challenge.badge_reward}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-6 border-l border-slate-100 pl-6 h-full min-w-[240px]">
+                      <div className="flex-1">
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Leaderboard Top</p>
+                        <div className="flex -space-x-2 overflow-hidden mb-1">
+                          {sortedEntries.slice(0, 3).map((entry, i) => (
+                             <div key={i} className={`w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-black ${['bg-indigo-500', 'bg-purple-500', 'bg-slate-800'][i]} text-white`}>
+                               {entry.user_email.charAt(0).toUpperCase()}
+                             </div>
+                          ))}
+                        </div>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase">
+                          {(challenge.entries?.length || 0)} Total Participants
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Button 
+                          onClick={() => {
+                            setSelectedChallenge(challenge);
+                            setShowInviteDialog(true);
+                          }}
+                          variant="outline" 
+                          className="border-2 font-black uppercase text-[10px] tracking-widest h-9 px-4 hover:bg-slate-50 transition-all"
+                        >
+                          Invite Intel
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </CardContent>
+  </Card>
+
+  {/* Inbound Protocols (Invitations) */}
+  <Card className="border-2 border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white">
+    <div className="h-1.5 w-full bg-indigo-600" />
+    <CardHeader className="bg-slate-50 border-b border-slate-100 py-4">
+      <div className="flex items-center gap-3">
+        <Activity className="w-4 h-4 text-indigo-600" />
+        <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
+          Inbound Invitations
+        </CardTitle>
+      </div>
+    </CardHeader>
+    <CardContent className="p-8">
+      {challenges.filter(c => c.invited_users?.includes(user?.email)).length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-6 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
+            // No Pending Signals Detected
+          </p>
+          <p className="text-[9px] text-slate-400 uppercase mt-1 tracking-tighter">Monitoring encrypted channels for authorization...</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {challenges.filter(c => c.invited_users?.includes(user?.email)).map(challenge => (
+            <div key={challenge.id} className="flex items-center justify-between p-4 border-2 border-slate-100 rounded-xl bg-slate-50/30 group hover:bg-white hover:border-indigo-100 transition-all">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm group-hover:border-indigo-200 transition-all">
+                  <Activity className="w-4 h-4 text-indigo-600" />
                 </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                {challenges.filter(c => c.created_by_email === user?.email).length === 0 ? (
-                  <p className="text-center text-slate-500 py-8">You haven't created any challenges yet</p>
-                ) : (
-                  <div className="space-y-4">
-                    {challenges.filter(c => c.created_by_email === user?.email).map(challenge => {
-                      const myEntry = challenge.entries?.find(e => e.user_email === user?.email);
-                      const sortedEntries = (challenge.entries || []).sort((a, b) => b.score - a.score);
-                      
-                      return (
-                        <Card key={challenge.id} className="border border-slate-200">
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-3">
-                              <div className="flex-1">
-                                <h3 className="font-bold text-slate-900 mb-1">{challenge.name}</h3>
-                                <p className="text-sm text-slate-600 mb-2">{challenge.description}</p>
-                                <div className="flex gap-2 mb-2">
-                                  <Badge className="bg-purple-100 text-purple-700">
-                                    {challenge.challenge_type.replace(/_/g, ' ')}
-                                  </Badge>
-                                  <Badge variant="outline">
-                                    {challenge.duration_months} months
-                                  </Badge>
-                                  <Badge variant="outline">
-                                    Target: {challenge.target_metric}
-                                  </Badge>
-                                  {challenge.badge_reward && (
-                                    <Badge className="bg-amber-100 text-amber-700">
-                                      🏆 {challenge.badge_reward}
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-xs text-slate-500">
-                                  {(challenge.invited_users?.length || 0)} invited • {(challenge.entries?.length || 0)} entries
-                                </p>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedChallenge(challenge);
-                                  setShowInviteDialog(true);
-                                }}
-                              >
-                                Invite Users
-                              </Button>
-                            </div>
-
-                            {sortedEntries.length > 0 && (
-                              <div className="border-t pt-3">
-                                <p className="text-sm font-semibold text-slate-700 mb-2">Leaderboard</p>
-                                <div className="space-y-2">
-                                  {sortedEntries.slice(0, 3).map((entry, idx) => (
-                                    <div key={idx} className="flex items-center justify-between bg-slate-50 rounded p-2">
-                                      <div className="flex items-center gap-2">
-                                        <span className="font-bold text-slate-900">#{idx + 1}</span>
-                                        <span className="text-sm text-slate-600">
-                                          {entry.user_email === user?.email ? "You" : entry.user_email}
-                                        </span>
-                                        {entry.badge_earned && (
-                                          <Badge className="bg-amber-100 text-amber-700 text-xs">
-                                            🏆
-                                          </Badge>
-                                        )}
-                                      </div>
-                                      <Badge className="bg-purple-600 text-white">
-                                        {entry.score}/100
-                                      </Badge>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-blue-200 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                <CardTitle className="flex items-center gap-3">
-                  <Award className="w-6 h-6" />
-                  Challenges I'm Invited To
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                {challenges.filter(c => c.invited_users?.includes(user?.email)).length === 0 ? (
-                  <p className="text-center text-slate-500 py-8">No invitations yet</p>
-                ) : (
-                  <div className="space-y-4">
-                    {challenges.filter(c => c.invited_users?.includes(user?.email)).map(challenge => {
-                      const myEntry = challenge.entries?.find(e => e.user_email === user?.email);
-                      
-                      return (
-                        <Card key={challenge.id} className="border border-slate-200">
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h3 className="font-bold text-slate-900 mb-1">{challenge.name}</h3>
-                                <p className="text-sm text-slate-600 mb-2">{challenge.description}</p>
-                                <div className="flex gap-2 mb-2">
-                                  <Badge className="bg-blue-100 text-blue-700">
-                                    {challenge.challenge_type.replace(/_/g, ' ')}
-                                  </Badge>
-                                  <Badge variant="outline">
-                                    {challenge.duration_months} months
-                                  </Badge>
-                                  <Badge variant="outline">
-                                    Target: {challenge.target_metric}
-                                  </Badge>
-                                </div>
-                                {myEntry && (
-                                  <div className="flex gap-2">
-                                    <Badge className="bg-emerald-100 text-emerald-700">
-                                      Entered • Score: {myEntry.score}/100
-                                    </Badge>
-                                    {myEntry.badge_earned && (
-                                      <Badge className="bg-amber-100 text-amber-700">
-                                        🏆 Badge Earned
-                                      </Badge>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                              <Button
-                                size="sm"
-                                className="bg-blue-600 hover:bg-blue-700"
-                                onClick={() => {
-                                  setSelectedChallenge(challenge);
-                                  setShowEnterChallengeDialog(true);
-                                }}
-                              >
-                                {myEntry ? "Re-enter" : "Enter Challenge"}
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+                <div>
+                  <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm">{challenge.name}</h4>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Awaiting Strategic Entry</p>
+                </div>
+              </div>
+              <Button
+                onClick={() => {
+                  setSelectedChallenge(challenge);
+                  setShowEnterChallengeDialog(true);
+                }}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-xl shadow-lg shadow-indigo-200"
+              >
+                Accept Deployment
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </CardContent>
+  </Card>
+</TabsContent>
 
           <TabsContent value="results" className="space-y-6 mt-6">
             {!scenarioResults ? (
