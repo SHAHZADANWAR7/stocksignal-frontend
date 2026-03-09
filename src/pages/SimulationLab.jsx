@@ -684,28 +684,41 @@ Target: ${selectedChallenge.target_metric}`;
   )}
 </AnimatePresence>
 
-        <Tabs defaultValue="portfolios" className="mb-8">
-          {/* 🛠 INDUSTRIAL TAB NAVIGATION (Replacement for lines 655-659) */}
-          <TabsList className="grid w-full grid-cols-3 bg-slate-200/60 p-1.5 rounded-xl h-14 border border-slate-300/50 shadow-inner">
-            <TabsTrigger 
-              value="portfolios" 
-              className="px-8 rounded-lg data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-lg uppercase text-[10px] font-black tracking-[0.2em] transition-all duration-200"
-            >
-              My Strategies
-            </TabsTrigger>
-            <TabsTrigger 
-              value="challenges" 
-              className="px-8 rounded-lg data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-lg uppercase text-[10px] font-black tracking-[0.2em] transition-all duration-200"
-            >
-              War Games
-            </TabsTrigger>
-            <TabsTrigger 
-              value="results" 
-              className="px-8 rounded-lg data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-lg uppercase text-[10px] font-black tracking-[0.2em] transition-all duration-200"
-            >
-              Terminal Output
-            </TabsTrigger>
-          </TabsList>
+        {/* 🛠️ INDUSTRIAL COMMAND DECK NAVIGATION (Replace from line 687 to line 708) */}
+<Tabs defaultValue="portfolios" className="mb-10">
+  <div className="bg-slate-900 p-1.5 rounded-2xl border-b-4 border-slate-800 shadow-xl">
+    <TabsList className="grid w-full grid-cols-3 bg-slate-800 p-1 rounded-xl h-14 border border-slate-700/50">
+      <TabsTrigger 
+        value="portfolios" 
+        className="px-8 rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-[0_0_20px_rgba(255,255,255,0.15)] uppercase text-[10px] font-black tracking-[0.2em] transition-all duration-300 text-slate-400 group"
+      >
+        <div className="flex items-center gap-2">
+          <Database className="w-3.5 h-3.5 group-data-[state=active]:text-indigo-600" />
+          My Strategies
+        </div>
+      </TabsTrigger>
+      
+      <TabsTrigger 
+        value="challenges" 
+        className="px-8 rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-[0_0_20px_rgba(255,255,255,0.15)] uppercase text-[10px] font-black tracking-[0.2em] transition-all duration-300 text-slate-400 group"
+      >
+        <div className="flex items-center gap-2">
+          <Shield className="w-3.5 h-3.5 group-data-[state=active]:text-indigo-600" />
+          Challenges
+        </div>
+      </TabsTrigger>
+      
+      <TabsTrigger 
+        value="results" 
+        className="px-8 rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-[0_0_20px_rgba(255,255,255,0.15)] uppercase text-[10px] font-black tracking-[0.2em] transition-all duration-300 text-slate-400 group"
+      >
+        <div className="flex items-center gap-2">
+          <Terminal className="w-3.5 h-3.5 group-data-[state=active]:text-indigo-600" />
+          Terminal Output
+        </div>
+      </TabsTrigger>
+    </TabsList>
+  </div>
 
           <TabsContent value="portfolios" className="space-y-6 mt-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
