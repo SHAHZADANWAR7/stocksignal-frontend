@@ -652,10 +652,26 @@ Target: ${selectedChallenge.target_metric}`;
         )}
 
         <Tabs defaultValue="portfolios" className="mb-8">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="portfolios">My Portfolios</TabsTrigger>
-            <TabsTrigger value="challenges">Challenges</TabsTrigger>
-            <TabsTrigger value="results">Simulation Results</TabsTrigger>
+          {/* 🛠 INDUSTRIAL TAB NAVIGATION (Replacement for lines 655-659) */}
+          <TabsList className="grid w-full grid-cols-3 bg-slate-200/60 p-1.5 rounded-xl h-14 border border-slate-300/50 shadow-inner">
+            <TabsTrigger 
+              value="portfolios" 
+              className="px-8 rounded-lg data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-lg uppercase text-[10px] font-black tracking-[0.2em] transition-all duration-200"
+            >
+              My Strategies
+            </TabsTrigger>
+            <TabsTrigger 
+              value="challenges" 
+              className="px-8 rounded-lg data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-lg uppercase text-[10px] font-black tracking-[0.2em] transition-all duration-200"
+            >
+              War Games
+            </TabsTrigger>
+            <TabsTrigger 
+              value="results" 
+              className="px-8 rounded-lg data-[state=active]:bg-slate-900 data-[state=active]:text-white data-[state=active]:shadow-lg uppercase text-[10px] font-black tracking-[0.2em] transition-all duration-200"
+            >
+              Terminal Output
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="portfolios" className="space-y-6 mt-6">
