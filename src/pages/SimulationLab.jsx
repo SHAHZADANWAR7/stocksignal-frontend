@@ -1037,11 +1037,6 @@ Target: ${selectedChallenge.target_metric}`;
         
         <CardContent className="p-6 bg-slate-50/50">
           <div className="bg-white border-2 border-slate-200 rounded-xl p-6 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-2">
-              <div className="text-[8px] font-black text-slate-200 uppercase tracking-widest -rotate-90 origin-right translate-x-4">
-                PROTOCOL-v2.1
-              </div>
-            </div>
             <h3 className="font-black text-slate-900 text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
               <Database className="w-4 h-4 text-indigo-600" />
               Simulation Methodology & Controls
@@ -1069,10 +1064,13 @@ Target: ${selectedChallenge.target_metric}`;
       </Card>
 
       {/* Performance Grids */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         {(scenarioResults.data ? [scenarioResults.data] : scenarioResults.portfolios || [])?.map((result, index) => {
           const outcome = result.outcome || result;
-          const analysisText = result.analysis?.scenario_analysis || result.ai_analysis || result.recommendations || "Analysis processing...";
+          // Logic to clean the analysis text if it contains JSON fragments
+          let rawAnalysis = result.analysis?.scenario_analysis || result.ai_analysis || result.recommendations || "Analysis processing...";
+          const cleanAnalysis = rawAnalysis.includes('}') ? rawAnalysis.split('}').pop().trim() : rawAnalysis;
+          
           const isPositive = Number(outcome.total_impact_percent || outcome.total_return_percent || 0) >= 0;
           
           return (
@@ -1089,30 +1087,58 @@ Target: ${selectedChallenge.target_metric}`;
                       Processing Engine: {result.model || 'SONNET-3.5'}
                     </Badge>
                   </div>
-                  <div className={`p-2 rounded-lg font-mono font-black text-sm border shadow-inner ${isPositive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
-                    {isPositive ? '+' : ''}{Number(outcome.total_impact_percent || outcome.total_return_percent || 0).toFixed(2)}%
+                  <div className="text-right">
+                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Valuation</p>
+                     <p className="text-xl font-black text-slate-900 font-mono">
+                        ${Number(outcome.scenario_portfolio_value || outcome.final_value || outcome.simulated_portfolio_value || 0).toLocaleString()}
+                     </p>
                   </div>
                 </div>
               </CardHeader>
               
               <CardContent className="p-6 space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-white transition-colors">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Entry Capital</p>
-                    <p className="text-xl font-black text-slate-900 font-mono">
-                      ${Number(outcome.base_portfolio_value || outcome.initial_value || 0).toLocaleString()}
+                {/* INDUSTRIAL GRID: SIX ESSENTIAL QUANT METRICS */}
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Return</p>
+                    <p className={`text-xl font-black font-mono ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {isPositive ? '+' : ''}{Number(outcome.total_impact_percent || outcome.total_return_percent || 0).toFixed(2)}%
                     </p>
                   </div>
-                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-white transition-colors">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Exit Capital</p>
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Volatility</p>
                     <p className="text-xl font-black text-slate-900 font-mono">
-                      ${Number(outcome.simulated_portfolio_value || outcome.final_value || 0).toLocaleString()}
+                      {Number(outcome.volatility || outcome.risk_score || 0).toFixed(2)}%
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Sharpe Ratio</p>
+                    <p className="text-xl font-black text-indigo-600 font-mono">
+                      {Number(outcome.sharpe_ratio || 0).toFixed(2)}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Max Drawdown</p>
+                    <p className="text-xl font-black text-rose-600 font-mono">
+                      {Number(outcome.max_drawdown || outcome.max_drawdown_percent || 0).toFixed(2)}%
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Stress Factor</p>
+                    <p className="text-xl font-black text-orange-600 font-mono">
+                      {Number(outcome.correlation_impact || 0).toFixed(2)}%
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Initial Capital</p>
+                    <p className="text-xl font-black text-slate-900 font-mono">
+                      ${Number(outcome.base_portfolio_value || outcome.initial_value || 0).toLocaleString()}
                     </p>
                   </div>
                 </div>
 
                 <div className="p-5 bg-slate-900 rounded-xl relative overflow-hidden group/intel">
-                  <div className="absolute top-0 right-0 p-2 opacity-10 group-hover/intel:opacity-20 transition-opacity">
+                  <div className="absolute top-0 right-0 p-2 opacity-10">
                     <Activity className="w-12 h-12 text-white" />
                   </div>
                   <div className="flex items-center gap-2 mb-3">
@@ -1120,16 +1146,16 @@ Target: ${selectedChallenge.target_metric}`;
                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Strategic AI Intelligence</p>
                   </div>
                   <p className="text-xs text-slate-300 font-medium leading-relaxed italic">
-                    "{analysisText}"
+                    "{cleanAnalysis}"
                   </p>
                 </div>
 
                 <div className="pt-2">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Portfolio Impact Summary</p>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Worst Affected Assets</p>
                   <div className="flex flex-wrap gap-2">
-                    {(outcome.worst_affected_assets || outcome.best_performing_assets || []).map((asset, i) => (
-                      <Badge key={i} variant="outline" className={`text-[10px] font-black uppercase ${isPositive ? 'border-emerald-200 text-emerald-600 bg-emerald-50/50' : 'border-rose-200 text-rose-600 bg-rose-50/50'}`}>
-                        {isPositive ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
+                    {(outcome.worst_affected_assets || []).map((asset, i) => (
+                      <Badge key={i} variant="outline" className="border-rose-200 text-rose-600 bg-rose-50/50 text-[10px] font-black uppercase">
+                        <TrendingDown className="w-3 h-3 mr-1" />
                         {asset.symbol || asset} {asset.impact_percent ? `(${asset.impact_percent}%)` : ''}
                       </Badge>
                     ))}
