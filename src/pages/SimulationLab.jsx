@@ -628,35 +628,61 @@ Target: ${selectedChallenge.target_metric}`;
               </motion.div>
             ))}
           </div>
-        {selectedPortfolios.length > 0 && (
-          <Card className="border-2 border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 mb-8">
-            <CardContent className="p-6">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="text-lg font-bold text-slate-900 mb-1">
-                    {selectedPortfolios.length} Portfolio{selectedPortfolios.length > 1 ? 's' : ''} Selected
-                  </p>
-                  <p className="text-sm text-slate-600">Run simulations or compare strategies</p>
-                </div>
-                <div className="flex gap-3">
-                  <Button
-                    onClick={() => setShowScenarioDialog(true)}
-                    className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    Run Scenario
-                  </Button>
-                  <Button
-                    onClick={() => setSelectedPortfolios([])}
-                    variant="outline"
-                  >
-                    Clear Selection
-                  </Button>
-                </div>
+        {/* 🛰️ INDUSTRIAL SELECTION COMMAND BAR (Replace lines 631 to 659) */}
+<AnimatePresence>
+  {selectedPortfolios.length > 0 && (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95, y: 10 }}
+      className="mb-10"
+    >
+      <Card className="border-2 border-slate-900 shadow-xl rounded-2xl overflow-hidden bg-white">
+        {/* Top Tactical Accent */}
+        <div className="h-1.5 w-full bg-slate-900" />
+        
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              {/* Tactical Ready Indicator */}
+              <div className="relative flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-indigo-600"></span>
               </div>
-            </CardContent>
-          </Card>
-        )}
+              
+              <div className="space-y-1">
+                <h3 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-tight">
+                  {selectedPortfolios.length} Strateg{selectedPortfolios.length > 1 ? 'ies' : 'y'} Linked
+                </h3>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] flex items-center gap-2">
+                  <span className="w-8 h-[1px] bg-slate-200" />
+                  System Ready for Tactical Deployment
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => setSelectedPortfolios([])}
+                className="flex-1 md:flex-none border-2 border-slate-200 text-slate-500 font-black uppercase text-[10px] tracking-widest h-12 px-8 hover:bg-slate-50 hover:border-slate-300 transition-all rounded-xl"
+              >
+                Reset Selection
+              </Button>
+              <Button
+                onClick={() => setShowScenarioDialog(true)}
+                className="flex-1 md:flex-none bg-slate-900 hover:bg-slate-800 text-white font-black uppercase text-[10px] tracking-widest h-12 px-10 rounded-xl transition-all shadow-lg active:translate-y-0.5 flex items-center gap-3"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                Initialize Scenario
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  )}
+</AnimatePresence>
 
         <Tabs defaultValue="portfolios" className="mb-8">
           {/* 🛠 INDUSTRIAL TAB NAVIGATION (Replacement for lines 655-659) */}
