@@ -676,7 +676,9 @@ Target: ${selectedChallenge.target_metric}`;
 
           <TabsContent value="portfolios" className="space-y-6 mt-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-             portfolios.map((portfolio, index) => {
+            {/* 🚀 INDUSTRIAL PORTFOLIO MAPPING (Replaces lines 679 to 820) */}
+{portfolios.map((portfolio, index) => {
+  // Use the shield icon as a reliable fallback
   const StrategyIcon = strategyIcons[portfolio.strategy_type] || Shield;
   const isSelected = selectedPortfolios.includes(portfolio.id);
 
@@ -689,6 +691,7 @@ Target: ${selectedChallenge.target_metric}`;
       className="h-full"
     >
       <Card className={`group relative border-2 transition-all h-full flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm ${isSelected ? 'border-indigo-600 ring-4 ring-indigo-500/10' : 'border-slate-200 hover:border-slate-300'}`}>
+        {/* Industrial Top Accent Bar */}
         <div className={`h-1.5 w-full bg-gradient-to-r ${strategyColors[portfolio.strategy_type]}`} />
         
         <CardHeader className="pb-3 pt-5">
@@ -716,11 +719,12 @@ Target: ${selectedChallenge.target_metric}`;
         </CardHeader>
 
         <CardContent className="p-6 pt-0 flex-1 flex flex-col space-y-4">
-          {/* DESCRIPTION: Fallback text removed. Line-clamp ensures it doesn't break layout */}
+          {/* DESCRIPTION: Fallback text removed. Min-height ensures alignment if empty */}
           <p className="text-sm text-slate-500 font-medium leading-relaxed line-clamp-2 min-h-[2.5rem]">
             {portfolio.description || ""}
           </p>
 
+          {/* Technical Metrics readout */}
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-white transition-colors">
               <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest mb-1 text-center">AUM Position</p>
@@ -736,39 +740,29 @@ Target: ${selectedChallenge.target_metric}`;
             </div>
           </div>
 
+          {/* Allocation Bar with Hover Titles */}
           {portfolio.assets && portfolio.assets.length > 0 && (
-            <div className="py-2 group/assets">
+            <div className="py-2">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest">Allocation Distribution</span>
                 <span className="text-[9px] font-bold text-slate-500">{portfolio.assets.length} Units</span>
               </div>
-              
-              {/* ASSET BAR: Height increased and title added to entire container for better hover detection */}
               <div 
-                className="h-5 w-full bg-slate-100 rounded-lg overflow-hidden flex border border-slate-200 cursor-help"
+                className="h-4 w-full bg-slate-100 rounded-lg overflow-hidden flex border border-slate-200 cursor-help"
                 title={portfolio.assets.map(a => `${a.symbol}: ${a.allocation_percent}%`).join('\n')}
               >
                 {portfolio.assets.map((asset, i) => (
                   <div 
                     key={i}
                     style={{ width: `${asset.allocation_percent}%` }}
-                    className={`h-full border-r border-white/20 transition-opacity hover:opacity-80 ${['bg-indigo-600', 'bg-purple-600', 'bg-emerald-600', 'bg-amber-500', 'bg-slate-400'][i % 5]}`}
+                    className={`h-full border-r border-white/20 hover:opacity-80 transition-opacity ${['bg-indigo-600', 'bg-purple-600', 'bg-emerald-600', 'bg-amber-500', 'bg-slate-400'][i % 5]}`}
                   />
                 ))}
-              </div>
-              
-              {/* TECHNICAL LEGEND: Shows first 3 assets in small text on hover for that "Technical" feel */}
-              <div className="mt-2 flex flex-wrap gap-2 opacity-0 group-hover/assets:opacity-100 transition-opacity">
-                {portfolio.assets.slice(0, 3).map((a, i) => (
-                  <span key={i} className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
-                    {a.symbol} {a.allocation_percent}%
-                  </span>
-                ))}
-                {portfolio.assets.length > 3 && <span className="text-[8px] font-bold text-slate-400">...</span>}
               </div>
             </div>
           )}
 
+          {/* Action Command Bar */}
           <div className="flex gap-2 mt-auto pt-4 border-t border-slate-100">
             <Button 
               onClick={() => setShowOptimizeDialog(portfolio.id)}
