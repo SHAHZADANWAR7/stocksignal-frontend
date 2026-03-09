@@ -740,24 +740,40 @@ Target: ${selectedChallenge.target_metric}`;
             </div>
           </div>
 
-          {/* Allocation Bar with Hover Titles */}
+          {/* Allocation Bar with IMMEDIATE Visual Legend on Hover */}
           {portfolio.assets && portfolio.assets.length > 0 && (
-            <div className="py-2">
+            <div 
+              className="py-2 group/assets-container cursor-help relative"
+              title={portfolio.assets.map(a => `${a.symbol}: ${a.allocation_percent}%`).join('\n')}
+            >
               <div className="flex justify-between items-center mb-2">
                 <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest">Allocation Distribution</span>
                 <span className="text-[9px] font-bold text-slate-500">{portfolio.assets.length} Units</span>
               </div>
-              <div 
-                className="h-4 w-full bg-slate-100 rounded-lg overflow-hidden flex border border-slate-200 cursor-help"
-                title={portfolio.assets.map(a => `${a.symbol}: ${a.allocation_percent}%`).join('\n')}
-              >
-                {portfolio.assets.map((asset, i) => (
-                  <div 
-                    key={i}
-                    style={{ width: `${asset.allocation_percent}%` }}
-                    className={`h-full border-r border-white/20 hover:opacity-80 transition-opacity ${['bg-indigo-600', 'bg-purple-600', 'bg-emerald-600', 'bg-amber-500', 'bg-slate-400'][i % 5]}`}
-                  />
-                ))}
+              
+              {/* Added 'group' here to ensure the legend below triggers on ANY hover in this section */}
+              <div className="group/bar-section">
+                <div className="h-4 w-full bg-slate-100 rounded-lg overflow-hidden flex border border-slate-200">
+                  {portfolio.assets.map((asset, i) => (
+                    <div 
+                      key={i}
+                      style={{ width: `${asset.allocation_percent}%` }}
+                      className={`h-full border-r border-white/20 transition-opacity hover:opacity-80 ${['bg-indigo-600', 'bg-purple-600', 'bg-emerald-600', 'bg-amber-500', 'bg-slate-400'][i % 5]}`}
+                    />
+                  ))}
+                </div>
+
+                {/* TECHNICAL LEGEND: Using standard group-hover for maximum compatibility */}
+                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 opacity-0 group-hover/assets-container:opacity-100 transition-opacity duration-200">
+                  {portfolio.assets.map((asset, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                      <div className={`w-1.5 h-1.5 rounded-full ${['bg-indigo-600', 'bg-purple-600', 'bg-emerald-600', 'bg-amber-500', 'bg-slate-400'][i % 5]}`} />
+                      <span className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">
+                        {asset.symbol} <span className="text-slate-400">{asset.allocation_percent}%</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
