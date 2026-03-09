@@ -513,10 +513,10 @@ Target: ${selectedChallenge.target_metric}`;
   };
 
   const strategyColors = {
-    aggressive_growth: "from-red-600 to-orange-600",
-    balanced: "from-blue-600 to-indigo-600",
-    income_focused: "from-emerald-600 to-teal-600",
-    thematic: "from-purple-600 to-pink-600",
+    aggressive_growth: "from-slate-900 to-slate-800",
+    balanced: "from-indigo-600 to-indigo-700",
+    income_focused: "from-emerald-600 to-emerald-700",
+    thematic: "from-purple-600 to-purple-700",
     custom: "from-slate-600 to-slate-700"
   };
 
@@ -677,147 +677,120 @@ Target: ${selectedChallenge.target_metric}`;
           <TabsContent value="portfolios" className="space-y-6 mt-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {portfolios.map((portfolio, index) => {
-                const StrategyIcon = strategyIcons[portfolio.strategy_type];
-                const isSelected = selectedPortfolios.includes(portfolio.id);
-                const pieData = portfolio.assets?.map(asset => ({
-                  name: asset.symbol,
-                  value: asset.allocation_percent
-                })) || [];
+  const StrategyIcon = strategyIcons[portfolio.strategy_type] || Shield;
+  const isSelected = selectedPortfolios.includes(portfolio.id);
 
-                return (
-                  <motion.div
-                    key={portfolio.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="h-full"
-                  >
-                    <Card className={`border-2 transition-all h-full flex flex-col ${isSelected ? 'border-indigo-500 shadow-xl shadow-indigo-500/20' : 'border-slate-200 hover:border-indigo-300'}`}>
-                      <CardHeader className={`bg-gradient-to-r ${strategyColors[portfolio.strategy_type]} text-white`}>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <StrategyIcon className="w-5 h-5" />
-                              <CardTitle className="text-lg">{portfolio.name}</CardTitle>
-                            </div>
-                            <p className="text-white/90 text-sm">{portfolio.description}</p>
-                          </div>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => togglePortfolioSelection(portfolio.id)}
-                            className="w-5 h-5 cursor-pointer"
-                          />
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-6 flex-1 flex flex-col">
-                        <div className="mb-4 min-h-[60px]">
-                          <h3 className="font-semibold text-slate-900">{portfolio.name}</h3>
-                          {portfolio.badges_earned && portfolio.badges_earned.length > 0 && (
-                            <div className="flex gap-1 mt-1 flex-wrap">
-                              {portfolio.badges_earned.map((badge, idx) => (
-                                <Badge key={idx} className="bg-amber-100 text-amber-700 text-xs">
-                                  🏆 {badge}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Total Value</p>
-                            <p className="text-lg font-bold text-slate-900">
-                              ${(portfolio.total_value || 0).toLocaleString()}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500 mb-1">Assets</p>
-                            <p className="text-lg font-bold text-slate-900">
-                              {portfolio.assets?.length || 0}
-                            </p>
-                          </div>
-                        </div>
+  return (
+    <motion.div
+      key={portfolio.id}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="h-full"
+    >
+      <Card className={`group relative border-2 transition-all h-full flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm ${isSelected ? 'border-indigo-600 ring-4 ring-indigo-500/10' : 'border-slate-200 hover:border-slate-300'}`}>
+        {/* Industrial Top Accent Bar */}
+        <div className={`h-1.5 w-full bg-gradient-to-r ${strategyColors[portfolio.strategy_type]}`} />
+        
+        <CardHeader className="pb-3 pt-5">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 rounded-md bg-slate-100 text-slate-600">
+                  <StrategyIcon className="w-4 h-4" />
+                </div>
+                <CardTitle className="text-xl font-black text-slate-900 tracking-tight">
+                  {portfolio.name}
+                </CardTitle>
+              </div>
+              <Badge variant="outline" className="text-[9px] uppercase font-black tracking-widest bg-slate-50 border-slate-200 text-slate-500">
+                {portfolio.strategy_type ? portfolio.strategy_type.replace(/_/g, ' ') : 'STRATEGY'}
+              </Badge>
+            </div>
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => togglePortfolioSelection(portfolio.id)}
+              className="w-5 h-5 accent-indigo-600 rounded cursor-pointer transition-transform active:scale-90 mt-1"
+            />
+          </div>
+        </CardHeader>
 
-                        {portfolio.assets && portfolio.assets.length > 0 && (
-                          <div className="mb-4">
-                            <ResponsiveContainer width="100%" height={150}>
-                              <RePieChart>
-                                <Pie
-                                  data={pieData}
-                                  cx="50%"
-                                  cy="50%"
-                                  innerRadius={40}
-                                  outerRadius={60}
-                                  paddingAngle={2}
-                                  dataKey="value"
-                                >
-                                  {pieData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                  ))}
-                                </Pie>
-                                <Tooltip />
-                              </RePieChart>
-                            </ResponsiveContainer>
-                          </div>
-                        )}
+        <CardContent className="p-6 pt-0 flex-1 flex flex-col space-y-4">
+          <p className="text-sm text-slate-500 font-medium leading-relaxed line-clamp-2">
+            {portfolio.description || "Institutional-grade asset allocation model."}
+          </p>
 
-                        <div className="grid grid-cols-2 gap-3 mb-4 text-sm min-h-[60px]">
-                          {portfolio.expected_return !== undefined && portfolio.expected_return !== null ? (
-                            <>
-                              <div className="bg-emerald-50 rounded p-2">
-                                <p className="text-xs text-slate-600">Expected Return</p>
-                                <p className="font-bold text-emerald-600">
-                                  {(portfolio.expected_return || 0).toFixed(1)}%
-                                </p>
-                              </div>
-                              <div className="bg-rose-50 rounded p-2">
-                                <p className="text-xs text-slate-600">Risk Score</p>
-                                <p className="font-bold text-rose-600">
-                                  {(portfolio.risk_score || 0).toFixed(1)}
-                                </p>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="col-span-2 text-center text-slate-400 text-sm">
-                              No metrics calculated yet
-                            </div>
-                          )}
-                        </div>
+          {/* Technical Metrics Readout */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-white transition-colors">
+              <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest mb-1 text-center">AUM Position</p>
+              <p className="text-lg font-black text-slate-900 text-center">
+                ${(portfolio.total_value || 0).toLocaleString()}
+              </p>
+            </div>
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-white transition-colors">
+              <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest mb-1 text-center">Risk Rating</p>
+              <p className="text-lg font-black text-slate-900 text-center">
+                {portfolio.risk_score || "0.0"}
+              </p>
+            </div>
+          </div>
 
-                        <div className="flex gap-2 mt-auto">
-                          <Button
-                            onClick={() => setShowOptimizeDialog(portfolio.id)}
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                          >
-                            <Repeat className="w-3 h-3 mr-1" />
-                            Optimize
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              setEditingPortfolio(portfolio);
-                              setShowCreateDialog(true);
-                            }}
-                            variant="outline"
-                            size="sm"
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </Button>
-                          <Button
-                            onClick={() => deletePortfolio(portfolio.id)}
-                            variant="ghost"
-                            size="sm"
-                            className="text-rose-600 hover:bg-rose-50"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                );
-              })}
+          {/* Linear Asset Visualizer (Technical Industrial Look) */}
+          {portfolio.assets && portfolio.assets.length > 0 && (
+            <div className="py-2">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest">Allocation Distribution</span>
+                <span className="text-[9px] font-bold text-slate-500">{portfolio.assets.length} Units</span>
+              </div>
+              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex">
+                {portfolio.assets.map((asset, i) => (
+                  <div 
+                    key={i}
+                    style={{ width: `${asset.allocation_percent}%` }}
+                    className={`h-full border-r border-white/20 ${['bg-indigo-600', 'bg-purple-600', 'bg-emerald-600', 'bg-amber-500', 'bg-slate-400'][i % 5]}`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Control Command Bar */}
+          <div className="flex gap-2 mt-auto pt-4 border-t border-slate-100">
+            <Button 
+              onClick={() => setShowOptimizeDialog(portfolio.id)}
+              variant="outline" 
+              className="flex-1 h-9 text-[10px] font-black uppercase tracking-widest border-2 hover:bg-slate-900 hover:text-white transition-all"
+            >
+              <Repeat className="w-3 h-3 mr-1" />
+              Optimize
+            </Button>
+            <Button 
+              onClick={() => {
+                setEditingPortfolio(portfolio);
+                setShowCreateDialog(true);
+              }}
+              variant="outline" 
+              size="icon" 
+              className="h-9 w-9 border-2 hover:bg-slate-100"
+            >
+              <Pencil className="w-3 h-3 text-slate-600" />
+            </Button>
+            <Button 
+              onClick={() => deletePortfolio(portfolio.id)}
+              variant="outline" 
+              size="icon" 
+              className="h-9 w-9 border-2 border-rose-100 text-rose-500 hover:bg-rose-50 hover:border-rose-200"
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+})}
             </div>
           </TabsContent>
 
