@@ -36,11 +36,18 @@ import {
   Sparkles,
   AlertTriangle,
   Shield,
+  ShieldAlert,
   Flame,
   Loader2,
   Repeat,
   GitCompare,
-  Pencil
+  Pencil,
+  Mail,
+  Activity,
+  Clock,
+  FileText,
+  Terminal,
+  Database
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { checkUsageLimit, incrementUsage, getRemainingUsage } from "@/components/utils/usageLimit";
