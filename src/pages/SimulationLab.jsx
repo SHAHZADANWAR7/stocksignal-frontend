@@ -689,7 +689,6 @@ Target: ${selectedChallenge.target_metric}`;
       className="h-full"
     >
       <Card className={`group relative border-2 transition-all h-full flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm ${isSelected ? 'border-indigo-600 ring-4 ring-indigo-500/10' : 'border-slate-200 hover:border-slate-300'}`}>
-        {/* Industrial Top Accent Bar */}
         <div className={`h-1.5 w-full bg-gradient-to-r ${strategyColors[portfolio.strategy_type]}`} />
         
         <CardHeader className="pb-3 pt-5">
@@ -721,7 +720,6 @@ Target: ${selectedChallenge.target_metric}`;
             {portfolio.description || "Institutional-grade asset allocation model."}
           </p>
 
-          {/* Technical Metrics Readout */}
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-white transition-colors">
               <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest mb-1 text-center">AUM Position</p>
@@ -732,31 +730,30 @@ Target: ${selectedChallenge.target_metric}`;
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-white transition-colors">
               <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest mb-1 text-center">Risk Rating</p>
               <p className="text-lg font-black text-slate-900 text-center">
-                {portfolio.risk_score || "0.0"}
+                {portfolio.risk_score && portfolio.risk_score > 0 ? portfolio.risk_score.toFixed(2) : "UNRATED"}
               </p>
             </div>
           </div>
 
-          {/* Linear Asset Visualizer (Technical Industrial Look) */}
           {portfolio.assets && portfolio.assets.length > 0 && (
             <div className="py-2">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest">Allocation Distribution</span>
                 <span className="text-[9px] font-bold text-slate-500">{portfolio.assets.length} Units</span>
               </div>
-              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden flex">
+              <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
                 {portfolio.assets.map((asset, i) => (
                   <div 
                     key={i}
                     style={{ width: `${asset.allocation_percent}%` }}
-                    className={`h-full border-r border-white/20 ${['bg-indigo-600', 'bg-purple-600', 'bg-emerald-600', 'bg-amber-500', 'bg-slate-400'][i % 5]}`}
+                    title={`${asset.symbol}: ${asset.allocation_percent}%`}
+                    className={`h-full border-r border-white/20 cursor-help ${['bg-indigo-600', 'bg-purple-600', 'bg-emerald-600', 'bg-amber-500', 'bg-slate-400'][i % 5]}`}
                   />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Control Command Bar */}
           <div className="flex gap-2 mt-auto pt-4 border-t border-slate-100">
             <Button 
               onClick={() => setShowOptimizeDialog(portfolio.id)}
