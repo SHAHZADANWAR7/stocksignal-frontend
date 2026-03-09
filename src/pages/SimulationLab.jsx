@@ -716,8 +716,9 @@ Target: ${selectedChallenge.target_metric}`;
         </CardHeader>
 
         <CardContent className="p-6 pt-0 flex-1 flex flex-col space-y-4">
-          <p className="text-sm text-slate-500 font-medium leading-relaxed line-clamp-2">
-            {portfolio.description || "Institutional-grade asset allocation model."}
+          {/* FIX: Removed the fallback text. If description is empty, it will now be blank */}
+          <p className="text-sm text-slate-500 font-medium leading-relaxed line-clamp-2 min-h-[2.5rem]">
+            {portfolio.description}
           </p>
 
           <div className="grid grid-cols-2 gap-3">
@@ -741,13 +742,14 @@ Target: ${selectedChallenge.target_metric}`;
                 <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest">Allocation Distribution</span>
                 <span className="text-[9px] font-bold text-slate-500">{portfolio.assets.length} Units</span>
               </div>
-              <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden flex">
+              {/* FIX: Increased height to 16px (h-4) and added cursor-help for easier hovering on colors */}
+              <div className="h-4 w-full bg-slate-100 rounded-lg overflow-hidden flex border border-slate-200">
                 {portfolio.assets.map((asset, i) => (
                   <div 
                     key={i}
                     style={{ width: `${asset.allocation_percent}%` }}
                     title={`${asset.symbol}: ${asset.allocation_percent}%`}
-                    className={`h-full border-r border-white/20 cursor-help ${['bg-indigo-600', 'bg-purple-600', 'bg-emerald-600', 'bg-amber-500', 'bg-slate-400'][i % 5]}`}
+                    className={`h-full border-r border-white/20 cursor-help transition-opacity hover:opacity-80 ${['bg-indigo-600', 'bg-purple-600', 'bg-emerald-600', 'bg-amber-500', 'bg-slate-400'][i % 5]}`}
                   />
                 ))}
               </div>
