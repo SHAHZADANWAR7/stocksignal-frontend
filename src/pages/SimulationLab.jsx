@@ -987,120 +987,162 @@ Target: ${selectedChallenge.target_metric}`;
   </Card>
 </TabsContent>
 
-          <TabsContent value="results" className="space-y-6 mt-6">
-            {!scenarioResults ? (
-              <Card className="border-2 border-slate-200">
-                <CardContent className="p-12 text-center">
-                  <BarChart3 className="w-16 h-16 mx-auto mb-4 text-slate-300" />
-                  <h3 className="text-xl font-semibold text-slate-900 mb-2">No Simulation Results Yet</h3>
-                  <p className="text-slate-500">Select portfolios and run a scenario simulation to see results</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="border-2 border-blue-300 shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                  <CardTitle className="text-2xl">
-                    {scenarioResults.scenario_name} - Simulation Results
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <Card className="border-2 border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 mb-6">
-                    <CardContent className="p-6">
-                      <h3 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
-                        <AlertTriangle className="w-5 h-5" />
-                        Simulation Methodology
-                      </h3>
-                      <div className="space-y-2 text-sm text-slate-700">
-                        <p><strong>Scenario Period:</strong> {customScenario.name} - {customScenario.duration_months} months</p>
-                        <p><strong>Asset Validation:</strong> Only assets that existed during the scenario period are included</p>
-                        <p><strong>Rebalancing:</strong> Monthly rebalancing to target allocations</p>
-                        <p><strong>Returns:</strong> Price-only (no dividends unless explicitly stated)</p>
-                        <p><strong>Data Source:</strong> AI-estimated returns based on historical market behavior patterns</p>
-                        <p><strong>Limitations:</strong> Past scenarios do not predict future results. Asset correlations may differ in future crises.</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+         {/* 🖥️ INDUSTRIAL SYSTEM OUTPUT (Replace lines 990 to 1103) */}
+<TabsContent value="results" className="space-y-6 mt-6">
+  {!scenarioResults ? (
+    <Card className="border-2 border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white">
+      <div className="h-1.5 w-full bg-slate-300" />
+      <CardContent className="p-16 flex flex-col items-center justify-center text-center">
+        <div className="p-5 bg-slate-50 rounded-full mb-6 border border-slate-100">
+          <BarChart3 className="w-12 h-12 text-slate-300" />
+        </div>
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400">
+          System State: Awaiting Input
+        </p>
+        <p className="text-sm text-slate-400 mt-2 max-w-xs font-medium">
+          Select portfolios and execute a scenario simulation to generate tactical analytics.
+        </p>
+      </CardContent>
+    </Card>
+  ) : (
+    <div className="space-y-6">
+      {/* Simulation Header & Methodology Dossier */}
+      <Card className="border-2 border-slate-900 shadow-xl rounded-2xl overflow-hidden bg-white">
+        <div className="h-1.5 w-full bg-slate-900" />
+        <CardHeader className="bg-slate-50 border-b border-slate-100 pb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-2.5 bg-slate-900 rounded-xl shadow-lg">
+                <Terminal className="w-6 h-6 text-emerald-400" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black uppercase tracking-tighter text-slate-900">
+                  {scenarioResults.scenario_name} - Simulation Results
+                </CardTitle>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Tactical Data Feed</span>
+                </div>
+              </div>
+            </div>
+            <Button variant="outline" className="border-2 font-black uppercase text-[10px] tracking-widest h-10 px-6 border-slate-200 hover:bg-slate-900 hover:text-white transition-all shadow-sm">
+              <FileText className="w-4 h-4 mr-2" />
+              Download Report
+            </Button>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="p-6 bg-slate-50/50">
+          <div className="bg-white border-2 border-slate-200 rounded-xl p-6 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-2">
+              <div className="text-[8px] font-black text-slate-200 uppercase tracking-widest -rotate-90 origin-right translate-x-4">
+                PROTOCOL-v2.1
+              </div>
+            </div>
+            <h3 className="font-black text-slate-900 text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
+              <Database className="w-4 h-4 text-indigo-600" />
+              Simulation Methodology & Controls
+            </h3>
+            <div className="grid md:grid-cols-2 gap-x-12 gap-y-3 text-[11px] font-medium text-slate-600">
+              <div className="flex items-start gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1" />
+                <p><span className="font-black text-slate-900 uppercase">Scenario:</span> {customScenario.name} ({customScenario.duration_months} Months)</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1" />
+                <p><span className="font-black text-slate-900 uppercase">Rebalancing:</span> Monthly drift correction to target weightings.</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1" />
+                <p><span className="font-black text-slate-900 uppercase">Valuation:</span> AI-estimated pricing based on volatility clusters.</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1" />
+                <p><span className="font-black text-slate-900 uppercase">Data:</span> Cross-referenced AI returns vs historical behavior.</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-                  <div className="grid md:grid-cols-2 gap-6">
-                    {/* Support both new single 'data' object and old 'portfolios' array */}
-                    {(scenarioResults.data ? [scenarioResults.data] : scenarioResults.portfolios || [])?.map((result, index) => {
-                      // Standardize data source: New backend uses 'outcome', old uses the root object
-                      const outcome = result.outcome || result;
-                      const analysisText = result.analysis?.scenario_analysis || result.ai_analysis || result.recommendations || "Analysis processing...";
-                      const isPositive = Number(outcome.total_impact_percent || outcome.total_return_percent || 0) >= 0;
-
-                      return (
-                        <Card key={index} className="border-2 border-slate-200 overflow-hidden">
-                          <div className={`h-1.5 ${isPositive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-lg flex justify-between items-center">
-                              {result.portfolio_name || (outcome.scenario_type ? outcome.scenario_type.replace('_', ' ').toUpperCase() : "Portfolio Simulation")}
-                              <Badge variant="secondary" className="font-mono text-[10px]">
-                                {result.model || 'CLAUDE-3.5'}
-                              </Badge>
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="bg-blue-50/50 border border-blue-100 rounded p-3">
-                                <p className="text-[10px] uppercase tracking-wider text-blue-600 font-bold mb-1">Initial Value</p>
-                                <p className="text-lg font-bold text-slate-900">
-                                  ${Number(outcome.base_portfolio_value || outcome.initial_value || 0).toLocaleString()}
-                                </p>
-                              </div>
-                              <div className="bg-indigo-50/50 border border-indigo-100 rounded p-3">
-                                <p className="text-[10px] uppercase tracking-wider text-indigo-600 font-bold mb-1">Final Value</p>
-                                <p className="text-lg font-bold text-slate-900">
-                                  ${Number(outcome.scenario_portfolio_value || outcome.final_value || 0).toLocaleString()}
-                                </p>
-                              </div>
-                              <div className={`border rounded p-3 ${isPositive ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
-                                <p className={`text-[10px] uppercase tracking-wider font-bold mb-1 ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>Total Return</p>
-                                <p className={`text-lg font-bold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                  {isPositive ? '+' : ''}{Number(outcome.total_impact_percent || outcome.total_return_percent || 0).toFixed(2)}%
-                                </p>
-                              </div>
-                              <div className="bg-orange-50/50 border border-orange-100 rounded p-3">
-                                <p className="text-[10px] uppercase tracking-wider text-orange-600 font-bold mb-1">Stress Factor</p>
-                                <p className="text-lg font-bold text-orange-600">
-                                  {outcome.correlation_impact || outcome.max_drawdown_percent || "0"}%
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* AI ANALYSIS BLOCK */}
-                            <div className="bg-slate-900 rounded-lg p-4 shadow-inner">
-                              <div className="flex items-center mb-2">
-                                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse mr-2" />
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">AI Market Intelligence</p>
-                              </div>
-                              <p className="text-sm text-slate-200 leading-relaxed font-serif italic">
-                                "{analysisText}"
-                              </p>
-                            </div>
-
-                            <div className="space-y-3">
-                              <div>
-                                <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">Portfolio Impact Summary</p>
-                                <div className="flex flex-wrap gap-2">
-                                  {(outcome.worst_affected_assets || outcome.best_performing_assets || []).map((asset, i) => (
-                                    <Badge key={i} variant="outline" className="border-rose-200 text-rose-600 bg-rose-50/30">
-                                      <TrendingDown className="w-3 h-3 mr-1" />
-                                      {asset.symbol || asset} {asset.impact_percent ? `(${asset.impact_percent}%)` : ''}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
+      {/* Performance Grids */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {(scenarioResults.data ? [scenarioResults.data] : scenarioResults.portfolios || [])?.map((result, index) => {
+          const outcome = result.outcome || result;
+          const analysisText = result.analysis?.scenario_analysis || result.ai_analysis || result.recommendations || "Analysis processing...";
+          const isPositive = Number(outcome.total_impact_percent || outcome.total_return_percent || 0) >= 0;
+          
+          return (
+            <Card key={index} className="border-2 border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:border-slate-300 transition-all">
+              <div className={`h-1.5 w-full ${isPositive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+              
+              <CardHeader className="pb-4 pt-5 border-b border-slate-50">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-lg font-black text-slate-900 uppercase tracking-tight">
+                      {result.portfolio_name || (outcome.scenario_type ? outcome.scenario_type.replace('_', ' ').toUpperCase() : "Portfolio Simulation")}
+                    </CardTitle>
+                    <Badge variant="outline" className="mt-1 text-[9px] font-black uppercase tracking-widest bg-slate-50 border-slate-200 text-slate-500">
+                      Processing Engine: {result.model || 'SONNET-3.5'}
+                    </Badge>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+                  <div className={`p-2 rounded-lg font-mono font-black text-sm border shadow-inner ${isPositive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'}`}>
+                    {isPositive ? '+' : ''}{Number(outcome.total_impact_percent || outcome.total_return_percent || 0).toFixed(2)}%
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="p-6 space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-white transition-colors">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Entry Capital</p>
+                    <p className="text-xl font-black text-slate-900 font-mono">
+                      ${Number(outcome.base_portfolio_value || outcome.initial_value || 0).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 group-hover:bg-white transition-colors">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Exit Capital</p>
+                    <p className="text-xl font-black text-slate-900 font-mono">
+                      ${Number(outcome.simulated_portfolio_value || outcome.final_value || 0).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-5 bg-slate-900 rounded-xl relative overflow-hidden group/intel">
+                  <div className="absolute top-0 right-0 p-2 opacity-10 group-hover/intel:opacity-20 transition-opacity">
+                    <Activity className="w-12 h-12 text-white" />
+                  </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Strategic AI Intelligence</p>
+                  </div>
+                  <p className="text-xs text-slate-300 font-medium leading-relaxed italic">
+                    "{analysisText}"
+                  </p>
+                </div>
+
+                <div className="pt-2">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Portfolio Impact Summary</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(outcome.worst_affected_assets || outcome.best_performing_assets || []).map((asset, i) => (
+                      <Badge key={i} variant="outline" className={`text-[10px] font-black uppercase ${isPositive ? 'border-emerald-200 text-emerald-600 bg-emerald-50/50' : 'border-rose-200 text-rose-600 bg-rose-50/50'}`}>
+                        {isPositive ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
+                        {asset.symbol || asset} {asset.impact_percent ? `(${asset.impact_percent}%)` : ''}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  )}
+</TabsContent>
         </Tabs>
       </motion.div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
