@@ -90,6 +90,8 @@ export default function SimulationLab() {
   const [scenarioResults, setScenarioResults] = useState(null);
   const [editingPortfolio, setEditingPortfolio] = useState(null);
   const [remainingUsage, setRemainingUsage] = useState(null);
+  const [selectedPortfolioForOpt, setSelectedPortfolioForOpt] = useState(null);
+const [isOptimizing, setIsOptimizing] = useState(false);
 
   const [newPortfolio, setNewPortfolio] = useState({
     name: "",
@@ -1628,6 +1630,69 @@ Target: ${selectedChallenge.target_metric}`;
                   </>
                 )}
               </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        {/* 🛠️ TACTICAL OPTIMIZER DIALOG (Insert at Line 1634) */}
+        <Dialog 
+          open={showOptimizeDialog} 
+          onOpenChange={(open) => {
+            setShowOptimizeDialog(open);
+            if (!open) setSelectedPortfolioForOpt(null);
+          }}
+        >
+          <DialogContent className="max-w-md bg-slate-900 border-slate-800 text-white p-0 overflow-hidden">
+            {/* Top Industrial Accent */}
+            <div className="h-1.5 w-full bg-indigo-500" />
+            
+            <div className="p-6">
+              <DialogHeader>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-indigo-500/20 rounded-lg">
+                    <Repeat className="w-5 h-5 text-indigo-400" />
+                  </div>
+                  <DialogTitle className="text-xl font-black uppercase tracking-tighter">
+                    Tactical Optimizer
+                  </DialogTitle>
+                </div>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-tight">
+                  Select a mathematical strategy to rebalance your experimental assets.
+                </p>
+              </DialogHeader>
+
+              {/* Strategy Grid */}
+              <div className="grid gap-3 mt-6">
+                {[
+                  { id: 'max_sharpe', label: 'Max Sharpe Ratio', desc: 'Optimal risk-adjusted returns', icon: Target },
+                  { id: 'min_volatility', label: 'Minimum Volatility', desc: 'Prioritize capital safety', icon: Shield },
+                  { id: 'max_returns', label: 'Maximum Growth', desc: 'Aggressive alpha seeking', icon: Flame },
+                ].map((strat) => (
+                  <button
+                    key={strat.id}
+                    disabled={isOptimizing}
+                    onClick={() => handleTacticalOptimize(strat.id)}
+                    className="flex items-center gap-4 p-4 rounded-xl border-2 border-slate-800 bg-slate-800/50 hover:bg-slate-800 hover:border-indigo-500 transition-all text-left group disabled:opacity-50"
+                  >
+                    <div className="p-2 bg-slate-700 rounded-lg group-hover:bg-indigo-600 transition-colors">
+                      <strat.icon className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-black uppercase text-[10px] tracking-widest">{strat.label}</p>
+                      <p className="text-[9px] text-slate-500 font-bold group-hover:text-slate-300 uppercase mt-0.5">
+                        {strat.desc}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Engine Status */}
+              {isOptimizing && (
+                <div className="mt-6 flex items-center justify-center gap-3 text-indigo-400 font-black text-[10px] uppercase tracking-[0.2em] animate-pulse">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing Quantitative Models...
+                </div>
+              )}
             </div>
           </DialogContent>
         </Dialog>
