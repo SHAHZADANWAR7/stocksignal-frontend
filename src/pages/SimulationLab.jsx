@@ -684,41 +684,47 @@ Target: ${selectedChallenge.target_metric}`;
   )}
 </AnimatePresence>
 
-        {/* 🛠️ INDUSTRIAL COMMAND DECK NAVIGATION (Replace from line 687 to line 708) */}
-<Tabs defaultValue="portfolios" className="mb-10">
-  <div className="bg-slate-900 p-1.5 rounded-2xl border-b-4 border-slate-800 shadow-xl">
-    <TabsList className="grid w-full grid-cols-3 bg-slate-800 p-1 rounded-xl h-14 border border-slate-700/50">
+       {/* 🛠️ RESPONSIVE INDUSTRIAL NAVIGATION (Replacement for Navigation Block) */}
+<Tabs defaultValue="portfolios" className="mb-8 md:mb-10">
+  <div className="bg-slate-900 p-1 md:p-1.5 rounded-xl md:rounded-2xl border-b-4 border-slate-800 shadow-xl overflow-hidden">
+    {/* MOBILE FIX: 
+        - Changed 'grid' to 'flex' on mobile to allow horizontal swiping.
+        - Added 'overflow-x-auto' and 'no-scrollbar' for smooth touch interaction.
+        - Restores 'md:grid' on desktop for the original layout.
+    */}
+    <TabsList className="flex md:grid md:grid-cols-3 bg-slate-800 p-1 rounded-lg md:rounded-xl h-12 md:h-14 border border-slate-700/50 overflow-x-auto no-scrollbar">
       <TabsTrigger 
         value="portfolios" 
-        className="px-8 rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-[0_0_20px_rgba(255,255,255,0.15)] uppercase text-[10px] font-black tracking-[0.2em] transition-all duration-300 text-slate-400 group"
+        className="flex-1 min-w-[130px] md:min-w-0 px-3 md:px-8 rounded-md md:rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-[0_0_15px_rgba(255,255,255,0.1)] uppercase text-[9px] md:text-[10px] font-black tracking-widest md:tracking-[0.2em] transition-all duration-300 text-slate-400 group shrink-0"
       >
-        <div className="flex items-center gap-2">
-          <Database className="w-3.5 h-3.5 group-data-[state=active]:text-indigo-600" />
-          My Strategies
+        <div className="flex items-center justify-center gap-1.5 md:gap-2">
+          <Database className="w-3 md:w-3.5 h-3 md:h-3.5 group-data-[state=active]:text-indigo-600" />
+          <span className="whitespace-nowrap">My Strategies</span>
         </div>
       </TabsTrigger>
       
       <TabsTrigger 
         value="challenges" 
-        className="px-8 rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-[0_0_20px_rgba(255,255,255,0.15)] uppercase text-[10px] font-black tracking-[0.2em] transition-all duration-300 text-slate-400 group"
+        className="flex-1 min-w-[130px] md:min-w-0 px-3 md:px-8 rounded-md md:rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-[0_0_15px_rgba(255,255,255,0.1)] uppercase text-[9px] md:text-[10px] font-black tracking-widest md:tracking-[0.2em] transition-all duration-300 text-slate-400 group shrink-0"
       >
-        <div className="flex items-center gap-2">
-          <Shield className="w-3.5 h-3.5 group-data-[state=active]:text-indigo-600" />
-          Challenges
+        <div className="flex items-center justify-center gap-1.5 md:gap-2">
+          <Shield className="w-3 md:w-3.5 h-3 md:h-3.5 group-data-[state=active]:text-indigo-600" />
+          <span className="whitespace-nowrap">Challenges</span>
         </div>
       </TabsTrigger>
       
       <TabsTrigger 
         value="results" 
-        className="px-8 rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-[0_0_20px_rgba(255,255,255,0.15)] uppercase text-[10px] font-black tracking-[0.2em] transition-all duration-300 text-slate-400 group"
+        className="flex-1 min-w-[130px] md:min-w-0 px-3 md:px-8 rounded-md md:rounded-lg data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-[0_0_15px_rgba(255,255,255,0.1)] uppercase text-[9px] md:text-[10px] font-black tracking-widest md:tracking-[0.2em] transition-all duration-300 text-slate-400 group shrink-0"
       >
-        <div className="flex items-center gap-2">
-          <Terminal className="w-3.5 h-3.5 group-data-[state=active]:text-indigo-600" />
-          Terminal Output
+        <div className="flex items-center justify-center gap-1.5 md:gap-2">
+          <Terminal className="w-3 md:w-3.5 h-3 md:h-3.5 group-data-[state=active]:text-indigo-600" />
+          <span className="whitespace-nowrap">Terminal Output</span>
         </div>
       </TabsTrigger>
     </TabsList>
   </div>
+
 
           <TabsContent value="portfolios" className="space-y-6 mt-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
