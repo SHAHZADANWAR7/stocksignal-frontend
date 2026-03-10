@@ -1107,14 +1107,22 @@ Target: ${selectedChallenge.target_metric}`;
         {(scenarioResults.data ? [scenarioResults.data] : scenarioResults.portfolios || [])?.map((result, index) => {
           const outcome = result.outcome || result;
           
-          // AI TEXT CLEANUP: Robust removal of any leading JSON syntax or code fragments
+          // AI TEXT CLEANUP: Stripping JSON and raw text fragments
           let cleanAnalysis = result.analysis?.scenario_analysis || result.ai_analysis || result.recommendations || "Analysis processing...";
           if (cleanAnalysis.includes('}')) {
              cleanAnalysis = cleanAnalysis.split('}').pop().replace(/^[^a-zA-Z]+/, '').trim();
           }
 
-          const isPositive = Number(outcome.total_impact_percent || outcome.total_return_percent || outcome.total_return || 0) >= 0;
+          const isPositive = Number(outcome.total_impact_percent || outcome.total_return_percent || 0) >= 0;
+          const initialCapital = Number(outcome.base_portfolio_value || outcome.initial_value || 0);
+          const returnPercent = Number(outcome.total_impact_percent || outcome.total_return_percent || 0);
           
+          // 🛠️ SMART CALCULATION: If Valuation is 0, calculate it manually from return %
+          let finalValuation = Number(outcome.scenario_portfolio_value || outcome.final_value || 0);
+          if (finalValuation === 0 && initialCapital > 0) {
+             finalValuation = initialCapital * (1 + (returnPercent / 100));
+          }
+
           return (
             <Card key={index} className="border-2 border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:border-slate-300 transition-all">
               <div className={`h-1.5 w-full ${isPositive ? 'bg-emerald-500' : 'bg-rose-500'}`} />
@@ -1132,19 +1140,18 @@ Target: ${selectedChallenge.target_metric}`;
                   <div className="text-right">
                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Valuation</p>
                      <p className="text-xl font-black text-slate-900 font-mono">
-                        ${Number(outcome.scenario_portfolio_value || outcome.final_value || outcome.simulated_portfolio_value || 0).toLocaleString()}
+                        ${finalValuation.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                      </p>
                   </div>
                 </div>
               </CardHeader>
               
               <CardContent className="p-6 space-y-6">
-                {/* 🛠️ ROBUST DATA MAPPING GRID: Solving the 0.00% Issue */}
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Return</p>
                     <p className={`text-xl font-black font-mono ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {isPositive ? '+' : ''}{Number(outcome.total_impact_percent || outcome.total_return_percent || outcome.total_return || 0).toFixed(2)}%
+                      {isPositive ? '+' : ''}{returnPercent.toFixed(2)}%
                     </p>
                   </div>
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
@@ -1168,13 +1175,13 @@ Target: ${selectedChallenge.target_metric}`;
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Stress Factor</p>
                     <p className="text-xl font-black text-orange-600 font-mono">
-                      {Number(outcome.correlation_impact || outcome.stress_factor || outcome.risk_score || 0).toFixed(2)}%
+                      {Number(outcome.stress_factor || outcome.correlation_impact || 0).toFixed(2)}%
                     </p>
                   </div>
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Initial Capital</p>
                     <p className="text-xl font-black text-slate-900 font-mono">
-                      ${Number(outcome.base_portfolio_value || outcome.initial_value || 0).toLocaleString()}
+                      ${initialCapital.toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -1195,12 +1202,21 @@ Target: ${selectedChallenge.target_metric}`;
                 <div className="pt-2">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Portfolio Impact Summary</p>
                   <div className="flex flex-wrap gap-2">
-                    {(outcome.worst_affected_assets || []).map((asset, i) => (
-                      <Badge key={i} variant="outline" className="border-rose-200 text-rose-600 bg-rose-50/50 text-[10px] font-black uppercase">
-                        <TrendingDown className="w-3 h-3 mr-1" />
-                        {asset.symbol || asset} {asset.impact_percent ? `(${asset.impact_percent}%)` : ''}
-                      </Badge>
-                    ))}
+                    {/* Logic to show Worst Affected Assets if data exists, otherwise show placeholder badges based on AI text keywords */}
+                    {(outcome.worst_affected_assets && outcome.worst_affected_assets.length > 0) ? (
+                      outcome.worst_affected_assets.map((asset, i) => (
+                        <Badge key={i} variant="outline" className="border-rose-200 text-rose-600 bg-rose-50/50 text-[10px] font-black uppercase">
+                          <TrendingDown className="w-3 h-3 mr-1" />
+                          {asset.symbol || asset} {asset.impact_percent ? `(${asset.impact_percent}%)` : ''}
+                        </Badge>
+                      ))
+                    ) : (
+                      <div className="flex items-center gap-2">
+                         <Badge variant="outline" className="border-slate-200 text-slate-400 text-[9px] uppercase font-black">
+                           Analysis Complete: Review AI Intelligence for Detail
+                         </Badge>
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
