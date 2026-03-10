@@ -376,53 +376,53 @@ Return JSON with detailed metrics for each portfolio.`;
     setIsSimulating(false);
   };
 
-  const optimizePortfolio = async (portfolioId, optimizationType) => {
-    const portfolio = portfolios.find(p => p.id === portfolioId);
-    if (!portfolio) return;
-
-    setIsSimulating(true);
-    try {
-      const prompt = `Optimize this investment portfolio using ${optimizationType} strategy:
-
-Current Portfolio: ${portfolio.name}
-Assets: ${portfolio.assets.map(a => `${a.symbol} (${a.allocation_percent}%)`).join(", ")}
-
-Optimization Goal: ${
-  optimizationType === "max_sharpe" ? "Maximize Sharpe Ratio (best risk-adjusted returns)" :
-  optimizationType === "min_volatility" ? "Minimize Volatility (lowest risk)" :
-  "Maximize Expected Returns (highest growth potential)"
-}
-
-Provide:
-1. New optimal allocation percentages for each asset
-2. Expected portfolio return %
-3. Expected volatility/risk %
-4. Sharpe ratio
-5. Reasoning for changes
-
-Return JSON with optimized allocations.`;
-
-      const result = await awsApi.optimizePortfolio(portfolioId, prompt);
-
-      const updatedAssets = portfolio.assets.map(asset => {
-        const optimized = result.optimized_allocations.find(o => o.symbol === asset.symbol);
-        return optimized ? { ...asset, allocation_percent: optimized.allocation_percent } : asset;
-      });
-
-      await awsApi.updateSimulationPortfolio(portfolioId, {
-        assets: updatedAssets,
-        expected_return: result.expected_return,
-        risk_score: result.expected_volatility,
-        sharpe_ratio: result.sharpe_ratio
-      });
-
-      alert(`✅ Portfolio optimized! ${result.reasoning}`);
-      loadData();
-    } catch (error) {
-      console.error("Error optimizing:", error);
-      alert("Error optimizing portfolio");
+  const handleTacticalOptimize = async (strategy) => {
+    if (!selectedPortfolioForOpt || !user?.email) {
+      alert("Tactical Error: Identity or Portfolio link lost.");
+      return;
     }
-    setIsSimulating(false);
+    
+    setIsOptimizing(true);
+    try {
+      // 1. Target the specific portfolio from state
+      const portfolio = portfolios.find(p => p.id === selectedPortfolioForOpt);
+
+      // 2. Execute Backend Quantitative Rebalance
+      // Passes email and portfolio_id to match the simulation_portfolios keys
+      const result = await awsApi.optimizePortfolio({
+        email: user.email,
+        portfolio_id: selectedPortfolioForOpt,
+        strategy: strategy,
+        total_investment: portfolio.total_value
+      });
+
+      if (result && result.optimization) {
+        const { optimized_allocations, reasoning } = result.optimization;
+
+        // 3. Map new math-based weights to the local portfolio structure
+        const updatedAssets = portfolio.assets.map(asset => {
+          const match = optimized_allocations.find(a => a.symbol === asset.symbol);
+          return match ? { ...asset, allocation_percent: match.allocation_percent } : asset;
+        });
+
+        // 4. Update the simulation_portfolios table with the new weights
+        await awsApi.updateSimulationPortfolio(selectedPortfolioForOpt, {
+          assets: updatedAssets,
+          updated_at: new Date().toISOString()
+        });
+
+        // 5. Success cleanup and UI refresh
+        await loadData();
+        setShowOptimizeDialog(false);
+        setSelectedPortfolioForOpt(null);
+        alert(`✅ Tactical Optimization Complete: ${reasoning}`);
+      }
+    } catch (error) {
+      console.error("❌ Optimization Engine Failure:", error);
+      alert("System Error: Optimization engine timed out or failed to find record.");
+    } finally {
+      setIsOptimizing(false);
+    }
   };
 
   const togglePortfolioSelection = (id) => {
@@ -835,7 +835,10 @@ Target: ${selectedChallenge.target_metric}`;
           {/* Action Command Bar */}
           <div className="flex gap-2 mt-auto pt-4 border-t border-slate-100">
             <Button 
-              onClick={() => setShowOptimizeDialog(portfolio.id)}
+              onClick={() => {
+                  setSelectedPortfolioForOpt(portfolio.id);
+                  setShowOptimizeDialog(true);
+                }}
               variant="outline" 
               className="flex-1 h-9 text-[10px] font-black uppercase tracking-widest border-2 hover:bg-slate-900 hover:text-white transition-all"
             >
