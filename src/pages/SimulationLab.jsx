@@ -1026,7 +1026,7 @@ Target: ${selectedChallenge.target_metric}`;
   </Card>
 </TabsContent>
 
-         {/* 🖥️ INDUSTRIAL SYSTEM OUTPUT (Replace lines 990 to 1103) */}
+        {/* 🖥️ INDUSTRIAL COMMAND INTEL (Replace from line 1030 to 1210) */}
 <TabsContent value="results" className="space-y-6 mt-6">
   {!scenarioResults ? (
     <Card className="border-2 border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white">
@@ -1056,20 +1056,20 @@ Target: ${selectedChallenge.target_metric}`;
               </div>
               <div>
                 <CardTitle className="text-2xl font-black uppercase tracking-tighter text-slate-900">
-                  {scenarioResults.scenario_name} - Simulation Results
+                  {scenarioResults.scenario_name || "Simulation Results"}
                 </CardTitle>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Tactical Data Feed</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Tactical Feed Active</span>
                 </div>
               </div>
             </div>
             <Button variant="outline" className="border-2 font-black uppercase text-[10px] tracking-widest h-10 px-6 border-slate-200 hover:bg-slate-900 hover:text-white transition-all shadow-sm">
               <FileText className="w-4 h-4 mr-2" />
-              Download Report
+              Download Intel
             </Button>
           </div>
         </CardHeader>
@@ -1095,22 +1095,25 @@ Target: ${selectedChallenge.target_metric}`;
               </div>
               <div className="flex items-start gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-slate-300 mt-1" />
-                <p><span className="font-black text-slate-900 uppercase">Data:</span> Cross-referenced AI returns vs historical behavior.</p>
+                <p><span className="font-black text-slate-900 uppercase">Data Source:</span> Cross-referenced AI vs Historical behavior.</p>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Performance Grids */}
+      {/* Performance Grid Breakdown */}
       <div className="space-y-6">
         {(scenarioResults.data ? [scenarioResults.data] : scenarioResults.portfolios || [])?.map((result, index) => {
           const outcome = result.outcome || result;
-          // Logic to clean the analysis text if it contains JSON fragments
-          let rawAnalysis = result.analysis?.scenario_analysis || result.ai_analysis || result.recommendations || "Analysis processing...";
-          const cleanAnalysis = rawAnalysis.includes('}') ? rawAnalysis.split('}').pop().trim() : rawAnalysis;
           
-          const isPositive = Number(outcome.total_impact_percent || outcome.total_return_percent || 0) >= 0;
+          // AI TEXT CLEANUP: Robust removal of any leading JSON syntax or code fragments
+          let cleanAnalysis = result.analysis?.scenario_analysis || result.ai_analysis || result.recommendations || "Analysis processing...";
+          if (cleanAnalysis.includes('}')) {
+             cleanAnalysis = cleanAnalysis.split('}').pop().replace(/^[^a-zA-Z]+/, '').trim();
+          }
+
+          const isPositive = Number(outcome.total_impact_percent || outcome.total_return_percent || outcome.total_return || 0) >= 0;
           
           return (
             <Card key={index} className="border-2 border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm hover:border-slate-300 transition-all">
@@ -1136,24 +1139,24 @@ Target: ${selectedChallenge.target_metric}`;
               </CardHeader>
               
               <CardContent className="p-6 space-y-6">
-                {/* INDUSTRIAL GRID: SIX ESSENTIAL QUANT METRICS */}
+                {/* 🛠️ ROBUST DATA MAPPING GRID: Solving the 0.00% Issue */}
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Return</p>
                     <p className={`text-xl font-black font-mono ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {isPositive ? '+' : ''}{Number(outcome.total_impact_percent || outcome.total_return_percent || 0).toFixed(2)}%
+                      {isPositive ? '+' : ''}{Number(outcome.total_impact_percent || outcome.total_return_percent || outcome.total_return || 0).toFixed(2)}%
                     </p>
                   </div>
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Volatility</p>
                     <p className="text-xl font-black text-slate-900 font-mono">
-                      {Number(outcome.volatility || outcome.risk_score || 0).toFixed(2)}%
+                      {Number(outcome.volatility || outcome.volatility_score || outcome.risk_score || 0).toFixed(2)}%
                     </p>
                   </div>
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Sharpe Ratio</p>
                     <p className="text-xl font-black text-indigo-600 font-mono">
-                      {Number(outcome.sharpe_ratio || 0).toFixed(2)}
+                      {Number(outcome.sharpe_ratio || outcome.sharpe || 0).toFixed(2)}
                     </p>
                   </div>
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
@@ -1165,7 +1168,7 @@ Target: ${selectedChallenge.target_metric}`;
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Stress Factor</p>
                     <p className="text-xl font-black text-orange-600 font-mono">
-                      {Number(outcome.correlation_impact || 0).toFixed(2)}%
+                      {Number(outcome.correlation_impact || outcome.stress_factor || outcome.risk_score || 0).toFixed(2)}%
                     </p>
                   </div>
                   <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
@@ -1190,7 +1193,7 @@ Target: ${selectedChallenge.target_metric}`;
                 </div>
 
                 <div className="pt-2">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Worst Affected Assets</p>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Portfolio Impact Summary</p>
                   <div className="flex flex-wrap gap-2">
                     {(outcome.worst_affected_assets || []).map((asset, i) => (
                       <Badge key={i} variant="outline" className="border-rose-200 text-rose-600 bg-rose-50/50 text-[10px] font-black uppercase">
