@@ -161,27 +161,26 @@ const loadUser = async () => {
 
 const loadData = async () => {
     try {
-      // 1. Fetch portfolios (Working: Status 200)
+      console.log("📡 [System] Initiating Global Sync...");
       const response = await awsApi.getSimulationPortfolio({}); 
       const portfolioList = response?.data || [];
-      
-      // ✅ UPDATE STATE IMMEDIATELY - This makes the portfolios appear!
       setPortfolios(portfolioList);
 
-      // 2. Fetch challenges/summary (Failing: Status 400)
-      // Wrap this in a separate try/catch so its failure doesn't affect the portfolios
       try {
         const labResponse = await awsApi.getSimulationLabData({});
-        const challengeList = labResponse?.data?.challenges || 
-                              labResponse?.data?.lab_summary?.challenges || [];
-        setChallenges(challengeList);
+        // Universal fallback to find the challenge list in the response
+        const challengeList = 
+          labResponse?.data?.challenges || 
+          labResponse?.data?.lab_summary?.challenges || 
+          (Array.isArray(labResponse?.data) ? labResponse.data : []);
+        
+        console.log(`✅ Received ${challengeList.length} total challenges`);
+        setChallenges(Array.isArray(challengeList) ? challengeList : []);
       } catch (labError) {
-        console.warn("⚠️ Lab Summary failed to load, but portfolios are safe.", labError);
+        console.warn("⚠️ Challenge registry inaccessible, but portfolios are safe.", labError);
       }
-      
-      console.log(`✅ Sync Success: ${portfolioList.length} Portfolios Loaded`);
     } catch (error) {
-      console.error("❌ Critical Sync Error in loadData:", error);
+      console.error("❌ Sync Error in loadData:", error);
     }
   };
 
