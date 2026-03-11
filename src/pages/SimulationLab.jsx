@@ -904,12 +904,17 @@ Target: ${selectedChallenge.target_metric}`;
    <CardContent className="p-6">
       {/* --- TACTICAL OPERATIONS LOGIC --- */}
       {(() => {
-        const currentUserEmail = (user?.email || localStorage.getItem('user_email') || "").toLowerCase().trim();
+        // 1. Identify current user precisely
+        const rawEmail = user?.email || localStorage.getItem('user_email') || "";
+        const currentUserEmail = rawEmail.toLowerCase().trim();
+        
+        // 2. Filter challenges (Owner check)
         const myChallenges = (challenges || []).filter(c => {
           const creator = (c.created_by_email || c.email || "").toLowerCase().trim();
           return creator === currentUserEmail && currentUserEmail !== "";
         });
 
+        // 3. Render Empty State ONLY if truly empty
         if (myChallenges.length === 0) {
           return (
             <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
@@ -924,10 +929,13 @@ Target: ${selectedChallenge.target_metric}`;
           );
         }
 
+        // 4. Render Challenge Cards
         return (
           <div className="space-y-4">
             {myChallenges.map(challenge => {
-              const sortedEntries = (challenge.entries || []).sort((a, b) => (b.score || 0) - (a.score || 0));
+              const entries = challenge.entries || [];
+              const sortedEntries = [...entries].sort((a, b) => (b.score || 0) - (a.score || 0));
+              
               return (
                 <Card key={challenge.id} className="border-2 border-slate-100 hover:border-indigo-200 transition-all rounded-xl overflow-hidden group">
                   <CardContent className="p-5">
@@ -938,15 +946,15 @@ Target: ${selectedChallenge.target_metric}`;
                             {challenge.name}
                           </h3>
                           <Badge variant="outline" className="text-[9px] uppercase font-black border-slate-200 text-slate-500 bg-slate-50">
-                            {challenge.challenge_type ? challenge.challenge_type.split('_').join(' ') : 'STRATEGY'}
+                            {challenge.challenge_type ? challenge.challenge_type.replace(/_/g, ' ') : 'STRATEGY'}
                           </Badge>
                         </div>
-                        <p className="text-sm text-slate-500 line-clamp-1 mb-4 font-medium">{challenge.description}</p>
+                        <p className="text-sm text-slate-500 line-clamp-1 mb-4 font-medium">{challenge.description || 'Global Market Scenario'}</p>
                         <div className="flex flex-wrap gap-2">
                           <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
                             <Clock className="w-3 h-3 text-slate-400" />
                             <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
-                              {challenge.duration_days || challenge.duration_months || 90} Days
+                              {challenge.duration_days || 90} Days
                             </span>
                           </div>
                           <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
@@ -963,10 +971,10 @@ Target: ${selectedChallenge.target_metric}`;
                           <div className="flex -space-x-2 overflow-hidden mb-1 justify-center">
                             {sortedEntries.length > 0 ? sortedEntries.slice(0, 3).map((entry, i) => (
                                <div key={i} className={`w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-black ${['bg-indigo-500', 'bg-purple-500', 'bg-slate-800'][i % 3]} text-white shadow-sm`}>
-                                 {(entry.user_email || "?").charAt(0).toUpperCase()}
+                                 {(entry.user_email || "U").charAt(0).toUpperCase()}
                                </div>
                             )) : (
-                              <div className="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] text-slate-400">0</div>
+                              <div className="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] text-slate-400 font-black">0</div>
                             )}
                           </div>
                         </div>
@@ -1005,19 +1013,21 @@ Target: ${selectedChallenge.target_metric}`;
     </CardHeader>
     <CardContent className="p-8">
       {(() => {
-        const currentUserEmail = (user?.email || localStorage.getItem('user_email') || "").toLowerCase().trim();
+        const rawEmail = user?.email || localStorage.getItem('user_email') || "";
+        const currentUserEmail = rawEmail.toLowerCase().trim();
+        
         const invitations = (challenges || []).filter(c => {
-          const isInvited = Array.isArray(c.invited_users) && 
-                            c.invited_users.map(u => (u || "").toLowerCase().trim()).includes(currentUserEmail);
-          const isNotCreator = (c.created_by_email || "").toLowerCase().trim() !== currentUserEmail;
-          return isInvited && isNotCreator;
+          const invited = Array.isArray(c.invited_users) && 
+                          c.invited_users.some(u => (u || "").toLowerCase().trim() === currentUserEmail);
+          const notOwner = (c.created_by_email || "").toLowerCase().trim() !== currentUserEmail;
+          return invited && notOwner;
         });
 
         if (invitations.length === 0) {
           return (
             <div className="flex flex-col items-center justify-center py-6 text-center">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
-                {"// No Pending Signals Detected"}
+                No Pending Signals Detected
               </p>
               <p className="text-[9px] text-slate-400 uppercase mt-1 tracking-tighter">Monitoring encrypted channels for authorization...</p>
             </div>
