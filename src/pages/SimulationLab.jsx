@@ -160,30 +160,33 @@ const loadUser = async () => {
   };
 
 const loadData = async () => {
-    try {
-      // 1. Fetch portfolios (Working: Status 200)
-      const response = await awsApi.getSimulationPortfolio({}); 
-      const portfolioList = response?.data || [];
-      
-      // ✅ UPDATE STATE IMMEDIATELY - This makes the portfolios appear!
-      setPortfolios(portfolioList);
+  try {
+    console.log("📡 [System] Initiating Global Sync...");
 
-      // 2. Fetch challenges/summary (Failing: Status 400)
-      // Wrap this in a separate try/catch so its failure doesn't affect the portfolios
-      try {
-        const labResponse = await awsApi.getSimulationLabData({});
-        const challengeList = labResponse?.data?.challenges || 
-                              labResponse?.data?.lab_summary?.challenges || [];
-        setChallenges(challengeList);
-      } catch (labError) {
-        console.warn("⚠️ Lab Summary failed to load, but portfolios are safe.", labError);
-      }
+    // 1. Fetch portfolios
+    const response = await awsApi.getSimulationPortfolio({}); 
+    const portfolioList = response?.data || [];
+    setPortfolios(portfolioList);
+
+    // 2. Fetch challenges (Optimized Extraction)
+    try {
+      const labResponse = await awsApi.getSimulationLabData({});
+      const challengeList = 
+        labResponse?.data?.challenges || 
+        labResponse?.data?.lab_summary?.challenges || 
+        (Array.isArray(labResponse?.data) ? labResponse.data : []);
       
-      console.log(`✅ Sync Success: ${portfolioList.length} Portfolios Loaded`);
-    } catch (error) {
-      console.error("❌ Critical Sync Error in loadData:", error);
+      console.log(`✅ Received ${challengeList.length} total challenges from registry`);
+      setChallenges(Array.isArray(challengeList) ? challengeList : []);
+    } catch (labError) {
+      console.warn("⚠️ Lab Summary failed to load, but portfolios are safe.", labError);
     }
-  };
+    
+    console.log(`✅ Sync Success: ${portfolioList.length} Portfolios Loaded`);
+  } catch (error) {
+    console.error("❌ Critical Sync Error in loadData:", error);
+  }
+};
 
   const addAssetToPortfolio = () => {
     // We simply add a blank row to the assets array so you can type directly into it
@@ -893,12 +896,16 @@ Target: ${selectedChallenge.target_metric}`;
           className="bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-widest text-[10px] px-6 py-5 rounded-xl transition-all shadow-lg active:translate-y-0.5"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Initialize Challenge
+         Initialize Challenge
         </Button>
       </div>
     </CardHeader>
     <CardContent className="p-6">
-      {challenges.filter(c => c.created_by_email === user?.email).length === 0 ? (
+      {challenges.filter(c => {
+        const creatorEmail = c.created_by_email || c.email;
+        const currentUserEmail = user?.email || localStorage.getItem('user_email');
+        return creatorEmail === currentUserEmail;
+      }).length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
           <div className="p-4 bg-white rounded-full shadow-sm mb-4">
             <Shield className="w-8 h-8 text-slate-300" />
@@ -910,7 +917,11 @@ Target: ${selectedChallenge.target_metric}`;
         </div>
       ) : (
         <div className="space-y-4">
-          {challenges.filter(c => c.created_by_email === user?.email).map(challenge => {
+          {challenges.filter(c => {
+            const creatorEmail = c.created_by_email || c.email;
+            const currentUserEmail = user?.email || localStorage.getItem('user_email');
+            return creatorEmail === currentUserEmail;
+          }).map(challenge => {
             const sortedEntries = (challenge.entries || []).sort((a, b) => b.score - a.score);
             return (
               <Card key={challenge.id} className="border-2 border-slate-100 hover:border-indigo-200 transition-all rounded-xl overflow-hidden group">
@@ -922,7 +933,7 @@ Target: ${selectedChallenge.target_metric}`;
                           {challenge.name}
                         </h3>
                         <Badge variant="outline" className="text-[9px] uppercase font-black border-slate-200 text-slate-500 bg-slate-50">
-                          {challenge.challenge_type.replace(/_/g, ' ')}
+                          {challenge.challenge_type ? challenge.challenge_type.replace(/_/g, ' ') : 'TACTICAL'}
                         </Badge>
                       </div>
                       <p className="text-sm text-slate-500 line-clamp-1 mb-4 font-medium">{challenge.description}</p>
@@ -931,7 +942,7 @@ Target: ${selectedChallenge.target_metric}`;
                         <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
                           <Activity className="w-3 h-3 text-slate-400" />
                           <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
-                            {challenge.duration_months} Months
+                            {challenge.duration_months || (challenge.duration_days ? Math.round(challenge.duration_days / 30) : 3)} Months
                           </span>
                         </div>
                         <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
@@ -950,7 +961,13 @@ Target: ${selectedChallenge.target_metric}`;
                         )}
                       </div>
                     </div>
-
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
                     <div className="flex items-center gap-6 border-l border-slate-100 pl-6 h-full min-w-[240px]">
                       <div className="flex-1">
                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Leaderboard Top</p>
