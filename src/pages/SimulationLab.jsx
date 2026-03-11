@@ -904,17 +904,23 @@ Target: ${selectedChallenge.target_metric}`;
    <CardContent className="p-6">
       {/* --- TACTICAL OPERATIONS LOGIC --- */}
       {(() => {
-        // 1. Identify current user precisely
-        const rawEmail = user?.email || localStorage.getItem('user_email') || "";
-        const currentUserEmail = rawEmail.toLowerCase().trim();
+        // Identity Recovery: Check all possible variants of your email
+        const cognitoEmail = (user?.email || "").toLowerCase().trim();
+        const profileEmail = (user?.profile_email || "").toLowerCase().trim();
+        const cachedEmail = (localStorage.getItem('user_email') || "").toLowerCase().trim();
         
-        // 2. Filter challenges (Owner check)
+        // Filter: If the creator matches ANY of your known identities
         const myChallenges = (challenges || []).filter(c => {
           const creator = (c.created_by_email || c.email || "").toLowerCase().trim();
-          return creator === currentUserEmail && currentUserEmail !== "";
+          if (creator === "") return false;
+
+          // Check for exact matches OR the specific "dr.shahzadanwar4/40" mismatch
+          const isExactMatch = creator === cognitoEmail || creator === profileEmail || creator === cachedEmail;
+          const isMismatchVariant = (creator.includes("dr.shahzadanwar4") && cognitoEmail.includes("dr.shahzadanwar4"));
+
+          return isExactMatch || isMismatchVariant;
         });
 
-        // 3. Render Empty State ONLY if truly empty
         if (myChallenges.length === 0) {
           return (
             <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
@@ -929,13 +935,10 @@ Target: ${selectedChallenge.target_metric}`;
           );
         }
 
-        // 4. Render Challenge Cards
         return (
           <div className="space-y-4">
             {myChallenges.map(challenge => {
-              const entries = challenge.entries || [];
-              const sortedEntries = [...entries].sort((a, b) => (b.score || 0) - (a.score || 0));
-              
+              const sortedEntries = (challenge.entries || []).sort((a, b) => (b.score || 0) - (a.score || 0));
               return (
                 <Card key={challenge.id} className="border-2 border-slate-100 hover:border-indigo-200 transition-all rounded-xl overflow-hidden group">
                   <CardContent className="p-5">
@@ -949,7 +952,7 @@ Target: ${selectedChallenge.target_metric}`;
                             {challenge.challenge_type ? challenge.challenge_type.replace(/_/g, ' ') : 'STRATEGY'}
                           </Badge>
                         </div>
-                        <p className="text-sm text-slate-500 line-clamp-1 mb-4 font-medium">{challenge.description || 'Global Market Scenario'}</p>
+                        <p className="text-sm text-slate-500 line-clamp-1 mb-4 font-medium">{challenge.description || 'Active Simulation Lab Challenge'}</p>
                         <div className="flex flex-wrap gap-2">
                           <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
                             <Clock className="w-3 h-3 text-slate-400" />
@@ -1013,14 +1016,15 @@ Target: ${selectedChallenge.target_metric}`;
     </CardHeader>
     <CardContent className="p-8">
       {(() => {
-        const rawEmail = user?.email || localStorage.getItem('user_email') || "";
-        const currentUserEmail = rawEmail.toLowerCase().trim();
+        const cognitoEmail = (user?.email || "").toLowerCase().trim();
+        const cachedEmail = (localStorage.getItem('user_email') || "").toLowerCase().trim();
         
         const invitations = (challenges || []).filter(c => {
-          const invited = Array.isArray(c.invited_users) && 
-                          c.invited_users.some(u => (u || "").toLowerCase().trim() === currentUserEmail);
-          const notOwner = (c.created_by_email || "").toLowerCase().trim() !== currentUserEmail;
-          return invited && notOwner;
+          const invited = (c.invited_users || []).map(u => (u || "").toLowerCase().trim());
+          const isInvited = invited.includes(cognitoEmail) || invited.includes(cachedEmail);
+          const creator = (c.created_by_email || "").toLowerCase().trim();
+          const isOwner = creator === cognitoEmail || creator === cachedEmail;
+          return isInvited && !isOwner;
         });
 
         if (invitations.length === 0) {
