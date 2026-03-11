@@ -1375,105 +1375,134 @@ Target: ${selectedChallenge.target_metric}`;
         </Dialog>
 
         <Dialog open={showCreateChallengeDialog} onOpenChange={setShowCreateChallengeDialog}>
-          <DialogContent className="max-w-xl">
-            <DialogHeader>
-              <DialogTitle className="text-2xl">Create New Challenge</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-4">
-              <div>
-                <Label>Challenge Name</Label>
-                <Input
-                  value={newChallenge.name}
-                  onChange={(e) => setNewChallenge({ ...newChallenge, name: e.target.value })}
-                  placeholder="e.g., Bear Market Survival Challenge"
-                />
-              </div>
+  <DialogContent className="max-w-xl bg-white border-2 border-slate-900 rounded-2xl p-0 overflow-hidden shadow-2xl">
+    {/* Industrial Top Accent */}
+    <div className="h-2 w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600" />
+    
+    <div className="p-8">
+      <DialogHeader className="mb-8">
+        <div className="flex items-center gap-4 mb-2">
+          <div className="p-3 bg-slate-900 rounded-xl shadow-lg">
+            <Trophy className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <DialogTitle className="text-3xl font-black uppercase tracking-tighter text-slate-900 leading-none">
+              Initialize Challenge
+            </DialogTitle>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mt-2">
+              Strategic Deployment Protocol v4.2
+            </p>
+          </div>
+        </div>
+      </DialogHeader>
 
-              <div>
-                <Label>Description</Label>
-                <Input
-                  value={newChallenge.description}
-                  onChange={(e) => setNewChallenge({ ...newChallenge, description: e.target.value })}
-                  placeholder="Test your portfolio in a market downturn"
-                />
-              </div>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Challenge Name</Label>
+          <Input
+            className="border-2 border-slate-200 h-12 rounded-xl focus:border-slate-900 transition-all font-bold text-slate-900 shadow-sm"
+            value={newChallenge.name}
+            onChange={(e) => setNewChallenge({ ...newChallenge, name: e.target.value })}
+            placeholder="e.g., Q1 ALPHA SURVIVAL"
+          />
+        </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Challenge Type</Label>
-                  <Select
-                    value={newChallenge.challenge_type}
-                    onValueChange={(value) => setNewChallenge({ ...newChallenge, challenge_type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="highest_return">Highest Return</SelectItem>
-                      <SelectItem value="lowest_drawdown">Lowest Drawdown</SelectItem>
-                      <SelectItem value="best_sharpe">Best Sharpe Ratio</SelectItem>
-                      <SelectItem value="target_return">Target Return</SelectItem>
-                      <SelectItem value="crisis_survival">Crisis Survival</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+        <div className="space-y-2">
+          <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Strategic Description</Label>
+          <Input
+            className="border-2 border-slate-200 h-12 rounded-xl focus:border-slate-900 transition-all font-medium text-slate-600"
+            value={newChallenge.description}
+            onChange={(e) => setNewChallenge({ ...newChallenge, description: e.target.value })}
+            placeholder="Operational parameters for this resilience test..."
+          />
+        </div>
 
-                <div>
-                  <Label>Duration (Months)</Label>
-                  <Input
-                    type="number"
-                    value={newChallenge.duration_months}
-                    onChange={(e) => setNewChallenge({ ...newChallenge, duration_months: parseInt(e.target.value) })}
-                    placeholder="3"
-                  />
-                </div>
-              </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Challenge Type</Label>
+            <Select
+              value={newChallenge.challenge_type}
+              onValueChange={(value) => setNewChallenge({ ...newChallenge, challenge_type: value })}
+            >
+              <SelectTrigger className="border-2 border-slate-200 h-12 bg-white text-slate-900 font-bold px-4 rounded-xl flex justify-between items-center shadow-sm">
+                {/* MANUAL RENDERER FIX: This forces the selected label to show in the UI */}
+                <span className="text-slate-900 uppercase text-[11px] font-black tracking-widest">
+                  {newChallenge.challenge_type === "highest_return" ? "Highest Return" :
+                   newChallenge.challenge_type === "lowest_drawdown" ? "Lowest Drawdown" :
+                   newChallenge.challenge_type === "best_sharpe" ? "Best Sharpe Ratio" :
+                   newChallenge.challenge_type === "target_return" ? "Target Return" :
+                   newChallenge.challenge_type === "crisis_survival" ? "Crisis Survival" :
+                   "Select Protocol"}
+                </span>
+              </SelectTrigger>
+              <SelectContent className="bg-white border-2 border-slate-900 rounded-xl shadow-2xl">
+                <SelectItem value="highest_return" className="font-bold text-[11px] uppercase tracking-widest">Highest Return</SelectItem>
+                <SelectItem value="lowest_drawdown" className="font-bold text-[11px] uppercase tracking-widest">Lowest Drawdown</SelectItem>
+                <SelectItem value="best_sharpe" className="font-bold text-[11px] uppercase tracking-widest">Best Sharpe Ratio</SelectItem>
+                <SelectItem value="target_return" className="font-bold text-[11px] uppercase tracking-widest">Target Return</SelectItem>
+                <SelectItem value="crisis_survival" className="font-bold text-[11px] uppercase tracking-widest">Crisis Survival</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-              <div>
-                <Label>Target Metric</Label>
-                <Input
-                  type="number"
-                  value={newChallenge.target_metric}
-                  onChange={(e) => setNewChallenge({ 
-                    ...newChallenge, 
-                    target_metric: e.target.value === "" ? 0 : parseFloat(e.target.value) 
-                  })}
-                  placeholder={
-                    newChallenge.challenge_type === "highest_return" ? "e.g., 15 for 15% return" :
-                    newChallenge.challenge_type === "lowest_drawdown" ? "e.g., -10 for max 10% loss" :
-                    newChallenge.challenge_type === "best_sharpe" ? "e.g., 1.5 for Sharpe ratio" :
-                    newChallenge.challenge_type === "target_return" ? "e.g., 12 for exact 12% return" :
-                    "e.g., -20 for max 20% loss allowed"
-                  }
-                />
-                <p className="text-xs text-slate-500 mt-1">
-                  {newChallenge.challenge_type === "highest_return" && "The minimum return % participants must beat"}
-                  {newChallenge.challenge_type === "lowest_drawdown" && "The maximum drawdown % allowed (negative number)"}
-                  {newChallenge.challenge_type === "best_sharpe" && "The minimum Sharpe ratio to achieve"}
-                  {newChallenge.challenge_type === "target_return" && "The exact return % to hit (closest wins)"}
-                  {newChallenge.challenge_type === "crisis_survival" && "The maximum portfolio loss % allowed"}
-                </p>
-              </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Duration (Months)</Label>
+            <Input
+              type="number"
+              className="border-2 border-slate-200 h-12 rounded-xl font-mono font-bold text-slate-900"
+              value={newChallenge.duration_months}
+              onChange={(e) => setNewChallenge({ ...newChallenge, duration_months: parseInt(e.target.value) })}
+            />
+          </div>
+        </div>
 
-              <div>
-                <Label>Badge Reward</Label>
-                <Input
-                  value={newChallenge.badge_reward}
-                  onChange={(e) => setNewChallenge({ ...newChallenge, badge_reward: e.target.value })}
-                  placeholder="e.g., Bear Market Survivor"
-                />
-              </div>
+        <div className="space-y-2 p-5 bg-slate-50 border-2 border-slate-100 rounded-2xl relative overflow-hidden group">
+          <Activity className="absolute -right-4 -bottom-4 w-20 h-20 text-slate-200/50 group-hover:scale-110 transition-transform" />
+          <Label className="text-[10px] uppercase font-black text-slate-500 tracking-widest flex items-center gap-2">
+            <Target className="w-3 h-3" /> Target Metric
+          </Label>
+          <Input
+            type="number"
+            className="border-2 border-slate-200 bg-white h-12 rounded-xl font-mono font-black text-indigo-600 text-lg shadow-inner"
+            value={newChallenge.target_metric}
+            onChange={(e) => setNewChallenge({ 
+              ...newChallenge, 
+              target_metric: e.target.value === "" ? 0 : parseFloat(e.target.value) 
+            })}
+          />
+          <p className="text-[9px] font-bold text-slate-400 uppercase mt-2 tracking-tighter">
+            {newChallenge.challenge_type === "highest_return" && "Minimum ROI benchmark for clearance"}
+            {newChallenge.challenge_type === "lowest_drawdown" && "Max allowable peak-to-trough decline"}
+            {newChallenge.challenge_type === "best_sharpe" && "Minimum efficiency score (Risk/Return)"}
+            {newChallenge.challenge_type === "target_return" && "Precision targeting for specific yield"}
+            {newChallenge.challenge_type === "crisis_survival" && "Maximum portfolio breach tolerance"}
+          </p>
+        </div>
 
-              <Button
-                onClick={createChallenge}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600"
-              >
-                <Trophy className="w-4 h-4 mr-2" />
-                Create Challenge
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <div className="space-y-2">
+          <Label className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Badge Reward</Label>
+          <div className="relative">
+            <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-500" />
+            <Input
+              className="border-2 border-slate-200 h-12 pl-12 rounded-xl font-bold text-slate-900 bg-amber-50/30 border-amber-100"
+              value={newChallenge.badge_reward}
+              onChange={(e) => setNewChallenge({ ...newChallenge, badge_reward: e.target.value })}
+              placeholder="e.g., BLACK SWAN SURVIVOR"
+            />
+          </div>
+        </div>
+
+        <Button
+          onClick={createChallenge}
+          className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black uppercase tracking-[0.2em] text-[11px] h-14 rounded-2xl shadow-xl active:translate-y-0.5 transition-all mt-4 flex items-center gap-3 border-0"
+        >
+          <Play className="w-4 h-4 fill-current" />
+          Commit Challenge Deployment
+        </Button>
+      </div>
+    </div>
+  </DialogContent>
+</Dialog>
 
         <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
           <DialogContent className="max-w-md">
