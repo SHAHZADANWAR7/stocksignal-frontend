@@ -1017,7 +1017,10 @@ Target: ${selectedChallenge.target_metric}`;
       </div>
     </CardHeader>
     <CardContent className="p-8">
-      {challenges.filter(c => c.invited_users?.includes(user?.email)).length === 0 ? (
+      {challenges.filter(c => {
+        const currentUserEmail = user?.email || localStorage.getItem('user_email');
+        return c.invited_users?.includes(currentUserEmail);
+      }).length === 0 ? (
         <div className="flex flex-col items-center justify-center py-6 text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
             // No Pending Signals Detected
@@ -1026,10 +1029,13 @@ Target: ${selectedChallenge.target_metric}`;
         </div>
       ) : (
         <div className="space-y-4">
-          {challenges.filter(c => c.invited_users?.includes(user?.email)).map(challenge => (
+          {challenges.filter(c => {
+            const currentUserEmail = user?.email || localStorage.getItem('user_email');
+            return c.invited_users?.includes(currentUserEmail);
+          }).map(challenge => (
             <div key={challenge.id} className="flex items-center justify-between p-4 border-2 border-slate-100 rounded-xl bg-slate-50/30 group hover:bg-white hover:border-indigo-100 transition-all">
               <div className="flex items-center gap-4">
-                <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm group-hover:border-indigo-200 transition-all">
+                <div className="p-2 bg-white rounded-full border border-slate-200 shadow-sm">
                   <Activity className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div>
@@ -1042,7 +1048,7 @@ Target: ${selectedChallenge.target_metric}`;
                   setSelectedChallenge(challenge);
                   setShowEnterChallengeDialog(true);
                 }}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-xl shadow-lg shadow-indigo-200"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-xl shadow-lg"
               >
                 Accept Deployment
               </Button>
