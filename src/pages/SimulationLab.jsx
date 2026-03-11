@@ -903,86 +903,92 @@ Target: ${selectedChallenge.target_metric}`;
     </CardHeader>
    <CardContent className="p-6">
       {/* --- TACTICAL OPERATIONS LOGIC --- */}
-      {challenges.filter(c => {
-        const creatorEmail = c.created_by_email || c.email;
-        const currentUserEmail = user?.email || localStorage.getItem('user_email');
-        return creatorEmail === currentUserEmail;
-      }).length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
-          <div className="p-4 bg-white rounded-full shadow-sm mb-4">
-            <Shield className="w-8 h-8 text-slate-300" />
-          </div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-            Status: No Active Deployments
-          </p>
-          <p className="text-sm text-slate-400 mt-1 font-medium">Create a challenge to stress-test regional strategy resilience.</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {challenges.filter(c => {
-            const creatorEmail = c.created_by_email || c.email;
-            const currentUserEmail = user?.email || localStorage.getItem('user_email');
-            return creatorEmail === currentUserEmail;
-          }).map(challenge => {
-            const sortedEntries = (challenge.entries || []).sort((a, b) => (b.score || 0) - (a.score || 0));
-            return (
-              <Card key={challenge.id} className="border-2 border-slate-100 hover:border-indigo-200 transition-all rounded-xl overflow-hidden group">
-                <CardContent className="p-5">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-1">
-                        <h3 className="font-black text-slate-900 uppercase tracking-tight text-lg group-hover:text-indigo-600 transition-colors">
-                          {challenge.name}
-                        </h3>
-                        <Badge variant="outline" className="text-[9px] uppercase font-black border-slate-200 text-slate-500 bg-slate-50">
-                          {challenge.challenge_type ? challenge.challenge_type.split('_').join(' ') : 'STRATEGY'}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-slate-500 line-clamp-1 mb-4 font-medium">{challenge.description}</p>
-                      <div className="flex flex-wrap gap-2">
-                        <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
-                          <Clock className="w-3 h-3 text-slate-400" />
-                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
-                            {challenge.duration_months} Months
-                          </span>
-                        </div>
-                        <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
-                          <Target className="w-3 h-3 text-slate-400" />
-                          <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
-                            Target: {challenge.target_metric}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-6 border-l border-slate-100 pl-6 h-full min-w-[240px]">
+      {(() => {
+        const currentUserEmail = (user?.email || localStorage.getItem('user_email') || "").toLowerCase().trim();
+        const myChallenges = (challenges || []).filter(c => {
+          const creator = (c.created_by_email || c.email || "").toLowerCase().trim();
+          return creator === currentUserEmail && currentUserEmail !== "";
+        });
+
+        if (myChallenges.length === 0) {
+          return (
+            <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
+              <div className="p-4 bg-white rounded-full shadow-sm mb-4">
+                <Shield className="w-8 h-8 text-slate-300" />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+                Status: No Active Deployments
+              </p>
+              <p className="text-sm text-slate-400 mt-1 font-medium">Create a challenge to stress-test regional strategy resilience.</p>
+            </div>
+          );
+        }
+
+        return (
+          <div className="space-y-4">
+            {myChallenges.map(challenge => {
+              const sortedEntries = (challenge.entries || []).sort((a, b) => (b.score || 0) - (a.score || 0));
+              return (
+                <Card key={challenge.id} className="border-2 border-slate-100 hover:border-indigo-200 transition-all rounded-xl overflow-hidden group">
+                  <CardContent className="p-5">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                       <div className="flex-1">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Leaderboard</p>
-                        <div className="flex -space-x-2 overflow-hidden mb-1 justify-center">
-                          {sortedEntries.slice(0, 3).map((entry, i) => (
-                             <div key={i} className={`w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-black ${['bg-indigo-500', 'bg-purple-500', 'bg-slate-800'][i % 3]} text-white shadow-sm`}>
-                               {(entry.user_email || "?").charAt(0).toUpperCase()}
-                             </div>
-                          ))}
+                        <div className="flex items-center gap-3 mb-1">
+                          <h3 className="font-black text-slate-900 uppercase tracking-tight text-lg group-hover:text-indigo-600 transition-colors">
+                            {challenge.name}
+                          </h3>
+                          <Badge variant="outline" className="text-[9px] uppercase font-black border-slate-200 text-slate-500 bg-slate-50">
+                            {challenge.challenge_type ? challenge.challenge_type.split('_').join(' ') : 'STRATEGY'}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-slate-500 line-clamp-1 mb-4 font-medium">{challenge.description}</p>
+                        <div className="flex flex-wrap gap-2">
+                          <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
+                            <Clock className="w-3 h-3 text-slate-400" />
+                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
+                              {challenge.duration_days || challenge.duration_months || 90} Days
+                            </span>
+                          </div>
+                          <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
+                            <Target className="w-3 h-3 text-slate-400" />
+                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
+                              Cap: ${Number(challenge.starting_capital || 100000).toLocaleString()}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <Button 
-                        onClick={() => {
-                          setSelectedChallenge(challenge);
-                          setShowInviteDialog(true);
-                        }}
-                        variant="outline" 
-                        className="border-2 font-black uppercase text-[10px] tracking-widest h-10 px-6 hover:bg-slate-50 transition-all shadow-sm"
-                      >
-                        Invite
-                      </Button>
+                      <div className="flex items-center gap-6 border-l border-slate-100 pl-6 h-full min-w-[240px]">
+                        <div className="flex-1">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Participants</p>
+                          <div className="flex -space-x-2 overflow-hidden mb-1 justify-center">
+                            {sortedEntries.length > 0 ? sortedEntries.slice(0, 3).map((entry, i) => (
+                               <div key={i} className={`w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-black ${['bg-indigo-500', 'bg-purple-500', 'bg-slate-800'][i % 3]} text-white shadow-sm`}>
+                                 {(entry.user_email || "?").charAt(0).toUpperCase()}
+                               </div>
+                            )) : (
+                              <div className="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] text-slate-400">0</div>
+                            )}
+                          </div>
+                        </div>
+                        <Button 
+                          onClick={() => {
+                            setSelectedChallenge(challenge);
+                            setShowInviteDialog(true);
+                          }}
+                          variant="outline" 
+                          className="border-2 font-black uppercase text-[10px] tracking-widest h-10 px-6 hover:bg-slate-50 transition-all shadow-sm"
+                        >
+                          Invite
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        );
+      })()}
     </CardContent>
   </Card>
 
@@ -998,45 +1004,53 @@ Target: ${selectedChallenge.target_metric}`;
       </div>
     </CardHeader>
     <CardContent className="p-8">
-      {challenges.filter(c => {
-        const currentUserEmail = user?.email || localStorage.getItem('user_email');
-        return c.invited_users?.includes(currentUserEmail);
-      }).length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-6 text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
-            // No Pending Signals Detected
-          </p>
-          <p className="text-[9px] text-slate-400 uppercase mt-1 tracking-tighter">Monitoring encrypted channels for authorization...</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {challenges.filter(c => {
-             const currentUserEmail = user?.email || localStorage.getItem('user_email');
-             return c.invited_users?.includes(currentUserEmail);
-          }).map(challenge => (
-            <div key={challenge.id} className="flex items-center justify-between p-4 border-2 border-slate-100 rounded-xl bg-slate-50/30 group hover:bg-white hover:border-indigo-100 transition-all">
-              <div className="flex items-center gap-4">
-                <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm group-hover:border-indigo-200 transition-all">
-                  <Activity className="w-4 h-4 text-indigo-600" />
-                </div>
-                <div>
-                  <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm">{challenge.name}</h4>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Awaiting Strategic Entry</p>
-                </div>
-              </div>
-              <Button
-                onClick={() => {
-                  setSelectedChallenge(challenge);
-                  setShowEnterChallengeDialog(true);
-                }}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-xl shadow-lg"
-              >
-                Accept Deployment
-              </Button>
+      {(() => {
+        const currentUserEmail = (user?.email || localStorage.getItem('user_email') || "").toLowerCase().trim();
+        const invitations = (challenges || []).filter(c => {
+          const isInvited = Array.isArray(c.invited_users) && 
+                            c.invited_users.map(u => (u || "").toLowerCase().trim()).includes(currentUserEmail);
+          const isNotCreator = (c.created_by_email || "").toLowerCase().trim() !== currentUserEmail;
+          return isInvited && isNotCreator;
+        });
+
+        if (invitations.length === 0) {
+          return (
+            <div className="flex flex-col items-center justify-center py-6 text-center">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
+                {"// No Pending Signals Detected"}
+              </p>
+              <p className="text-[9px] text-slate-400 uppercase mt-1 tracking-tighter">Monitoring encrypted channels for authorization...</p>
             </div>
-          ))}
-        </div>
-      )}
+          );
+        }
+
+        return (
+          <div className="space-y-4">
+            {invitations.map(challenge => (
+              <div key={challenge.id} className="flex items-center justify-between p-4 border-2 border-slate-100 rounded-xl bg-slate-50/30 group hover:bg-white hover:border-indigo-100 transition-all">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm group-hover:border-indigo-200 transition-all">
+                    <Activity className="w-4 h-4 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm">{challenge.name}</h4>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Awaiting Strategic Entry</p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => {
+                    setSelectedChallenge(challenge);
+                    setShowEnterChallengeDialog(true);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-xl shadow-lg"
+                >
+                  Accept Deployment
+                </Button>
+              </div>
+            ))}
+          </div>
+        );
+      })()}
     </CardContent>
   </Card>
 </TabsContent>
