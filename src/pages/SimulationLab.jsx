@@ -161,27 +161,31 @@ const loadUser = async () => {
 
 const loadData = async () => {
     try {
-      // 1. Fetch portfolios (Working: Status 200)
+      // 1. Fetch portfolios (Preserving your working logic)
       const response = await awsApi.getSimulationPortfolio({}); 
-      const portfolioList = response?.data || [];
-      
-      // ✅ UPDATE STATE IMMEDIATELY - This makes the portfolios appear!
+      const portfolioList = Array.isArray(response?.data) ? response.data : [];
       setPortfolios(portfolioList);
 
-      // 2. Fetch challenges/summary (Failing: Status 400)
-      // Wrap this in a separate try/catch so its failure doesn't affect the portfolios
+      // 2. Fetch challenges with Universal Fallbacks
       try {
         const labResponse = await awsApi.getSimulationLabData({});
-        const challengeList = labResponse?.data?.challenges || 
-                              labResponse?.data?.lab_summary?.challenges || [];
-        setChallenges(challengeList);
+        const rawData = labResponse?.data;
+
+        // Drill down through all possible API response structures
+        const challengeList = 
+          rawData?.challenges ||                           // Check path: data.challenges
+          rawData?.lab_summary?.challenges ||              // Check path: data.lab_summary.challenges
+          (Array.isArray(rawData) ? rawData : []);         // Check if data itself is the list
+
+        setChallenges(Array.isArray(challengeList) ? challengeList : []);
+        
+        console.log(`📡 [System] Sync: ${portfolioList.length} Portfolios | ${challengeList.length} Challenges Captured`);
       } catch (labError) {
-        console.warn("⚠️ Lab Summary failed to load, but portfolios are safe.", labError);
+        // Critical Fallback: If the Lab API fails, we do NOT crash the portfolio view
+        console.warn("⚠️ Challenge registry sync failed, but portfolios are safe.", labError);
       }
-      
-      console.log(`✅ Sync Success: ${portfolioList.length} Portfolios Loaded`);
     } catch (error) {
-      console.error("❌ Critical Sync Error in loadData:", error);
+      console.error("❌ Critical Global Sync Error:", error);
     }
   };
 
