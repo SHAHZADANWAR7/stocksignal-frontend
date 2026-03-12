@@ -460,9 +460,9 @@ export default function PracticeTrading() {
               {/* FIXED VISIBILITY BUTTON: Changed to bg-indigo-600 for high contrast */}
               <Button
                 onClick={() => setIsTradeModalOpen(true)}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-none px-12 h-12 font-black text-[10px] tracking-[0.2em] uppercase transition-all shadow-xl border-b-4 border-indigo-900"
+                className="!bg-indigo-600 hover:!bg-indigo-500 !text-white font-black uppercase text-[10px] tracking-[0.2em] px-12 h-12 rounded-none border-b-4 border-indigo-900 shadow-2xl transition-all flex items-center justify-center mx-auto"
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4 mr-2 !text-white" />
                 Initialize First Acquisition
               </Button>
             </div>
