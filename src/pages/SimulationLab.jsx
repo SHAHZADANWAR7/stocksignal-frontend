@@ -1016,38 +1016,31 @@ Target: ${selectedChallenge.target_metric}`;
     </CardHeader>
     <CardContent className="p-8">
       {(() => {
-        // --- EMERGENCY IDENTITY RECOVERY ---
-        // We look at EVERY possible way the email might be stored in Kevin's session
-        const getKevinIdentity = () => {
-          const emailList = [
-            user?.email, 
-            user?.attributes?.email, 
-            user?.signInDetails?.loginId,
-            localStorage.getItem('user_email')
-          ];
-          // Find the first valid email string
-          return emailList.find(e => e && typeof e === 'string' && e.includes('@'))?.toLowerCase().trim() || "";
-        };
+        // --- SERVER-VERIFIED IDENTITY RESOLUTION ---
+        // Since the user prop is failing, we use the email the server just verified for us
+        const serverVerifiedEmail = labData?.user_email || labData?.data?.user_email || "";
+        const cognitoEmail = (user?.email || user?.attributes?.email || "").toLowerCase().trim();
+        const cachedEmail = (localStorage.getItem('user_email') || "").toLowerCase().trim();
+        
+        // The "Master Email" - Prioritizing what the server said
+        const myEmail = (serverVerifiedEmail || cognitoEmail || cachedEmail).toLowerCase().trim();
 
-        const currentIdentity = getKevinIdentity();
+        // LOGGING FOR KEVIN (This will now show his email!)
+        console.log(`🧪 [Filter Debug] My Resolved Identity: "${myEmail}"`);
 
         const invitations = (challenges || []).filter(c => {
-          const invitedUsers = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
-          const challengeCreator = String(c.created_by_email || c.email || "").toLowerCase().trim();
+          const invitedList = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
+          const creator = String(c.created_by_email || c.email || "").toLowerCase().trim();
           
-          // Match Logic
-          const isMeInvited = currentIdentity !== "" && invitedUsers.includes(currentIdentity);
-          const amIOwner = currentIdentity !== "" && challengeCreator === currentIdentity;
+          const isMeInvited = myEmail !== "" && invitedList.includes(myEmail);
+          const isMeOwner = myEmail !== "" && creator === myEmail;
 
-          // LOGGING FOR KEVIN (Visible in Browser Console)
-          if (invitedUsers.length > 0) {
-            console.log(`🧪 [Filter Debug] Checking Challenge: ${c.name}`);
-            console.log(`   - My ID: "${currentIdentity}"`);
-            console.log(`   - Invited List:`, invitedUsers);
-            console.log(`   - Match Found: ${isMeInvited} | Is Owner: ${amIOwner}`);
+          // If we found a match, let's celebrate in the console
+          if (isMeInvited && !isMeOwner) {
+            console.log(`✅ [Filter Debug] MATCH FOUND: Showing challenge "${c.name}"`);
           }
 
-          return isMeInvited && !amIOwner;
+          return isMeInvited && !isMeOwner;
         });
 
         if (invitations.length === 0) {
@@ -1074,7 +1067,7 @@ Target: ${selectedChallenge.target_metric}`;
                   <div>
                     <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm">{challenge.name}</h4>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Deployment Code: {challenge.id.split(':').pop()}
+                      Awaiting Strategic Entry
                     </p>
                   </div>
                 </div>
