@@ -161,28 +161,33 @@ const loadUser = async () => {
 
 const loadData = async () => {
     try {
-      // 1. Fetch portfolios (Preserving your working logic)
+      // 1. Fetch portfolios
       const response = await awsApi.getSimulationPortfolio({}); 
       const portfolioList = Array.isArray(response?.data) ? response.data : [];
       setPortfolios(portfolioList);
 
-      // 2. Fetch challenges with Universal Fallbacks
+      // 2. Fetch challenges 
       try {
         const labResponse = await awsApi.getSimulationLabData({});
         const rawData = labResponse?.data;
 
-        // Drill down through all possible API response structures
+        // --- THE FIX ---
+        // If our user state is null (due to 404), we "borrow" the email 
+        // the server just verified for us and inject it into the user state
+        if (!user && rawData?.user_email) {
+          setUser({ attributes: { email: rawData.user_email } });
+        }
+
         const challengeList = 
-          rawData?.challenges ||                           // Check path: data.challenges
-          rawData?.lab_summary?.challenges ||              // Check path: data.lab_summary.challenges
-          (Array.isArray(rawData) ? rawData : []);         // Check if data itself is the list
+          rawData?.challenges || 
+          rawData?.lab_summary?.challenges || 
+          (Array.isArray(rawData) ? rawData : []);
 
         setChallenges(Array.isArray(challengeList) ? challengeList : []);
         
         console.log(`📡 [System] Sync: ${portfolioList.length} Portfolios | ${challengeList.length} Challenges Captured`);
       } catch (labError) {
-        // Critical Fallback: If the Lab API fails, we do NOT crash the portfolio view
-        console.warn("⚠️ Challenge registry sync failed, but portfolios are safe.", labError);
+        console.warn("⚠️ Challenge registry sync failed.", labError);
       }
     } catch (error) {
       console.error("❌ Critical Global Sync Error:", error);
@@ -1017,20 +1022,20 @@ Target: ${selectedChallenge.target_metric}`;
     <CardContent className="p-8">
       {(() => {
         try {
-          // --- ROBUST IDENTITY RECOVERY ---
-          // We use the attributes.email which your logs confirmed is 'kevinpieterson40@yahoo.com'
+          // Resolve Identity from all possible signals
           const rawEmail = user?.attributes?.email || user?.email || localStorage.getItem('user_email') || "";
           const myEmail = String(rawEmail).toLowerCase().trim();
 
-          // Log to console so we can see it working
-          if (myEmail) console.log(`🧪 [UI Sync] Scanning for invites matching: "${myEmail}"`);
-
+          // Filter challenges
           const invitations = (challenges || []).filter(c => {
             const invitedList = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
             const creator = String(c.created_by_email || c.email || "").toLowerCase().trim();
             
             const isInvited = myEmail !== "" && invitedList.includes(myEmail);
             const isOwner = myEmail !== "" && creator === myEmail;
+
+            // Debug log if we find a match
+            if (isInvited && !isOwner) console.log(`✅ [UI Match] Found invitation for Kevin: ${c.name}`);
 
             return isInvited && !isOwner;
           });
@@ -1077,8 +1082,8 @@ Target: ${selectedChallenge.target_metric}`;
             </div>
           );
         } catch (error) {
-          console.error("Critical UI Filter Error:", error);
-          return <p className="text-[10px] text-red-400 uppercase font-black">Sync Error: Identity Mismatch</p>;
+          console.error("UI Filter Logic Error:", error);
+          return null;
         }
       })()}
     </CardContent>
