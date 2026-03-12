@@ -1118,6 +1118,7 @@ Target: ${selectedChallenge.target_metric}`;
     })()}
   </CardContent>
 </Card>
+</TabsContent>
         {/* 🖥️ INDUSTRIAL COMMAND INTEL (Replace from line 1030 to 1210) */}
 <TabsContent value="results" className="space-y-6 mt-6">
   {!scenarioResults ? (
