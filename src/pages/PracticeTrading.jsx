@@ -38,19 +38,28 @@ export default function PracticeTrading() {
 
   const loadPortfolio = async () => {
     try {
-      const response = await awsApi.getUserPortfolio();
+      // Identity Bridge: Explicitly pass the ID from the session
+      const response = await awsApi.getUserPortfolio({
+        userId: localStorage.getItem('user_id')
+      });
       
-      // Industrial Fix: Ensure we never have a 'null' portfolio after loading
-      // This stops the "ghost" cards from flashing
-      const portfolioData = response?.portfolio || { holdings: {} };
-      setPortfolio(portfolioData);
+      const rawPF = response?.portfolio || response?.data?.portfolio || { holdings: {} };
       
-      if (portfolioData.lastUpdated) {
-        setLastSync(new Date(portfolioData.lastUpdated));
+      // UNIVERSAL FIX: Convert 'assets' (new user format) to 'holdings' (UI format)
+      const holdings = rawPF.holdings || {};
+      if (rawPF.assets && Array.isArray(rawPF.assets)) {
+        rawPF.assets.forEach(a => { 
+          if (a.symbol) holdings[a.symbol] = a; 
+        });
+      }
+
+      setPortfolio({ ...rawPF, holdings });
+      
+      if (rawPF.lastUpdated || rawPF.updated_at) {
+        setLastSync(new Date(rawPF.lastUpdated || rawPF.updated_at));
       }
     } catch (error) {
       console.error("Error loading portfolio:", error);
-      // Fallback to empty holdings so the UI stays in the 'Asset Database: Empty' state
       setPortfolio({ holdings: {} });
     }
   };
@@ -171,25 +180,38 @@ export default function PracticeTrading() {
     }
   };
 
-  const handleSyncPortfolio = async () => {
+ const handleSyncPortfolio = async () => {
     setIsSyncing(true);
     try {
-      const response = await awsApi.syncPortfolio({});
+      const response = await awsApi.syncPortfolio({
+        userId: localStorage.getItem('user_id')
+      });
 
       console.log('📦 Sync response:', response);
 
       if (response.success) {
+        const rawPF = response.portfolio || response.data?.portfolio || response.data;
+        
+        // NORMALIZATION: Map assets to holdings so the Chart and Table "wake up"
+        const holdings = rawPF?.holdings || {};
+        if (rawPF?.assets && Array.isArray(rawPF.assets)) {
+          rawPF.assets.forEach(a => { 
+            if (a.symbol) holdings[a.symbol] = a; 
+          });
+        }
+
         setPortfolio(prev => ({
-          ...prev,
-          ...response.portfolio
+          ...(prev || {}),
+          ...rawPF,
+          holdings: Object.keys(holdings).length > 0 ? holdings : (prev?.holdings || {})
         }));
+        
         setLastSync(new Date());
       } else {
         alert(response.error || 'Sync failed');
       }
     } catch (error) {
       console.error('❌ Sync error:', error);
-      alert('Error syncing portfolio: ' + error.message);
     }
     setIsSyncing(false);
   };
