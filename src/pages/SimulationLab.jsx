@@ -1016,25 +1016,35 @@ Target: ${selectedChallenge.target_metric}`;
     </CardHeader>
     <CardContent className="p-8">
       {(() => {
-        // --- DEEP IDENTITY RESOLUTION ---
-        // We scan every possible property where Kevin's email might be hiding
-        const rawEmail = user?.email || user?.attributes?.email || user?.userEmail || "";
-        const cognitoEmail = String(rawEmail).toLowerCase().trim();
-        const cachedEmail = String(localStorage.getItem('user_email') || "").toLowerCase().trim();
+        // --- MAXIMUM IDENTITY RESOLUTION ---
+        // We collect EVERY possible way the system might know Kevin
+        const identitySet = new Set();
         
-        // The definitive identity for this session
-        const activeIdentity = cognitoEmail || cachedEmail;
+        const possibleEmails = [
+          user?.email,
+          user?.attributes?.email,
+          user?.signInDetails?.loginId,
+          user?.username,
+          localStorage.getItem('user_email')
+        ];
+
+        possibleEmails.forEach(email => {
+          if (email && typeof email === 'string' && email.includes('@')) {
+            identitySet.add(email.toLowerCase().trim());
+          }
+        });
+
+        const myIdentities = Array.from(identitySet);
 
         const invitations = (challenges || []).filter(c => {
-          // 1. Clean the invited list from the database
           const invitedList = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
           
-          // 2. Check if Kevin's identity matches ANY of the invited emails
-          const isInvited = activeIdentity !== "" && invitedList.includes(activeIdentity);
+          // Check if ANY of my identities match ANY of the invited emails
+          const isInvited = myIdentities.some(myId => invitedList.includes(myId));
           
-          // 3. Security: Ensure Kevin isn't the owner (owners see their challenges in the 'Active' list)
+          // Check ownership (Owner shouldn't see their own challenge in the invite box)
           const creator = String(c.created_by_email || c.email || "").toLowerCase().trim();
-          const isOwner = activeIdentity !== "" && creator === activeIdentity;
+          const isOwner = myIdentities.includes(creator);
 
           return isInvited && !isOwner;
         });
