@@ -1016,14 +1016,26 @@ Target: ${selectedChallenge.target_metric}`;
     </CardHeader>
     <CardContent className="p-8">
       {(() => {
+        // --- DEEP IDENTITY PROTOCOL ---
         const cognitoEmail = (user?.email || "").toLowerCase().trim();
+        const authEmail = (user?.attributes?.email || "").toLowerCase().trim();
+        const profileEmail = (user?.profile_email || "").toLowerCase().trim();
         const cachedEmail = (localStorage.getItem('user_email') || "").toLowerCase().trim();
         
+        const activeEmail = cognitoEmail || authEmail || profileEmail || cachedEmail;
+
         const invitations = (challenges || []).filter(c => {
-          const invited = (c.invited_users || []).map(u => (u || "").toLowerCase().trim());
-          const isInvited = invited.includes(cognitoEmail) || invited.includes(cachedEmail);
-          const creator = (c.created_by_email || "").toLowerCase().trim();
-          const isOwner = creator === cognitoEmail || creator === cachedEmail;
+          const invitedList = (c.invited_users || []).map(u => (u || "").toLowerCase().trim());
+          
+          // Check all possible identity matches
+          const isInvited = (cognitoEmail && invitedList.includes(cognitoEmail)) || 
+                            (authEmail && invitedList.includes(authEmail)) || 
+                            (profileEmail && invitedList.includes(profileEmail)) || 
+                            (cachedEmail && invitedList.includes(cachedEmail));
+          
+          const creator = (c.created_by_email || c.email || "").toLowerCase().trim();
+          const isOwner = activeEmail !== "" && creator === activeEmail;
+
           return isInvited && !isOwner;
         });
 
@@ -1033,7 +1045,9 @@ Target: ${selectedChallenge.target_metric}`;
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
                 No Pending Signals Detected
               </p>
-              <p className="text-[9px] text-slate-400 uppercase mt-1 tracking-tighter">Monitoring encrypted channels for authorization...</p>
+              <p className="text-[9px] text-slate-400 uppercase mt-1 tracking-tighter">
+                Monitoring encrypted channels for authorization...
+              </p>
             </div>
           );
         }
@@ -1048,7 +1062,9 @@ Target: ${selectedChallenge.target_metric}`;
                   </div>
                   <div>
                     <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm">{challenge.name}</h4>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Awaiting Strategic Entry</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      Awaiting Strategic Entry
+                    </p>
                   </div>
                 </div>
                 <Button
@@ -1068,7 +1084,6 @@ Target: ${selectedChallenge.target_metric}`;
     </CardContent>
   </Card>
 </TabsContent>
-
         {/* 🖥️ INDUSTRIAL COMMAND INTEL (Replace from line 1030 to 1210) */}
 <TabsContent value="results" className="space-y-6 mt-6">
   {!scenarioResults ? (
