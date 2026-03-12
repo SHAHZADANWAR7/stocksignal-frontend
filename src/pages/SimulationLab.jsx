@@ -1016,25 +1016,25 @@ Target: ${selectedChallenge.target_metric}`;
     </CardHeader>
     <CardContent className="p-8">
       {(() => {
-        // --- DEEP IDENTITY PROTOCOL ---
-        const cognitoEmail = (user?.email || "").toLowerCase().trim();
-        const authEmail = (user?.attributes?.email || "").toLowerCase().trim();
-        const profileEmail = (user?.profile_email || "").toLowerCase().trim();
-        const cachedEmail = (localStorage.getItem('user_email') || "").toLowerCase().trim();
+        // --- DEEP IDENTITY RESOLUTION ---
+        // We scan every possible property where Kevin's email might be hiding
+        const rawEmail = user?.email || user?.attributes?.email || user?.userEmail || "";
+        const cognitoEmail = String(rawEmail).toLowerCase().trim();
+        const cachedEmail = String(localStorage.getItem('user_email') || "").toLowerCase().trim();
         
-        const activeEmail = cognitoEmail || authEmail || profileEmail || cachedEmail;
+        // The definitive identity for this session
+        const activeIdentity = cognitoEmail || cachedEmail;
 
         const invitations = (challenges || []).filter(c => {
-          const invitedList = (c.invited_users || []).map(u => (u || "").toLowerCase().trim());
+          // 1. Clean the invited list from the database
+          const invitedList = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
           
-          // Check all possible identity matches
-          const isInvited = (cognitoEmail && invitedList.includes(cognitoEmail)) || 
-                            (authEmail && invitedList.includes(authEmail)) || 
-                            (profileEmail && invitedList.includes(profileEmail)) || 
-                            (cachedEmail && invitedList.includes(cachedEmail));
+          // 2. Check if Kevin's identity matches ANY of the invited emails
+          const isInvited = activeIdentity !== "" && invitedList.includes(activeIdentity);
           
-          const creator = (c.created_by_email || c.email || "").toLowerCase().trim();
-          const isOwner = activeEmail !== "" && creator === activeEmail;
+          // 3. Security: Ensure Kevin isn't the owner (owners see their challenges in the 'Active' list)
+          const creator = String(c.created_by_email || c.email || "").toLowerCase().trim();
+          const isOwner = activeIdentity !== "" && creator === activeIdentity;
 
           return isInvited && !isOwner;
         });
