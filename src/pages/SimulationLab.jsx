@@ -143,24 +143,35 @@ useEffect(() => {
       }); 
       
       if (data) {
-        // We force the email to be the loginEmail to fix the "4 vs 40" typo
-        setUser({ 
-          ...data, 
-          email: loginEmail || data.email,
-          attributes: { email: loginEmail || data.email }
-        });
+        // USE FUNCTIONAL UPDATE: Prevents overwriting loadData results
+        setUser(prev => ({
+          ...(prev || {}),
+          ...data,
+          email: loginEmail || data.email || prev?.email,
+          attributes: { 
+            ...(prev?.attributes || {}), 
+            email: loginEmail || data.email || prev?.attributes?.email 
+          }
+        }));
         console.log("✅ Profile Sync Successful");
       }
     } catch (error) {
       if (error.message?.includes('404')) {
         const fallback = (localStorage.getItem('user_email') || "").toLowerCase().trim();
-        setUser({ email: fallback, attributes: { email: fallback } });
+        // USE FUNCTIONAL UPDATE: Only set fallback if email isn't already there
+        setUser(prev => ({
+          ...(prev || {}),
+          email: prev?.email || fallback,
+          attributes: { 
+            ...(prev?.attributes || {}), 
+            email: prev?.attributes?.email || fallback 
+          }
+        }));
       } else {
         console.error("Error loading user:", error);
       }
     }
   };
-
 
   const loadRemainingUsage = async () => {
     const usage = await getRemainingUsage();
@@ -1024,86 +1035,89 @@ Target: ${selectedChallenge.target_metric}`;
   </Card>
 
  {/* Inbound Protocols (Invitations) */}
-  <Card className="border-2 border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white mt-6">
-    <div className="h-1.5 w-full bg-indigo-600" />
-    <CardHeader className="bg-slate-50 border-b border-slate-100 py-4">
-      <div className="flex items-center gap-3">
-        <Activity className="w-4 h-4 text-indigo-600" />
-        <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
-          Inbound Invitations
-        </CardTitle>
-      </div>
-    </CardHeader>
-    <CardContent className="p-8">
-      {(() => {
-        try {
-          // Resolve Identity from all possible signals
-          const rawEmail = user?.attributes?.email || user?.email || localStorage.getItem('user_email') || "";
-          const myEmail = String(rawEmail).toLowerCase().trim();
+<Card className="border-2 border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white mt-6">
+  <div className="h-1.5 w-full bg-indigo-600" />
+  <CardHeader className="bg-slate-50 border-b border-slate-100 py-4">
+    <div className="flex items-center gap-3">
+      <Activity className="w-4 h-4 text-indigo-600" />
+      <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
+        Inbound Invitations
+      </CardTitle>
+    </div>
+  </CardHeader>
+  <CardContent className="p-8">
+    {(() => {
+      try {
+        // --- TRIPLE-LOCK IDENTITY DETECTION ---
+        // We check 3 places to ensure Kevin/Shahzad are NEVER invisible during a refresh
+        const myEmail = (
+          user?.email || 
+          user?.attributes?.email || 
+          localStorage.getItem('user_email') || 
+          ""
+        ).toLowerCase().trim();
 
-          // Filter challenges
-          const invitations = (challenges || []).filter(c => {
-            const invitedList = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
-            const creator = String(c.created_by_email || c.email || "").toLowerCase().trim();
-            
-            const isInvited = myEmail !== "" && invitedList.includes(myEmail);
-            const isOwner = myEmail !== "" && creator === myEmail;
+        const invitations = (challenges || []).filter(c => {
+          const invitedList = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
+          const creator = String(c.created_by_email || c.email || "").toLowerCase().trim();
+          
+          const isInvited = myEmail !== "" && invitedList.includes(myEmail);
+          const isOwner = myEmail !== "" && creator === myEmail;
 
-            // Debug log if we find a match
-            if (isInvited && !isOwner) console.log(`✅ [UI Match] Found invitation for Kevin: ${c.name}`);
+          // Debug log helps us see the race condition in action
+          if (isInvited && !isOwner) console.log(`✅ [UI Match] Active Invite: ${c.name} for ${myEmail}`);
 
-            return isInvited && !isOwner;
-          });
+          return isInvited && !isOwner;
+        });
 
-          if (invitations.length === 0) {
-            return (
-              <div className="flex flex-col items-center justify-center py-6 text-center">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
-                  No Pending Signals Detected
-                </p>
-                <p className="text-[9px] text-slate-400 uppercase mt-1 tracking-tighter">
-                  Monitoring encrypted channels for authorization...
-                </p>
-              </div>
-            );
-          }
-
+        if (invitations.length === 0) {
           return (
-            <div className="space-y-4">
-              {invitations.map(challenge => (
-                <div key={challenge.id} className="flex items-center justify-between p-4 border-2 border-slate-100 rounded-xl bg-slate-50/30 group hover:bg-white hover:border-indigo-100 transition-all">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm group-hover:border-indigo-200 transition-all">
-                      <Activity className="w-4 h-4 text-indigo-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm">{challenge.name}</h4>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest uppercase">
-                        Invitation Verified
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => {
-                      setSelectedChallenge(challenge);
-                      setShowEnterChallengeDialog(true);
-                    }}
-                    className="bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-xl shadow-lg"
-                  >
-                    Accept Deployment
-                  </Button>
-                </div>
-              ))}
+            <div className="flex flex-col items-center justify-center py-6 text-center">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
+                No Pending Signals Detected
+              </p>
+              <p className="text-[9px] text-slate-400 uppercase mt-1 tracking-tighter">
+                Monitoring encrypted channels for authorization...
+              </p>
             </div>
           );
-        } catch (error) {
-          console.error("UI Filter Logic Error:", error);
-          return null;
         }
-      })()}
-    </CardContent>
-  </Card>
-</TabsContent>
+
+        return (
+          <div className="space-y-4">
+            {invitations.map(challenge => (
+              <div key={challenge.id} className="flex items-center justify-between p-4 border-2 border-slate-100 rounded-xl bg-slate-50/30 group hover:bg-white transition-all">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm">
+                    <Activity className="w-4 h-4 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm">{challenge.name}</h4>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest uppercase">
+                      Invitation Verified
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => {
+                    setSelectedChallenge(challenge);
+                    setShowEnterChallengeDialog(true);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-xl shadow-lg"
+                >
+                  Accept Deployment
+                </Button>
+              </div>
+            ))}
+          </div>
+        );
+      } catch (error) {
+        console.error("UI Filter Logic Error:", error);
+        return null;
+      }
+    })()}
+  </CardContent>
+</Card>
         {/* 🖥️ INDUSTRIAL COMMAND INTEL (Replace from line 1030 to 1210) */}
 <TabsContent value="results" className="space-y-6 mt-6">
   {!scenarioResults ? (
