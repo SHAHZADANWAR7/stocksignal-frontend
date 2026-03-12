@@ -1016,35 +1016,30 @@ Target: ${selectedChallenge.target_metric}`;
     </CardHeader>
     <CardContent className="p-8">
       {(() => {
-        // --- MAXIMUM IDENTITY RESOLUTION ---
-        // We collect EVERY possible way the system might know Kevin
-        const identitySet = new Set();
+        // --- ULTIMATE IDENTITY RESOLUTION ---
+        const getEmail = () => {
+          const sources = [
+            user?.email,
+            user?.attributes?.email,
+            user?.signInDetails?.loginId,
+            localStorage.getItem('user_email'),
+            // Standard Amplify v6 attribute path
+            user?.attributes?.email
+          ];
+          return sources.find(s => s && typeof s === 'string' && s.includes('@'))?.toLowerCase().trim() || "";
+        };
+
+        const myEmail = getEmail();
         
-        const possibleEmails = [
-          user?.email,
-          user?.attributes?.email,
-          user?.signInDetails?.loginId,
-          user?.username,
-          localStorage.getItem('user_email')
-        ];
-
-        possibleEmails.forEach(email => {
-          if (email && typeof email === 'string' && email.includes('@')) {
-            identitySet.add(email.toLowerCase().trim());
-          }
-        });
-
-        const myIdentities = Array.from(identitySet);
+        // Debugging for the console
+        if (myEmail) console.log("🔍 [Lab UI] Filtering invites for identity:", myEmail);
 
         const invitations = (challenges || []).filter(c => {
           const invitedList = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
-          
-          // Check if ANY of my identities match ANY of the invited emails
-          const isInvited = myIdentities.some(myId => invitedList.includes(myId));
-          
-          // Check ownership (Owner shouldn't see their own challenge in the invite box)
           const creator = String(c.created_by_email || c.email || "").toLowerCase().trim();
-          const isOwner = myIdentities.includes(creator);
+          
+          const isInvited = myEmail !== "" && invitedList.includes(myEmail);
+          const isOwner = myEmail !== "" && creator === myEmail;
 
           return isInvited && !isOwner;
         });
