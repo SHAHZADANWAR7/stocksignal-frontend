@@ -133,26 +133,41 @@ useEffect(() => {
     loadRemainingUsage();
   }, []);
 
+/**
+ * 🏆 UNIVERSAL IDENTITY RESOLUTION
+ * Preserves hard-won timing logic while adding 404 resilience for new users.
+ */
 const loadUser = async () => {
-    try {
-      await new Promise(resolve => setTimeout(resolve, 500));
+  try {
+    // PRESERVE: Critical 500ms delay for session stability (The "drift" fix)
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-      // We send a flat object. 
-      // awsClient.js will wrap this into event.body.payload
-      // Then Lambda will see event.body.payload.userId
-      const data = await awsApi.getUser({ 
-        userId: localStorage.getItem('user_id'),
-        cognitoSub: localStorage.getItem('user_id') 
-      }); 
-      
-      if (data && data.email) {
-        setUser(data);
-        console.log("✅ Profile Sync Successful");
-      }
-    } catch (error) {
+    // PRESERVE: Flat object payload for Lambda compatibility
+    const data = await awsApi.getUser({ 
+      userId: localStorage.getItem('user_id'),
+      cognitoSub: localStorage.getItem('user_id') 
+    }); 
+    
+    if (data && data.email) {
+      setUser(data);
+      console.log("✅ Profile Sync Successful");
+    }
+  } catch (error) {
+    // UNIVERSAL FIX: Handle 404 for new users (like Kevin)
+    // We map 'attributes.email' specifically because the invitation filter looks for it.
+    if (error.message?.includes('404')) {
+      console.log("ℹ️ New User Detected: Initializing fallback identity from session.");
+      setUser({ 
+        email: localStorage.getItem('user_email'),
+        attributes: { 
+          email: localStorage.getItem('user_email') 
+        }
+      });
+    } else {
       console.error("Error loading user:", error);
     }
-  };
+  }
+};
 
   const loadRemainingUsage = async () => {
     const usage = await getRemainingUsage();
