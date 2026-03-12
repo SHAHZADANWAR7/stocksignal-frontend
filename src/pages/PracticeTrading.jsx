@@ -421,7 +421,7 @@ export default function PracticeTrading() {
           </Card>
         )}
 
-       {/* ASSET DATABASE SECTION */}
+      {/* ASSET DATABASE SECTION */}
         {!portfolio ? (
           <div className="bg-slate-900 border-x border-b border-t-4 border-t-blue-600 p-20 text-center shadow-2xl rounded-none mb-8">
             <Loader2 className="w-8 h-8 mx-auto mb-4 text-blue-500 animate-spin opacity-40" />
@@ -457,9 +457,10 @@ export default function PracticeTrading() {
                 System is operational. Market feeds connected. No simulated assets detected in current environment.
               </p>
 
+              {/* FIXED VISIBILITY BUTTON: Changed to bg-indigo-600 for high contrast */}
               <Button
                 onClick={() => setIsTradeModalOpen(true)}
-                className="relative z-50 bg-white hover:bg-blue-50 text-slate-900 rounded-none px-10 h-11 font-black text-[10px] tracking-[0.2em] uppercase transition-all border-b-2 border-blue-600 shadow-xl"
+                className="bg-indigo-600 hover:bg-indigo-500 text-white rounded-none px-12 h-12 font-black text-[10px] tracking-[0.2em] uppercase transition-all shadow-xl border-b-4 border-indigo-900"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Initialize First Acquisition
