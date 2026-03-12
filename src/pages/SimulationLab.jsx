@@ -133,22 +133,17 @@ useEffect(() => {
     loadRemainingUsage();
   }, []);
 
-const loadUser = async () => {
+ const loadUser = async () => {
     try {
-      // PRESERVE: Critical 500ms delay
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Get the email you actually logged in with (The "40" version)
-      const loginEmail = localStorage.getItem('user_email');
-
+      const loginEmail = (localStorage.getItem('user_email') || "").toLowerCase().trim();
       const data = await awsApi.getUser({ 
         userId: localStorage.getItem('user_id'),
         cognitoSub: localStorage.getItem('user_id') 
       }); 
       
       if (data) {
-        // UNIVERSAL FIX: Use the profile data but FORCE the email to be 
-        // the loginEmail. This protects you from the "4 vs 40" typo in the DB.
+        // We force the email to be the loginEmail to fix the "4 vs 40" typo
         setUser({ 
           ...data, 
           email: loginEmail || data.email,
@@ -158,40 +153,13 @@ const loadUser = async () => {
       }
     } catch (error) {
       if (error.message?.includes('404')) {
-        const fallback = localStorage.getItem('user_email');
-        setUser({ 
-          email: fallback,
-          attributes: { email: fallback }
-        });
+        const fallback = (localStorage.getItem('user_email') || "").toLowerCase().trim();
+        setUser({ email: fallback, attributes: { email: fallback } });
       } else {
         console.error("Error loading user:", error);
       }
     }
   };
-```
-
-### 2. The Universal Filter Logic
-We will use the **exact same logic** for both "My Challenges" and "Inbound Invitations." This ensures there is no more "back and forth."
-
-**For "Tactical Operations" (My Challenges - around line 905):**
-```javascript
-const myEmail = (user?.email || localStorage.getItem('user_email') || "").toLowerCase().trim();
-const myChallenges = (challenges || []).filter(c => {
-  const creator = (c.created_by_email || c.email || "").toLowerCase().trim();
-  return creator === myEmail;
-});
-```
-
-**For "Inbound Invitations" (Invitations - around line 1018):**
-```javascript
-const myEmail = (user?.email || localStorage.getItem('user_email') || "").toLowerCase().trim();
-const invitations = (challenges || []).filter(c => {
-  const invitedList = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
-  const creator = (c.created_by_email || c.email || "").toLowerCase().trim();
-  const isInvited = myEmail !== "" && invitedList.includes(myEmail);
-  const isOwner = myEmail !== "" && creator === myEmail;
-  return isInvited && !isOwner;
-});
 
 
   const loadRemainingUsage = async () => {
