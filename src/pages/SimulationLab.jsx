@@ -133,41 +133,66 @@ useEffect(() => {
     loadRemainingUsage();
   }, []);
 
-/**
- * 🏆 UNIVERSAL IDENTITY RESOLUTION
- * Preserves hard-won timing logic while adding 404 resilience for new users.
- */
 const loadUser = async () => {
-  try {
-    // PRESERVE: Critical 500ms delay for session stability (The "drift" fix)
-    await new Promise(resolve => setTimeout(resolve, 500));
+    try {
+      // PRESERVE: Critical 500ms delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Get the email you actually logged in with (The "40" version)
+      const loginEmail = localStorage.getItem('user_email');
 
-    // PRESERVE: Flat object payload for Lambda compatibility
-    const data = await awsApi.getUser({ 
-      userId: localStorage.getItem('user_id'),
-      cognitoSub: localStorage.getItem('user_id') 
-    }); 
-    
-    if (data && data.email) {
-      setUser(data);
-      console.log("✅ Profile Sync Successful");
+      const data = await awsApi.getUser({ 
+        userId: localStorage.getItem('user_id'),
+        cognitoSub: localStorage.getItem('user_id') 
+      }); 
+      
+      if (data) {
+        // UNIVERSAL FIX: Use the profile data but FORCE the email to be 
+        // the loginEmail. This protects you from the "4 vs 40" typo in the DB.
+        setUser({ 
+          ...data, 
+          email: loginEmail || data.email,
+          attributes: { email: loginEmail || data.email }
+        });
+        console.log("✅ Profile Sync Successful");
+      }
+    } catch (error) {
+      if (error.message?.includes('404')) {
+        const fallback = localStorage.getItem('user_email');
+        setUser({ 
+          email: fallback,
+          attributes: { email: fallback }
+        });
+      } else {
+        console.error("Error loading user:", error);
+      }
     }
-  } catch (error) {
-    // UNIVERSAL FIX: Handle 404 for new users (like Kevin)
-    // We map 'attributes.email' specifically because the invitation filter looks for it.
-    if (error.message?.includes('404')) {
-      console.log("ℹ️ New User Detected: Initializing fallback identity from session.");
-      setUser({ 
-        email: localStorage.getItem('user_email'),
-        attributes: { 
-          email: localStorage.getItem('user_email') 
-        }
-      });
-    } else {
-      console.error("Error loading user:", error);
-    }
-  }
-};
+  };
+```
+
+### 2. The Universal Filter Logic
+We will use the **exact same logic** for both "My Challenges" and "Inbound Invitations." This ensures there is no more "back and forth."
+
+**For "Tactical Operations" (My Challenges - around line 905):**
+```javascript
+const myEmail = (user?.email || localStorage.getItem('user_email') || "").toLowerCase().trim();
+const myChallenges = (challenges || []).filter(c => {
+  const creator = (c.created_by_email || c.email || "").toLowerCase().trim();
+  return creator === myEmail;
+});
+```
+
+**For "Inbound Invitations" (Invitations - around line 1018):**
+```javascript
+const myEmail = (user?.email || localStorage.getItem('user_email') || "").toLowerCase().trim();
+const invitations = (challenges || []).filter(c => {
+  const invitedList = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
+  const creator = (c.created_by_email || c.email || "").toLowerCase().trim();
+  const isInvited = myEmail !== "" && invitedList.includes(myEmail);
+  const isOwner = myEmail !== "" && creator === myEmail;
+  return isInvited && !isOwner;
+});
+
 
   const loadRemainingUsage = async () => {
     const usage = await getRemainingUsage();
@@ -186,11 +211,18 @@ const loadData = async () => {
         const labResponse = await awsApi.getSimulationLabData({});
         const rawData = labResponse?.data;
 
-        // --- THE FIX ---
-        // If our user state is null (due to 404), we "borrow" the email 
-        // the server just verified for us and inject it into the user state
-        if (!user && rawData?.user_email) {
-          setUser({ attributes: { email: rawData.user_email } });
+        // --- THE UNIVERSAL IDENTITY PATCH ---
+        // Your logs show rawData.user_email is the CORRECT '40' version.
+        // We use this to 'patch' the user state every time, 
+        // fixing both Kevin's 404 and your '4 vs 40' typo automatically.
+        const verifiedEmail = rawData?.user_email || localStorage.getItem('user_email');
+        
+        if (verifiedEmail) {
+          setUser(prev => ({
+            ...(prev || {}),
+            email: verifiedEmail,
+            attributes: { ...(prev?.attributes || {}), email: verifiedEmail }
+          }));
         }
 
         const challengeList = 
