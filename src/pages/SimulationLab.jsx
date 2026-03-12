@@ -1003,7 +1003,7 @@ Target: ${selectedChallenge.target_metric}`;
     </CardContent>
   </Card>
 
-  {/* Inbound Protocols (Invitations) */}
+ {/* Inbound Protocols (Invitations) */}
   <Card className="border-2 border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white mt-6">
     <div className="h-1.5 w-full bg-indigo-600" />
     <CardHeader className="bg-slate-50 border-b border-slate-100 py-4">
@@ -1016,32 +1016,38 @@ Target: ${selectedChallenge.target_metric}`;
     </CardHeader>
     <CardContent className="p-8">
       {(() => {
-        // --- ULTIMATE IDENTITY RESOLUTION ---
-        const getEmail = () => {
-          const sources = [
-            user?.email,
-            user?.attributes?.email,
+        // --- EMERGENCY IDENTITY RECOVERY ---
+        // We look at EVERY possible way the email might be stored in Kevin's session
+        const getKevinIdentity = () => {
+          const emailList = [
+            user?.email, 
+            user?.attributes?.email, 
             user?.signInDetails?.loginId,
-            localStorage.getItem('user_email'),
-            // Standard Amplify v6 attribute path
-            user?.attributes?.email
+            localStorage.getItem('user_email')
           ];
-          return sources.find(s => s && typeof s === 'string' && s.includes('@'))?.toLowerCase().trim() || "";
+          // Find the first valid email string
+          return emailList.find(e => e && typeof e === 'string' && e.includes('@'))?.toLowerCase().trim() || "";
         };
 
-        const myEmail = getEmail();
-        
-        // Debugging for the console
-        if (myEmail) console.log("🔍 [Lab UI] Filtering invites for identity:", myEmail);
+        const currentIdentity = getKevinIdentity();
 
         const invitations = (challenges || []).filter(c => {
-          const invitedList = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
-          const creator = String(c.created_by_email || c.email || "").toLowerCase().trim();
+          const invitedUsers = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
+          const challengeCreator = String(c.created_by_email || c.email || "").toLowerCase().trim();
           
-          const isInvited = myEmail !== "" && invitedList.includes(myEmail);
-          const isOwner = myEmail !== "" && creator === myEmail;
+          // Match Logic
+          const isMeInvited = currentIdentity !== "" && invitedUsers.includes(currentIdentity);
+          const amIOwner = currentIdentity !== "" && challengeCreator === currentIdentity;
 
-          return isInvited && !isOwner;
+          // LOGGING FOR KEVIN (Visible in Browser Console)
+          if (invitedUsers.length > 0) {
+            console.log(`🧪 [Filter Debug] Checking Challenge: ${c.name}`);
+            console.log(`   - My ID: "${currentIdentity}"`);
+            console.log(`   - Invited List:`, invitedUsers);
+            console.log(`   - Match Found: ${isMeInvited} | Is Owner: ${amIOwner}`);
+          }
+
+          return isMeInvited && !amIOwner;
         });
 
         if (invitations.length === 0) {
@@ -1068,7 +1074,7 @@ Target: ${selectedChallenge.target_metric}`;
                   <div>
                     <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm">{challenge.name}</h4>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                      Awaiting Strategic Entry
+                      Deployment Code: {challenge.id.split(':').pop()}
                     </p>
                   </div>
                 </div>
