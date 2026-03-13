@@ -518,42 +518,52 @@ Return JSON with detailed metrics for each portfolio.`;
 
     setIsSimulating(true);
     try {
-      const scenario = selectedChallenge.scenario_conditions?.custom_scenario || {};
-      
-      const prompt = `Score this portfolio for a ${selectedChallenge.challenge_type} challenge:
+      // 1. DATA TRANSLATION
+      // Convert simulation 'allocation percentages' into the 'holdings' array the Lambda expects.
+      const holdingsArray = (portfolio.assets || []).map(asset => ({
+        symbol: asset.symbol,
+        // We use the allocation % as a virtual quantity and set price to 1 
+        // if live prices aren't currently loaded in this specific state.
+        quantity: Number(asset.allocation_percent || 0),
+        current_price: Number(asset.current_price || asset.price || 1)
+      }));
 
-Portfolio: ${portfolio.name}
-Assets: ${portfolio.assets.map(a => `${a.symbol} (${a.allocation_percent}%)`).join(", ")}
+      // 2. CONSTRUCT PAYLOAD
+      // We send a single object to match the Lambda's expectations
+      const payload = {
+        challenge_id: selectedChallenge.id,
+        portfolio: {
+          holdings: holdingsArray
+        }
+      };
 
-Challenge Scenario:
-${scenario.name || "Standard market conditions"}
-- Market crash: ${scenario.market_crash_percent || 0}%
-- Interest rate change: ${scenario.interest_rate_change || 0}%
-- Duration: ${selectedChallenge.duration_months} months
+      console.log('📡 Dispatching Challenge Payload:', payload);
 
-Calculate:
-1. Final return %
-2. Maximum drawdown %
-3. Sharpe ratio
-4. Challenge score (0-100 based on meeting the challenge goal)
+      const response = await awsApi.enterChallengeWithPortfolio(payload);
 
-Target: ${selectedChallenge.target_metric}`;
+      // 3. PROCESS RESPONSE
+      // The Lambda returns data in { message, data: { ...metrics } }
+      if (response.statusCode === 200 || response.success || response.data) {
+        const metrics = response.data?.portfolio_metrics || {};
+        
+        alert(
+          `🏆 CHALLENGE SUBMISSION SUCCESSFUL\n\n` +
+          `Challenge: ${selectedChallenge.name}\n` +
+          `Initial Return: ${metrics.initial_return_percent || '0'}%\n` +
+          `Holdings Count: ${metrics.holding_count || 0}`
+        );
 
-      const result = await awsApi.enterChallengeWithPortfolio(selectedChallenge.id, portfolioId, prompt);
-
-      setShowEnterChallengeDialog(false);
-      loadData();
-      
-      if (result.badge_earned) {
-        alert(`🏆 Challenge entered! Score: ${result.score}/100\n\nBadge Earned: ${selectedChallenge.badge_reward}`);
+        setShowEnterChallengeDialog(false);
+        await loadData();
       } else {
-        alert(`✅ Challenge entered! Score: ${result.score}/100\n\nKeep trying to earn the badge!`);
+        alert(response.error || "Submission rejected by validation protocol.");
       }
     } catch (error) {
-      console.error("Error entering challenge:", error);
-      alert("Error entering challenge");
+      console.error("❌ Challenge Entry Failure:", error);
+      alert("Error entering challenge: " + (error.message || "Identity or Data mismatch"));
+    } finally {
+      setIsSimulating(false);
     }
-    setIsSimulating(false);
   };
 
   const strategyColors = {
