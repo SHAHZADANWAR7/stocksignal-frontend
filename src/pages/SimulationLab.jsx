@@ -88,6 +88,7 @@ export default function SimulationLab() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [isSimulating, setIsSimulating] = useState(false);
   const [scenarioResults, setScenarioResults] = useState(null);
+  const [expandedLeaderboardId, setExpandedLeaderboardId] = useState(null);
   const [editingPortfolio, setEditingPortfolio] = useState(null);
   const [remainingUsage, setRemainingUsage] = useState(null);
   const [selectedPortfolioForOpt, setSelectedPortfolioForOpt] = useState(null);
