@@ -85,10 +85,10 @@ export default function SimulationLab() {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [showEnterChallengeDialog, setShowEnterChallengeDialog] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState(null);
+  const [expandedInviteId, setExpandedInviteId] = useState(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [isSimulating, setIsSimulating] = useState(false);
   const [scenarioResults, setScenarioResults] = useState(null);
-  const [isInvitesOpen, setIsInvitesOpen] = useState(true);
   const [expandedLeaderboardId, setExpandedLeaderboardId] = useState(null);
   const [editingPortfolio, setEditingPortfolio] = useState(null);
   const [remainingUsage, setRemainingUsage] = useState(null);
@@ -1148,160 +1148,135 @@ Return JSON with detailed metrics for each portfolio.`;
     </CardContent>
   </Card>
 
-{/* Inbound Protocols (Invitations) */}
-<Card className="border-2 border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white mt-6 transition-all duration-300">
-  <div className="h-1.5 w-full bg-indigo-600" />
-  <CardHeader 
-    className="bg-slate-50 border-b border-slate-100 py-4 cursor-pointer hover:bg-slate-100/50 transition-colors"
-    onClick={() => setIsInvitesOpen(!isInvitesOpen)}
-  >
-    <div className="flex items-center justify-between w-full">
-      <div className="flex items-center gap-3">
-        <Activity className="w-4 h-4 text-indigo-600" />
-        <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
-          Inbound Invitations
-        </CardTitle>
-        <Badge className="bg-indigo-50 text-indigo-700 border-none text-[9px] font-black px-2 py-0.5 rounded-full">
-          Signals Active
-        </Badge>
-      </div>
-      <div className="flex items-center gap-2">
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-          {isInvitesOpen ? "Minimize" : "Expand Intel"}
-        </p>
-        <div className="p-1 rounded-md bg-white border border-slate-200 shadow-sm">
-          {isInvitesOpen ? <TrendingUp className="w-3 h-3 text-indigo-600" /> : <TrendingDown className="w-3 h-3 text-slate-400" />}
-        </div>
-      </div>
-    </div>
-  </CardHeader>
+ {/* Inbound Protocols (Invitations) */}
+          <Card className="border-2 border-slate-200 shadow-sm rounded-2xl overflow-hidden bg-white mt-6">
+            <div className="h-1.5 w-full bg-indigo-600" />
+            <CardHeader className="bg-slate-50 border-b border-slate-100 py-4">
+              <div className="flex items-center gap-3">
+                <Activity className="w-4 h-4 text-indigo-600" />
+                <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">
+                  Inbound Invitations
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              {(() => {
+                try {
+                  const myEmail = (
+                    user?.email || 
+                    user?.attributes?.email || 
+                    localStorage.getItem('user_email') || 
+                    ""
+                  ).toLowerCase().trim();
 
-  <AnimatePresence>
-    {isInvitesOpen && (
-      <motion.div
-        initial={{ height: 0, opacity: 0 }}
-        animate={{ height: "auto", opacity: 1 }}
-        exit={{ height: 0, opacity: 0 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="overflow-hidden"
-      >
-        <CardContent className="p-6">
-          {(() => {
-            try {
-              // --- TRIPLE-LOCK IDENTITY DETECTION ---
-              const myEmail = (
-                user?.email || 
-                user?.attributes?.email || 
-                localStorage.getItem('user_email') || 
-                ""
-              ).toLowerCase().trim();
+                  const invitations = (challenges || []).filter(c => {
+                    const invitedList = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
+                    const creator = String(c.created_by_email || c.email || "").toLowerCase().trim();
+                    return myEmail !== "" && invitedList.includes(myEmail) && creator !== myEmail;
+                  });
 
-              const invitations = (challenges || []).filter(c => {
-                const invitedList = (c.invited_users || []).map(u => String(u || "").toLowerCase().trim());
-                const creator = String(c.created_by_email || c.email || "").toLowerCase().trim();
-                
-                const isInvited = myEmail !== "" && invitedList.includes(myEmail);
-                const isOwner = myEmail !== "" && creator === myEmail;
-
-                return isInvited && !isOwner;
-              });
-
-              if (invitations.length === 0) {
-                return (
-                  <div className="flex flex-col items-center justify-center py-10 text-center border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
-                    <div className="p-3 bg-white rounded-full shadow-sm mb-3">
-                      <Shield className="w-6 h-6 text-slate-200" />
-                    </div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
-                      No Pending Authorization Signals
-                    </p>
-                  </div>
-                );
-              }
-
-              return (
-                <div className="space-y-4">
-                  {invitations.map(challenge => (
-                    <div key={challenge.id} className="p-6 border-2 border-slate-100 rounded-2xl bg-slate-50/30 group hover:bg-white transition-all shadow-sm">
-                      <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-6">
-                        
-                        {/* 📋 THE INTEL DOSSIER */}
-                        <div className="space-y-4 flex-1">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2.5 bg-indigo-600 rounded-xl shadow-lg group-hover:scale-110 transition-transform">
-                              <ShieldAlert className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <h4 className="font-black text-slate-900 uppercase tracking-tight text-lg leading-none">
-                                {challenge.name}
-                              </h4>
-                              <Badge variant="outline" className="mt-2 text-[9px] font-black uppercase tracking-widest bg-indigo-50 border-indigo-100 text-indigo-600">
-                                Protocol: {challenge.challenge_type?.replace(/_/g, ' ') || 'TACTICAL DEPLOYMENT'}
-                              </Badge>
-                            </div>
-                          </div>
-                          
-                          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-inner relative overflow-hidden">
-                            <Terminal className="absolute -right-2 -bottom-2 w-16 h-16 text-slate-50 opacity-50" />
-                            <p className="text-sm text-slate-600 font-medium leading-relaxed italic mb-4 relative z-10">
-                              "{challenge.description || "You have been authorized to join this regional resilience simulation. Deploy a portfolio to begin."}"
-                            </p>
-
-                            <div className="flex flex-wrap gap-3 relative z-10">
-                              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg">
-                                <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
-                                  {challenge.duration_months || 3} Month Window
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg">
-                                <Target className="w-3.5 h-3.5 text-slate-400" />
-                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
-                                  Start Capital: ${Number(challenge.starting_capital || challenge.starting_value || 100000).toLocaleString()}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg">
-                                <Activity className="w-3.5 h-3.5 text-slate-400" />
-                                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
-                                  Metric: {challenge.challenge_type?.includes('sharpe') ? 'Risk Adjusted' : 'Total Return'}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* ⚡ ACTION COMMAND */}
-                        <div className="flex flex-col items-center justify-center min-w-[200px]">
-                          <Button
-                            onClick={() => {
-                              setSelectedChallenge(challenge);
-                              setShowEnterChallengeDialog(true);
-                            }}
-                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-[11px] h-14 px-10 rounded-2xl shadow-xl group transition-all active:scale-95 flex items-center justify-center gap-3"
-                          >
-                            Accept Deployment
-                            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                          </Button>
-                          <p className="text-[9px] font-bold text-slate-400 uppercase mt-3 tracking-widest">
-                            Authorization Required
-                          </p>
-                        </div>
+                  if (invitations.length === 0) {
+                    return (
+                      <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/50">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
+                          No Pending Signals Detected
+                        </p>
                       </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-3">
+                      {invitations.map(challenge => {
+                        const isExpanded = expandedInviteId === challenge.id;
+                        
+                        return (
+                          <div key={challenge.id} className={`border-2 rounded-2xl transition-all duration-200 ${isExpanded ? 'border-indigo-200 bg-white shadow-md' : 'border-slate-100 bg-slate-50/30'}`}>
+                            {/* --- ROW HEADER (Always Visible) --- */}
+                            <div className="p-4 flex items-center justify-between gap-4">
+                              <div className="flex items-center gap-4 flex-1 min-w-0">
+                                <div className={`p-2 rounded-lg transition-colors ${isExpanded ? 'bg-indigo-600 text-white' : 'bg-white text-indigo-600 border border-slate-200'}`}>
+                                  <ShieldAlert className="w-4 h-4" />
+                                </div>
+                                <div className="min-w-0">
+                                  <h4 className="font-black text-slate-900 uppercase tracking-tight text-sm truncate">{challenge.name}</h4>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <Badge variant="outline" className="text-[7px] font-black uppercase tracking-widest border-slate-200 text-slate-400 bg-white">
+                                      {challenge.challenge_type ? challenge.challenge_type.replace(/_/g, ' ') : 'TACTICAL'}
+                                    </Badge>
+                                    <button 
+                                      type="button"
+                                      onClick={() => setExpandedInviteId(isExpanded ? null : challenge.id)}
+                                      className="text-[9px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-1 hover:underline ml-2"
+                                    >
+                                      <Info className="w-3 h-3" />
+                                      {isExpanded ? 'Hide Intel' : 'View Intel'}
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <Button
+                                onClick={() => {
+                                  setSelectedChallenge(challenge);
+                                  setShowEnterChallengeDialog(true);
+                                }}
+                                className="bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest text-[9px] h-9 px-5 rounded-xl shadow-lg shrink-0"
+                              >
+                                Accept
+                                <ArrowRight className="w-3 h-3 ml-2" />
+                              </Button>
+                            </div>
+
+                            {/* --- EXPANDABLE INTEL SECTION --- */}
+                            <AnimatePresence>
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="px-4 pb-5 pt-0">
+                                    <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 shadow-inner relative">
+                                      <Terminal className="absolute right-2 bottom-2 w-12 h-12 text-white/5" />
+                                      
+                                      <p className="text-xs text-slate-300 font-medium leading-relaxed italic mb-4">
+                                        {challenge.description || "You have been authorized to join this regional resilience simulation. Deploy a portfolio to begin."}
+                                      </p>
+
+                                      <div className="flex flex-wrap gap-2">
+                                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg">
+                                          <Clock className="w-3 h-3 text-slate-500" />
+                                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                                            {challenge.duration_months || 3} Month Op
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/5 border border-white/10 rounded-lg">
+                                          <Target className="w-3 h-3 text-slate-500" />
+                                          <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                                            Cap: ${Number(challenge.starting_capital || challenge.starting_value || 100000).toLocaleString()}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        );
+                      })}
                     </div>
-                  ))}
-                </div>
-              );
-            } catch (error) {
-              console.error("UI Filter Logic Error:", error);
-              return null;
-            }
-          })()}
-        </CardContent>
-      </motion.div>
-    )}
-  </AnimatePresence>
-</Card>
-</TabsContent>
+                  );
+                } catch (error) {
+                  console.error("UI Filter Logic Error:", error);
+                  return null;
+                }
+              })()}
+            </CardContent>
+          </Card>
+        </TabsContent>
         {/* 🖥️ INDUSTRIAL COMMAND INTEL (Replace from line 1030 to 1210) */}
 <TabsContent value="results" className="space-y-6 mt-6">
   {!scenarioResults ? (
@@ -1997,4 +1972,3 @@ Return JSON with detailed metrics for each portfolio.`;
     </div>
   );
 }
-
