@@ -47,7 +47,9 @@ import {
   Clock,
   FileText,
   Terminal,
-  Database
+  Database,
+  Info,
+  ArrowRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { checkUsageLimit, incrementUsage, getRemainingUsage } from "@/components/utils/usageLimit";
