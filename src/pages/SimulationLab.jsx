@@ -945,12 +945,12 @@ Return JSON with detailed metrics for each portfolio.`;
    <CardContent className="p-6">
       {/* --- TACTICAL OPERATIONS LOGIC --- */}
       {(() => {
-        // Identity Recovery: Check all possible variants of your email
+        // 1. Identity Recovery: Check all possible variants of your email
         const cognitoEmail = (user?.email || "").toLowerCase().trim();
         const profileEmail = (user?.profile_email || "").toLowerCase().trim();
         const cachedEmail = (localStorage.getItem('user_email') || "").toLowerCase().trim();
         
-        // Filter: If the creator matches ANY of your known identities
+        // 2. Filter: If the creator matches ANY of your known identities
         const myChallenges = (challenges || []).filter(c => {
           const creator = (c.created_by_email || c.email || "").toLowerCase().trim();
           if (creator === "") return false;
@@ -979,7 +979,11 @@ Return JSON with detailed metrics for each portfolio.`;
         return (
           <div className="space-y-4">
             {myChallenges.map(challenge => {
-              const sortedEntries = (challenge.entries || []).sort((a, b) => (b.score || 0) - (a.score || 0));
+              // 3. Leaderboard Logic: Sort by return_percent (descending)
+              const sortedEntries = (challenge.entries || []).sort((a, b) => 
+                Number(b.return_percent || 0) - Number(a.return_percent || 0)
+              );
+
               return (
                 <Card key={challenge.id} className="border-2 border-slate-100 hover:border-indigo-200 transition-all rounded-xl overflow-hidden group">
                   <CardContent className="p-5">
@@ -998,27 +1002,48 @@ Return JSON with detailed metrics for each portfolio.`;
                           <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
                             <Clock className="w-3 h-3 text-slate-400" />
                             <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
-                              {challenge.duration_days || 90} Days
+                              {challenge.duration_months || 3} Months
                             </span>
                           </div>
                           <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
                             <Target className="w-3 h-3 text-slate-400" />
                             <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
-                              Cap: ${Number(challenge.starting_capital || 100000).toLocaleString()}
+                              Cap: ${Number(challenge.target_metric || 100000).toLocaleString()}
                             </span>
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-6 border-l border-slate-100 pl-6 h-full min-w-[240px]">
+
+                      {/* --- INDUSTRIAL LIVE LEADERBOARD --- */}
+                      <div className="flex items-center gap-6 border-l border-slate-100 pl-6 h-full min-w-[280px]">
                         <div className="flex-1">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 text-center">Participants</p>
-                          <div className="flex -space-x-2 overflow-hidden mb-1 justify-center">
-                            {sortedEntries.length > 0 ? sortedEntries.slice(0, 3).map((entry, i) => (
-                               <div key={i} className={`w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-black ${['bg-indigo-500', 'bg-purple-500', 'bg-slate-800'][i % 3]} text-white shadow-sm`}>
-                                 {(entry.user_email || "U").charAt(0).toUpperCase()}
-                               </div>
-                            )) : (
-                              <div className="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] text-slate-400 font-black">0</div>
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 text-center">
+                            Live Leaderboard
+                          </p>
+                          <div className="space-y-1.5">
+                            {sortedEntries.length > 0 ? (
+                              sortedEntries.slice(0, 3).map((entry, i) => (
+                                <div key={i} className="flex items-center justify-between bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-lg shadow-sm group/entry hover:bg-white transition-all">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-[10px] font-black ${i === 0 ? 'text-amber-500' : 'text-slate-400'}`}>
+                                      #{i + 1}
+                                    </span>
+                                    <div className="w-5 h-5 rounded-full bg-slate-900 flex items-center justify-center text-[8px] font-black text-white">
+                                      {(entry.user_email || "U").charAt(0).toUpperCase()}
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-700 truncate max-w-[100px]">
+                                      {entry.user_email === user?.email ? "YOU" : entry.user_email.split('@')[0]}
+                                    </span>
+                                  </div>
+                                  <span className={`text-[10px] font-black ${Number(entry.return_percent) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                    {Number(entry.return_percent) >= 0 ? '+' : ''}{entry.return_percent}%
+                                  </span>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-center py-4 bg-slate-50 rounded-xl border-2 border-dashed border-slate-100">
+                                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Awaiting Entries</p>
+                              </div>
                             )}
                           </div>
                         </div>
@@ -1028,7 +1053,7 @@ Return JSON with detailed metrics for each portfolio.`;
                             setShowInviteDialog(true);
                           }}
                           variant="outline" 
-                          className="border-2 font-black uppercase text-[10px] tracking-widest h-10 px-6 hover:bg-slate-50 transition-all shadow-sm"
+                          className="border-2 font-black uppercase text-[10px] tracking-widest h-10 px-6 hover:bg-slate-900 hover:text-white transition-all shadow-sm"
                         >
                           Invite
                         </Button>
