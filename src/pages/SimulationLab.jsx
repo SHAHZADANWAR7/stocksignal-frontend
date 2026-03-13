@@ -953,193 +953,197 @@ Return JSON with detailed metrics for each portfolio.`;
     </CardHeader>
    <CardContent className="p-6">
     {/* --- TACTICAL OPERATIONS LOGIC --- */}
-      {(() => {
-        // 1. Identity Recovery: Check all variants (Cognito, Profile, Storage)
-        const cognitoEmail = (user?.email || "").toLowerCase().trim();
-        const profileEmail = (user?.profile_email || "").toLowerCase().trim();
-        const cachedEmail = (localStorage.getItem('user_email') || "").toLowerCase().trim();
+{(() => {
+  // 1. Identity Recovery: Check all variants (Cognito, Profile, Storage)
+  const cognitoEmail = (user?.email || "").toLowerCase().trim();
+  const profileEmail = (user?.profile_email || "").toLowerCase().trim();
+  const cachedEmail = (localStorage.getItem('user_email') || "").toLowerCase().trim();
+  
+  // 2. Filter: Determine which challenges involve this specific user
+  const myChallenges = (challenges || []).filter(c => {
+    const creator = (c.created_by_email || c.email || "").toLowerCase().trim();
+    if (creator === "") return false;
+
+    const isExactMatch = creator === cognitoEmail || creator === profileEmail || creator === cachedEmail;
+    const isMismatchVariant = (creator.includes("dr.shahzadanwar4") && cognitoEmail.includes("dr.shahzadanwar4"));
+
+    return isExactMatch || isMismatchVariant;
+  });
+
+  if (myChallenges.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
+        <div className="p-4 bg-white rounded-full shadow-sm mb-4">
+          <Shield className="w-8 h-8 text-slate-300" />
+        </div>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
+          Status: No Active Deployments
+        </p>
+        <p className="text-sm text-slate-400 mt-1 font-medium">Create a challenge to stress-test regional strategy resilience.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {myChallenges.map(challenge => {
+        // 3. CONTEXTUAL SORTING LOGIC
+        const isSharpeChallenge = challenge.challenge_type === 'best_sharpe';
         
-        // 2. Filter: Determine which challenges involve this specific user
-        const myChallenges = (challenges || []).filter(c => {
-          const creator = (c.created_by_email || c.email || "").toLowerCase().trim();
-          if (creator === "") return false;
-
-          const isExactMatch = creator === cognitoEmail || creator === profileEmail || creator === cachedEmail;
-          const isMismatchVariant = (creator.includes("dr.shahzadanwar4") && cognitoEmail.includes("dr.shahzadanwar4"));
-
-          return isExactMatch || isMismatchVariant;
+        const sortedEntries = (challenge.entries || []).sort((a, b) => {
+          if (isSharpeChallenge) {
+            return Number(b.sharpe_ratio || 0) - Number(a.sharpe_ratio || 0);
+          }
+          return Number(b.return_percent || 0) - Number(a.return_percent || 0);
         });
 
-        if (myChallenges.length === 0) {
-          return (
-            <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-slate-100 rounded-2xl bg-slate-50/50">
-              <div className="p-4 bg-white rounded-full shadow-sm mb-4">
-                <Shield className="w-8 h-8 text-slate-300" />
-              </div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-                Status: No Active Deployments
-              </p>
-              <p className="text-sm text-slate-400 mt-1 font-medium">Create a challenge to stress-test regional strategy resilience.</p>
-            </div>
-          );
-        }
-
         return (
-          <div className="space-y-4">
-            {myChallenges.map(challenge => {
-              // 3. CONTEXTUAL SORTING LOGIC
-              // If challenge is Sharpe-based, sort by sharpe_ratio. Otherwise, return_percent.
-              const isSharpeChallenge = challenge.challenge_type === 'best_sharpe';
-              
-              const sortedEntries = (challenge.entries || []).sort((a, b) => {
-                if (isSharpeChallenge) {
-                  return Number(b.sharpe_ratio || 0) - Number(a.sharpe_ratio || 0);
-                }
-                return Number(b.return_percent || 0) - Number(a.return_percent || 0);
-              });
+          <Card key={challenge.id} className="border-2 border-slate-100 hover:border-indigo-200 transition-all rounded-xl overflow-hidden group">
+            <CardContent className="p-5">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                
+                {/* Challenge Metadata */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="font-black text-slate-900 uppercase tracking-tight text-lg group-hover:text-indigo-600 transition-colors">
+                      {challenge.name}
+                    </h3>
+                    <Badge variant="outline" className="text-[9px] uppercase font-black border-slate-200 text-slate-500 bg-slate-50">
+                      {challenge.challenge_type ? challenge.challenge_type.replace(/_/g, ' ') : 'STRATEGY'}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-slate-500 line-clamp-1 mb-4 font-medium">{challenge.description || 'Active Simulation Lab Challenge'}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
+                      <Clock className="w-3 h-3 text-slate-400" />
+                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
+                        {challenge.duration_months || 3} Months
+                      </span>
+                    </div>
+                    <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
+                      <Target className="w-3 h-3 text-slate-400" />
+                      <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
+                        Cap: ${Number(challenge.starting_capital || challenge.target_metric || 100000).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-              return (
-                <Card key={challenge.id} className="border-2 border-slate-100 hover:border-indigo-200 transition-all rounded-xl overflow-hidden group">
-                  <CardContent className="p-5">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                      
-                      {/* Challenge Metadata Dossier */}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-1">
-                          <h3 className="font-black text-slate-900 uppercase tracking-tight text-lg group-hover:text-indigo-600 transition-colors">
-                            {challenge.name}
-                          </h3>
-                          <Badge variant="outline" className="text-[9px] uppercase font-black border-slate-200 text-slate-500 bg-slate-50">
-                            {challenge.challenge_type ? challenge.challenge_type.replace(/_/g, ' ') : 'STRATEGY'}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-slate-500 line-clamp-1 mb-4 font-medium">{challenge.description || 'Active Simulation Lab Challenge'}</p>
-                        <div className="flex flex-wrap gap-2">
-                          <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
-                            <Clock className="w-3 h-3 text-slate-400" />
-                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
-                              {challenge.duration_months || 3} Months
-                            </span>
-                          </div>
-                          <div className="px-2.5 py-1 bg-slate-50 rounded border border-slate-100 flex items-center gap-2">
-                            <Target className="w-3 h-3 text-slate-400" />
-                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-tighter">
-                              Cap: ${Number(challenge.starting_capital || challenge.target_metric || 100000).toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* TACTICAL INTELLIGENCE CENTER (Leaderboard) */}
-                      <div className="flex items-center gap-6 border-l border-slate-100 pl-6 h-full min-w-[340px]">
-                        <div className="flex-1">
-                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 text-center">
-                            Tactical Intelligence
-                          </p>
-                          <div className="space-y-2">
-                            {sortedEntries.length > 0 ? (
-                              sortedEntries.slice(0, 3).map((entry, i) => {
-                                const entryId = `${challenge.id}-${entry.user_email}`;
-                                const isExpanded = expandedLeaderboardId === entryId;
+                {/* TACTICAL INTELLIGENCE CENTER (Leaderboard) */}
+                <div className="flex items-center gap-6 border-l border-slate-100 pl-6 h-full min-w-[340px]">
+                  <div className="flex-1">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 text-center">
+                      Tactical Intelligence
+                    </p>
+                    <div className="space-y-2">
+                      {sortedEntries.length > 0 ? (
+                        sortedEntries.slice(0, 3).map((entry, i) => {
+                          const entryId = `${challenge.id}-${entry.user_email}`;
+                          const isExpanded = expandedLeaderboardId === entryId;
+                          
+                          return (
+                            <div key={i} className="flex flex-col gap-1">
+                              {/* Leaderboard Row */}
+                              <div 
+                                onClick={() => setExpandedLeaderboardId(isExpanded ? null : entryId)}
+                                className={`flex items-center justify-between px-3 py-2 rounded-xl shadow-sm cursor-pointer transition-all border ${
+                                  isExpanded ? 'bg-white border-indigo-500 ring-2 ring-indigo-500/5' : 'bg-slate-50 border-slate-100 hover:bg-white'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-[10px] font-black ${i === 0 ? 'text-amber-500' : 'text-slate-400'}`}>#{i + 1}</span>
+                                  <div className="w-6 h-6 rounded-full bg-slate-900 flex items-center justify-center text-[9px] font-black text-white">
+                                    {(entry.user_email || "U").charAt(0).toUpperCase()}
+                                  </div>
+                                  <span className="text-[10px] font-bold text-slate-700 truncate max-w-[100px]">
+                                    {entry.user_email === user?.email ? "YOU" : entry.user_email.split('@')[0]}
+                                  </span>
+                                </div>
                                 
-                                return (
-                                  <div key={i} className="flex flex-col gap-1">
-                                    <div 
-                                      onClick={() => setExpandedLeaderboardId(isExpanded ? null : entryId)}
-                                      className={`flex items-center justify-between px-3 py-2 rounded-xl shadow-sm cursor-pointer transition-all border ${
-                                        isExpanded ? 'bg-white border-indigo-500 ring-2 ring-indigo-500/5' : 'bg-slate-50 border-slate-100 hover:bg-white'
-                                      }`}
-                                    >
-                                      <div className="flex items-center gap-2">
-                                        <span className={`text-[10px] font-black ${i === 0 ? 'text-amber-500' : 'text-slate-400'}`}>#{i + 1}</span>
-                                        <div className="w-6 h-6 rounded-full bg-slate-900 flex items-center justify-center text-[9px] font-black text-white">
-                                          {(entry.user_email || "U").charAt(0).toUpperCase()}
-                                        </div>
-                                        <span className="text-[10px] font-bold text-slate-700 truncate max-w-[100px]">
-                                          {entry.user_email === user?.email ? "YOU" : entry.user_email.split('@')[0]}
-                                        </span>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex flex-col items-end">
+                                    <span className={`text-[11px] font-black ${Number(entry.return_percent) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                      {Number(entry.return_percent) >= 0 ? '+' : ''}{entry.return_percent}%
+                                    </span>
+                                    {isSharpeChallenge && (
+                                      <span className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter">
+                                        Sharpe: {Number(entry.sharpe_ratio || 0).toFixed(2)}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <Plus className={`w-3 h-3 text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-45 text-indigo-500' : ''}`} />
+                                </div>
+                              </div>
+
+                              {/* STRATEGY COMPOSITION (The Fix is Here) */}
+                              <AnimatePresence>
+                                {isExpanded && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden"
+                                  >
+                                    <div className="bg-slate-900 rounded-xl p-3 mt-1 border border-slate-800 shadow-2xl">
+                                      <div className="flex items-center justify-between mb-3">
+                                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                          <Terminal className="w-3 h-3" /> Allocation Blueprint
+                                        </p>
+                                        <Badge className="bg-indigo-500/10 text-indigo-400 text-[7px] border-indigo-500/20 uppercase font-black">Verified</Badge>
                                       </div>
-                                      
-                                      <div className="flex items-center gap-3">
-                                        {/* Multidimensional Metric Display */}
-                                        <div className="flex flex-col items-end">
-                                          <span className={`text-[11px] font-black ${Number(entry.return_percent) >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                            {Number(entry.return_percent) >= 0 ? '+' : ''}{entry.return_percent}%
-                                          </span>
-                                          {isSharpeChallenge && (
-                                            <span className="text-[8px] font-black text-indigo-500 uppercase tracking-tighter">
-                                              Sharpe: {Number(entry.sharpe_ratio || 0).toFixed(2)}
-                                            </span>
-                                          )}
-                                        </div>
-                                        <Plus className={`w-3 h-3 text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-45 text-indigo-500' : ''}`} />
+                                      <div className="grid grid-cols-2 gap-2">
+                                        {(entry.portfolio_snapshot || []).map((asset, idx) => {
+                                          const totalVal = Number(entry.current_value || 100000);
+                                          
+                                          // ANTI-INFLATION SHIELD: Use live_asset_value if available
+                                          const assetVal = asset.live_asset_value !== undefined 
+                                            ? Number(asset.live_asset_value) 
+                                            : Number(asset.quantity || 0) * Number(asset.current_price || 1);
+
+                                          const weight = totalVal > 0 ? ((assetVal / totalVal) * 100).toFixed(1) : "0.0";
+                                          
+                                          return (
+                                            <div key={idx} className="flex items-center justify-between bg-white/5 px-2 py-1.5 rounded border border-white/5">
+                                              <span className="text-[10px] font-black text-indigo-400">{asset.symbol}</span>
+                                              <span className="text-[9px] font-mono font-bold text-slate-300">{weight}%</span>
+                                            </div>
+                                          );
+                                        })}
                                       </div>
                                     </div>
-
-                                    {/* STRATEGY COMPOSITION (Collapsible) */}
-                                    <AnimatePresence>
-                                      {isExpanded && (
-                                        <motion.div
-                                          initial={{ height: 0, opacity: 0 }}
-                                          animate={{ height: 'auto', opacity: 1 }}
-                                          exit={{ height: 0, opacity: 0 }}
-                                          className="overflow-hidden"
-                                        >
-                                          <div className="bg-slate-900 rounded-xl p-3 mt-1 border border-slate-800 shadow-2xl">
-                                            <div className="flex items-center justify-between mb-3">
-                                              <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                                <Terminal className="w-3 h-3" /> Allocation Blueprint
-                                              </p>
-                                              <Badge className="bg-indigo-500/10 text-indigo-400 text-[7px] border-indigo-500/20 uppercase font-black">Verified</Badge>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-2">
-                                              {(entry.portfolio_snapshot || []).map((asset, idx) => {
-                                                const totalVal = Number(entry.current_value || 100000);
-                                                const assetVal = Number(asset.quantity || 0) * Number(asset.current_price || 1);
-                                                const weight = totalVal > 0 ? ((assetVal / totalVal) * 100).toFixed(1) : "0.0";
-                                                
-                                                return (
-                                                  <div key={idx} className="flex items-center justify-between bg-white/5 px-2 py-1.5 rounded border border-white/5">
-                                                    <span className="text-[10px] font-black text-indigo-400">{asset.symbol}</span>
-                                                    <span className="text-[9px] font-mono font-bold text-slate-300">{weight}%</span>
-                                                  </div>
-                                                );
-                                              })}
-                                            </div>
-                                          </div>
-                                        </motion.div>
-                                      )}
-                                    </AnimatePresence>
-                                  </div>
-                                );
-                              })
-                            ) : (
-                              <div className="text-center py-5 bg-slate-50 rounded-xl border-2 border-dashed border-slate-100">
-                                <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Awaiting Tactical Signals</p>
-                              </div>
-                            )}
-                          </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="text-center py-5 bg-slate-50 rounded-xl border-2 border-dashed border-slate-100">
+                          <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Awaiting Tactical Signals</p>
                         </div>
-
-                        <Button 
-                          onClick={() => {
-                            setSelectedChallenge(challenge);
-                            setShowInviteDialog(true);
-                          }}
-                          variant="outline" 
-                          className="border-2 font-black uppercase text-[10px] tracking-widest h-10 px-6 hover:bg-slate-900 hover:text-white transition-all shadow-sm"
-                        >
-                          Invite
-                        </Button>
-                      </div>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+                  </div>
+
+                  <Button 
+                    onClick={() => {
+                      setSelectedChallenge(challenge);
+                      setShowInviteDialog(true);
+                    }}
+                    variant="outline" 
+                    className="border-2 font-black uppercase text-[10px] tracking-widest h-10 px-6 hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                  >
+                    Invite
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         );
-      })()}
+      })}
+    </div>
+  );
+})()}
     </CardContent>
   </Card>
 
