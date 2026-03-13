@@ -518,18 +518,26 @@ Return JSON with detailed metrics for each portfolio.`;
 
     setIsSimulating(true);
     try {
-      // 1. DATA TRANSLATION
-      // Convert simulation 'allocation percentages' into the 'holdings' array the Lambda expects.
-      const holdingsArray = (portfolio.assets || []).map(asset => ({
-        symbol: asset.symbol,
-        // We use the allocation % as a virtual quantity and set price to 1 
-        // if live prices aren't currently loaded in this specific state.
-        quantity: Number(asset.allocation_percent || 0),
-        current_price: Number(asset.current_price || asset.price || 1)
-      }));
+      // 1. PRECISION MATH TRANSLATION
+      // We scale the quantities so the initial value matches the challenge's starting capital.
+      // This ensures your return starts at 0.00% instead of -99.9%.
+      const startingCapital = Number(selectedChallenge.starting_capital || selectedChallenge.starting_value || 100000);
+      
+      const holdingsArray = (portfolio.assets || []).map(asset => {
+        const allocDecimal = Number(asset.allocation_percent || 0) / 100;
+        const price = Number(asset.current_price || asset.price || 1);
+        
+        // Quantity = (Total Capital * Allocation Ratio) / Current Price
+        const quantity = (startingCapital * allocDecimal) / price;
+
+        return {
+          symbol: asset.symbol,
+          quantity: quantity,
+          current_price: price
+        };
+      });
 
       // 2. CONSTRUCT PAYLOAD
-      // We send a single object to match the Lambda's expectations
       const payload = {
         challenge_id: selectedChallenge.id,
         portfolio: {
@@ -537,20 +545,20 @@ Return JSON with detailed metrics for each portfolio.`;
         }
       };
 
-      console.log('📡 Dispatching Challenge Payload:', payload);
+      console.log('📡 Dispatching Precision Challenge Payload:', payload);
 
       const response = await awsApi.enterChallengeWithPortfolio(payload);
 
       // 3. PROCESS RESPONSE
-      // The Lambda returns data in { message, data: { ...metrics } }
       if (response.statusCode === 200 || response.success || response.data) {
-        const metrics = response.data?.portfolio_metrics || {};
+        const result = response.data || response;
+        const metrics = result.portfolio_metrics || {};
         
         alert(
           `🏆 CHALLENGE SUBMISSION SUCCESSFUL\n\n` +
           `Challenge: ${selectedChallenge.name}\n` +
-          `Initial Return: ${metrics.initial_return_percent || '0'}%\n` +
-          `Holdings Count: ${metrics.holding_count || 0}`
+          `Initial Return: ${metrics.initial_return_percent || '0.00'}%\n` +
+          `Starting Value: $${Number(metrics.total_value || startingCapital).toLocaleString()}`
         );
 
         setShowEnterChallengeDialog(false);
