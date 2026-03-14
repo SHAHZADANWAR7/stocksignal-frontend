@@ -112,8 +112,8 @@ export const awsApi = {
   sendEmail: (data) => awsClient.sendEmail(data),
 
   // Market Insights
-  generateMarketInsights: () => awsClient.generateMarketInsights(),
-  cacheMarketInsights: (data) => awsClient.cacheMarketInsights(data),
+  generateMarketInsights: (prompt) => awsClient.generateMarketInsights(prompt),
+  cacheMarketInsights: (payload) => awsClient.cacheMarketInsights(payload),
 
   // Trades
   getUserTrades: () => awsClient.getUserTrades(),
