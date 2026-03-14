@@ -53,7 +53,10 @@ const LAMBDA_KEY_MAPPING = {
     "getPortfolioGoal",
     "createPortfolioGoal",
     "updatePortfolioGoal",
-    "deletePortfolioGoal"
+    "deletePortfolioGoal",
+    "generateMarketInsights",
+    "cacheMarketInsights",
+    "getVIXData"
   ]
 };
 
@@ -279,8 +282,23 @@ export const awsApi = {
   optimizePortfolio: (data) => invokeProxy("optimizePortfolio", data),
   getUserPortfolio: () => invokeProxy("getUserPortfolio", {}),
   analyzeInvestmentBehavior: (payload = {}) => invokeProxy("analyzeInvestmentBehavior", payload),
-  generateMarketInsights: () => invokeProxy("generateMarketInsights", {}),
-  cacheMarketInsights: (data) => invokeProxy("cacheMarketInsights", data),
+  generateMarketInsights: (prompt) => invokeProxy("generateMarketInsights", { prompt }),
+  cacheMarketInsights: async (payload) => {
+    const response = await invokeProxy("cacheMarketInsights", payload);
+    
+    // 🛡️ Logic to handle the 'cache_age' for the frontend loadCachedData()
+    if (payload.action === 'get' && response?.data?.insight?.created_at) {
+      const createdTime = new Date(response.data.insight.created_at).getTime();
+      const ageInMs = Date.now() - createdTime;
+      
+      return {
+        market_data: response.data.insight.consolidated_data,
+        last_fetched: response.data.insight.created_at,
+        cache_age: ageInMs
+      };
+    }
+    return response;
+  },
   getUserTrades: () => invokeProxy("getUserTrades", {}),
   invokeLLM: (prompt, context) => invokeProxy("invokeLLM", { prompt, context }),
   getSimulationLabData: (payload = {}) => invokeProxy("getSimulationLabData", payload),
