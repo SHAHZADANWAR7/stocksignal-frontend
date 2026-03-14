@@ -588,9 +588,11 @@ REQUIREMENT: Ensure news stories and events reflect actual market movements from
                       )}
                       </TabsContent>
 
-                <TabsContent value="indicators" className="mt-6">
+               <TabsContent value="indicators" className="mt-6">
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {marketData.economic_indicators && Object.entries(marketData.economic_indicators).map(([key, data], idx) => {
+                      if (!data) return null;
+
                       const indicatorInfo = {
                         interest_rate: {
                           title: "Interest Rate",
@@ -632,22 +634,23 @@ REQUIREMENT: Ensure news stories and events reflect actual market movements from
                       };
 
                       const getTrendColor = (trend, metric) => {
+                        const t = (trend || "stable").toLowerCase();
                         if (metric === "unemployment") {
-                          if (trend === "up") return "bg-rose-100 text-rose-700 border-rose-300";
-                          if (trend === "down") return "bg-emerald-100 text-emerald-700 border-emerald-300";
+                          if (t === "up") return "bg-rose-100 text-rose-700 border-rose-300";
+                          if (t === "down") return "bg-emerald-100 text-emerald-700 border-emerald-300";
                           return "bg-slate-100 text-slate-700 border-slate-300";
                         }
                         if (metric === "inflation") {
-                          if (trend === "up") return "bg-amber-100 text-amber-700 border-amber-300";
-                          if (trend === "down") return "bg-emerald-100 text-emerald-700 border-emerald-300";
+                          if (t === "up") return "bg-amber-100 text-amber-700 border-amber-300";
+                          if (t === "down") return "bg-emerald-100 text-emerald-700 border-emerald-300";
                           return "bg-slate-100 text-slate-700 border-slate-300";
                         }
                         if (metric === "interest_rate") {
-                          if (trend === "stable") return "bg-slate-100 text-slate-700 border-slate-300";
+                          if (t === "stable") return "bg-slate-100 text-slate-700 border-slate-300";
                           return "bg-purple-100 text-purple-700 border-purple-300";
                         }
-                        if (trend === "up") return "bg-emerald-100 text-emerald-700 border-emerald-300";
-                        if (trend === "down") return "bg-rose-100 text-rose-700 border-rose-300";
+                        if (t === "up") return "bg-emerald-100 text-emerald-700 border-emerald-300";
+                        if (t === "down") return "bg-rose-100 text-rose-700 border-rose-300";
                         return "bg-slate-100 text-slate-700 border-slate-300";
                       };
 
@@ -667,13 +670,13 @@ REQUIREMENT: Ensure news stories and events reflect actual market movements from
 
                             <div className="mb-4">
                               <Badge className={`border-2 ${getTrendColor(data.trend, key)}`}>
-                                {data.trend === "up" ? "↑" : data.trend === "down" ? "↓" : "→"} {data.trend.toUpperCase()}
+                                {data.trend?.toLowerCase() === "up" ? "↑" : data.trend?.toLowerCase() === "down" ? "↓" : "→"} {(data.trend || "stable").toUpperCase()}
                               </Badge>
                             </div>
 
                             <div className="mb-3">
                               <p className="text-2xl md:text-4xl font-bold text-slate-900 break-words">
-                                {key === "leading_economic_index" ? data.value : `${data.value}%`}
+                                {data.value ?? 'N/A'}{typeof data.value === 'number' && key !== 'leading_economic_index' ? '%' : ''}
                               </p>
                               <p className="text-[10px] md:text-xs text-slate-500 mt-1 break-words">{info.unit}</p>
                             </div>
