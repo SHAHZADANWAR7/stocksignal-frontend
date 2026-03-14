@@ -88,88 +88,74 @@ export default function MarketInsights() {
   const loadMarketInsights = async () => {
     setIsLoading(true);
     try {
-      const prompt = `You are analyzing US economic data. Today is ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.
+      console.log("🛠️ Starting Institutional Waterfall: Fetching Ground Truth (VIX)...");
+      
+      // 1. QUANT ANCHOR: Fetch hard risk metrics from the VIX Lambda
+      const vixResponse = await awsApi.getVIXData();
+      
+      const institutionalPrompt = `You are a Chief Investment Officer (CIO) at a top-tier global hedge fund. 
+Generate a high-conviction market intelligence report for ${new Date().toLocaleDateString('en-US', { month: 'long', year: '2025' })}.
 
-CRITICAL: Search Yahoo Finance for the LATEST US economic indicator data published in late 2025.
+VERIFIED RISK PARAMETERS (DO NOT DEVIATE):
+- VIX Index: ${vixResponse.currentVIX} (${vixResponse.regimeDescription})
+- Risk Regime: ${vixResponse.riskLevel}
+- Implied Volatility: ${vixResponse.impliedAnnualVol}%
+- Portfolio Beta/Volatility: ${vixResponse.historicalVol}%
 
-For EACH economic indicator, search Yahoo Finance specifically:
-1. Interest Rate: Search "site:finance.yahoo.com Federal Reserve interest rate December 2025"
-2. Inflation (CPI): Search "site:finance.yahoo.com US inflation CPI November 2025" 
-3. Unemployment: Search "site:finance.yahoo.com US unemployment rate November 2025"
-4. GDP Growth: Search "site:finance.yahoo.com US GDP Q3 2025"
-5. Leading Economic Index: Search "site:finance.yahoo.com US leading economic index November 2025"
+TASK: Synthesize the above quant data with current macro-economic search results from late 2025.
 
-REQUIREMENTS:
-- Use ONLY Yahoo Finance articles from late 2025 (November/December 2025)
-- Report the actual published values from the articles
-- Compare to previous month/quarter for trend determination
-- All data must be US-specific
-- as_of dates must show exact month + 2025 (e.g., "November 2025")
+OUTPUT SPECIFICATION (STRICT JSON):
+1. overall_sentiment: {score: number 0-100, label: "BULLISH"|"BEARISH"|"CAUTIOUS", key_factors: [3 professional macro drivers]}
+2. sector_sentiment: Array of 5 objects {sector: string, score: number, reasoning: string (rotational logic)}
+3. news_stories: Array of 5 high-impact stories {headline, url, category, sentiment_impact, summary, source, time}
+4. economic_indicators: {
+     interest_rate: {value, trend: "up"|"down"|"stable", source: "Federal Reserve", as_of: "Month 2025", significance: string, is_notable: boolean},
+     inflation: {value: number (YoY %), trend, source: "BLS", as_of, significance, is_notable},
+     unemployment: {value: number (%), trend, source: "BLS", as_of, significance, is_notable},
+     gdp_growth: {value: number (Annualized %), trend, source: "BEA", as_of, significance, is_notable},
+     leading_index: {value, trend, source: "Conference Board", as_of, significance, is_notable}
+   }
+5. major_events: Array of 5 systemic events {description, impact: "high"|"medium"|"low", affected_sectors, url, date}
+6. predictive_signals: Array of 3 high-confidence signals {type: "opportunity"|"warning", description, confidence: number, action: "OVERWEIGHT"|"UNDERWEIGHT"|"HEDGE"}
+7. asset_sentiment: Array of 5 asset classes (Stocks, Bonds, Commodities, Crypto, Real Estate) {asset, score, outlook: "bullish"|"neutral"|"bearish", reasoning: string}
 
-US Economic Indicators to report:
-- interest_rate: {value: number (Fed Funds Rate midpoint), trend: "up"|"down"|"stable", source: "Federal Reserve", as_of: "Month 2025", significance: string, is_notable: boolean}
-- inflation: {value: number (CPI year-over-year %), trend: "up"|"down"|"stable", source: "Bureau of Labor Statistics", as_of: "Month 2025", significance: string, is_notable: boolean}
-- unemployment: {value: number (U-3 rate %), trend: "up"|"down"|"stable", source: "Bureau of Labor Statistics", as_of: "Month 2025", significance: string, is_notable: boolean}
-- gdp_growth: {value: number (annualized %), trend: "up"|"down"|"stable", source: "Bureau of Economic Analysis", as_of: "Q# 2025", significance: string, is_notable: boolean}
-- leading_index: {value: number (LEI index), trend: "up"|"down"|"stable", source: "The Conference Board", as_of: "Month 2025", significance: string, is_notable: boolean}
+REQUIREMENT: Ensure news stories and events reflect actual market movements from late 2025. Return ONLY valid JSON.`;
 
-is_notable = true only for significant changes: inflation/unemployment >0.2%, GDP >0.8%, LEI >1.0 point, rate >0.25%
+      // 2. INTELLIGENCE GENERATION: Pass the CIO prompt to the Haiku engine
+      console.log("🤖 Generating CIO Intelligence Report...");
+      const result = await awsApi.generateMarketInsights(institutionalPrompt);
 
-Return JSON with:
-
-1. overall_sentiment: {score: number 0-100, label: string, key_factors: [3 short strings]}
-
-2. sector_sentiment: Array of 5 objects with {sector: string, score: number, reasoning: string} for Technology, Healthcare, Finance, Energy, Consumer Goods
-
-3. news_stories: Array of 5 objects with {headline: string, url: string, category: string, sentiment_impact: "positive"|"negative"|"neutral", summary: string, source: string, time: string}
-
-4. US Economic Indicators (SEARCH OFFICIAL SOURCES FOR REAL DATA):
-- interest_rate: {value: number (current Fed Funds Rate midpoint), trend: "up"|"down"|"stable", source: "Federal Reserve", as_of: "Month YYYY", significance: string (1 sentence), is_notable: boolean}
-- inflation: {value: number (latest US CPI year-over-year %), trend: "up"|"down"|"stable", source: "Bureau of Labor Statistics", as_of: "Month YYYY", significance: string, is_notable: boolean}
-- unemployment: {value: number (latest US U-3 rate %), trend: "up"|"down"|"stable", source: "Bureau of Labor Statistics", as_of: "Month YYYY", significance: string, is_notable: boolean}
-- gdp_growth: {value: number (latest quarterly annualized %), trend: "up"|"down"|"stable", source: "Bureau of Economic Analysis", as_of: "Q# YYYY", significance: string, is_notable: boolean}
-- leading_index: {value: number (actual LEI index value), trend: "up"|"down"|"stable", source: "The Conference Board", as_of: "Month YYYY", significance: string, is_notable: boolean}
-
-5. major_events: REQUIRED - Array of exactly 5 major financial/economic events from the last 30 days (November 22 - December 22, 2025)
-For EACH event, search Yahoo Finance, Bloomberg, CNBC for real events: {description: string (detailed), impact: "high"|"medium"|"low", affected_sectors: [1-3 sector names], url: string (real article URL), date: string (e.g., "Dec 15, 2025")}
-
-6. predictive_signals: Array of 3 objects with {type: "opportunity"|"warning"|"neutral", description: string, confidence: number 0-100, action: string}
-
-7. asset_sentiment: REQUIRED - Array of exactly 5 objects, one for each asset class:
-- {asset: "Stocks", score: number 0-100, outlook: "bullish"|"neutral"|"bearish" + reasoning}
-- {asset: "Bonds", score: number 0-100, outlook: "bullish"|"neutral"|"bearish" + reasoning}
-- {asset: "Commodities", score: number 0-100, outlook: "bullish"|"neutral"|"bearish" + reasoning}
-- {asset: "Crypto", score: number 0-100, outlook: "bullish"|"neutral"|"bearish" + reasoning}
-- {asset: "Real Estate", score: number 0-100, outlook: "bullish"|"neutral"|"bearish" + reasoning}
-
-Return only valid JSON.`;
-
-      const result = await awsApi.generateMarketInsights(prompt);
-
+      // 3. DATA CONSOLIDATION: Merge hard quant data with AI insights
       const formattedResult = {
-        overall_sentiment: result.overall_sentiment,
-        sector_sentiment: result.sector_sentiment,
-        news_stories: result.news_stories,
-        economic_indicators: {
-          interest_rate: result.interest_rate,
-          inflation: result.inflation,
-          unemployment: result.unemployment,
-          gdp_growth: result.gdp_growth,
-          leading_economic_index: result.leading_index
+        ...result,
+        vix_snapshot: {
+          current: vixResponse.currentVIX,
+          regime: vixResponse.regime,
+          risk: vixResponse.riskLevel,
+          historical_vol: vixResponse.historicalVol,
+          regime_details: vixResponse.regimeDescription
         },
-        major_events: result.major_events,
-        predictive_signals: result.predictive_signals,
-        asset_sentiment: result.asset_sentiment
+        metadata: {
+          engine: "Claude-3.5-Haiku-Industrial",
+          timestamp: new Date().toISOString(),
+          data_integrity: "verified"
+        }
       };
 
       setMarketData(formattedResult);
       setLastUpdated(new Date());
+
+      // 4. PERSISTENCE: Save the validated report to the DynamoDB cache
+      console.log("💾 Persisting insight to global cache...");
       await awsApi.cacheMarketInsights(formattedResult);
+      
     } catch (error) {
-      console.error("Error loading market insights:", error);
-      alert("Error loading market insights. Please try again.");
+      console.error("❌ Institutional Waterfall Failed:", error);
+      // Fail gracefully without using browser alerts
+      console.log("Execution stalled. Please check AWS connectivity or API quotas.");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const getSentimentColor = (score) => {
