@@ -588,117 +588,81 @@ REQUIREMENT: Ensure news stories and events reflect actual market movements from
                       )}
                       </TabsContent>
 
-               <TabsContent value="indicators" className="mt-6">
+              <TabsContent value="indicators" className="mt-6">
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {marketData.economic_indicators && Object.entries(marketData.economic_indicators).map(([key, data], idx) => {
+                    {marketData.economic_indicators && Object.entries(marketData.economic_indicators)
+                      .filter(([key]) => key !== 'source' && key !== 'as_of')
+                      .map(([key, data], idx) => {
                       if (!data) return null;
 
+                      // Institutional Indicator Mapping
                       const indicatorInfo = {
-                        interest_rate: {
-                          title: "Interest Rate",
-                          unit: "Federal Funds Rate",
-                          description: "The target rate set by the Federal Reserve for overnight lending between banks.",
-                          trendMeaning: { up: "Higher rates slow growth", down: "Lower rates stimulate growth", stable: "Policy on hold" }
-                        },
-                        inflation: {
-                          title: "Inflation (CPI)",
-                          unit: "Year-over-year % change",
-                          description: "Consumer Price Index measures average change in prices paid by consumers.",
-                          trendMeaning: { up: "Rising prices reduce purchasing power", down: "Moderating prices", stable: "Stable prices" }
-                        },
-                        unemployment: {
-                          title: "Unemployment Rate",
-                          unit: "U-3 unemployment rate",
-                          description: "Percentage of labor force seeking employment but without jobs.",
-                          trendMeaning: { up: "Weakening labor market", down: "Strengthening job market", stable: "Stable employment" }
-                        },
-                        gdp_growth: {
-                          title: "GDP Growth",
-                          unit: "Quarterly annualized %",
-                          description: "Gross Domestic Product growth measures economic expansion rate.",
-                          trendMeaning: { up: "Accelerating growth", down: "Slowing growth", stable: "Steady growth" }
-                        },
-                        leading_economic_index: {
-                          title: "Leading Economic Index",
-                          unit: "Index level (100 baseline)",
-                          description: "Composite index designed to predict future economic direction.",
-                          trendMeaning: { up: "Economy strengthening", down: "Economy weakening", stable: "Steady outlook" }
-                        }
+                        interest_rate: { title: "Fed Funds Rate", unit: "%", desc: "Central bank benchmark rate" },
+                        fed_funds_rate: { title: "Fed Funds Rate", unit: "%", desc: "Target interest rate range" },
+                        inflation: { title: "Inflation (CPI)", unit: "%", desc: "Consumer price index YoY" },
+                        inflation_rate: { title: "Inflation (CPI)", unit: "%", desc: "Purchasing power stability" },
+                        unemployment: { title: "Unemployment", unit: "%", desc: "Labor market slack" },
+                        unemployment_rate: { title: "Unemployment", unit: "%", desc: "Labor market participation" },
+                        gdp_growth: { title: "GDP Growth", unit: "%", desc: "Economic expansion rate" },
+                        vix_index: { title: "VIX (Fear Index)", unit: "pts", desc: "Market volatility expectations" },
+                        yield_curve_slope: { title: "Yield Curve (10Y-2Y)", unit: "bps", desc: "Recession predictor" },
+                        market_breadth: { title: "Market Breadth", unit: "%", desc: "Advancing vs Declining ratio" },
+                        credit_spreads: { title: "Credit Spreads", unit: "bps", desc: "Corporate default risk premium" },
+                        put_call_ratio: { title: "Put/Call Ratio", unit: "x", desc: "Options market sentiment" },
+                        leading_economic_index: { title: "Leading Index", unit: "idx", desc: "Forward economic outlook" }
                       };
 
                       const info = indicatorInfo[key] || { 
-                        title: key.replace(/_/g, ' '), 
+                        title: key.replace(/_/g, ' ').toUpperCase(), 
                         unit: "", 
-                        description: "",
-                        trendMeaning: { up: "", down: "", stable: "" }
+                        desc: "Institutional data point" 
                       };
 
+                      // Institutional Trend Logic: Red for bad, Green for good
                       const getTrendColor = (trend, metric) => {
                         const t = (trend || "stable").toLowerCase();
-                        if (metric === "unemployment") {
-                          if (t === "up") return "bg-rose-100 text-rose-700 border-rose-300";
-                          if (t === "down") return "bg-emerald-100 text-emerald-700 border-emerald-300";
-                          return "bg-slate-100 text-slate-700 border-slate-300";
-                        }
-                        if (metric === "inflation") {
-                          if (t === "up") return "bg-amber-100 text-amber-700 border-amber-300";
-                          if (t === "down") return "bg-emerald-100 text-emerald-700 border-emerald-300";
-                          return "bg-slate-100 text-slate-700 border-slate-300";
-                        }
-                        if (metric === "interest_rate") {
-                          if (t === "stable") return "bg-slate-100 text-slate-700 border-slate-300";
-                          return "bg-purple-100 text-purple-700 border-purple-300";
-                        }
-                        if (t === "up") return "bg-emerald-100 text-emerald-700 border-emerald-300";
-                        if (t === "down") return "bg-rose-100 text-rose-700 border-rose-300";
+                        // Inverse metrics: When these go UP, it signals market stress (Red)
+                        const isInverse = ["vix_index", "inflation", "inflation_rate", "unemployment", "unemployment_rate", "credit_spreads", "put_call_ratio"].includes(metric);
+                        
+                        if (t === "stable") return "bg-slate-100 text-slate-700 border-slate-300";
+                        if (t === "up") return isInverse ? "bg-rose-100 text-rose-700 border-rose-300" : "bg-emerald-100 text-emerald-700 border-emerald-300";
+                        if (t === "down") return isInverse ? "bg-emerald-100 text-emerald-700 border-emerald-300" : "bg-rose-100 text-rose-700 border-rose-300";
                         return "bg-slate-100 text-slate-700 border-slate-300";
+                      };
+
+                      // Institutional Value Formatter
+                      const formatValue = (val) => {
+                        if (val === undefined || val === null) return "N/A";
+                        // Handle decimal confidence/values (e.g. 0.85 -> 85%)
+                        if (typeof val === 'number' && Math.abs(val) < 1 && val !== 0) {
+                          return `${(val * 100).toFixed(1)}${info.unit || '%'}`;
+                        }
+                        return `${val}${info.unit || ''}`;
                       };
 
                       return (
                         <Card key={idx} className={`border-2 transition-all rounded-xl ${
-                          data.is_notable 
-                            ? "border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50 shadow-lg ring-2 ring-amber-200" 
-                            : "border-slate-200 hover:shadow-lg"
+                          data.is_notable ? "border-amber-300 bg-amber-50 shadow-md" : "border-slate-200"
                         }`}>
                           <CardContent className="p-4 md:p-6">
-                            <div className="flex items-start justify-between mb-3 md:mb-4 gap-2">
-                              <h3 className="font-bold text-slate-900 text-sm md:text-lg truncate">{info.title}</h3>
-                              {data.is_notable && (
-                                <Badge className="bg-amber-600 text-white animate-pulse">Notable</Badge>
-                              )}
-                            </div>
-
+                            <h3 className="font-bold text-slate-900 text-sm md:text-lg mb-1">{info.title}</h3>
+                            <p className="text-[10px] text-slate-500 mb-3">{info.desc}</p>
+                            
                             <div className="mb-4">
                               <Badge className={`border-2 ${getTrendColor(data.trend, key)}`}>
-                                {data.trend?.toLowerCase() === "up" ? "↑" : data.trend?.toLowerCase() === "down" ? "↓" : "→"} {(data.trend || "stable").toUpperCase()}
+                                {data.trend?.toLowerCase() === "up" ? "↑" : data.trend?.toLowerCase() === "down" ? "↓" : "→"} {(data.trend || "STABLE").toUpperCase()}
                               </Badge>
                             </div>
 
                             <div className="mb-3">
-                              <p className="text-2xl md:text-4xl font-bold text-slate-900 break-words">
-                                {data.value ?? 'N/A'}{typeof data.value === 'number' && key !== 'leading_economic_index' ? '%' : ''}
+                              <p className="text-2xl md:text-4xl font-bold text-slate-900">
+                                {formatValue(data.value ?? data)} 
                               </p>
-                              <p className="text-[10px] md:text-xs text-slate-500 mt-1 break-words">{info.unit}</p>
                             </div>
 
-                            {data.significance && (
-                              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 mb-3 border-2 border-blue-200">
-                                <p className="text-sm text-slate-800 font-medium">
-                                  {data.significance}
-                                </p>
-                              </div>
-                            )}
-
-                            <div className="pt-3 border-t border-slate-200 space-y-1">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-500">Source:</span>
-                                <span className="font-semibold text-slate-700">{data.source || "Official Data"}</span>
-                              </div>
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-500">As of:</span>
-                                <span className="font-semibold text-slate-700">{data.as_of || "Latest"}</span>
-                              </div>
-                            </div>
+                            <p className="text-xs text-slate-700 bg-white/50 p-2 rounded border border-slate-100">
+                              {data.significance || `Monitoring ${info.title} for structural regime shifts.`}
+                            </p>
                           </CardContent>
                         </Card>
                       );
