@@ -67,15 +67,18 @@ export default function MarketInsights() {
     try {
       const data = await awsApi.cacheMarketInsights({ action: 'get' });
       
+      // 'data.market_data' contains the flat report saved by the Generator
       if (data && data.market_data) {
         const oneHour = 60 * 60 * 1000;
-        // 🛡️ Added Version Check: Force refresh if the cache is an older version (v4 or lower)
+        
+        // Force refresh if the version isn't 5.0 (clears hallucinations)
         const isOldVersion = data.market_data.metadata?.calibration_version !== "5.0";
         
         if (data.cache_age > oneHour || isOldVersion) {
-          console.log("🔄 Cache stale or old version. Triggering refresh...");
+          console.log("🔄 Cache stale or old version. Refreshing...");
           loadMarketInsights();
         } else {
+          // Set state directly to the flat report
           setMarketData(data.market_data);
           setLastUpdated(new Date(data.last_fetched));
         }
@@ -87,13 +90,13 @@ export default function MarketInsights() {
       loadMarketInsights();
     }
   };
-
   const loadMarketInsights = async () => {
     setIsLoading(true);
     try {
       console.log("🛠️ Starting Calibrated Institutional Waterfall (v5)...");
       
       // 1. QUANT ANCHOR: Fetch hard risk metrics from the VIX Lambda
+      // We keep all your original quantitative defaults and calculations
       const vixResponse = await awsApi.getVIXData() || { 
         currentVIX: 18.5, 
         regimeDescription: "Normal volatility", 
@@ -102,6 +105,7 @@ export default function MarketInsights() {
         historicalVol: 20 
       };
       
+      // We keep your full, professional CIO prompt exactly as you wrote it
       const institutionalPrompt = `You are a Chief Investment Officer (CIO) at a top-tier global hedge fund. 
 Generate a high-conviction market intelligence report for late 2025.
 
@@ -139,6 +143,7 @@ REQUIREMENT: No hallucinations about GPT-7. Focus on real-world macro. Return ON
       });
 
       // 3. DATA CONSOLIDATION: Merge with VIX snapshot
+      // 🛡️ THE FIX: We spread '...result' at the top level so UI cards can find the keys
       const formattedResult = {
         ...result,
         vix_snapshot: {
@@ -147,6 +152,7 @@ REQUIREMENT: No hallucinations about GPT-7. Focus on real-world macro. Return ON
           regime_details: vixResponse.regimeDescription
         },
         metadata: {
+          ...result.metadata, // Keep Lambda metadata
           engine: "Claude-3.5-Haiku-Institutional",
           timestamp: new Date().toISOString(),
           calibration_version: "5.0"
@@ -170,7 +176,6 @@ REQUIREMENT: No hallucinations about GPT-7. Focus on real-world macro. Return ON
       setIsLoading(false);
     }
   };
-
   const getSentimentColor = (score) => {
     if (score >= 65) return "text-emerald-600 bg-emerald-50 border-emerald-200";
     if (score >= 45) return "text-amber-600 bg-amber-50 border-amber-200";
