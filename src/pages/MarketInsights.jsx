@@ -63,30 +63,34 @@ export default function MarketInsights() {
     loadCachedData();
   }, []);
 
-  const loadCachedData = async () => {
+ const loadCachedData = async () => {
     try {
+      console.log("📂 Checking global cache for calibrated v5 insights...");
       const data = await awsApi.cacheMarketInsights({ action: 'get' });
       
       // 'data.market_data' contains the flat report saved by the Generator
       if (data && data.market_data) {
         const oneHour = 60 * 60 * 1000;
         
-        // Force refresh if the version isn't 5.0 (clears hallucinations)
+        // 🛡️ Force refresh if the version isn't 5.0 (this clears out any old GPT-7 hallucinations)
         const isOldVersion = data.market_data.metadata?.calibration_version !== "5.0";
+        const isStale = data.cache_age > oneHour;
         
-        if (data.cache_age > oneHour || isOldVersion) {
-          console.log("🔄 Cache stale or old version. Refreshing...");
+        if (isStale || isOldVersion) {
+          console.log(isOldVersion ? "🔄 Old version detected. Refreshing..." : "🔄 Cache stale. Refreshing...");
           loadMarketInsights();
         } else {
+          console.log("✅ Valid v5 cache found. Loading data.");
           // Set state directly to the flat report
           setMarketData(data.market_data);
           setLastUpdated(new Date(data.last_fetched));
         }
       } else {
+        console.log("ℹ️ No cache found. Starting fresh load...");
         loadMarketInsights();
       }
     } catch (error) {
-      console.error("Error loading cached data:", error);
+      console.error("❌ Error loading cached data:", error);
       loadMarketInsights();
     }
   };
@@ -96,7 +100,7 @@ export default function MarketInsights() {
       console.log("🛠️ Starting Calibrated Institutional Waterfall (v5)...");
       
       // 1. QUANT ANCHOR: Fetch hard risk metrics from the VIX Lambda
-      // We keep all your original quantitative defaults and calculations
+      // We maintain your original quantitative defaults and context
       const vixResponse = await awsApi.getVIXData() || { 
         currentVIX: 18.5, 
         regimeDescription: "Normal volatility", 
@@ -105,7 +109,7 @@ export default function MarketInsights() {
         historicalVol: 20 
       };
       
-      // We keep your full, professional CIO prompt exactly as you wrote it
+      // 2. CIO PROMPT: The full, high-conviction mandate for the LLM
       const institutionalPrompt = `You are a Chief Investment Officer (CIO) at a top-tier global hedge fund. 
 Generate a high-conviction market intelligence report for late 2025.
 
@@ -129,41 +133,42 @@ OUTPUT SPECIFICATION (STRICT JSON):
      vix_index: {value, trend, source, as_of, significance, is_notable}
    }
 5. major_events: Array of 5 systemic events {description, impact, affected_sectors, date}
-6. predictive_signals: Array of 3 high-confidence signals {type, description, confidence, action}
+6. predictive_signals: Array of 3 high-confidence signals {type: "opportunity"|"warning", description, confidence, action}
 7. asset_sentiment: Array of 5 asset classes {asset, score, outlook, reasoning}
 
 REQUIREMENT: No hallucinations about GPT-7. Focus on real-world macro. Return ONLY valid JSON.`;
 
-      // 2. INTELLIGENCE GENERATION: Updated to pass the force_refresh flag
-      // This ensures the backend clears its internal memory cache
+      // 3. INTELLIGENCE GENERATION: Updated to pass the force_refresh flag
+      // This tells the backend to bypass its local memory and hit the LLM
       console.log("🤖 Generating CIO Intelligence Report (Bypassing memory cache)...");
       const result = await awsApi.generateMarketInsights({
         prompt: institutionalPrompt,
         force_refresh: true
       });
 
-      // 3. DATA CONSOLIDATION: Merge with VIX snapshot
-      // 🛡️ THE FIX: We spread '...result' at the top level so UI cards can find the keys
+      // 4. DATA CONSOLIDATION: Flatten the result for the UI
+      // 🛡️ THE FIX: We spread '...result' so overall_sentiment is at the root level.
       const formattedResult = {
         ...result,
         vix_snapshot: {
           current: vixResponse.currentVIX,
           risk: vixResponse.riskLevel,
-          regime_details: vixResponse.regimeDescription
+          regime_details: vixResponse.regimeDescription,
+          historical_vol: vixResponse.historicalVol
         },
         metadata: {
-          ...result.metadata, // Keep Lambda metadata
+          ...result.metadata, // Carry over any metadata from the Lambda
           engine: "Claude-3.5-Haiku-Institutional",
           timestamp: new Date().toISOString(),
           calibration_version: "5.0"
         }
       };
 
-      // 4. UI UPDATE
+      // 5. UI UPDATE: Set state directly to the flat object
       setMarketData(formattedResult);
       setLastUpdated(new Date());
 
-      // 5. PERSISTENCE: Save to the DynamoDB global cache manager
+      // 6. PERSISTENCE: Save this exact flat report to the DynamoDB global cache manager
       console.log("💾 Persisting fresh v5 result to global cache...");
       await awsApi.cacheMarketInsights({ 
         action: 'save', 
@@ -598,15 +603,15 @@ REQUIREMENT: No hallucinations about GPT-7. Focus on real-world macro. Return ON
                       )}
                       </TabsContent>
 
-              <TabsContent value="indicators" className="mt-6">
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {marketData.economic_indicators && Object.entries(marketData.economic_indicators)
-                      .filter(([key]) => key !== 'source' && key !== 'as_of')
-                      .map(([key, data], idx) => {
+             <TabsContent value="indicators" className="mt-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {marketData.economic_indicators && Object.entries(marketData.economic_indicators)
+                    .filter(([key]) => key !== 'source' && key !== 'as_of')
+                    .map(([key, data], idx) => {
                       if (!data) return null;
 
-                      // Institutional Indicator Mapping
-                      const indicatorInfo = {
+                      // Institutional Indicator Mapping (Maps multiple possible backend keys to one UI Label)
+                      const indicatorMapping = {
                         interest_rate: { title: "Fed Funds Rate", unit: "%", desc: "Central bank benchmark rate" },
                         fed_funds_rate: { title: "Fed Funds Rate", unit: "%", desc: "Target interest rate range" },
                         inflation: { title: "Inflation (CPI)", unit: "%", desc: "Consumer price index YoY" },
@@ -618,20 +623,18 @@ REQUIREMENT: No hallucinations about GPT-7. Focus on real-world macro. Return ON
                         yield_curve_slope: { title: "Yield Curve (10Y-2Y)", unit: "bps", desc: "Recession predictor" },
                         market_breadth: { title: "Market Breadth", unit: "%", desc: "Advancing vs Declining ratio" },
                         credit_spreads: { title: "Credit Spreads", unit: "bps", desc: "Corporate default risk premium" },
-                        put_call_ratio: { title: "Put/Call Ratio", unit: "x", desc: "Options market sentiment" },
-                        leading_economic_index: { title: "Leading Index", unit: "idx", desc: "Forward economic outlook" }
+                        put_call_ratio: { title: "Put/Call Ratio", unit: "x", desc: "Options market sentiment" }
                       };
 
-                      const info = indicatorInfo[key] || { 
+                      const info = indicatorMapping[key] || { 
                         title: key.replace(/_/g, ' ').toUpperCase(), 
                         unit: "", 
                         desc: "Institutional data point" 
                       };
 
-                      // Institutional Trend Logic: Red for bad, Green for good
+                      // Helper: Trend Color Logic
                       const getTrendColor = (trend, metric) => {
                         const t = (trend || "stable").toLowerCase();
-                        // Inverse metrics: When these go UP, it signals market stress (Red)
                         const isInverse = ["vix_index", "inflation", "inflation_rate", "unemployment", "unemployment_rate", "credit_spreads", "put_call_ratio"].includes(metric);
                         
                         if (t === "stable") return "bg-slate-100 text-slate-700 border-slate-300";
@@ -640,33 +643,37 @@ REQUIREMENT: No hallucinations about GPT-7. Focus on real-world macro. Return ON
                         return "bg-slate-100 text-slate-700 border-slate-300";
                       };
 
-                      // Institutional Value Formatter
+                      // Helper: Value Formatter
                       const formatValue = (val) => {
                         if (val === undefined || val === null) return "N/A";
-                        // Handle decimal confidence/values (e.g. 0.85 -> 85%)
                         if (typeof val === 'number' && Math.abs(val) < 1 && val !== 0) {
                           return `${(val * 100).toFixed(1)}${info.unit || '%'}`;
                         }
                         return `${val}${info.unit || ''}`;
                       };
 
+                      // Extract actual value if data is an object, otherwise use as primitive
+                      const displayValue = typeof data === 'object' ? (data.value ?? "N/A") : data;
+                      const displayTrend = typeof data === 'object' ? (data.trend ?? "stable") : "stable";
+                      const isNotable = typeof data === 'object' ? data.is_notable : false;
+
                       return (
                         <Card key={idx} className={`border-2 transition-all rounded-xl ${
-                          data.is_notable ? "border-amber-300 bg-amber-50 shadow-md" : "border-slate-200"
+                          isNotable ? "border-amber-300 bg-amber-50 shadow-md" : "border-slate-200"
                         }`}>
                           <CardContent className="p-4 md:p-6">
                             <h3 className="font-bold text-slate-900 text-sm md:text-lg mb-1">{info.title}</h3>
                             <p className="text-[10px] text-slate-500 mb-3">{info.desc}</p>
                             
                             <div className="mb-4">
-                              <Badge className={`border-2 ${getTrendColor(data.trend, key)}`}>
-                                {data.trend?.toLowerCase() === "up" ? "↑" : data.trend?.toLowerCase() === "down" ? "↓" : "→"} {(data.trend || "STABLE").toUpperCase()}
+                              <Badge className={`border-2 ${getTrendColor(displayTrend, key)}`}>
+                                {displayTrend.toLowerCase() === "up" ? "↑" : displayTrend.toLowerCase() === "down" ? "↓" : "→"} {displayTrend.toUpperCase()}
                               </Badge>
                             </div>
 
                             <div className="mb-3">
                               <p className="text-2xl md:text-4xl font-bold text-slate-900">
-                                {formatValue(data.value ?? data)} 
+                                {formatValue(displayValue)} 
                               </p>
                             </div>
 
@@ -677,11 +684,22 @@ REQUIREMENT: No hallucinations about GPT-7. Focus on real-world macro. Return ON
                         </Card>
                       );
                     })}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </>
-          )}
+                </div>
+              </TabsContent>
+            </Tabs>
+            
+            {/* Footer Attribution */}
+            <div className="mt-12 pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-400 text-xs font-bold uppercase tracking-widest">
+              <div className="flex items-center gap-6">
+                <span className="flex items-center gap-2"><Brain className="w-4 h-4" /> Engine: {marketData.metadata?.engine || "Claude-3.5-Haiku"}</span>
+                <span>Version: {marketData.metadata?.calibration_version || "5.0"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4" /> Ground Truth Source: VIX Terminal
+              </div>
+            </div>
+          </>
+        )}
         </motion.div>
       </div>
     </div>
