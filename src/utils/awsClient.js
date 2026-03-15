@@ -282,7 +282,7 @@ export const awsApi = {
   optimizePortfolio: (data) => invokeProxy("optimizePortfolio", data),
   getUserPortfolio: () => invokeProxy("getUserPortfolio", {}),
   analyzeInvestmentBehavior: (payload = {}) => invokeProxy("analyzeInvestmentBehavior", payload),
-  generateMarketInsights: (prompt) => invokeProxy("generateMarketInsights", { prompt }),
+ generateMarketInsights: (payload) => invokeProxy("generateMarketInsights", payload),
   cacheMarketInsights: async (payload) => {
     const response = await invokeProxy("cacheMarketInsights", payload);
     
