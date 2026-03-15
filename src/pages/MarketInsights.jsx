@@ -195,7 +195,7 @@ REQUIREMENT: No hallucinations about GPT-7. Focus on real-world macro. Return ON
           ...result.metadata, // Carry over any metadata from the Lambda
           engine: "Claude-3.5-Haiku-Institutional",
           timestamp: new Date().toISOString(),
-          calibration_version: "5.0"
+          calibration_version: "5.3"
         }
       };
 
