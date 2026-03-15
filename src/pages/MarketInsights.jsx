@@ -67,10 +67,13 @@ export default function MarketInsights() {
     try {
       const data = await awsApi.cacheMarketInsights({ action: 'get' });
       
-      if (data && data.cache_age !== undefined) {
+      if (data && data.market_data) {
         const oneHour = 60 * 60 * 1000;
+        // 🛡️ Added Version Check: Force refresh if the cache is an older version (v4 or lower)
+        const isOldVersion = data.market_data.metadata?.calibration_version !== "5.0";
         
-        if (data.cache_age > oneHour) {
+        if (data.cache_age > oneHour || isOldVersion) {
+          console.log("🔄 Cache stale or old version. Triggering refresh...");
           loadMarketInsights();
         } else {
           setMarketData(data.market_data);
@@ -88,7 +91,7 @@ export default function MarketInsights() {
   const loadMarketInsights = async () => {
     setIsLoading(true);
     try {
-      console.log("🛠️ Starting Institutional Waterfall: Fetching Ground Truth (VIX)...");
+      console.log("🛠️ Starting Calibrated Institutional Waterfall (v5)...");
       
       // 1. QUANT ANCHOR: Fetch hard risk metrics from the VIX Lambda
       const vixResponse = await awsApi.getVIXData() || { 
@@ -108,51 +111,54 @@ VERIFIED RISK PARAMETERS (GROUND TRUTH):
 - Implied Volatility: ${vixResponse.impliedAnnualVol}%
 - Portfolio Beta/Volatility: ${vixResponse.historicalVol}%
 
-TASK: Synthesize the above quant data with current macro-economic search results from late 2025 (Nov/Dec).
+TASK: Synthesize the above quant data with actual late 2025 macro: Fed policy, Yield Volatility, and Fiscal Deficits.
 
 OUTPUT SPECIFICATION (STRICT JSON):
 1. overall_sentiment: {score: number 0-100, label: "BULLISH"|"BEARISH"|"CAUTIOUS", key_factors: [3 professional macro drivers]}
 2. sector_sentiment: Array of 5 objects {sector: string, score: number, reasoning: string}
-3. news_stories: Array of 5 high-impact stories {headline, url, category, sentiment_impact, summary, source, time}
+3. news_stories: Array of 5 high-impact stories {headline, category, sentiment_impact, summary, source, time}
 4. economic_indicators: {
-     interest_rate: {value, trend: "up"|"down"|"stable", source: "Federal Reserve", as_of: "Month 2025", significance: string, is_notable: boolean},
-     inflation: {value: number (YoY %), trend, source: "BLS", as_of, significance, is_notable},
-     unemployment: {value: number (%), trend, source: "BLS", as_of, significance, is_notable},
-     gdp_growth: {value: number (Annualized %), trend, source: "BEA", as_of, significance, is_notable},
-     leading_index: {value, trend, source: "Conference Board", as_of, significance, is_notable}
+     interest_rate: {value, trend, source, as_of, significance, is_notable},
+     inflation: {value, trend, source, as_of, significance, is_notable},
+     unemployment: {value, trend, source, as_of, significance, is_notable},
+     gdp_growth: {value, trend, source, as_of, significance, is_notable},
+     vix_index: {value, trend, source, as_of, significance, is_notable}
    }
-5. major_events: Array of 5 systemic events {description, impact: "high"|"medium"|"low", affected_sectors, url, date}
-6. predictive_signals: Array of 3 high-confidence signals {type: "opportunity"|"warning", description, confidence: number, action: "OVERWEIGHT"|"UNDERWEIGHT"|"HEDGE"}
-7. asset_sentiment: Array of 5 asset classes (Stocks, Bonds, Commodities, Crypto, Real Estate) {asset, score, outlook: "bullish"|"neutral"|"bearish", reasoning: string}
+5. major_events: Array of 5 systemic events {description, impact, affected_sectors, date}
+6. predictive_signals: Array of 3 high-confidence signals {type, description, confidence, action}
+7. asset_sentiment: Array of 5 asset classes {asset, score, outlook, reasoning}
 
-REQUIREMENT: Ensure news stories and events reflect actual market movements from late 2025. Return ONLY valid JSON.`;
+REQUIREMENT: No hallucinations about GPT-7. Focus on real-world macro. Return ONLY valid JSON.`;
 
-      // 2. INTELLIGENCE GENERATION: Generate report based on verified risk data
-      console.log("🤖 Generating CIO Intelligence Report...");
-      const result = await awsApi.generateMarketInsights(institutionalPrompt);
+      // 2. INTELLIGENCE GENERATION: Updated to pass the force_refresh flag
+      // This ensures the backend clears its internal memory cache
+      console.log("🤖 Generating CIO Intelligence Report (Bypassing memory cache)...");
+      const result = await awsApi.generateMarketInsights({
+        prompt: institutionalPrompt,
+        force_refresh: true
+      });
 
-      // 3. DATA CONSOLIDATION: Merge quant data with AI narrative for UI rendering
+      // 3. DATA CONSOLIDATION: Merge with VIX snapshot
       const formattedResult = {
         ...result,
         vix_snapshot: {
           current: vixResponse.currentVIX,
-          regime: vixResponse.regime,
           risk: vixResponse.riskLevel,
-          historical_vol: vixResponse.historicalVol,
           regime_details: vixResponse.regimeDescription
         },
         metadata: {
           engine: "Claude-3.5-Haiku-Institutional",
           timestamp: new Date().toISOString(),
-          data_integrity: "verified"
+          calibration_version: "5.0"
         }
       };
 
+      // 4. UI UPDATE
       setMarketData(formattedResult);
       setLastUpdated(new Date());
 
-      // 4. PERSISTENCE: Save to the DynamoDB global cache manager
-      console.log("💾 Persisting consolidated insight to global cache...");
+      // 5. PERSISTENCE: Save to the DynamoDB global cache manager
+      console.log("💾 Persisting fresh v5 result to global cache...");
       await awsApi.cacheMarketInsights({ 
         action: 'save', 
         data: formattedResult 
@@ -160,7 +166,6 @@ REQUIREMENT: Ensure news stories and events reflect actual market movements from
       
     } catch (error) {
       console.error("❌ Institutional Waterfall Failed:", error);
-      // Fail gracefully - logs to console without crashing the frontend UI
     } finally {
       setIsLoading(false);
     }
