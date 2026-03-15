@@ -99,23 +99,24 @@ export default function MarketInsights() {
 
  const loadCachedData = async () => {
     try {
-      console.log("📂 Checking global cache for calibrated v5 insights...");
+      console.log("📂 Checking global cache for Industrial v5.3 insights...");
       const data = await awsApi.cacheMarketInsights({ action: 'get' });
       
-      // 'data.market_data' contains the flat report saved by the Generator
       if (data && data.market_data) {
         const oneHour = 60 * 60 * 1000;
         
-        // 🛡️ Force refresh if the version isn't 5.0 (this clears out any old GPT-7 hallucinations)
-        const isOldVersion = data.market_data.metadata?.calibration_version !== "5.0";
-        const isStale = data.cache_age > oneHour;
+        // 🛡️ FIX 1: Change "5.0" to "5.3" to match your Industrial Backend
+        const isOldVersion = data.market_data.metadata?.calibration_version !== "5.3";
+        
+        // 🛡️ FIX 2: More robust stale check for the Preview environment
+        const fetchedTime = new Date(data.last_fetched || Date.now()).getTime();
+        const isStale = (Date.now() - fetchedTime) > oneHour;
         
         if (isStale || isOldVersion) {
-          console.log(isOldVersion ? "🔄 Old version detected. Refreshing..." : "🔄 Cache stale. Refreshing...");
+          console.log(isOldVersion ? "🔄 Version mismatch (v5.3 required). Refreshing..." : "🔄 Cache stale. Refreshing...");
           loadMarketInsights();
         } else {
-          console.log("✅ Valid v5 cache found. Loading data.");
-          // Set state directly to the flat report
+          console.log("✅ Valid v5.3 cache found. Loading data.");
           setMarketData(data.market_data);
           setLastUpdated(new Date(data.last_fetched));
         }
