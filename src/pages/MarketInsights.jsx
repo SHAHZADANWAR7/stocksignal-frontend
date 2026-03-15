@@ -505,236 +505,174 @@ REQUIREMENT: No hallucinations about GPT-7. Focus on real-world macro. Return ON
                 </CardContent>
               </Card>
 
-              <Tabs defaultValue="news" className="mb-8">
+              <Tabs defaultValue="indicators" className="mb-8">
                 <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="news">Live News Feed</TabsTrigger>
-                  <TabsTrigger value="events">Major Events</TabsTrigger>
                   <TabsTrigger value="indicators">Economic Indicators</TabsTrigger>
+                  <TabsTrigger value="sectors">Sector Analysis</TabsTrigger>
+                  <TabsTrigger value="assets">Asset Outlook</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="news" className="mt-6">
-                  <div className="space-y-4">
-                    {marketData.news_stories?.map((story, idx) => {
-                      const CategoryIcon = getCategoryIcon(story.category);
-                      return (
-                        <motion.div
-                          key={idx}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.05 }}
-                        >
-                          <Card className="border-2 border-slate-200 hover:shadow-lg transition-shadow rounded-xl">
-                            <CardContent className="p-4 md:p-6">
-                              <div className="flex items-start gap-3 md:gap-4">
-                                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center flex-shrink-0">
-                                  <CategoryIcon className="w-5 h-5 md:w-6 md:h-6 text-slate-700" />
+                {/* 1. ECONOMIC INDICATORS TAB */}
+                <TabsContent value="indicators" className="mt-6">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {marketData.economic_indicators && Object.entries(marketData.economic_indicators)
+                      .filter(([key]) => key !== 'source' && key !== 'as_of')
+                      .map(([key, data], idx) => {
+                        if (!data) return null;
+
+                        const indicatorMapping = {
+                          fed_funds_rate: { title: "Fed Funds Rate", unit: "%", desc: "Target interest rate range" },
+                          inflation_rate: { title: "Inflation (CPI)", unit: "%", desc: "Purchasing power stability" },
+                          unemployment_rate: { title: "Unemployment", unit: "%", desc: "Labor market participation" },
+                          gdp_growth: { title: "GDP Growth", unit: "%", desc: "Economic expansion rate" },
+                          vix_index: { title: "VIX (Fear Index)", unit: "pts", desc: "Market volatility expectations" },
+                          yield_curve_slope: { title: "Yield Curve (10Y-2Y)", unit: "bps", desc: "Recession predictor" }
+                        };
+
+                        const info = indicatorMapping[key] || { 
+                          title: key.replace(/_/g, ' ').toUpperCase(), 
+                          unit: "", 
+                          desc: "Institutional data point" 
+                        };
+
+                        const getTrendColor = (trend, metric) => {
+                          const t = (trend || "stable").toLowerCase();
+                          const isInverse = ["vix_index", "inflation_rate", "unemployment_rate"].includes(metric);
+                          if (t === "stable") return "bg-slate-100 text-slate-700 border-slate-300";
+                          if (t === "up") return isInverse ? "bg-rose-100 text-rose-700 border-rose-300" : "bg-emerald-100 text-emerald-700 border-emerald-300";
+                          if (t === "down") return isInverse ? "bg-emerald-100 text-emerald-700 border-emerald-300" : "bg-rose-100 text-rose-700 border-rose-300";
+                          return "bg-slate-100 text-slate-700 border-slate-300";
+                        };
+
+                        const displayValue = typeof data === 'object' ? (data.value ?? "N/A") : data;
+                        const displayTrend = typeof data === 'object' ? (data.trend ?? "stable") : "stable";
+                        const isNotable = typeof data === 'object' ? data.is_notable : false;
+
+                        return (
+                          <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: idx * 0.05 }}
+                          >
+                            <Card className={`border-2 transition-all rounded-xl h-full ${
+                              isNotable ? "border-amber-300 bg-amber-50 shadow-md" : "border-slate-200"
+                            }`}>
+                              <CardContent className="p-4 md:p-6">
+                                <h3 className="font-bold text-slate-900 text-sm md:text-lg mb-1">{info.title}</h3>
+                                <p className="text-[10px] text-slate-500 mb-3">{info.desc}</p>
+                                
+                                <div className="mb-4">
+                                  <Badge className={`border-2 ${getTrendColor(displayTrend, key)}`}>
+                                    {displayTrend.toLowerCase() === "up" ? "↑" : displayTrend.toLowerCase() === "down" ? "↓" : "→"} {displayTrend.toUpperCase()}
+                                  </Badge>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex flex-col sm:flex-row items-start justify-between gap-2 mb-2">
-                                      <h3 className="font-bold text-slate-900 text-sm md:text-lg break-words flex-1">{story.headline}</h3>
-                                      <Badge className={`border ${getImpactColor(story.sentiment_impact)} text-[10px] md:text-xs flex-shrink-0`}>
-                                        {story.sentiment_impact}
-                                      </Badge>
-                                    </div>
-                                    <p className="text-xs md:text-sm text-slate-700 mb-3 break-words">{story.summary}</p>
-                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                                      <div className="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm text-slate-500 flex-wrap">
-                                        <Badge variant="outline" className="capitalize text-[10px] md:text-xs">{story.category}</Badge>
-                                        <span className="truncate">{story.source}</span>
-                                        <span className="flex items-center gap-1 flex-shrink-0">
-                                          <Clock className="w-3 h-3" />
-                                          {story.time}
-                                        </span>
-                                      </div>
-                                      {story.url && (
-                                        <a
-                                          href__={story.url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="text-blue-600 hover:text-blue-700 font-semibold text-xs md:text-sm flex items-center gap-1 flex-shrink-0"
-                                        >
-                                          Read More
-                                          <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
-                                        </a>
-                                      )}
-                                    </div>
+
+                                <div className="mb-3">
+                                  <p className="text-2xl md:text-4xl font-bold text-slate-900">
+                                    {displayValue}{info.unit}
+                                  </p>
                                 </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </motion.div>
-                      );
-                    })}
+
+                                <p className="text-xs text-slate-700 bg-white/50 p-2 rounded border border-slate-100">
+                                  {data.significance || `Monitoring ${info.title} for structural shifts.`}
+                                </p>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        );
+                      })}
                   </div>
                 </TabsContent>
 
-                <TabsContent value="events" className="mt-6">
-                  {!marketData.major_events || marketData.major_events.length === 0 ? (
-                  <Card className="border-2 border-amber-200 bg-amber-50 rounded-xl">
-                    <CardContent className="p-6 text-center">
-                        <AlertTriangle className="w-12 h-12 mx-auto mb-3 text-amber-600" />
-                        <p className="text-slate-700">No major events data available. Click "Refresh" to load recent market events.</p>
-                      </CardContent>
-                    </Card>
-                  ) : (
-                    <div className="space-y-4">
-                      {marketData.major_events.map((event, idx) => (
-                      <Card key={idx} className="border-2 border-slate-200 rounded-xl">
-                        <CardContent className="p-4 md:p-6">
-                          <div className="flex items-start gap-3 md:gap-4">
-                            <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                              event.impact === "high" ? "bg-rose-100" :
-                              event.impact === "medium" ? "bg-amber-100" : "bg-blue-100"
-                            }`}>
-                              <AlertTriangle className={`w-5 h-5 md:w-6 md:h-6 ${
-                                event.impact === "high" ? "text-rose-600" :
-                                event.impact === "medium" ? "text-amber-600" : "text-blue-600"
-                              }`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-col sm:flex-row items-start justify-between gap-2 mb-2">
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-slate-900 font-semibold mb-1 text-xs md:text-sm break-words">{event.description}</p>
-                                  {event.date && (
-                                    <p className="text-[10px] md:text-xs text-slate-500 flex items-center gap-1">
-                                      <Clock className="w-3 h-3 flex-shrink-0" />
-                                      {event.date}
-                                    </p>
-                                  )}
-                                </div>
-                                <Badge className={`capitalize flex-shrink-0 text-[10px] md:text-xs ${
-                                  event.impact === "high" ? "bg-rose-100 text-rose-700" :
-                                  event.impact === "medium" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
-                                }`}>
-                                  {event.impact}
-                                </Badge>
-                              </div>
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                                <div className="flex gap-1.5 md:gap-2 flex-wrap">
-                                  {event.affected_sectors?.map((sector, sidx) => (
-                                    <Badge key={sidx} variant="outline" className="text-[10px] md:text-xs">
-                                      {sector}
-                                    </Badge>
-                                  ))}
-                                </div>
-                                {event.url && (
-                                  <a
-                                    href__={event.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-700 font-semibold text-xs md:text-sm flex items-center gap-1 flex-shrink-0"
-                                  >
-                                    Read More
-                                    <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                      ))}
+                {/* 2. SECTOR ANALYSIS TAB */}
+                <TabsContent value="sectors" className="mt-6">
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <Card className="p-6 rounded-2xl border-2 border-slate-200">
+                      <div className="h-[300px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={marketData.sector_sentiment}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                            <XAxis dataKey="sector" tick={{fontSize: 10}} stroke="#64748b" />
+                            <YAxis domain={[0, 100]} hide />
+                            <RechartsTooltip />
+                            <Bar dataKey="score" radius={[6, 6, 0, 0]}>
+                              {marketData.sector_sentiment?.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.score > 65 ? '#10b981' : entry.score < 45 ? '#f43f5e' : '#f59e0b'} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
                       </div>
-                      )}
-                      </TabsContent>
+                    </Card>
+                    <div className="space-y-3">
+                      {marketData.sector_sentiment?.map((s, i) => (
+                        <motion.div 
+                          key={i} 
+                          initial={{ x: 20, opacity: 0 }} 
+                          animate={{ x: 0, opacity: 1 }} 
+                          transition={{ delay: i * 0.1 }}
+                          className="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm flex justify-between items-center"
+                        >
+                          <div className="min-w-0 flex-1 mr-4">
+                            <p className="font-bold text-slate-800 truncate">{s.sector}</p>
+                            <p className="text-xs text-slate-500 line-clamp-1">{s.reasoning}</p>
+                          </div>
+                          <Badge className={`${getSentimentColor(s.score)} text-lg px-4 py-1 flex-shrink-0`}>
+                            {s.score}
+                          </Badge>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
 
-             <TabsContent value="indicators" className="mt-6">
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {marketData.economic_indicators && Object.entries(marketData.economic_indicators)
-                    .filter(([key]) => key !== 'source' && key !== 'as_of')
-                    .map(([key, data], idx) => {
-                      if (!data) return null;
-
-                      // Institutional Indicator Mapping (Maps multiple possible backend keys to one UI Label)
-                      const indicatorMapping = {
-                        interest_rate: { title: "Fed Funds Rate", unit: "%", desc: "Central bank benchmark rate" },
-                        fed_funds_rate: { title: "Fed Funds Rate", unit: "%", desc: "Target interest rate range" },
-                        inflation: { title: "Inflation (CPI)", unit: "%", desc: "Consumer price index YoY" },
-                        inflation_rate: { title: "Inflation (CPI)", unit: "%", desc: "Purchasing power stability" },
-                        unemployment: { title: "Unemployment", unit: "%", desc: "Labor market slack" },
-                        unemployment_rate: { title: "Unemployment", unit: "%", desc: "Labor market participation" },
-                        gdp_growth: { title: "GDP Growth", unit: "%", desc: "Economic expansion rate" },
-                        vix_index: { title: "VIX (Fear Index)", unit: "pts", desc: "Market volatility expectations" },
-                        yield_curve_slope: { title: "Yield Curve (10Y-2Y)", unit: "bps", desc: "Recession predictor" },
-                        market_breadth: { title: "Market Breadth", unit: "%", desc: "Advancing vs Declining ratio" },
-                        credit_spreads: { title: "Credit Spreads", unit: "bps", desc: "Corporate default risk premium" },
-                        put_call_ratio: { title: "Put/Call Ratio", unit: "x", desc: "Options market sentiment" }
-                      };
-
-                      const info = indicatorMapping[key] || { 
-                        title: key.replace(/_/g, ' ').toUpperCase(), 
-                        unit: "", 
-                        desc: "Institutional data point" 
-                      };
-
-                      // Helper: Trend Color Logic
-                      const getTrendColor = (trend, metric) => {
-                        const t = (trend || "stable").toLowerCase();
-                        const isInverse = ["vix_index", "inflation", "inflation_rate", "unemployment", "unemployment_rate", "credit_spreads", "put_call_ratio"].includes(metric);
-                        
-                        if (t === "stable") return "bg-slate-100 text-slate-700 border-slate-300";
-                        if (t === "up") return isInverse ? "bg-rose-100 text-rose-700 border-rose-300" : "bg-emerald-100 text-emerald-700 border-emerald-300";
-                        if (t === "down") return isInverse ? "bg-emerald-100 text-emerald-700 border-emerald-300" : "bg-rose-100 text-rose-700 border-rose-300";
-                        return "bg-slate-100 text-slate-700 border-slate-300";
-                      };
-
-                      // Helper: Value Formatter
-                      const formatValue = (val) => {
-                        if (val === undefined || val === null) return "N/A";
-                        if (typeof val === 'number' && Math.abs(val) < 1 && val !== 0) {
-                          return `${(val * 100).toFixed(1)}${info.unit || '%'}`;
-                        }
-                        return `${val}${info.unit || ''}`;
-                      };
-
-                      // Extract actual value if data is an object, otherwise use as primitive
-                      const displayValue = typeof data === 'object' ? (data.value ?? "N/A") : data;
-                      const displayTrend = typeof data === 'object' ? (data.trend ?? "stable") : "stable";
-                      const isNotable = typeof data === 'object' ? data.is_notable : false;
-
-                      return (
-                        <Card key={idx} className={`border-2 transition-all rounded-xl ${
-                          isNotable ? "border-amber-300 bg-amber-50 shadow-md" : "border-slate-200"
-                        }`}>
-                          <CardContent className="p-4 md:p-6">
-                            <h3 className="font-bold text-slate-900 text-sm md:text-lg mb-1">{info.title}</h3>
-                            <p className="text-[10px] text-slate-500 mb-3">{info.desc}</p>
-                            
-                            <div className="mb-4">
-                              <Badge className={`border-2 ${getTrendColor(displayTrend, key)}`}>
-                                {displayTrend.toLowerCase() === "up" ? "↑" : displayTrend.toLowerCase() === "down" ? "↓" : "→"} {displayTrend.toUpperCase()}
-                              </Badge>
+                {/* 3. ASSET OUTLOOK TAB */}
+                <TabsContent value="assets" className="mt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {marketData.asset_sentiment?.map((asset, i) => (
+                      <motion.div 
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                      >
+                        <Card className={`border-2 rounded-2xl h-full shadow-sm ${getSentimentColor(asset.score)}`}>
+                          <CardContent className="p-6 text-center">
+                            <div className="w-12 h-12 bg-white/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                              <Target className="w-6 h-6 text-slate-700" />
                             </div>
-
-                            <div className="mb-3">
-                              <p className="text-2xl md:text-4xl font-bold text-slate-900">
-                                {formatValue(displayValue)} 
-                              </p>
-                            </div>
-
-                            <p className="text-xs text-slate-700 bg-white/50 p-2 rounded border border-slate-100">
-                              {data.significance || `Monitoring ${info.title} for structural regime shifts.`}
+                            <p className="font-bold text-xl text-slate-900 mb-1">{asset.asset}</p>
+                            <p className="text-4xl font-black text-slate-900 mb-2">{asset.score}</p>
+                            <Badge variant="outline" className="mb-4 bg-white/80 border-slate-200 text-slate-700 font-bold">
+                              {asset.outlook?.toUpperCase()}
+                            </Badge>
+                            <p className="text-xs font-medium text-slate-600 leading-relaxed">
+                              {asset.reasoning}
                             </p>
                           </CardContent>
                         </Card>
-                      );
-                    })}
+                      </motion.div>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
+              
+              {/* Footer Attribution */}
+              <div className="mt-12 pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-400 text-xs font-bold uppercase tracking-widest">
+                <div className="flex items-center gap-6">
+                  <span className="flex items-center gap-2">
+                    <Brain className="w-4 h-4" /> 
+                    Engine: {marketData.metadata?.engine || "Claude-3.5-Haiku-Institutional"}
+                  </span>
+                  <span>Version: {marketData.metadata?.calibration_version || "5.3"}</span>
                 </div>
-              </TabsContent>
-            </Tabs>
-            
-            {/* Footer Attribution */}
-            <div className="mt-12 pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-400 text-xs font-bold uppercase tracking-widest">
-              <div className="flex items-center gap-6">
-                <span className="flex items-center gap-2"><Brain className="w-4 h-4" /> Engine: {marketData.metadata?.engine || "Claude-3.5-Haiku"}</span>
-                <span>Version: {marketData.metadata?.calibration_version || "5.0"}</span>
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4" /> Ground Truth Source: VIX Terminal
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4" /> Ground Truth Source: VIX Terminal
-              </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
         </motion.div>
       </div>
     </div>
