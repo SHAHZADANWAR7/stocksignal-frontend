@@ -237,57 +237,68 @@ export default function MarketInsights() {
 
          {marketData && (
             <>
-              <Card className="border-2 border-purple-300 shadow-xl mb-8 rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-                  <CardTitle className="text-2xl flex items-center justify-between">
+              {/* INDUSTRIAL GRADE CIO HYBRID SENTIMENT CARD */}
+              <Card className="border-b-4 border-r-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] mb-10 rounded-none overflow-hidden bg-white">
+                <CardHeader className="bg-slate-900 text-white py-4 border-b border-slate-800">
+                  <CardTitle className="text-xl flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Activity className="w-7 h-7" />
-                      CIO Hybrid Sentiment Model
+                      <div className="p-2 bg-purple-500/20 rounded-lg">
+                        <Activity className="w-6 h-6 text-purple-400" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 leading-none mb-1">Institutional Model</span>
+                        <span className="text-lg font-black tracking-tight uppercase">CIO Hybrid Sentiment</span>
+                      </div>
                     </div>
-                    <Badge className="bg-white/20 text-white border-white/40 hidden sm:block">v5.4 Industrial</Badge>
+                    <div className="flex items-center gap-3">
+                      <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-slate-800 border border-slate-700">
+                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                        <span className="font-mono text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Live Stream</span>
+                      </div>
+                      <Badge className="bg-purple-600 text-white border-0 font-mono text-[10px] rounded-none">v5.4 INDUSTRIAL</Badge>
+                    </div>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4 md:p-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <CardContent className="p-0">
+                  <div className="grid grid-cols-1 lg:grid-cols-12">
                     
-                    {/* Column 1: Core Sentiment Score */}
-                    <div className="flex flex-col items-center justify-center text-center lg:border-r lg:border-slate-100 lg:pr-8">
-                      <div className={`inline-flex items-center gap-3 px-6 py-4 rounded-2xl border-2 mb-4 ${getSentimentColor(marketData.overall_sentiment?.score)}`}>
+                    {/* COL 1: CORE SENTIMENT ENGINE (3/12) */}
+                    <div className="lg:col-span-3 p-8 flex flex-col items-center justify-center bg-slate-50 border-b lg:border-b-0 lg:border-r border-slate-200">
+                      <div className={`mb-4 px-4 py-1 rounded-none border-2 font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 ${getSentimentColor(marketData.overall_sentiment?.score)}`}>
                         {getSentimentIcon(marketData.overall_sentiment?.score)}
-                        <div className="text-left">
-                          <p className="text-[10px] opacity-75 uppercase font-black tracking-widest">Market Status</p>
-                          <p className="text-2xl font-black">{getSentimentLabel(marketData.overall_sentiment?.score)}</p>
-                        </div>
+                        {getSentimentLabel(marketData.overall_sentiment?.score)}
                       </div>
-                      <div className="relative">
-                        <span className="text-7xl font-black text-slate-900 leading-none">{marketData.overall_sentiment?.score}</span>
-                        <span className="text-xl text-slate-400 font-bold absolute -top-1 -right-8">/100</span>
+                      <div className="relative mb-2">
+                        <span className="text-8xl font-black text-slate-900 tracking-tighter leading-none">
+                          {marketData.overall_sentiment?.score}
+                        </span>
+                        <span className="text-xl font-black text-slate-400 absolute -top-1 -right-8">/100</span>
                       </div>
-                      <p className="text-xs text-slate-500 font-bold uppercase tracking-tighter mt-2">Weighted Aggregate Score</p>
+                      <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-4">Weighted Aggregate Score</p>
                     </div>
 
-                    {/* Column 2: Signal Contributions (The 30/25/20/15/10 Breakdown) */}
-                    <div className="lg:border-r lg:border-slate-100 lg:px-4">
-                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    {/* COL 2: SIGNAL CONTRIBUTION (4/12) */}
+                    <div className="lg:col-span-4 p-8 border-b lg:border-b-0 lg:border-r border-slate-100 bg-white">
+                      <div className="flex items-center gap-2 mb-8">
                         <Zap className="w-4 h-4 text-amber-500" />
-                        Signal Contribution
-                      </h4>
-                      <div className="space-y-4">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Signal Attribution</h4>
+                      </div>
+                      <div className="space-y-6">
                         {marketData.signal_contributions && Object.entries(marketData.signal_contributions).map(([key, val]) => (
-                          <div key={key} className="space-y-1">
-                            <div className="flex justify-between text-[10px] uppercase font-black text-slate-600">
-                              <span>{key}</span>
-                              <span className="text-purple-600">{val} pts</span>
+                          <div key={key} className="group">
+                            <div className="flex justify-between items-end mb-1.5">
+                              <span className="text-[10px] uppercase font-black text-slate-500 group-hover:text-slate-900 transition-colors tracking-widest">{key}</span>
+                              <span className="font-mono text-sm font-black text-slate-900">{val}<span className="text-[10px] ml-0.5 text-slate-400">PTS</span></span>
                             </div>
-                            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                            <div className="h-1.5 w-full bg-slate-100 rounded-none overflow-hidden flex border border-slate-200">
                               <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: `${(val / 30) * 100}%` }}
-                                className={`h-full rounded-full ${
-                                  key === 'news' ? 'bg-blue-500' : 
+                                className={`h-full ${
+                                  key === 'news' ? 'bg-blue-600' : 
                                   key === 'volatility' ? 'bg-purple-600' : 
-                                  key === 'bond' ? 'bg-emerald-500' : 
-                                  key === 'commodity' ? 'bg-orange-500' : 'bg-slate-700'
+                                  key === 'bond' ? 'bg-emerald-600' : 
+                                  key === 'commodity' ? 'bg-orange-600' : 'bg-slate-900'
                                 }`}
                               />
                             </div>
@@ -296,36 +307,50 @@ export default function MarketInsights() {
                       </div>
                     </div>
 
-                    {/* Column 3: Live Macro Drivers (Ground Truth Data) */}
-                    <div className="lg:pl-4">
-                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    {/* COL 3: MACRO DRIVERS (5/12) */}
+                    <div className="lg:col-span-5 p-8 bg-slate-50/50">
+                      <div className="flex items-center gap-2 mb-8">
                         <Globe className="w-4 h-4 text-blue-500" />
-                        Live Macro Drivers
-                      </h4>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 bg-white rounded-xl border-2 border-slate-100 hover:border-purple-200 transition-colors">
-                          <p className="text-[10px] text-slate-400 font-black uppercase mb-1">Volatility</p>
-                          <p className="text-xl font-black text-slate-900">VIX {marketData.macro_drivers?.vix?.value}</p>
-                          <Badge variant="outline" className="text-[9px] font-bold h-4 px-1">{marketData.macro_drivers?.vix?.status}</Badge>
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Macro Ground Truth</h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* VIX */}
+                        <div className="bg-white p-4 border-2 border-slate-200 shadow-sm hover:border-slate-900 transition-colors cursor-default">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">Volatility Index</p>
+                          <div className="flex items-baseline justify-between">
+                            <span className="text-2xl font-black text-slate-900 tracking-tighter">VIX {marketData.macro_drivers?.vix?.value}</span>
+                            <Badge variant="outline" className="text-[9px] font-black px-1.5 h-4 border-slate-900 rounded-none uppercase bg-slate-900 text-white">
+                              {marketData.macro_drivers?.vix?.status}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="p-3 bg-white rounded-xl border-2 border-slate-100 hover:border-purple-200 transition-colors">
-                          <p className="text-[10px] text-slate-400 font-black uppercase mb-1">US10Y Yield</p>
-                          <p className="text-xl font-black text-slate-900">{marketData.macro_drivers?.bond_10y?.value}%</p>
-                          <span className={`text-[10px] font-black ${marketData.macro_drivers?.bond_10y?.change > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                            {marketData.macro_drivers?.bond_10y?.change > 0 ? '↑' : '↓'} {Math.abs(marketData.macro_drivers?.bond_10y?.change)}
-                          </span>
+                        {/* 10Y */}
+                        <div className="bg-white p-4 border-2 border-slate-200 shadow-sm hover:border-slate-900 transition-colors cursor-default">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">US 10Y Yield</p>
+                          <div className="flex items-baseline justify-between">
+                            <span className="text-2xl font-black text-slate-900 tracking-tighter">{marketData.macro_drivers?.bond_10y?.value}%</span>
+                            <span className={`text-[10px] font-black flex items-center gap-0.5 ${marketData.macro_drivers?.bond_10y?.change > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                              {marketData.macro_drivers?.bond_10y?.change > 0 ? '▲' : '▼'} {Math.abs(marketData.macro_drivers?.bond_10y?.change)}
+                            </span>
+                          </div>
                         </div>
-                        <div className="p-3 bg-white rounded-xl border-2 border-slate-100 hover:border-purple-200 transition-colors">
-                          <p className="text-[10px] text-slate-400 font-black uppercase mb-1">WTI Crude</p>
-                          <p className="text-xl font-black text-slate-900">${marketData.macro_drivers?.oil?.wti}</p>
-                          <span className={`text-[10px] font-black ${marketData.macro_drivers?.oil?.change_pct > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                            {marketData.macro_drivers?.oil?.change_pct}%
-                          </span>
+                        {/* CRUDE */}
+                        <div className="bg-white p-4 border-2 border-slate-200 shadow-sm hover:border-slate-900 transition-colors cursor-default">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">Energy / WTI</p>
+                          <div className="flex items-baseline justify-between">
+                            <span className="text-2xl font-black text-slate-900 tracking-tighter">${marketData.macro_drivers?.oil?.wti}</span>
+                            <span className={`text-[10px] font-black ${marketData.macro_drivers?.oil?.change_pct > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                              {marketData.macro_drivers?.oil?.change_pct}%
+                            </span>
+                          </div>
                         </div>
-                        <div className="p-3 bg-white rounded-xl border-2 border-slate-100 hover:border-purple-200 transition-colors">
-                          <p className="text-[10px] text-slate-400 font-black uppercase mb-1">Breadth</p>
-                          <p className="text-xl font-black text-slate-900">{marketData.macro_drivers?.breadth?.ratio}x</p>
-                          <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">A/D Ratio</p>
+                        {/* BREADTH */}
+                        <div className="bg-white p-4 border-2 border-slate-200 shadow-sm hover:border-slate-900 transition-colors cursor-default">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1">Market Breadth</p>
+                          <div className="flex items-baseline justify-between">
+                            <span className="text-2xl font-black text-slate-900 tracking-tighter">{marketData.macro_drivers?.breadth?.ratio}x</span>
+                            <span className="text-[9px] font-black text-slate-400 uppercase">A/D Ratio</span>
+                          </div>
                         </div>
                       </div>
                     </div>
