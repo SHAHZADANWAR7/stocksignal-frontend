@@ -113,6 +113,7 @@ export const awsApi = {
 
   // Market Insights
   generateMarketInsights: (prompt) => awsClient.generateMarketInsights(prompt),
+  getMarketInsights: () => awsClient.getMarketInsights(), 
   cacheMarketInsights: (payload) => awsClient.cacheMarketInsights(payload),
 
   // Trades
@@ -195,6 +196,7 @@ export const {
   sendSupportEmail,
   sendEmail,
   generateMarketInsights,
+  getMarketInsights,
   cacheMarketInsights,
   getUserTrades,
   invokeLLM,
