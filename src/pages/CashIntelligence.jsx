@@ -296,67 +296,78 @@ RETURN ONLY VALID JSON:
           </p>
         </motion.div>
 
-        <div className="mb-8 space-y-6">
-          <Card className="border-2 border-blue-200 shadow-lg bg-gradient-to-br from-blue-50 to-indigo-50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="w-6 h-6 text-blue-600" />
-                Your Idle Cash Details
+       <div className="mb-10">
+          <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden bg-white">
+            <CardHeader className="bg-slate-900 text-white py-4 border-b-4 border-slate-900">
+              <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3">
+                <DollarSign className="w-5 h-5 text-emerald-400" />
+                Capital Input & Duration Audit
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Idle Cash Amount ($)
-                  </label>
+            <CardContent className="p-8 md:p-10">
+              <div className="grid md:grid-cols-2 gap-10">
+                {/* IDLE CASH INPUT */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      Idle Cash Volume ($)
+                    </label>
+                    <Badge variant="outline" className="border-2 border-slate-900 font-mono text-[10px] font-black uppercase">Liquid Assets</Badge>
+                  </div>
                   <input
                     type="number"
                     min="0"
-                    step="100"
-                    placeholder="e.g., 5000"
+                    placeholder="0.00"
                     value={idleCashAmount}
                     onChange={(e) => setIdleCashAmount(e.target.value)}
-                    className="w-full px-4 py-2 border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                    className="w-full bg-slate-50 border-4 border-slate-900 rounded-2xl px-6 py-4 text-3xl font-black text-slate-900 placeholder:text-slate-300 focus:ring-0 outline-none transition-all focus:bg-white"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
-                    Cash sitting in savings/checking accounts
+                  <p className="text-[10px] font-bold text-slate-500 uppercase italic">
+                    Uninvested liquidity held in low-yield accounts
                   </p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Months Not Invested
-                  </label>
+
+                {/* MONTHS INPUT */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                      Inactivity Duration (Months)
+                    </label>
+                    <Badge variant="outline" className="border-2 border-slate-900 font-mono text-[10px] font-black uppercase">Time Decay</Badge>
+                  </div>
                   <input
                     type="number"
                     min="0"
-                    step="1"
-                    placeholder="e.g., 6"
+                    placeholder="0"
                     value={idleCashMonths}
                     onChange={(e) => setIdleCashMonths(e.target.value)}
-                    className="w-full px-4 py-2 border-2 border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                    className="w-full bg-slate-50 border-4 border-slate-900 rounded-2xl px-6 py-4 text-3xl font-black text-slate-900 placeholder:text-slate-300 focus:ring-0 outline-none transition-all focus:bg-white"
                   />
-                  <p className="text-xs text-slate-500 mt-1">
-                    How long has this cash been idle?
+                  <p className="text-[10px] font-bold text-slate-500 uppercase italic">
+                    Cumulative period of capital stagnation
                   </p>
                 </div>
               </div>
-              <div className="mt-4 flex justify-end">
+
+              {/* ACTION BAR */}
+              <div className="mt-10 pt-8 border-t-4 border-slate-900 flex justify-center md:justify-end">
                 <Button
                   onClick={analyzeCashOpportunity}
                   disabled={isAnalyzing || !idleCashAmount || !idleCashMonths}
-                  className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                  className="h-16 px-10 bg-slate-900 text-white border-4 border-slate-900 hover:bg-emerald-600 hover:border-emerald-600 rounded-2xl transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
                 >
                   {isAnalyzing ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Analyzing...
-                    </>
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <span className="font-black uppercase tracking-widest text-xs">Processing Intelligence...</span>
+                    </div>
                   ) : (
-                    <>
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      {analysis ? "Refresh Analysis" : "Analyze My Cash"}
-                    </>
+                    <div className="flex items-center gap-3">
+                      <TrendingUp className="w-6 h-6" />
+                      <span className="font-black uppercase tracking-widest text-xs">
+                        {analysis ? "Re-Calibrate Intelligence" : "Execute Strategic Audit"}
+                      </span>
+                    </div>
                   )}
                 </Button>
               </div>
