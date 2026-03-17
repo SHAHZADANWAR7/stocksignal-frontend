@@ -493,7 +493,7 @@ export default function MarketInsights() {
                 </Card>
               </div>
 
-             {/* INDUSTRIAL AI PREDICTIVE SIGNAL INTELLIGENCE - BALANCED ALIGNMENT */}
+            {/* INDUSTRIAL AI PREDICTIVE SIGNAL INTELLIGENCE - OPTIMIZED DENSITY */}
               <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] mb-10 rounded-[2.5rem] overflow-hidden bg-white">
                 <CardHeader className="bg-slate-900 text-white py-4 border-b-4 border-slate-900">
                   <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3">
@@ -502,13 +502,13 @@ export default function MarketInsights() {
                   </CardTitle>
                 </CardHeader>
                 
-                {/* FIX: 
-                   - py-12 md:py-16: Provides a large, fixed vertical safety buffer from the header.
-                   - flex justify-center: Centers the grid horizontally.
-                   - min-h-[400px]: Ensures the card always has a professional industrial "body".
+                {/* FIXED: 
+                   - Removed min-h-[400px] to prevent vertical stretching.
+                   - Reduced py-12 to py-8 for a tighter, high-density professional look.
+                   - Kept flex items-center to ensure 1 or 2 cards stay centered.
                 */}
-                <CardContent className="py-12 md:py-16 px-6 md:px-10 flex flex-col justify-center items-center min-h-[400px] bg-slate-50/30">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl mx-auto">
+                <CardContent className="py-8 md:py-10 px-4 md:px-8 flex flex-col items-center bg-slate-50/30">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-7xl">
                     {marketData.predictive_signals?.map((signal, idx) => {
                       const Icon = getSignalIcon(signal.type);
                       return (
@@ -534,18 +534,18 @@ export default function MarketInsights() {
                             </div>
                           </div>
                           
-                          <div className="p-6 flex-1 flex flex-col justify-between">
+                          <div className="p-5 flex-1 flex flex-col justify-between">
                             <div>
                               <h5 className="text-slate-900 font-black text-sm mb-3 leading-snug uppercase tracking-tight">
                                 {signal.description}
                               </h5>
-                              <div className="bg-slate-50 border-l-4 border-slate-900 p-4 mb-4 rounded-r-lg shadow-inner">
+                              <div className="bg-slate-50 border-l-4 border-slate-900 p-3 mb-4 rounded-r-lg shadow-inner">
                                 <p className="text-[11px] text-slate-700 font-bold leading-relaxed italic">
                                   "{signal.action}"
                                 </p>
                               </div>
                             </div>
-                            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200 shadow-inner mt-2">
+                            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200 shadow-inner mt-auto">
                               <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${signal.confidence}%` }}
@@ -562,7 +562,6 @@ export default function MarketInsights() {
                   </div>
                 </CardContent>
               </Card>
-
              <Tabs defaultValue="news" className="mb-8">
                 <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-slate-900 rounded-[2rem] border-4 border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]">
                   <TabsTrigger 
