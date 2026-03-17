@@ -428,12 +428,36 @@ export default function MarketInsights() {
                             />
                           </RadarChart>
                         </ResponsiveContainer>
-                        <div className="mt-3 md:mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
+                        
+                        <div className="mt-6 space-y-3">
                           {marketData.asset_sentiment.map((asset, idx) => (
-                            <div key={idx} className={`p-2 md:p-3 rounded-lg border-2 ${getSentimentColor(asset.score)}`}>
-                              <p className="font-semibold text-xs md:text-sm truncate">{asset.asset}</p>
-                              <p className="text-base md:text-lg font-bold break-words">{asset.score}</p>
-                              <p className="text-[10px] md:text-xs opacity-75 capitalize mt-1 truncate">{asset.outlook}</p>
+                            <div key={idx} className={`p-4 rounded-xl border-2 transition-all hover:shadow-md ${getSentimentColor(asset.score)}`}>
+                              <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-slate-900 text-sm md:text-base uppercase tracking-tight">
+                                    {asset.asset}
+                                  </span>
+                                  <Badge variant="outline" className="text-[10px] uppercase font-bold px-1.5 h-5 border-current">
+                                    {asset.outlook}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-baseline gap-1">
+                                  <span className="text-xl font-black">{asset.score}</span>
+                                  <span className="text-[10px] opacity-70 font-bold">/100</span>
+                                </div>
+                              </div>
+                              
+                              <p className="text-xs md:text-sm text-slate-700 leading-relaxed font-medium">
+                                {asset.reasoning}
+                              </p>
+
+                              <div className="mt-3 w-full bg-black/5 rounded-full h-1.5 overflow-hidden">
+                                <motion.div 
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${asset.score}%` }}
+                                  className="h-full bg-current opacity-40"
+                                />
+                              </div>
                             </div>
                           ))}
                         </div>
