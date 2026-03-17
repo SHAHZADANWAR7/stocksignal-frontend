@@ -493,39 +493,63 @@ export default function MarketInsights() {
                 </Card>
               </div>
 
-              <Card className="border-2 border-amber-300 shadow-xl mb-8 rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-amber-600 to-orange-600 text-white">
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    <Zap className="w-6 h-6" />
-                    AI Predictive Signals
+              {/* INDUSTRIAL AI PREDICTIVE SIGNAL INTELLIGENCE */}
+              <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] mb-10 rounded-[2.5rem] overflow-hidden bg-white">
+                <CardHeader className="bg-slate-900 text-white py-4 border-b-4 border-slate-900">
+                  <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3">
+                    <Zap className="w-5 h-5 text-amber-400" />
+                    Predictive Signal Intelligence
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-4 md:p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                <CardContent className="p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {marketData.predictive_signals?.map((signal, idx) => {
                       const Icon = getSignalIcon(signal.type);
                       return (
-                        <Card key={idx} className="border-2 border-slate-200 overflow-hidden rounded-xl">
-                          <div className={`bg-gradient-to-r ${getSignalColor(signal.type)} text-white p-3 md:p-4`}>
-                            <div className="flex items-center gap-2 mb-2">
-                              <Icon className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
-                              <span className="font-bold capitalize text-xs md:text-sm">{signal.type}</span>
+                        <div key={idx} className="border-2 border-slate-900 rounded-2xl overflow-hidden flex flex-col bg-white hover:translate-y-[-2px] transition-transform shadow-sm">
+                          <div className={`p-4 border-b-2 border-slate-900 flex items-center justify-between ${
+                            signal.type === 'opportunity' ? 'bg-emerald-50' : signal.type === 'warning' ? 'bg-rose-50' : 'bg-blue-50'
+                          }`}>
+                            <div className="flex items-center gap-2">
+                              <div className={`p-1.5 rounded-lg border-2 ${
+                                signal.type === 'opportunity' ? 'border-emerald-200 bg-white' : 
+                                signal.type === 'warning' ? 'border-rose-200 bg-white' : 'border-blue-200 bg-white'
+                              }`}>
+                                <Icon className={`w-4 h-4 ${
+                                  signal.type === 'opportunity' ? 'text-emerald-600' : 
+                                  signal.type === 'warning' ? 'text-rose-600' : 'text-blue-600'
+                                }`} />
+                              </div>
+                              <span className="font-black text-[10px] uppercase tracking-[0.15em] text-slate-900">{signal.type}</span>
                             </div>
-                            <Badge className="bg-white/20 text-white border-0 text-[10px] md:text-xs">
-                              {signal.confidence}% confidence
-                            </Badge>
+                            <div className="text-right">
+                              <p className="font-mono text-xs font-black leading-none">{signal.confidence}%</p>
+                              <p className="text-[7px] font-black text-slate-400 uppercase mt-0.5">Confidence</p>
+                            </div>
                           </div>
-                          <CardContent className="p-3 md:p-4">
-                            <p className="text-slate-900 font-semibold mb-2 text-xs md:text-sm break-words">{signal.description}</p>
-                            <p className="text-xs md:text-sm text-slate-600 mb-3 break-words">{signal.action}</p>
-                            <div className="w-full bg-slate-200 rounded-full h-1.5 md:h-2">
-                              <div
-                                className="bg-gradient-to-r from-purple-600 to-pink-600 h-1.5 md:h-2 rounded-full transition-all"
-                                style={{ width: `${signal.confidence}%` }}
+                          <div className="p-5 flex-1 flex flex-col justify-between">
+                            <div>
+                              <h5 className="text-slate-900 font-black text-sm mb-2 leading-snug uppercase tracking-tight">
+                                {signal.description}
+                              </h5>
+                              <div className="bg-slate-50 border-l-4 border-slate-900 p-3 mb-4 rounded-r-lg">
+                                <p className="text-[11px] text-slate-600 font-bold leading-relaxed italic">
+                                  "{signal.action}"
+                                </p>
+                              </div>
+                            </div>
+                            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200 shadow-inner">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${signal.confidence}%` }}
+                                className={`h-full ${
+                                  signal.type === 'opportunity' ? 'bg-emerald-500' : 
+                                  signal.type === 'warning' ? 'bg-rose-500' : 'bg-blue-600'
+                                }`}
                               />
                             </div>
-                          </CardContent>
-                        </Card>
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
