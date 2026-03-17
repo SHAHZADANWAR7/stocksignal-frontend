@@ -283,22 +283,8 @@ export const awsApi = {
   getUserPortfolio: () => invokeProxy("getUserPortfolio", {}),
   analyzeInvestmentBehavior: (payload = {}) => invokeProxy("analyzeInvestmentBehavior", payload),
  generateMarketInsights: (payload) => invokeProxy("generateMarketInsights", payload),
-  cacheMarketInsights: async (payload) => {
-    const response = await invokeProxy("cacheMarketInsights", payload);
-    
-    // 🛡️ Logic to handle the 'cache_age' for the frontend loadCachedData()
-    if (payload.action === 'get' && response?.data?.insight?.created_at) {
-      const createdTime = new Date(response.data.insight.created_at).getTime();
-      const ageInMs = Date.now() - createdTime;
-      
-      return {
-        market_data: response.data.insight.consolidated_data,
-        last_fetched: response.data.insight.created_at,
-        cache_age: ageInMs
-      };
-    }
-    return response;
-  },
+  getMarketInsights: () => invokeProxy("cacheMarketInsights", { action: 'get' }),
+ cacheMarketInsights: (payload) => invokeProxy("cacheMarketInsights", payload),
   getUserTrades: () => invokeProxy("getUserTrades", {}),
   invokeLLM: (prompt, context) => invokeProxy("invokeLLM", { prompt, context }),
   getSimulationLabData: (payload = {}) => invokeProxy("getSimulationLabData", payload),
