@@ -230,42 +230,101 @@ export default function MarketInsights() {
             </Button>
           </div>
 
-          {marketData && (
+         {marketData && (
             <>
               <Card className="border-2 border-purple-300 shadow-xl mb-8 rounded-2xl overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-                  <CardTitle className="text-2xl flex items-center gap-3">
-                    <Activity className="w-7 h-7" />
-                    Overall Market Sentiment
+                  <CardTitle className="text-2xl flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Activity className="w-7 h-7" />
+                      CIO Hybrid Sentiment Model
+                    </div>
+                    <Badge className="bg-white/20 text-white border-white/40 hidden sm:block">v5.4 Industrial</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 md:p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                    <div className="text-center">
-                      <div className={`inline-flex items-center gap-2 md:gap-3 px-4 md:px-8 py-3 md:py-4 rounded-2xl border-2 ${getSentimentColor(marketData.overall_sentiment?.score)}`}>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    
+                    {/* Column 1: Core Sentiment Score */}
+                    <div className="flex flex-col items-center justify-center text-center lg:border-r lg:border-slate-100 lg:pr-8">
+                      <div className={`inline-flex items-center gap-3 px-6 py-4 rounded-2xl border-2 mb-4 ${getSentimentColor(marketData.overall_sentiment?.score)}`}>
                         {getSentimentIcon(marketData.overall_sentiment?.score)}
                         <div className="text-left">
-                          <p className="text-xs md:text-sm opacity-75">Current Sentiment</p>
-                          <p className="text-xl md:text-3xl font-bold break-words">{getSentimentLabel(marketData.overall_sentiment?.score)}</p>
+                          <p className="text-[10px] opacity-75 uppercase font-black tracking-widest">Market Status</p>
+                          <p className="text-2xl font-black">{getSentimentLabel(marketData.overall_sentiment?.score)}</p>
                         </div>
                       </div>
-                      <div className="mt-3 md:mt-4">
-                        <p className="text-3xl md:text-5xl font-bold text-slate-900 break-words">{marketData.overall_sentiment?.score}</p>
-                        <p className="text-xs md:text-sm text-slate-500">Sentiment Score</p>
+                      <div className="relative">
+                        <span className="text-7xl font-black text-slate-900 leading-none">{marketData.overall_sentiment?.score}</span>
+                        <span className="text-xl text-slate-400 font-bold absolute -top-1 -right-8">/100</span>
+                      </div>
+                      <p className="text-xs text-slate-500 font-bold uppercase tracking-tighter mt-2">Weighted Aggregate Score</p>
+                    </div>
+
+                    {/* Column 2: Signal Contributions (The 30/25/20/15/10 Breakdown) */}
+                    <div className="lg:border-r lg:border-slate-100 lg:px-4">
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-amber-500" />
+                        Signal Contribution
+                      </h4>
+                      <div className="space-y-4">
+                        {marketData.signal_contributions && Object.entries(marketData.signal_contributions).map(([key, val]) => (
+                          <div key={key} className="space-y-1">
+                            <div className="flex justify-between text-[10px] uppercase font-black text-slate-600">
+                              <span>{key}</span>
+                              <span className="text-purple-600">{val} pts</span>
+                            </div>
+                            <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                              <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ width: `${(val / 30) * 100}%` }}
+                                className={`h-full rounded-full ${
+                                  key === 'news' ? 'bg-blue-500' : 
+                                  key === 'volatility' ? 'bg-purple-600' : 
+                                  key === 'bond' ? 'bg-emerald-500' : 
+                                  key === 'commodity' ? 'bg-orange-500' : 'bg-slate-700'
+                                }`}
+                              />
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
-                    <div>
-                      <h4 className="font-semibold text-slate-900 mb-2 md:mb-3 text-sm md:text-base">Key Factors Driving Sentiment</h4>
-                      <ul className="space-y-2">
-                        {marketData.overall_sentiment?.key_factors?.map((factor, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-xs md:text-sm text-slate-700">
-                            <ChevronRight className="w-3 h-3 md:w-4 md:h-4 mt-0.5 md:mt-1 text-purple-600 flex-shrink-0" />
-                            <span className="break-words">{factor}</span>
-                          </li>
-                        ))}
-                      </ul>
+                    {/* Column 3: Live Macro Drivers (Ground Truth Data) */}
+                    <div className="lg:pl-4">
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <Globe className="w-4 h-4 text-blue-500" />
+                        Live Macro Drivers
+                      </h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-3 bg-white rounded-xl border-2 border-slate-100 hover:border-purple-200 transition-colors">
+                          <p className="text-[10px] text-slate-400 font-black uppercase mb-1">Volatility</p>
+                          <p className="text-xl font-black text-slate-900">VIX {marketData.macro_drivers?.vix?.value}</p>
+                          <Badge variant="outline" className="text-[9px] font-bold h-4 px-1">{marketData.macro_drivers?.vix?.status}</Badge>
+                        </div>
+                        <div className="p-3 bg-white rounded-xl border-2 border-slate-100 hover:border-purple-200 transition-colors">
+                          <p className="text-[10px] text-slate-400 font-black uppercase mb-1">US10Y Yield</p>
+                          <p className="text-xl font-black text-slate-900">{marketData.macro_drivers?.bond_10y?.value}%</p>
+                          <span className={`text-[10px] font-black ${marketData.macro_drivers?.bond_10y?.change > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                            {marketData.macro_drivers?.bond_10y?.change > 0 ? '↑' : '↓'} {Math.abs(marketData.macro_drivers?.bond_10y?.change)}
+                          </span>
+                        </div>
+                        <div className="p-3 bg-white rounded-xl border-2 border-slate-100 hover:border-purple-200 transition-colors">
+                          <p className="text-[10px] text-slate-400 font-black uppercase mb-1">WTI Crude</p>
+                          <p className="text-xl font-black text-slate-900">${marketData.macro_drivers?.oil?.wti}</p>
+                          <span className={`text-[10px] font-black ${marketData.macro_drivers?.oil?.change_pct > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                            {marketData.macro_drivers?.oil?.change_pct}%
+                          </span>
+                        </div>
+                        <div className="p-3 bg-white rounded-xl border-2 border-slate-100 hover:border-purple-200 transition-colors">
+                          <p className="text-[10px] text-slate-400 font-black uppercase mb-1">Breadth</p>
+                          <p className="text-xl font-black text-slate-900">{marketData.macro_drivers?.breadth?.ratio}x</p>
+                          <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">A/D Ratio</p>
+                        </div>
+                      </div>
                     </div>
+
                   </div>
                 </CardContent>
               </Card>
