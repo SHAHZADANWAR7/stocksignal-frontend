@@ -501,8 +501,8 @@ export default function MarketInsights() {
                     Predictive Signal Intelligence
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-8">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <CardContent className="pt-12 p-8 md:pt-16 md:p-10 lg:pt-20 lg:p-12">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {marketData.predictive_signals?.map((signal, idx) => {
                       const Icon = getSignalIcon(signal.type);
                       return (
