@@ -556,11 +556,17 @@ export default function MarketInsights() {
                 </CardContent>
               </Card>
 
-              <Tabs defaultValue="news" className="mb-8">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="news">Live News Feed</TabsTrigger>
-                  <TabsTrigger value="events">Major Events</TabsTrigger>
-                  <TabsTrigger value="indicators">Economic Indicators</TabsTrigger>
+             <Tabs defaultValue="news" className="mb-8">
+                <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-slate-900 rounded-[2rem] border-4 border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+                  <TabsTrigger value="news" className="py-3 font-black uppercase text-[10px] md:text-xs tracking-widest data-[state=active]:bg-white data-[state=active]:text-slate-900 rounded-[1.5rem] transition-all text-white/60">
+                    News Wire
+                  </TabsTrigger>
+                  <TabsTrigger value="events" className="py-3 font-black uppercase text-[10px] md:text-xs tracking-widest data-[state=active]:bg-white data-[state=active]:text-slate-900 rounded-[1.5rem] transition-all text-white/60">
+                    Macro Events
+                  </TabsTrigger>
+                  <TabsTrigger value="indicators" className="py-3 font-black uppercase text-[10px] md:text-xs tracking-widest data-[state=active]:bg-white data-[state=active]:text-slate-900 rounded-[1.5rem] transition-all text-white/60">
+                    Indicators
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="news" className="mt-6">
@@ -574,124 +580,127 @@ export default function MarketInsights() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.05 }}
                         >
-                          <Card className="border-2 border-slate-200 hover:shadow-lg transition-shadow rounded-xl">
-                            <CardContent className="p-4 md:p-6">
-                              <div className="flex items-start gap-3 md:gap-4">
-                                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center flex-shrink-0">
-                                  <CategoryIcon className="w-5 h-5 md:w-6 md:h-6 text-slate-700" />
+                          <div className="group border-4 border-slate-900 bg-white rounded-[2rem] overflow-hidden hover:shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all cursor-default flex flex-col md:flex-row">
+                            <div className="md:w-20 bg-slate-50 border-b-4 md:border-b-0 md:border-r-4 border-slate-900 flex items-center justify-center p-4">
+                              <CategoryIcon className="w-8 h-8 text-slate-900" />
+                            </div>
+                            <div className="flex-1 p-6">
+                              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                                <div className="flex items-center gap-3">
+                                  <Badge className="rounded-full bg-slate-900 text-white font-mono text-[9px] px-3 py-0.5 uppercase border-0">
+                                    {story.source}
+                                  </Badge>
+                                  <span className="font-mono text-[10px] text-slate-400 font-bold uppercase">
+                                    {story.time}
+                                  </span>
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex flex-col sm:flex-row items-start justify-between gap-2 mb-2">
-                                      <h3 className="font-bold text-slate-900 text-sm md:text-lg break-words flex-1">{story.headline}</h3>
-                                      <Badge className={`border ${getImpactColor(story.sentiment_impact)} text-[10px] md:text-xs flex-shrink-0`}>
-                                        {story.sentiment_impact}
-                                      </Badge>
-                                    </div>
-                                    <p className="text-xs md:text-sm text-slate-700 mb-3 break-words">{story.summary}</p>
-                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                                      <div className="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm text-slate-500 flex-wrap">
-                                        <Badge variant="outline" className="capitalize text-[10px] md:text-xs">{story.category}</Badge>
-                                        <span className="truncate">{story.source}</span>
-                                        <span className="flex items-center gap-1 flex-shrink-0">
-                                          <Clock className="w-3 h-3" />
-                                          {story.time}
-                                        </span>
-                                      </div>
-                                      {story.url && (
-                                        <a
-                                          href__={story.url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="text-blue-600 hover:text-blue-700 font-semibold text-xs md:text-sm flex items-center gap-1 flex-shrink-0"
-                                        >
-                                          Read More
-                                          <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
-                                        </a>
-                                      )}
-                                    </div>
-                                </div>
+                                <Badge variant="outline" className={`font-black uppercase text-[9px] border-2 rounded-full px-3 ${getImpactColor(story.sentiment_impact)}`}>
+                                  {story.sentiment_impact} Impact
+                                </Badge>
                               </div>
-                            </CardContent>
-                          </Card>
+                              <h3 className="font-black text-slate-900 text-base md:text-xl leading-tight mb-2 uppercase tracking-tight">
+                                {story.headline}
+                              </h3>
+                              <p className="text-xs md:text-sm text-slate-600 font-bold leading-relaxed mb-4">
+                                {story.summary}
+                              </p>
+                              <div className="flex items-center justify-between gap-3">
+                                <Badge className="bg-slate-100 text-slate-500 border-0 text-[9px] font-black uppercase rounded-lg">
+                                  {story.category}
+                                </Badge>
+                                {story.url && (
+                                  <a
+                                    href={story.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-slate-900 hover:text-purple-600 font-black text-xs flex items-center gap-1 transition-colors uppercase tracking-tighter"
+                                  >
+                                    Terminal View
+                                    <ChevronRight className="w-4 h-4" />
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </motion.div>
                       );
                     })}
                   </div>
                 </TabsContent>
 
-                <TabsContent value="events" className="mt-6">
+               <TabsContent value="events" className="mt-6">
                   {!marketData.major_events || marketData.major_events.length === 0 ? (
-                  <Card className="border-2 border-amber-200 bg-amber-50 rounded-xl">
-                    <CardContent className="p-6 text-center">
-                        <AlertTriangle className="w-12 h-12 mx-auto mb-3 text-amber-600" />
-                        <p className="text-slate-700">No major events data available. Click "Refresh" to load recent market events.</p>
-                      </CardContent>
-                    </Card>
+                    <div className="border-4 border-dashed border-slate-200 bg-slate-50 rounded-[2rem] p-12 text-center">
+                        <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">No System-Critical Events Detected</p>
+                    </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       {marketData.major_events.map((event, idx) => (
-                      <Card key={idx} className="border-2 border-slate-200 rounded-xl">
-                        <CardContent className="p-4 md:p-6">
-                          <div className="flex items-start gap-3 md:gap-4">
-                            <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                              event.impact === "high" ? "bg-rose-100" :
-                              event.impact === "medium" ? "bg-amber-100" : "bg-blue-100"
-                            }`}>
-                              <AlertTriangle className={`w-5 h-5 md:w-6 md:h-6 ${
-                                event.impact === "high" ? "text-rose-600" :
-                                event.impact === "medium" ? "text-amber-600" : "text-blue-600"
-                              }`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-col sm:flex-row items-start justify-between gap-2 mb-2">
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-slate-900 font-semibold mb-1 text-xs md:text-sm break-words">{event.description}</p>
-                                  {event.date && (
-                                    <p className="text-[10px] md:text-xs text-slate-500 flex items-center gap-1">
-                                      <Clock className="w-3 h-3 flex-shrink-0" />
-                                      {event.date}
-                                    </p>
-                                  )}
-                                </div>
-                                <Badge className={`capitalize flex-shrink-0 text-[10px] md:text-xs ${
-                                  event.impact === "high" ? "bg-rose-100 text-rose-700" :
-                                  event.impact === "medium" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
-                                }`}>
-                                  {event.impact}
-                                </Badge>
-                              </div>
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                                <div className="flex gap-1.5 md:gap-2 flex-wrap">
-                                  {event.affected_sectors?.map((sector, sidx) => (
-                                    <Badge key={sidx} variant="outline" className="text-[10px] md:text-xs">
-                                      {sector}
-                                    </Badge>
-                                  ))}
-                                </div>
-                                {event.url && (
-                                  <a
-                                    href__={event.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-700 font-semibold text-xs md:text-sm flex items-center gap-1 flex-shrink-0"
-                                  >
-                                    Read More
-                                    <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
-                                  </a>
+                        <div key={idx} className="group border-4 border-slate-900 bg-white rounded-[2.5rem] overflow-hidden hover:shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all flex flex-col md:flex-row">
+                          <div className={`md:w-32 flex flex-col items-center justify-center p-6 border-b-4 md:border-b-0 md:border-r-4 border-slate-900 ${
+                            event.impact === "high" ? "bg-rose-50" :
+                            event.impact === "medium" ? "bg-amber-50" : "bg-blue-50"
+                          }`}>
+                            <AlertTriangle className={`w-8 h-8 mb-2 ${
+                              event.impact === "high" ? "text-rose-600" :
+                              event.impact === "medium" ? "text-amber-600" : "text-blue-600"
+                            }`} />
+                            <span className="font-black text-[10px] uppercase tracking-widest text-slate-900">{event.impact}</span>
+                          </div>
+                          
+                          <div className="flex-1 p-6 md:p-8">
+                            <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
+                              <div className="flex-1">
+                                <h3 className="text-slate-900 font-black text-lg md:text-2xl leading-tight uppercase tracking-tight mb-2">
+                                  {event.description}
+                                </h3>
+                                {event.date && (
+                                  <div className="flex items-center gap-2 text-slate-400">
+                                    <Clock className="w-4 h-4" />
+                                    <span className="font-mono text-[10px] font-black uppercase tracking-widest">{event.date}</span>
+                                  </div>
                                 )}
                               </div>
+                              <Badge className={`rounded-full border-2 font-black uppercase text-[10px] px-4 py-1 flex-shrink-0 ${
+                                event.impact === "high" ? "border-rose-500 text-rose-600 bg-rose-50" :
+                                event.impact === "medium" ? "border-amber-500 text-amber-600 bg-amber-50" : 
+                                "border-blue-500 text-blue-600 bg-blue-50"
+                              }`}>
+                                {event.impact} IMPACT
+                              </Badge>
+                            </div>
+
+                            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t-2 border-slate-100">
+                              <div className="flex gap-2 flex-wrap">
+                                {event.affected_sectors?.map((sector, sidx) => (
+                                  <Badge key={sidx} className="bg-slate-900 text-white border-0 text-[9px] font-black uppercase rounded-full px-3 py-0.5">
+                                    {sector}
+                                  </Badge>
+                                ))}
+                              </div>
+                              {event.url && (
+                                <a
+                                  href={event.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-slate-900 hover:text-purple-600 font-black text-xs flex items-center gap-1 transition-colors uppercase tracking-tighter"
+                                >
+                                  Detailed Analysis
+                                  <ChevronRight className="w-4 h-4" />
+                                </a>
+                              )}
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
+                        </div>
                       ))}
-                      </div>
-                      )}
-                      </TabsContent>
-
-                <TabsContent value="indicators" className="mt-6">
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    </div>
+                  )}
+                </TabsContent>
+                <TabsContent value="indicators" className="mt-8 outline-none">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {marketData.economic_indicators && Object.entries(marketData.economic_indicators).map(([key, data], idx) => {
+                      // RESTORED: Full metadata mapping for specific indicators
                       const indicatorInfo = {
                         fed_funds_rate: { 
                           title: "Fed Funds Rate", 
@@ -725,68 +734,64 @@ export default function MarketInsights() {
                         }
                       };
 
-                      const info = indicatorInfo[key] || { title: key.replace(/_/g, ' '), unit: "", description: "" };
+                      const info = indicatorInfo[key] || { title: key.replace(/_/g, ' '), unit: "Latest Metric", description: "" };
                       
+                      // RESTORED: Specific Trend Logic (VIX/Unemployment Up = Bad, Yield Curve Inversion)
                       const getTrendColor = (trend, metric) => {
-                        // Logic: For VIX and Unemployment, UP is BAD (Rose), DOWN is GOOD (Emerald)
                         if (metric === "unemployment_rate" || metric === "vix_index") {
-                          if (trend === "up") return "bg-rose-100 text-rose-700 border-rose-300";
-                          if (trend === "down") return "bg-emerald-100 text-emerald-700 border-emerald-300";
+                          if (trend === "up") return "bg-rose-50 text-rose-700 border-rose-500";
+                          if (trend === "down") return "bg-emerald-50 text-emerald-700 border-emerald-500";
                         }
-                        // Logic: For Yield Curve, Negative is BAD
                         if (metric === "yield_curve_slope") {
-                          return data.value < 0 ? "bg-rose-100 text-rose-700 border-rose-300" : "bg-emerald-100 text-emerald-700 border-emerald-300";
+                          return data.value < 0 ? "bg-rose-50 text-rose-700 border-rose-500" : "bg-emerald-50 text-emerald-700 border-emerald-500";
                         }
-                        // Standard: UP is GOOD, DOWN is BAD
-                        if (trend === "up") return "bg-emerald-100 text-emerald-700 border-emerald-300";
-                        if (trend === "down") return "bg-rose-100 text-rose-700 border-rose-300";
+                        if (trend === "up") return "bg-emerald-50 text-emerald-700 border-emerald-500";
+                        if (trend === "down") return "bg-rose-50 text-rose-700 border-rose-500";
                         return "bg-slate-100 text-slate-700 border-slate-300";
                       };
 
                       return (
-                        <Card key={idx} className={`border-2 transition-all rounded-xl shadow-sm hover:shadow-md ${
+                        <div key={idx} className={`group border-4 border-slate-900 rounded-[2.5rem] p-8 bg-white transition-all hover:translate-y-[-4px] ${
                           data.is_notable 
-                            ? "border-amber-300 bg-amber-50/40" 
-                            : "border-slate-200"
+                            ? 'shadow-[8px_8px_0px_0px_rgba(245,158,11,1)] border-amber-500' 
+                            : 'shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]'
                         }`}>
-                          <CardContent className="p-5">
-                            <div className="flex items-start justify-between mb-4">
-                              <div>
-                                <h3 className="font-black text-slate-900 text-sm uppercase tracking-widest">{info.title}</h3>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase">{info.unit}</p>
-                              </div>
-                              {data.is_notable && (
-                                <Badge className="bg-amber-600 text-white text-[10px] uppercase font-black px-2 py-0.5 animate-pulse">Notable</Badge>
-                              )}
+                          <div className="flex justify-between items-start mb-6">
+                            <div>
+                              <h3 className="font-black text-slate-900 text-[10px] uppercase tracking-[0.2em] mb-1">{info.title}</h3>
+                              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{info.unit}</p>
                             </div>
+                            {data.is_notable && (
+                              <Badge className="bg-amber-600 text-white text-[9px] uppercase font-black px-2 py-0.5 animate-pulse rounded-full">Notable</Badge>
+                            )}
+                          </div>
 
-                            <div className="flex items-baseline gap-2 mb-4">
-                              <span className="text-4xl font-black text-slate-900 tracking-tighter">
-                                {key === 'vix_index' || key === 'yield_curve_slope' ? data.value : `${data.value}%`}
-                              </span>
-                              <Badge className={`border-2 px-1.5 py-0 text-[10px] font-black ${getTrendColor(data.trend, key)}`}>
-                                {data.trend === "up" ? "↑" : data.trend === "down" ? "↓" : "→"} {data.trend.toUpperCase()}
-                              </Badge>
-                            </div>
+                          <div className="flex items-baseline gap-3 mb-6">
+                            <span className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
+                              {key === 'vix_index' || key === 'yield_curve_slope' ? data.value : `${data.value}%`}
+                            </span>
+                            <Badge className={`border-2 font-black uppercase text-[10px] px-3 py-0.5 rounded-full ${getTrendColor(data.trend, key)}`}>
+                              {data.trend === "up" ? "↑" : data.trend === "down" ? "↓" : "→"} {data.trend}
+                            </Badge>
+                          </div>
 
-                            <div className="bg-white border border-slate-100 rounded-xl p-3 mb-4 shadow-inner">
-                              <p className="text-[11px] text-slate-600 leading-relaxed font-medium italic">
-                                "{data.significance}"
-                              </p>
-                            </div>
+                          <div className="bg-slate-50 border-l-4 border-slate-900 p-4 mb-6 rounded-r-2xl">
+                            <p className="text-[11px] font-bold text-slate-600 leading-relaxed italic line-clamp-3">
+                              "{data.significance}"
+                            </p>
+                          </div>
 
-                            <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-100">
-                              <div>
-                                <p className="text-[9px] text-slate-400 font-black uppercase">Source</p>
-                                <p className="text-[10px] text-slate-800 font-bold truncate">{data.source || "Official Data"}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-[9px] text-slate-400 font-black uppercase">Reporting</p>
-                                <p className="text-[10px] text-slate-800 font-bold">{data.as_of || "Latest"}</p>
-                              </div>
+                          <div className="grid grid-cols-2 gap-4 pt-6 border-t-2 border-slate-100">
+                            <div>
+                              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Data Source</p>
+                              <p className="text-[10px] text-slate-900 font-black truncate">{data.source || "Institutional Data"}</p>
                             </div>
-                          </CardContent>
-                        </Card>
+                            <div className="text-right">
+                              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">As Of</p>
+                              <p className="text-[10px] text-slate-900 font-black">{data.as_of || "Latest"}</p>
+                            </div>
+                          </div>
+                        </div>
                       );
                     })}
                   </div>
