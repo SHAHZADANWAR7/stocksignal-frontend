@@ -493,7 +493,7 @@ export default function MarketInsights() {
                 </Card>
               </div>
 
-             {/* INDUSTRIAL AI PREDICTIVE SIGNAL INTELLIGENCE - FIXED CENTERING */}
+             {/* INDUSTRIAL AI PREDICTIVE SIGNAL INTELLIGENCE - BALANCED ALIGNMENT */}
               <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] mb-10 rounded-[2.5rem] overflow-hidden bg-white">
                 <CardHeader className="bg-slate-900 text-white py-4 border-b-4 border-slate-900">
                   <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3">
@@ -502,19 +502,21 @@ export default function MarketInsights() {
                   </CardTitle>
                 </CardHeader>
                 
-                {/* FIX: flex flex-col justify-center and min-h ensures the 
-                  subcards are perfectly vertically centered and never touch the header.
+                {/* FIX: 
+                   - py-12 md:py-16: Provides a large, fixed vertical safety buffer from the header.
+                   - flex justify-center: Centers the grid horizontally.
+                   - min-h-[400px]: Ensures the card always has a professional industrial "body".
                 */}
-                <CardContent className="p-8 md:p-12 lg:p-16 min-h-[450px] flex flex-col justify-center">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
+                <CardContent className="py-12 md:py-16 px-6 md:px-10 flex flex-col justify-center items-center min-h-[400px] bg-slate-50/30">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl mx-auto">
                     {marketData.predictive_signals?.map((signal, idx) => {
                       const Icon = getSignalIcon(signal.type);
                       return (
-                        <div key={idx} className="border-2 border-slate-900 rounded-2xl overflow-hidden flex flex-col bg-white hover:translate-y-[-2px] transition-transform shadow-sm">
+                        <div key={idx} className="border-2 border-slate-900 rounded-2xl overflow-hidden flex flex-col bg-white hover:translate-y-[-4px] transition-all shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                           <div className={`p-4 border-b-2 border-slate-900 flex items-center justify-between ${
                             signal.type === 'opportunity' ? 'bg-emerald-50' : signal.type === 'warning' ? 'bg-rose-50' : 'bg-blue-50'
                           }`}>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-3">
                               <div className={`p-1.5 rounded-lg border-2 ${
                                 signal.type === 'opportunity' ? 'border-emerald-200 bg-white' : 
                                 signal.type === 'warning' ? 'border-rose-200 bg-white' : 'border-blue-200 bg-white'
@@ -528,15 +530,16 @@ export default function MarketInsights() {
                             </div>
                             <div className="text-right">
                               <p className="font-mono text-xs font-black leading-none text-slate-900">{signal.confidence}%</p>
-                              <p className="text-[7px] font-black text-slate-400 uppercase mt-0.5">Confidence</p>
+                              <p className="text-[7px] font-black text-slate-400 uppercase mt-1">Confidence</p>
                             </div>
                           </div>
-                          <div className="p-5 flex-1 flex flex-col justify-between">
+                          
+                          <div className="p-6 flex-1 flex flex-col justify-between">
                             <div>
                               <h5 className="text-slate-900 font-black text-sm mb-3 leading-snug uppercase tracking-tight">
                                 {signal.description}
                               </h5>
-                              <div className="bg-slate-50 border-l-4 border-slate-900 p-4 mb-4 rounded-r-lg">
+                              <div className="bg-slate-50 border-l-4 border-slate-900 p-4 mb-4 rounded-r-lg shadow-inner">
                                 <p className="text-[11px] text-slate-700 font-bold leading-relaxed italic">
                                   "{signal.action}"
                                 </p>
