@@ -1,39 +1,5 @@
 import React, { useState, useEffect } from "react";
-// Mock implementation to resolve the build error
-const awsApi = {
-  cacheMarketInsights: async ({ action, data }) => {
-    if (action === 'get') {
-      const cached = localStorage.getItem('market_insights_cache');
-      return cached ? JSON.parse(cached) : null;
-    }
-    if (action === 'save') {
-      localStorage.setItem('market_insights_cache', JSON.stringify({
-        market_data: data,
-        last_fetched: new Date().toISOString()
-      }));
-    }
-  },
-  getVIXData: async () => ({ currentVIX: 18.5, regimeDescription: "Normal volatility", riskLevel: "Low" }),
-  generateMarketInsights: async ({ prompt, force_refresh }) => {
-    // This simulates your Lambda call for the preview
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          overall_sentiment: { score: 68, label: "BULLISH", key_factors: ["Fed stability", "Earnings growth"] },
-          sector_sentiment: [{ sector: "Technology", score: 85, reasoning: "AI growth" }],
-          news_stories: [{ headline: "Fed Holds Rates", category: "economy", sentiment_impact: "positive", summary: "Stability confirmed.", source: "News", time: "1h ago" }],
-          economic_indicators: {
-            fed_funds_rate: { value: 5.25, trend: "STABLE" },
-            inflation_rate: { value: 3.1, trend: "DOWN" },
-            vix_index: { value: 21, trend: "DOWN" },
-            yield_curve_slope: { value: -15, trend: "UP" }
-          },
-          metadata: { calibration: "Industrial v5.3" }
-        });
-      }, 1000);
-    });
-  }
-};
+import { awsApi } from "@/utils/awsClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -97,125 +63,115 @@ export default function MarketInsights() {
     loadCachedData();
   }, []);
 
- const loadCachedData = async () => {
+  const loadCachedData = async () => {
     try {
-      console.log("📂 Checking global cache for Industrial v5.3 insights...");
-      const data = await awsApi.cacheMarketInsights({ action: 'get' });
+      const data = await awsApi.getMarketInsights();
       
-      if (data && data.market_data) {
+      if (data && data.cache_age !== undefined) {
         const oneHour = 60 * 60 * 1000;
         
-        // 🛡️ FIX 1: Change "5.0" to "5.3" to match your Industrial Backend
-        const isOldVersion = data.market_data.metadata?.calibration_version !== "5.3";
-        
-        // 🛡️ FIX 2: More robust stale check for the Preview environment
-        const fetchedTime = new Date(data.last_fetched || Date.now()).getTime();
-        const isStale = (Date.now() - fetchedTime) > oneHour;
-        
-        if (isStale || isOldVersion) {
-          console.log(isOldVersion ? "🔄 Version mismatch (v5.3 required). Refreshing..." : "🔄 Cache stale. Refreshing...");
+        if (data.cache_age > oneHour) {
           loadMarketInsights();
         } else {
-          console.log("✅ Valid v5.3 cache found. Loading data.");
           setMarketData(data.market_data);
           setLastUpdated(new Date(data.last_fetched));
         }
       } else {
-        console.log("ℹ️ No cache found. Starting fresh load...");
         loadMarketInsights();
       }
     } catch (error) {
-      console.error("❌ Error loading cached data:", error);
+      console.error("Error loading cached data:", error);
       loadMarketInsights();
     }
   };
+
   const loadMarketInsights = async () => {
     setIsLoading(true);
     try {
-      console.log("🛠️ Starting Calibrated Institutional Waterfall (v5)...");
-      
-      // 1. QUANT ANCHOR: Fetch hard risk metrics from the VIX Lambda
-      // We maintain your original quantitative defaults and context
-      const vixResponse = await awsApi.getVIXData() || { 
-        currentVIX: 18.5, 
-        regimeDescription: "Normal volatility", 
-        riskLevel: "Low", 
-        impliedAnnualVol: 18, 
-        historicalVol: 20 
-      };
-      
-      // 2. CIO PROMPT: The full, high-conviction mandate for the LLM
-      const institutionalPrompt = `You are a Chief Investment Officer (CIO) at a top-tier global hedge fund. 
-Generate a high-conviction market intelligence report for late 2025.
+      const prompt = `You are analyzing US economic data. Today is ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.
 
-VERIFIED RISK PARAMETERS (GROUND TRUTH):
-- VIX Index: ${vixResponse.currentVIX} (${vixResponse.regimeDescription})
-- Risk Regime: ${vixResponse.riskLevel}
-- Implied Volatility: ${vixResponse.impliedAnnualVol}%
-- Portfolio Beta/Volatility: ${vixResponse.historicalVol}%
+CRITICAL: Search Yahoo Finance for the LATEST US economic indicator data published in late 2025.
 
-TASK: Synthesize the above quant data with actual late 2025 macro: Fed policy, Yield Volatility, and Fiscal Deficits.
+For EACH economic indicator, search Yahoo Finance specifically:
+1. Interest Rate: Search "site:finance.yahoo.com Federal Reserve interest rate December 2025"
+2. Inflation (CPI): Search "site:finance.yahoo.com US inflation CPI November 2025" 
+3. Unemployment: Search "site:finance.yahoo.com US unemployment rate November 2025"
+4. GDP Growth: Search "site:finance.yahoo.com US GDP Q3 2025"
+5. Leading Economic Index: Search "site:finance.yahoo.com US leading economic index November 2025"
 
-OUTPUT SPECIFICATION (STRICT JSON):
-1. overall_sentiment: {score: number 0-100, label: "BULLISH"|"BEARISH"|"CAUTIOUS", key_factors: [3 professional macro drivers]}
-2. sector_sentiment: Array of 5 objects {sector: string, score: number, reasoning: string}
-3. news_stories: Array of 5 high-impact stories {headline, category, sentiment_impact, summary, source, time}
-4. economic_indicators: {
-     interest_rate: {value, trend, source, as_of, significance, is_notable},
-     inflation: {value, trend, source, as_of, significance, is_notable},
-     unemployment: {value, trend, source, as_of, significance, is_notable},
-     gdp_growth: {value, trend, source, as_of, significance, is_notable},
-     vix_index: {value, trend, source, as_of, significance, is_notable}
-   }
-5. major_events: Array of 5 systemic events {description, impact, affected_sectors, date}
-6. predictive_signals: Array of 3 high-confidence signals {type: "opportunity"|"warning", description, confidence, action}
-7. asset_sentiment: Array of 5 asset classes {asset, score, outlook, reasoning}
+REQUIREMENTS:
+- Use ONLY Yahoo Finance articles from late 2025 (November/December 2025)
+- Report the actual published values from the articles
+- Compare to previous month/quarter for trend determination
+- All data must be US-specific
+- as_of dates must show exact month + 2025 (e.g., "November 2025")
 
-REQUIREMENT: No hallucinations about GPT-7. Focus on real-world macro. Return ONLY valid JSON.`;
+US Economic Indicators to report:
+- interest_rate: {value: number (Fed Funds Rate midpoint), trend: "up"|"down"|"stable", source: "Federal Reserve", as_of: "Month 2025", significance: string, is_notable: boolean}
+- inflation: {value: number (CPI year-over-year %), trend: "up"|"down"|"stable", source: "Bureau of Labor Statistics", as_of: "Month 2025", significance: string, is_notable: boolean}
+- unemployment: {value: number (U-3 rate %), trend: "up"|"down"|"stable", source: "Bureau of Labor Statistics", as_of: "Month 2025", significance: string, is_notable: boolean}
+- gdp_growth: {value: number (annualized %), trend: "up"|"down"|"stable", source: "Bureau of Economic Analysis", as_of: "Q# 2025", significance: string, is_notable: boolean}
+- leading_index: {value: number (LEI index), trend: "up"|"down"|"stable", source: "The Conference Board", as_of: "Month 2025", significance: string, is_notable: boolean}
 
-      // 3. INTELLIGENCE GENERATION: Updated to pass the force_refresh flag
-      // This tells the backend to bypass its local memory and hit the LLM
-      console.log("🤖 Generating CIO Intelligence Report (Bypassing memory cache)...");
-      const result = await awsApi.generateMarketInsights({
-        prompt: institutionalPrompt,
-        force_refresh: true
-      });
+is_notable = true only for significant changes: inflation/unemployment >0.2%, GDP >0.8%, LEI >1.0 point, rate >0.25%
 
-      // 4. DATA CONSOLIDATION: Flatten the result for the UI
-      // 🛡️ THE FIX: We spread '...result' so overall_sentiment is at the root level.
+Return JSON with:
+
+1. overall_sentiment: {score: number 0-100, label: string, key_factors: [3 short strings]}
+
+2. sector_sentiment: Array of 5 objects with {sector: string, score: number, reasoning: string} for Technology, Healthcare, Finance, Energy, Consumer Goods
+
+3. news_stories: Array of 5 objects with {headline: string, url: string, category: string, sentiment_impact: "positive"|"negative"|"neutral", summary: string, source: string, time: string}
+
+4. US Economic Indicators (SEARCH OFFICIAL SOURCES FOR REAL DATA):
+- interest_rate: {value: number (current Fed Funds Rate midpoint), trend: "up"|"down"|"stable", source: "Federal Reserve", as_of: "Month YYYY", significance: string (1 sentence), is_notable: boolean}
+- inflation: {value: number (latest US CPI year-over-year %), trend: "up"|"down"|"stable", source: "Bureau of Labor Statistics", as_of: "Month YYYY", significance: string, is_notable: boolean}
+- unemployment: {value: number (latest US U-3 rate %), trend: "up"|"down"|"stable", source: "Bureau of Labor Statistics", as_of: "Month YYYY", significance: string, is_notable: boolean}
+- gdp_growth: {value: number (latest quarterly annualized %), trend: "up"|"down"|"stable", source: "Bureau of Economic Analysis", as_of: "Q# YYYY", significance: string, is_notable: boolean}
+- leading_index: {value: number (actual LEI index value), trend: "up"|"down"|"stable", source: "The Conference Board", as_of: "Month YYYY", significance: string, is_notable: boolean}
+
+5. major_events: REQUIRED - Array of exactly 5 major financial/economic events from the last 30 days (November 22 - December 22, 2025)
+For EACH event, search Yahoo Finance, Bloomberg, CNBC for real events: {description: string (detailed), impact: "high"|"medium"|"low", affected_sectors: [1-3 sector names], url: string (real article URL), date: string (e.g., "Dec 15, 2025")}
+
+6. predictive_signals: Array of 3 objects with {type: "opportunity"|"warning"|"neutral", description: string, confidence: number 0-100, action: string}
+
+7. asset_sentiment: REQUIRED - Array of exactly 5 objects, one for each asset class:
+- {asset: "Stocks", score: number 0-100, outlook: "bullish"|"neutral"|"bearish" + reasoning}
+- {asset: "Bonds", score: number 0-100, outlook: "bullish"|"neutral"|"bearish" + reasoning}
+- {asset: "Commodities", score: number 0-100, outlook: "bullish"|"neutral"|"bearish" + reasoning}
+- {asset: "Crypto", score: number 0-100, outlook: "bullish"|"neutral"|"bearish" + reasoning}
+- {asset: "Real Estate", score: number 0-100, outlook: "bullish"|"neutral"|"bearish" + reasoning}
+
+Return only valid JSON.`;
+
+      const result = await awsApi.generateMarketInsights(prompt);
+
       const formattedResult = {
-        ...result,
-        vix_snapshot: {
-          current: vixResponse.currentVIX,
-          risk: vixResponse.riskLevel,
-          regime_details: vixResponse.regimeDescription,
-          historical_vol: vixResponse.historicalVol
+        overall_sentiment: result.overall_sentiment,
+        sector_sentiment: result.sector_sentiment,
+        news_stories: result.news_stories,
+        economic_indicators: {
+          interest_rate: result.interest_rate,
+          inflation: result.inflation,
+          unemployment: result.unemployment,
+          gdp_growth: result.gdp_growth,
+          leading_economic_index: result.leading_index
         },
-        metadata: {
-          ...result.metadata, // Carry over any metadata from the Lambda
-          engine: "Claude-3.5-Haiku-Institutional",
-          timestamp: new Date().toISOString(),
-          calibration_version: "5.3"
-        }
+        major_events: result.major_events,
+        predictive_signals: result.predictive_signals,
+        asset_sentiment: result.asset_sentiment
       };
 
-      // 5. UI UPDATE: Set state directly to the flat object
       setMarketData(formattedResult);
       setLastUpdated(new Date());
-
-      // 6. PERSISTENCE: Save this exact flat report to the DynamoDB global cache manager
-      console.log("💾 Persisting fresh v5 result to global cache...");
-      await awsApi.cacheMarketInsights({ 
-        action: 'save', 
-        data: formattedResult 
-      });
-      
+      await awsApi.cacheMarketInsights(formattedResult);
     } catch (error) {
-      console.error("❌ Institutional Waterfall Failed:", error);
-    } finally {
-      setIsLoading(false);
+      console.error("Error loading market insights:", error);
+      alert("Error loading market insights. Please try again.");
     }
+    setIsLoading(false);
   };
+
   const getSentimentColor = (score) => {
     if (score >= 65) return "text-emerald-600 bg-emerald-50 border-emerald-200";
     if (score >= 45) return "text-amber-600 bg-amber-50 border-amber-200";
@@ -505,172 +461,254 @@ REQUIREMENT: No hallucinations about GPT-7. Focus on real-world macro. Return ON
                 </CardContent>
               </Card>
 
-              <Tabs defaultValue="indicators" className="mb-8">
+              <Tabs defaultValue="news" className="mb-8">
                 <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="news">Live News Feed</TabsTrigger>
+                  <TabsTrigger value="events">Major Events</TabsTrigger>
                   <TabsTrigger value="indicators">Economic Indicators</TabsTrigger>
-                  <TabsTrigger value="sectors">Sector Analysis</TabsTrigger>
-                  <TabsTrigger value="assets">Asset Outlook</TabsTrigger>
                 </TabsList>
 
-                {/* 1. ECONOMIC INDICATORS TAB */}
+                <TabsContent value="news" className="mt-6">
+                  <div className="space-y-4">
+                    {marketData.news_stories?.map((story, idx) => {
+                      const CategoryIcon = getCategoryIcon(story.category);
+                      return (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                        >
+                          <Card className="border-2 border-slate-200 hover:shadow-lg transition-shadow rounded-xl">
+                            <CardContent className="p-4 md:p-6">
+                              <div className="flex items-start gap-3 md:gap-4">
+                                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center flex-shrink-0">
+                                  <CategoryIcon className="w-5 h-5 md:w-6 md:h-6 text-slate-700" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-col sm:flex-row items-start justify-between gap-2 mb-2">
+                                      <h3 className="font-bold text-slate-900 text-sm md:text-lg break-words flex-1">{story.headline}</h3>
+                                      <Badge className={`border ${getImpactColor(story.sentiment_impact)} text-[10px] md:text-xs flex-shrink-0`}>
+                                        {story.sentiment_impact}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-xs md:text-sm text-slate-700 mb-3 break-words">{story.summary}</p>
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                                      <div className="flex items-center gap-2 md:gap-4 text-[10px] md:text-sm text-slate-500 flex-wrap">
+                                        <Badge variant="outline" className="capitalize text-[10px] md:text-xs">{story.category}</Badge>
+                                        <span className="truncate">{story.source}</span>
+                                        <span className="flex items-center gap-1 flex-shrink-0">
+                                          <Clock className="w-3 h-3" />
+                                          {story.time}
+                                        </span>
+                                      </div>
+                                      {story.url && (
+                                        <a
+                                          href__={story.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-blue-600 hover:text-blue-700 font-semibold text-xs md:text-sm flex items-center gap-1 flex-shrink-0"
+                                        >
+                                          Read More
+                                          <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
+                                        </a>
+                                      )}
+                                    </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="events" className="mt-6">
+                  {!marketData.major_events || marketData.major_events.length === 0 ? (
+                  <Card className="border-2 border-amber-200 bg-amber-50 rounded-xl">
+                    <CardContent className="p-6 text-center">
+                        <AlertTriangle className="w-12 h-12 mx-auto mb-3 text-amber-600" />
+                        <p className="text-slate-700">No major events data available. Click "Refresh" to load recent market events.</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-4">
+                      {marketData.major_events.map((event, idx) => (
+                      <Card key={idx} className="border-2 border-slate-200 rounded-xl">
+                        <CardContent className="p-4 md:p-6">
+                          <div className="flex items-start gap-3 md:gap-4">
+                            <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                              event.impact === "high" ? "bg-rose-100" :
+                              event.impact === "medium" ? "bg-amber-100" : "bg-blue-100"
+                            }`}>
+                              <AlertTriangle className={`w-5 h-5 md:w-6 md:h-6 ${
+                                event.impact === "high" ? "text-rose-600" :
+                                event.impact === "medium" ? "text-amber-600" : "text-blue-600"
+                              }`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-col sm:flex-row items-start justify-between gap-2 mb-2">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-slate-900 font-semibold mb-1 text-xs md:text-sm break-words">{event.description}</p>
+                                  {event.date && (
+                                    <p className="text-[10px] md:text-xs text-slate-500 flex items-center gap-1">
+                                      <Clock className="w-3 h-3 flex-shrink-0" />
+                                      {event.date}
+                                    </p>
+                                  )}
+                                </div>
+                                <Badge className={`capitalize flex-shrink-0 text-[10px] md:text-xs ${
+                                  event.impact === "high" ? "bg-rose-100 text-rose-700" :
+                                  event.impact === "medium" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+                                }`}>
+                                  {event.impact}
+                                </Badge>
+                              </div>
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                                <div className="flex gap-1.5 md:gap-2 flex-wrap">
+                                  {event.affected_sectors?.map((sector, sidx) => (
+                                    <Badge key={sidx} variant="outline" className="text-[10px] md:text-xs">
+                                      {sector}
+                                    </Badge>
+                                  ))}
+                                </div>
+                                {event.url && (
+                                  <a
+                                    href__={event.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-700 font-semibold text-xs md:text-sm flex items-center gap-1 flex-shrink-0"
+                                  >
+                                    Read More
+                                    <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      ))}
+                      </div>
+                      )}
+                      </TabsContent>
+
                 <TabsContent value="indicators" className="mt-6">
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {marketData.economic_indicators && Object.entries(marketData.economic_indicators)
-                      .filter(([key]) => key !== 'source' && key !== 'as_of')
-                      .map(([key, data], idx) => {
-                        if (!data) return null;
+                    {marketData.economic_indicators && Object.entries(marketData.economic_indicators).map(([key, data], idx) => {
+                      const indicatorInfo = {
+                        interest_rate: {
+                          title: "Interest Rate",
+                          unit: "Federal Funds Rate",
+                          description: "The target rate set by the Federal Reserve for overnight lending between banks.",
+                          trendMeaning: { up: "Higher rates slow growth", down: "Lower rates stimulate growth", stable: "Policy on hold" }
+                        },
+                        inflation: {
+                          title: "Inflation (CPI)",
+                          unit: "Year-over-year % change",
+                          description: "Consumer Price Index measures average change in prices paid by consumers.",
+                          trendMeaning: { up: "Rising prices reduce purchasing power", down: "Moderating prices", stable: "Stable prices" }
+                        },
+                        unemployment: {
+                          title: "Unemployment Rate",
+                          unit: "U-3 unemployment rate",
+                          description: "Percentage of labor force seeking employment but without jobs.",
+                          trendMeaning: { up: "Weakening labor market", down: "Strengthening job market", stable: "Stable employment" }
+                        },
+                        gdp_growth: {
+                          title: "GDP Growth",
+                          unit: "Quarterly annualized %",
+                          description: "Gross Domestic Product growth measures economic expansion rate.",
+                          trendMeaning: { up: "Accelerating growth", down: "Slowing growth", stable: "Steady growth" }
+                        },
+                        leading_economic_index: {
+                          title: "Leading Economic Index",
+                          unit: "Index level (100 baseline)",
+                          description: "Composite index designed to predict future economic direction.",
+                          trendMeaning: { up: "Economy strengthening", down: "Economy weakening", stable: "Steady outlook" }
+                        }
+                      };
 
-                        const indicatorMapping = {
-                          fed_funds_rate: { title: "Fed Funds Rate", unit: "%", desc: "Target interest rate range" },
-                          inflation_rate: { title: "Inflation (CPI)", unit: "%", desc: "Purchasing power stability" },
-                          unemployment_rate: { title: "Unemployment", unit: "%", desc: "Labor market participation" },
-                          gdp_growth: { title: "GDP Growth", unit: "%", desc: "Economic expansion rate" },
-                          vix_index: { title: "VIX (Fear Index)", unit: "pts", desc: "Market volatility expectations" },
-                          yield_curve_slope: { title: "Yield Curve (10Y-2Y)", unit: "bps", desc: "Recession predictor" }
-                        };
+                      const info = indicatorInfo[key] || { 
+                        title: key.replace(/_/g, ' '), 
+                        unit: "", 
+                        description: "",
+                        trendMeaning: { up: "", down: "", stable: "" }
+                      };
 
-                        const info = indicatorMapping[key] || { 
-                          title: key.replace(/_/g, ' ').toUpperCase(), 
-                          unit: "", 
-                          desc: "Institutional data point" 
-                        };
-
-                        const getTrendColor = (trend, metric) => {
-                          const t = (trend || "stable").toLowerCase();
-                          const isInverse = ["vix_index", "inflation_rate", "unemployment_rate"].includes(metric);
-                          if (t === "stable") return "bg-slate-100 text-slate-700 border-slate-300";
-                          if (t === "up") return isInverse ? "bg-rose-100 text-rose-700 border-rose-300" : "bg-emerald-100 text-emerald-700 border-emerald-300";
-                          if (t === "down") return isInverse ? "bg-emerald-100 text-emerald-700 border-emerald-300" : "bg-rose-100 text-rose-700 border-rose-300";
+                      const getTrendColor = (trend, metric) => {
+                        if (metric === "unemployment") {
+                          if (trend === "up") return "bg-rose-100 text-rose-700 border-rose-300";
+                          if (trend === "down") return "bg-emerald-100 text-emerald-700 border-emerald-300";
                           return "bg-slate-100 text-slate-700 border-slate-300";
-                        };
+                        }
+                        if (metric === "inflation") {
+                          if (trend === "up") return "bg-amber-100 text-amber-700 border-amber-300";
+                          if (trend === "down") return "bg-emerald-100 text-emerald-700 border-emerald-300";
+                          return "bg-slate-100 text-slate-700 border-slate-300";
+                        }
+                        if (metric === "interest_rate") {
+                          if (trend === "stable") return "bg-slate-100 text-slate-700 border-slate-300";
+                          return "bg-purple-100 text-purple-700 border-purple-300";
+                        }
+                        if (trend === "up") return "bg-emerald-100 text-emerald-700 border-emerald-300";
+                        if (trend === "down") return "bg-rose-100 text-rose-700 border-rose-300";
+                        return "bg-slate-100 text-slate-700 border-slate-300";
+                      };
 
-                        const displayValue = typeof data === 'object' ? (data.value ?? "N/A") : data;
-                        const displayTrend = typeof data === 'object' ? (data.trend ?? "stable") : "stable";
-                        const isNotable = typeof data === 'object' ? data.is_notable : false;
-
-                        return (
-                          <motion.div
-                            key={idx}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: idx * 0.05 }}
-                          >
-                            <Card className={`border-2 transition-all rounded-xl h-full ${
-                              isNotable ? "border-amber-300 bg-amber-50 shadow-md" : "border-slate-200"
-                            }`}>
-                              <CardContent className="p-4 md:p-6">
-                                <h3 className="font-bold text-slate-900 text-sm md:text-lg mb-1">{info.title}</h3>
-                                <p className="text-[10px] text-slate-500 mb-3">{info.desc}</p>
-                                
-                                <div className="mb-4">
-                                  <Badge className={`border-2 ${getTrendColor(displayTrend, key)}`}>
-                                    {displayTrend.toLowerCase() === "up" ? "↑" : displayTrend.toLowerCase() === "down" ? "↓" : "→"} {displayTrend.toUpperCase()}
-                                  </Badge>
-                                </div>
-
-                                <div className="mb-3">
-                                  <p className="text-2xl md:text-4xl font-bold text-slate-900">
-                                    {displayValue}{info.unit}
-                                  </p>
-                                </div>
-
-                                <p className="text-xs text-slate-700 bg-white/50 p-2 rounded border border-slate-100">
-                                  {data.significance || `Monitoring ${info.title} for structural shifts.`}
-                                </p>
-                              </CardContent>
-                            </Card>
-                          </motion.div>
-                        );
-                      })}
-                  </div>
-                </TabsContent>
-
-                {/* 2. SECTOR ANALYSIS TAB */}
-                <TabsContent value="sectors" className="mt-6">
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <Card className="p-6 rounded-2xl border-2 border-slate-200">
-                      <div className="h-[300px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={marketData.sector_sentiment}>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                            <XAxis dataKey="sector" tick={{fontSize: 10}} stroke="#64748b" />
-                            <YAxis domain={[0, 100]} hide />
-                            <RechartsTooltip />
-                            <Bar dataKey="score" radius={[6, 6, 0, 0]}>
-                              {marketData.sector_sentiment?.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.score > 65 ? '#10b981' : entry.score < 45 ? '#f43f5e' : '#f59e0b'} />
-                              ))}
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </Card>
-                    <div className="space-y-3">
-                      {marketData.sector_sentiment?.map((s, i) => (
-                        <motion.div 
-                          key={i} 
-                          initial={{ x: 20, opacity: 0 }} 
-                          animate={{ x: 0, opacity: 1 }} 
-                          transition={{ delay: i * 0.1 }}
-                          className="p-4 bg-white border border-slate-100 rounded-2xl shadow-sm flex justify-between items-center"
-                        >
-                          <div className="min-w-0 flex-1 mr-4">
-                            <p className="font-bold text-slate-800 truncate">{s.sector}</p>
-                            <p className="text-xs text-slate-500 line-clamp-1">{s.reasoning}</p>
-                          </div>
-                          <Badge className={`${getSentimentColor(s.score)} text-lg px-4 py-1 flex-shrink-0`}>
-                            {s.score}
-                          </Badge>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-                </TabsContent>
-
-                {/* 3. ASSET OUTLOOK TAB */}
-                <TabsContent value="assets" className="mt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {marketData.asset_sentiment?.map((asset, i) => (
-                      <motion.div 
-                        key={i}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                      >
-                        <Card className={`border-2 rounded-2xl h-full shadow-sm ${getSentimentColor(asset.score)}`}>
-                          <CardContent className="p-6 text-center">
-                            <div className="w-12 h-12 bg-white/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <Target className="w-6 h-6 text-slate-700" />
+                      return (
+                        <Card key={idx} className={`border-2 transition-all rounded-xl ${
+                          data.is_notable 
+                            ? "border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50 shadow-lg ring-2 ring-amber-200" 
+                            : "border-slate-200 hover:shadow-lg"
+                        }`}>
+                          <CardContent className="p-4 md:p-6">
+                            <div className="flex items-start justify-between mb-3 md:mb-4 gap-2">
+                              <h3 className="font-bold text-slate-900 text-sm md:text-lg truncate">{info.title}</h3>
+                              {data.is_notable && (
+                                <Badge className="bg-amber-600 text-white animate-pulse">Notable</Badge>
+                              )}
                             </div>
-                            <p className="font-bold text-xl text-slate-900 mb-1">{asset.asset}</p>
-                            <p className="text-4xl font-black text-slate-900 mb-2">{asset.score}</p>
-                            <Badge variant="outline" className="mb-4 bg-white/80 border-slate-200 text-slate-700 font-bold">
-                              {asset.outlook?.toUpperCase()}
-                            </Badge>
-                            <p className="text-xs font-medium text-slate-600 leading-relaxed">
-                              {asset.reasoning}
-                            </p>
+
+                            <div className="mb-4">
+                              <Badge className={`border-2 ${getTrendColor(data.trend, key)}`}>
+                                {data.trend === "up" ? "↑" : data.trend === "down" ? "↓" : "→"} {data.trend.toUpperCase()}
+                              </Badge>
+                            </div>
+
+                            <div className="mb-3">
+                              <p className="text-2xl md:text-4xl font-bold text-slate-900 break-words">
+                                {key === "leading_economic_index" ? data.value : `${data.value}%`}
+                              </p>
+                              <p className="text-[10px] md:text-xs text-slate-500 mt-1 break-words">{info.unit}</p>
+                            </div>
+
+                            {data.significance && (
+                              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 mb-3 border-2 border-blue-200">
+                                <p className="text-sm text-slate-800 font-medium">
+                                  {data.significance}
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="pt-3 border-t border-slate-200 space-y-1">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-slate-500">Source:</span>
+                                <span className="font-semibold text-slate-700">{data.source || "Official Data"}</span>
+                              </div>
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-slate-500">As of:</span>
+                                <span className="font-semibold text-slate-700">{data.as_of || "Latest"}</span>
+                              </div>
+                            </div>
                           </CardContent>
                         </Card>
-                      </motion.div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </TabsContent>
               </Tabs>
-              
-              {/* Footer Attribution */}
-              <div className="mt-12 pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 text-slate-400 text-xs font-bold uppercase tracking-widest">
-                <div className="flex items-center gap-6">
-                  <span className="flex items-center gap-2">
-                    <Brain className="w-4 h-4" /> 
-                    Engine: {marketData.metadata?.engine || "Claude-3.5-Haiku-Institutional"}
-                  </span>
-                  <span>Version: {marketData.metadata?.calibration_version || "5.3"}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4" /> Ground Truth Source: VIX Terminal
-                </div>
-              </div>
             </>
           )}
         </motion.div>
