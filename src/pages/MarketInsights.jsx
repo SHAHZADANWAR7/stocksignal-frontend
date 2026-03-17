@@ -557,14 +557,23 @@ export default function MarketInsights() {
               </Card>
 
              <Tabs defaultValue="news" className="mb-8">
-                <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-slate-900 rounded-[2rem] border-4 border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
-                  <TabsTrigger value="news" className="py-3 font-black uppercase text-[10px] md:text-xs tracking-widest data-[state=active]:bg-white data-[state=active]:text-slate-900 rounded-[1.5rem] transition-all text-white/60">
+                <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-slate-900 rounded-[2rem] border-4 border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]">
+                  <TabsTrigger 
+                    value="news" 
+                    className="py-3 font-black uppercase text-[10px] md:text-xs tracking-widest text-slate-400 data-[state=active]:bg-white data-[state=active]:text-slate-950 rounded-[1.5rem] transition-all"
+                  >
                     News Wire
                   </TabsTrigger>
-                  <TabsTrigger value="events" className="py-3 font-black uppercase text-[10px] md:text-xs tracking-widest data-[state=active]:bg-white data-[state=active]:text-slate-900 rounded-[1.5rem] transition-all text-white/60">
+                  <TabsTrigger 
+                    value="events" 
+                    className="py-3 font-black uppercase text-[10px] md:text-xs tracking-widest text-slate-400 data-[state=active]:bg-white data-[state=active]:text-slate-950 rounded-[1.5rem] transition-all"
+                  >
                     Macro Events
                   </TabsTrigger>
-                  <TabsTrigger value="indicators" className="py-3 font-black uppercase text-[10px] md:text-xs tracking-widest data-[state=active]:bg-white data-[state=active]:text-slate-900 rounded-[1.5rem] transition-all text-white/60">
+                  <TabsTrigger 
+                    value="indicators" 
+                    className="py-3 font-black uppercase text-[10px] md:text-xs tracking-widest text-slate-400 data-[state=active]:bg-white data-[state=active]:text-slate-950 rounded-[1.5rem] transition-all"
+                  >
                     Indicators
                   </TabsTrigger>
                 </TabsList>
@@ -697,7 +706,7 @@ export default function MarketInsights() {
                     </div>
                   )}
                 </TabsContent>
-                <TabsContent value="indicators" className="mt-8 outline-none">
+               <TabsContent value="indicators" className="mt-8 outline-none">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {marketData.economic_indicators && Object.entries(marketData.economic_indicators).map(([key, data], idx) => {
                       // RESTORED: Full metadata mapping for specific indicators
@@ -736,18 +745,18 @@ export default function MarketInsights() {
 
                       const info = indicatorInfo[key] || { title: key.replace(/_/g, ' '), unit: "Latest Metric", description: "" };
                       
-                      // RESTORED: Specific Trend Logic (VIX/Unemployment Up = Bad, Yield Curve Inversion)
+                      // FIXED: High-Contrast Trend Logic (VIX/Unemployment Up = Bad)
                       const getTrendColor = (trend, metric) => {
                         if (metric === "unemployment_rate" || metric === "vix_index") {
-                          if (trend === "up") return "bg-rose-50 text-rose-700 border-rose-500";
-                          if (trend === "down") return "bg-emerald-50 text-emerald-700 border-emerald-500";
+                          if (trend === "up") return "bg-rose-100 text-rose-950 border-rose-600";
+                          if (trend === "down") return "bg-emerald-100 text-emerald-950 border-emerald-600";
                         }
                         if (metric === "yield_curve_slope") {
-                          return data.value < 0 ? "bg-rose-50 text-rose-700 border-rose-500" : "bg-emerald-50 text-emerald-700 border-emerald-500";
+                          return data.value < 0 ? "bg-rose-100 text-rose-950 border-rose-600" : "bg-emerald-100 text-emerald-950 border-emerald-600";
                         }
-                        if (trend === "up") return "bg-emerald-50 text-emerald-700 border-emerald-500";
-                        if (trend === "down") return "bg-rose-50 text-rose-700 border-rose-500";
-                        return "bg-slate-100 text-slate-700 border-slate-300";
+                        if (trend === "up") return "bg-emerald-100 text-emerald-950 border-emerald-600";
+                        if (trend === "down") return "bg-rose-100 text-rose-950 border-rose-600";
+                        return "bg-slate-200 text-slate-900 border-slate-400";
                       };
 
                       return (
@@ -758,8 +767,8 @@ export default function MarketInsights() {
                         }`}>
                           <div className="flex justify-between items-start mb-6">
                             <div>
-                              <h3 className="font-black text-slate-900 text-[10px] uppercase tracking-[0.2em] mb-1">{info.title}</h3>
-                              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">{info.unit}</p>
+                              <h3 className="font-black text-slate-950 text-[10px] uppercase tracking-[0.2em] mb-1">{info.title}</h3>
+                              <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">{info.unit}</p>
                             </div>
                             {data.is_notable && (
                               <Badge className="bg-amber-600 text-white text-[9px] uppercase font-black px-2 py-0.5 animate-pulse rounded-full">Notable</Badge>
@@ -767,28 +776,29 @@ export default function MarketInsights() {
                           </div>
 
                           <div className="flex items-baseline gap-3 mb-6">
-                            <span className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter">
+                            <span className="text-4xl md:text-5xl font-black text-slate-950 tracking-tighter">
                               {key === 'vix_index' || key === 'yield_curve_slope' ? data.value : `${data.value}%`}
                             </span>
-                            <Badge className={`border-2 font-black uppercase text-[10px] px-3 py-0.5 rounded-full ${getTrendColor(data.trend, key)}`}>
-                              {data.trend === "up" ? "↑" : data.trend === "down" ? "↓" : "→"} {data.trend}
+                            {/* HIGH CONTRAST TREND BADGE */}
+                            <Badge className={`border-2 font-black uppercase text-[10px] px-3 py-0.5 rounded-full shadow-sm ${getTrendColor(data.trend, key)}`}>
+                              {data.trend === "up" ? "▲" : data.trend === "down" ? "↓" : "■"} {data.trend}
                             </Badge>
                           </div>
 
                           <div className="bg-slate-50 border-l-4 border-slate-900 p-4 mb-6 rounded-r-2xl">
-                            <p className="text-[11px] font-bold text-slate-600 leading-relaxed italic line-clamp-3">
+                            <p className="text-[11px] font-black text-slate-700 leading-relaxed italic line-clamp-3">
                               "{data.significance}"
                             </p>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4 pt-6 border-t-2 border-slate-100">
+                          <div className="grid grid-cols-2 gap-4 pt-6 border-t-2 border-slate-900">
                             <div>
-                              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Data Source</p>
-                              <p className="text-[10px] text-slate-900 font-black truncate">{data.source || "Institutional Data"}</p>
+                              <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Data Source</p>
+                              <p className="text-[10px] text-slate-950 font-black truncate">{data.source || "Institutional Data"}</p>
                             </div>
                             <div className="text-right">
-                              <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">As Of</p>
-                              <p className="text-[10px] text-slate-900 font-black">{data.as_of || "Latest"}</p>
+                              <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">As Of</p>
+                              <p className="text-[10px] text-slate-950 font-black">{data.as_of || "Latest"}</p>
                             </div>
                           </div>
                         </div>
