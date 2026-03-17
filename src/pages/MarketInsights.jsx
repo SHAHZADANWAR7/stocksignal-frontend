@@ -493,7 +493,7 @@ export default function MarketInsights() {
                 </Card>
               </div>
 
-              {/* INDUSTRIAL AI PREDICTIVE SIGNAL INTELLIGENCE */}
+             {/* INDUSTRIAL AI PREDICTIVE SIGNAL INTELLIGENCE - FIXED CENTERING */}
               <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] mb-10 rounded-[2.5rem] overflow-hidden bg-white">
                 <CardHeader className="bg-slate-900 text-white py-4 border-b-4 border-slate-900">
                   <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3">
@@ -501,8 +501,12 @@ export default function MarketInsights() {
                     Predictive Signal Intelligence
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-12 p-8 md:pt-16 md:p-10 lg:pt-20 lg:p-12">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                
+                {/* FIX: flex flex-col justify-center and min-h ensures the 
+                  subcards are perfectly vertically centered and never touch the header.
+                */}
+                <CardContent className="p-8 md:p-12 lg:p-16 min-h-[450px] flex flex-col justify-center">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full">
                     {marketData.predictive_signals?.map((signal, idx) => {
                       const Icon = getSignalIcon(signal.type);
                       return (
@@ -523,22 +527,22 @@ export default function MarketInsights() {
                               <span className="font-black text-[10px] uppercase tracking-[0.15em] text-slate-900">{signal.type}</span>
                             </div>
                             <div className="text-right">
-                              <p className="font-mono text-xs font-black leading-none">{signal.confidence}%</p>
+                              <p className="font-mono text-xs font-black leading-none text-slate-900">{signal.confidence}%</p>
                               <p className="text-[7px] font-black text-slate-400 uppercase mt-0.5">Confidence</p>
                             </div>
                           </div>
                           <div className="p-5 flex-1 flex flex-col justify-between">
                             <div>
-                              <h5 className="text-slate-900 font-black text-sm mb-2 leading-snug uppercase tracking-tight">
+                              <h5 className="text-slate-900 font-black text-sm mb-3 leading-snug uppercase tracking-tight">
                                 {signal.description}
                               </h5>
-                              <div className="bg-slate-50 border-l-4 border-slate-900 p-3 mb-4 rounded-r-lg">
-                                <p className="text-[11px] text-slate-600 font-bold leading-relaxed italic">
+                              <div className="bg-slate-50 border-l-4 border-slate-900 p-4 mb-4 rounded-r-lg">
+                                <p className="text-[11px] text-slate-700 font-bold leading-relaxed italic">
                                   "{signal.action}"
                                 </p>
                               </div>
                             </div>
-                            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200 shadow-inner">
+                            <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200 shadow-inner mt-2">
                               <motion.div
                                 initial={{ width: 0 }}
                                 animate={{ width: `${signal.confidence}%` }}
