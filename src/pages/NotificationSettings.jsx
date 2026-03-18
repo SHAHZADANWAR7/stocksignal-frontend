@@ -258,7 +258,7 @@ export default function NotificationSettings() {
                   }))
                 }
                 placeholder="your@email.com"
-                className="mt-2 h-12 text-base"
+                className="mt-2 h-12 text-base border-2 border-slate-200 focus:border-slate-900 rounded-xl"
               />
             </div>
 
@@ -276,20 +276,25 @@ export default function NotificationSettings() {
                   }))
                 }
               >
-                <SelectTrigger className="h-12 text-base">
-                  <SelectValue />
+                <SelectTrigger className="h-12 border-2 border-slate-900 bg-white text-slate-900 font-bold rounded-xl px-4 flex justify-between items-center shadow-sm">
+                  {/* Robust Manual Render to prevent invisible selection */}
+                  <span className="uppercase text-sm tracking-widest">
+                    {newsletterData.frequency === "daily" ? "Daily Updates" : 
+                     newsletterData.frequency === "weekly" ? "Weekly Digest" : 
+                     newsletterData.frequency === "monthly" ? "Monthly Summary" : "Select Frequency"}
+                  </span>
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily Updates</SelectItem>
-                  <SelectItem value="weekly">Weekly Digest (Recommended)</SelectItem>
-                  <SelectItem value="monthly">Monthly Summary</SelectItem>
+                <SelectContent className="bg-white border-2 border-slate-900 rounded-xl shadow-xl">
+                  <SelectItem value="daily" className="font-bold uppercase text-xs">Daily Updates</SelectItem>
+                  <SelectItem value="weekly" className="font-bold uppercase text-xs">Weekly Digest</SelectItem>
+                  <SelectItem value="monthly" className="font-bold uppercase text-xs">Monthly Summary</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* INDUSTRIAL TOPIC GRID */}
             <div>
-              <Label className="font-black uppercase text-[10px] text-slate-400 mb-4 block">
+              <Label className="font-black uppercase text-[10px] text-slate-400 mb-4 block tracking-[0.2em]">
                 Intelligence Focus Areas
               </Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -305,7 +310,7 @@ export default function NotificationSettings() {
                   >
                     <Checkbox
                       checked={newsletterData.interests.includes(topic)}
-                      className="border-slate-400 data-[state=checked]:bg-purple-500"
+                      className="border-slate-400 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
                     />
                     <span className="font-black uppercase text-[10px] tracking-widest">{topic}</span>
                   </div>
@@ -319,7 +324,7 @@ export default function NotificationSettings() {
                 onClick={() => handleManualTrigger("newsletter")}
                 disabled={isTriggering === "newsletter"}
                 variant="outline"
-                className="border-2 border-slate-900 font-black uppercase text-xs rounded-2xl h-12 flex-1"
+                className="border-2 border-slate-900 font-black uppercase text-xs rounded-2xl h-12 flex-1 hover:bg-slate-50 transition-all"
               >
                 {isTriggering === "newsletter" ? (
                   <Loader2 className="animate-spin" />
@@ -331,7 +336,7 @@ export default function NotificationSettings() {
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="bg-slate-900 text-white font-black uppercase text-xs rounded-2xl h-12 flex-1 shadow-[4px_4px_0px_0px_rgba(168,85,247,1)]"
+                className="bg-slate-900 text-white font-black uppercase text-xs rounded-2xl h-12 flex-1 shadow-[4px_4px_0px_0px_rgba(168,85,247,1)] hover:translate-y-[-2px] active:translate-y-[0px] transition-all"
               >
                 {saveSuccess ? "System Updated!" : "Save Configuration"}
               </Button>
