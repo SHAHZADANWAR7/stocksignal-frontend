@@ -17,17 +17,18 @@ export default function NotificationSettings() {
   const [settings, setSettings] = useState({
     daily_alerts: false,
     weekly_summary: true,
-    monthly_report: true
+    monthly_report: true,
   });
   const [newsletterData, setNewsletterData] = useState({
     email: "",
     frequency: "weekly",
-    interests: []
+    interests: [],
   });
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isTriggering, setIsTriggering] = useState(""); // Tracks which button is loading
 
   useEffect(() => {
     loadSettings();
@@ -58,13 +59,16 @@ export default function NotificationSettings() {
 
       if (currentUser.newsletter_preferences) {
         setSettings(currentUser.newsletter_preferences);
-        setNewsletterData(prev => ({
+        setNewsletterData((prev) => ({
           ...prev,
           email: userEmail || "",
-          interests: currentUser.newsletter_preferences.interests || []
+          interests: currentUser.newsletter_preferences.interests || [],
         }));
       } else {
-        setNewsletterData(prev => ({ ...prev, email: userEmail || "" }));
+        setNewsletterData((prev) => ({
+          ...prev,
+          email: userEmail || "",
+        }));
       }
     } catch (error) {
       console.error("Error loading settings:", error);
@@ -78,11 +82,11 @@ export default function NotificationSettings() {
 
       const updatedPrefs = {
         ...settings,
-        interests: newsletterData.interests
+        interests: newsletterData.interests,
       };
 
       await awsApi.updateUser(userId, {
-        newsletter_preferences: updatedPrefs
+        newsletter_preferences: updatedPrefs,
       });
 
       setSaveSuccess(true);
@@ -94,22 +98,53 @@ export default function NotificationSettings() {
     }
   };
 
-  const toggleSetting = key => {
-    setSettings(prev => ({
+  const toggleSetting = (key) => {
+    setSettings((prev) => ({
       ...prev,
-      [key]: !prev[key]
+      [key]: !prev[key],
     }));
   };
 
-  const handleInterestToggle = topic => {
-    setNewsletterData(prev => ({
+  const handleInterestToggle = (topic) => {
+    setNewsletterData((prev) => ({
       ...prev,
       interests: prev.interests.includes(topic)
-        ? prev.interests.filter(i => i !== topic)
-        : [...prev.interests, topic]
+        ? prev.interests.filter((i) => i !== topic)
+        : [...prev.interests, topic],
     }));
   };
 
+  // Handles real lambda triggers for newsletter and notification manual dispatch/testing
+  const handleManualTrigger = async (type) => {
+    setIsTriggering(type);
+    try {
+      let result;
+      const userId = localStorage.getItem("user_id");
+      switch (type) {
+        case "daily":
+          result = await awsApi.sendDailyAlert({ userId });
+          break;
+        case "weekly":
+          result = await awsApi.sendWeeklySummary({ userId });
+          break;
+        case "monthly":
+          result = await awsApi.sendMonthlyReport({ userId });
+          break;
+        case "newsletter":
+          result = await awsApi.sendNewsletter({ userId, interests: newsletterData.interests });
+          break;
+        default:
+          break;
+      }
+      alert(`✅ ${type.toUpperCase()} Dispatch Successful!`);
+    } catch (error) {
+      alert(`❌ ${type.toUpperCase()} Failed: ` + error.message);
+    } finally {
+      setIsTriggering("");
+    }
+  };
+
+  // You may keep this legacy test preview for LLM/test email, or remove if not wanted anymore
   const handleSendTestEmail = async () => {
     if (newsletterData.interests.length === 0) {
       alert("Please select at least one topic of interest first.");
@@ -144,9 +179,7 @@ export default function NotificationSettings() {
       <p>Your ${newsletterData.frequency} Investment Digest</p>
     </div>
     <div class="content">
-      ${typeof content === "string"
-        ? content.replace(/\n/g, "<br>")
-        : content}
+      ${typeof content === "string" ? content.replace(/\n/g, "<br>") : content}
     </div>
   </div>
 </body>
@@ -156,7 +189,7 @@ export default function NotificationSettings() {
         to: newsletterData.email,
         subject: `📈 Your ${newsletterData.frequency} StockSignal Digest - Test`,
         body: emailBody,
-        from_name: "StockSignal"
+        from_name: "StockSignal",
       });
 
       alert("Test email sent! Check your inbox.");
@@ -172,19 +205,19 @@ export default function NotificationSettings() {
         {/* INDUSTRIAL HEADER WITH FORCE SYNC */}
         <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">System Control</h1>
-            <p className="text-slate-500 font-bold uppercase text-xs tracking-widest mt-1">v5.4 Notification & Data Management</p>
+            <h1 className="text-4xl font-black text-slate-900 uppercase tracking-tighter">
+              System Control
+            </h1>
+            <p className="text-slate-500 font-bold uppercase text-xs tracking-widest mt-1">
+              v5.4 Notification & Data Management
+            </p>
           </div>
           <Button
             onClick={handleSyncPortfolio}
             disabled={isSyncing}
             className="border-4 border-slate-900 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-black rounded-xl h-14 px-8"
           >
-            {isSyncing ? (
-              <Loader2 className="animate-spin mr-2" />
-            ) : (
-              <RefreshCw className="mr-2 w-5 h-5" />
-            )}
+            {isSyncing ? <Loader2 className="animate-spin mr-2" /> : <RefreshCw className="mr-2 w-5 h-5" />}
             FORCE PRICE SYNC
           </Button>
         </div>
@@ -197,7 +230,7 @@ export default function NotificationSettings() {
           </AlertDescription>
         </Alert>
 
-        {/* Newsletter Subscription Card (with symmetrical shadow) */}
+        {/* Newsletter Subscription Card (with industrial styling) */}
         <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden bg-white mb-8">
           <CardHeader className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 text-white py-6">
             <CardTitle className="text-2xl font-bold flex items-center gap-3">
@@ -218,10 +251,10 @@ export default function NotificationSettings() {
                 id="email"
                 type="email"
                 value={newsletterData.email}
-                onChange={e =>
-                  setNewsletterData(prev => ({
+                onChange={(e) =>
+                  setNewsletterData((prev) => ({
                     ...prev,
-                    email: e.target.value
+                    email: e.target.value,
                   }))
                 }
                 placeholder="your@email.com"
@@ -236,10 +269,10 @@ export default function NotificationSettings() {
               </Label>
               <Select
                 value={newsletterData.frequency}
-                onValueChange={value =>
-                  setNewsletterData(prev => ({
+                onValueChange={(value) =>
+                  setNewsletterData((prev) => ({
                     ...prev,
-                    frequency: value
+                    frequency: value,
                   }))
                 }
               >
@@ -256,9 +289,11 @@ export default function NotificationSettings() {
 
             {/* INDUSTRIAL TOPIC GRID */}
             <div>
-              <Label className="font-black uppercase text-[10px] text-slate-400 mb-4 block">Intelligence Focus Areas</Label>
+              <Label className="font-black uppercase text-[10px] text-slate-400 mb-4 block">
+                Intelligence Focus Areas
+              </Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {["stocks", "crypto", "economy", "analysis", "news"].map(topic => (
+                {["stocks", "crypto", "economy", "analysis", "news"].map((topic) => (
                   <div
                     key={topic}
                     onClick={() => handleInterestToggle(topic)}
@@ -281,22 +316,22 @@ export default function NotificationSettings() {
             {/* Newsletter Card Footer */}
             <div className="pt-6 border-t-2 border-slate-100 flex flex-col md:flex-row gap-4">
               <Button
-                onClick={handleSendTestEmail}
-                disabled={isSendingTest}
+                onClick={() => handleManualTrigger("newsletter")}
+                disabled={isTriggering === "newsletter"}
                 variant="outline"
-                className="border-2 border-slate-900 font-black uppercase text-xs rounded-xl h-12 flex-1"
+                className="border-2 border-slate-900 font-black uppercase text-xs rounded-2xl h-12 flex-1"
               >
-                {isSendingTest ? (
+                {isTriggering === "newsletter" ? (
                   <Loader2 className="animate-spin" />
                 ) : (
                   <Send className="mr-2 w-4 h-4" />
                 )}
-                Generate Test Preview
+                Dispatch Newsletter Now
               </Button>
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="bg-slate-900 text-white font-black uppercase text-xs rounded-xl h-12 flex-1 shadow-[4px_4px_0px_0px_rgba(168,85,247,1)]"
+                className="bg-slate-900 text-white font-black uppercase text-xs rounded-2xl h-12 flex-1 shadow-[4px_4px_0px_0px_rgba(168,85,247,1)]"
               >
                 {saveSuccess ? "System Updated!" : "Save Configuration"}
               </Button>
@@ -307,120 +342,96 @@ export default function NotificationSettings() {
         {/* App Notifications Header */}
         <h2 className="text-2xl font-bold text-slate-900 mb-4">App Notifications</h2>
 
-        {/* Weekly Summary - App Notification Card with Icon */}
-        <Card className="border-2 border-slate-200 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+        {/* Weekly Summary */}
+        <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden mb-8 bg-white">
+          <CardHeader className="bg-slate-900 text-white py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <TrendingUp className="w-6 h-6" />
-                <div>
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    Weekly Investor Summary
-                  </CardTitle>
-                  <p className="text-white/90 text-sm mt-1">Every Monday morning</p>
-                </div>
+                <TrendingUp className="w-5 h-5 text-indigo-400" />
+                <CardTitle className="text-sm font-black uppercase tracking-widest">
+                  Weekly Investor Summary
+                </CardTitle>
               </div>
-              <Badge className="bg-white text-blue-700 text-sm">Recommended</Badge>
+              <Button
+                size="sm"
+                onClick={() => handleManualTrigger("weekly")}
+                className="bg-white/10 hover:bg-white/20 border border-white/20 text-[10px] font-black uppercase rounded-lg h-8"
+              >
+                {isTriggering === "weekly" ? <Loader2 className="w-3 h-3 animate-spin inline-block" /> : "Test Dispatch"}
+              </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <p className="text-slate-700 mb-3">
-                  Your primary engagement driver. Get a weekly snapshot of:
-                </p>
-                <ul className="text-sm text-slate-600 space-y-1 ml-4">
-                  <li>• Portfolio Health Grade (A–F)</li>
-                  <li>• Investor IQ score trend</li>
-                  <li>• Risk & correlation changes</li>
-                  <li>• One educational insight</li>
-                  <li>• What changed this week</li>
-                </ul>
-              </div>
-              <Switch
-                checked={settings.weekly_summary}
-                onCheckedChange={() => toggleSetting("weekly_summary")}
-                className="ml-4"
-              />
-            </div>
+          <CardContent className="p-6 flex items-center justify-between">
+            <p className="text-xs font-bold text-slate-500 max-w-md uppercase tracking-tight leading-relaxed">
+              Every Monday: Portfolio Health, IQ score trends, and risk correlation updates.
+            </p>
+            <Switch
+              checked={!!settings.weekly_summary}
+              onCheckedChange={() => toggleSetting("weekly_summary")}
+              className="data-[state=checked]:bg-indigo-500"
+            />
           </CardContent>
         </Card>
 
-        {/* Monthly Report - App Notification Card with Icon */}
-        <Card className="border-2 border-slate-200 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+        {/* Monthly Report */}
+        <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden mb-8 bg-white">
+          <CardHeader className="bg-slate-900 text-white py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Calendar className="w-6 h-6" />
-                <div>
-                  <CardTitle className="text-xl flex items-center gap-2">
-                    Monthly Portfolio Report
-                  </CardTitle>
-                  <p className="text-white/90 text-sm mt-1">First day of each month</p>
-                </div>
+                <Calendar className="w-5 h-5 text-purple-400" />
+                <CardTitle className="text-sm font-black uppercase tracking-widest">
+                  Monthly Portfolio Report
+                </CardTitle>
               </div>
-              <Badge className="bg-white text-purple-700 text-sm">Reflection</Badge>
+              <Button
+                size="sm"
+                onClick={() => handleManualTrigger("monthly")}
+                className="bg-white/10 hover:bg-white/20 border border-white/20 text-[10px] font-black uppercase rounded-lg h-8"
+              >
+                {isTriggering === "monthly" ? <Loader2 className="w-3 h-3 animate-spin inline-block" /> : "Test Dispatch"}
+              </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <p className="text-slate-700 mb-3">
-                  Designed for reflection and tracking long-term progress:
-                </p>
-                <ul className="text-sm text-slate-600 space-y-1 ml-4">
-                  <li>• Portfolio progress vs goals</li>
-                  <li>• Risk & drawdown summary</li>
-                  <li>• Contribution vs growth breakdown</li>
-                  <li>• Achievement badges earned</li>
-                  <li>• Monthly performance recap</li>
-                </ul>
-              </div>
-              <Switch
-                checked={settings.monthly_report}
-                onCheckedChange={() => toggleSetting("monthly_report")}
-                className="ml-4"
-              />
-            </div>
+          <CardContent className="p-6 flex items-center justify-between">
+            <p className="text-xs font-bold text-slate-500 max-w-md uppercase tracking-tight leading-relaxed">
+              First of Month: Progress vs goals, drawdown summary, and achievement badges.
+            </p>
+            <Switch
+              checked={!!settings.monthly_report}
+              onCheckedChange={() => toggleSetting("monthly_report")}
+              className="data-[state=checked]:bg-purple-500"
+            />
           </CardContent>
         </Card>
 
         {/* Daily Alerts */}
-        <Card className="border-2 border-slate-200 shadow-lg">
-          <CardHeader className="bg-gradient-to-r from-amber-600 to-orange-600 text-white">
+        <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden mb-8 bg-white">
+          <CardHeader className="bg-slate-900 text-white py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <AlertCircle className="w-6 h-6" />
-                <div>
-                  <CardTitle className="text-xl">Daily Alerts</CardTitle>
-                  <p className="text-white/90 text-sm mt-1">Only when significant changes occur</p>
-                </div>
+                <AlertCircle className="w-5 h-5 text-amber-400" />
+                <CardTitle className="text-sm font-black uppercase tracking-widest">
+                  Daily Critical Alerts
+                </CardTitle>
               </div>
-              <Badge className="bg-white text-amber-700 text-sm">Optional</Badge>
+              <Button
+                size="sm"
+                onClick={() => handleManualTrigger("daily")}
+                className="bg-white/10 hover:bg-white/20 border border-white/20 text-[10px] font-black uppercase rounded-lg h-8"
+              >
+                {isTriggering === "daily" ? <Loader2 className="w-3 h-3 animate-spin inline-block" /> : "Test Dispatch"}
+              </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <p className="text-slate-700 mb-3">
-                  Get notified only when meaningful changes happen:
-                </p>
-                <ul className="text-sm text-slate-600 space-y-1 ml-4">
-                  <li>• Portfolio health updates (significant changes only)</li>
-                  <li>• Risk increase detection</li>
-                  <li>• Goal drift warnings</li>
-                  <li>• Correlation spikes</li>
-                </ul>
-                <p className="text-xs text-amber-700 mt-3 font-semibold">
-                  ⚠️ Rate-limited to prevent spam. Maximum 1 alert per day.
-                </p>
-              </div>
-              <Switch
-                checked={settings.daily_alerts}
-                onCheckedChange={() => toggleSetting("daily_alerts")}
-                className="ml-4"
-              />
-            </div>
+          <CardContent className="p-6 flex items-center justify-between">
+            <p className="text-xs font-bold text-slate-500 max-w-md uppercase tracking-tight leading-relaxed">
+              On Demand: Only when significant risk increases or goal drift is detected.
+            </p>
+            <Switch
+              checked={!!settings.daily_alerts}
+              onCheckedChange={() => toggleSetting("daily_alerts")}
+              className="data-[state=checked]:bg-amber-500"
+            />
           </CardContent>
         </Card>
 
