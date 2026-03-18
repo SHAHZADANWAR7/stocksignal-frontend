@@ -260,25 +260,26 @@ export default function MarketInsights() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="grid grid-cols-1 lg:grid-cols-12">
+                  {/* RESPONSIVE ENGINE: flex-col for mobile, lg:flex-row for laptop */}
+                  <div className="flex flex-col lg:flex-row divide-y-4 lg:divide-y-0 lg:divide-x-4 divide-slate-900">
                     
-                    {/* COL 1: CORE SENTIMENT ENGINE (3/12) */}
-                    <div className="lg:col-span-3 p-10 flex flex-col items-center justify-center bg-slate-50 border-b lg:border-b-0 lg:border-r-4 border-slate-900">
+                    {/* COL 1: CORE SENTIMENT ENGINE (Mobile Center / Laptop Left) */}
+                    <div className="p-10 flex flex-col items-center justify-center bg-slate-50 lg:w-[25%]">
                       <div className={`mb-6 px-5 py-2 rounded-full border-2 font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 ${getSentimentColor(marketData.overall_sentiment?.score)}`}>
                         {getSentimentIcon(marketData.overall_sentiment?.score)}
                         {getSentimentLabel(marketData.overall_sentiment?.score)}
                       </div>
                       <div className="relative mb-2">
-                        <span className="text-8xl font-black text-slate-900 tracking-tighter leading-none">
+                        <span className="text-7xl md:text-8xl font-black text-slate-900 tracking-tighter leading-none">
                           {marketData.overall_sentiment?.score}
                         </span>
                         <span className="text-xl font-black text-slate-400 absolute -top-1 -right-8">/100</span>
                       </div>
-                      <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-6">Weighted Aggregate Score</p>
+                      <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mt-6 text-center">Weighted Aggregate Score</p>
                     </div>
 
-                    {/* COL 2: SIGNAL CONTRIBUTION (4/12) */}
-                    <div className="lg:col-span-4 p-10 border-b lg:border-b-0 lg:border-r-4 border-slate-900 bg-white">
+                    {/* COL 2: SIGNAL CONTRIBUTION (Mobile Scroll / Laptop Center) */}
+                    <div className="p-10 bg-white lg:w-[35%]">
                       <div className="flex items-center gap-2 mb-8">
                         <Zap className="w-4 h-4 text-amber-500" />
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Signal Attribution</h4>
@@ -307,69 +308,69 @@ export default function MarketInsights() {
                       </div>
                     </div>
 
-                    {/* COL 3: MACRO DRIVERS (5/12) */}
-                    <div className="lg:col-span-5 p-10 bg-slate-50/50">
+                    {/* COL 3: MACRO DRIVERS (Mobile Grid / Laptop Right) */}
+                    <div className="p-10 bg-slate-50/50 flex-1">
                       <div className="flex items-center gap-2 mb-8">
                         <Globe className="w-4 h-4 text-blue-500" />
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Macro Ground Truth</h4>
                       </div>
-                      <div className="grid grid-cols-2 gap-5">
+                      <div className="grid grid-cols-1 xs:grid-cols-2 gap-5">
                         {/* VIX */}
-                        <div className="bg-white p-5 border-2 border-slate-200 rounded-2xl shadow-sm hover:border-slate-900 transition-all hover:shadow-md cursor-default">
+                        <div className="bg-white p-5 border-2 border-slate-900 rounded-2xl shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1.5">Volatility Index</p>
-                          <div className="flex items-baseline justify-between">
-                            <span className="text-2xl font-black text-slate-900 tracking-tighter">VIX {marketData.macro_drivers?.vix?.value}</span>
-                            <Badge variant="outline" className="text-[9px] font-black px-2 h-5 border-0 rounded-full uppercase bg-slate-900 text-white">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xl font-black text-slate-900">VIX {marketData.macro_drivers?.vix?.value}</span>
+                            <Badge className="text-[9px] font-black bg-slate-900 text-white rounded-md uppercase px-2 h-5">
                               {marketData.macro_drivers?.vix?.status}
                             </Badge>
                           </div>
                         </div>
                         {/* 10Y */}
-                        <div className="bg-white p-5 border-2 border-slate-200 rounded-2xl shadow-sm hover:border-slate-900 transition-all hover:shadow-md cursor-default">
+                        <div className="bg-white p-5 border-2 border-slate-900 rounded-2xl shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1.5">US 10Y Yield</p>
-                          <div className="flex items-baseline justify-between">
-                            <span className="text-2xl font-black text-slate-900 tracking-tighter">{marketData.macro_drivers?.bond_10y?.value}%</span>
-                            <span className={`text-[10px] font-black flex items-center gap-0.5 ${marketData.macro_drivers?.bond_10y?.change > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                              {marketData.macro_drivers?.bond_10y?.change > 0 ? '▲' : '▼'} {Math.abs(marketData.macro_drivers?.bond_10y?.change)}
+                          <div className="flex items-center justify-between">
+                            <span className="text-xl font-black text-slate-900">{marketData.macro_drivers?.bond_10y?.value}%</span>
+                            <span className={`text-[10px] font-black ${marketData.macro_drivers?.bond_10y?.change > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                              {marketData.macro_drivers?.bond_10y?.change > 0 ? '▲' : '▼'}{Math.abs(marketData.macro_drivers?.bond_10y?.change)}
                             </span>
                           </div>
                         </div>
                         {/* CRUDE */}
-                        <div className="bg-white p-5 border-2 border-slate-200 rounded-2xl shadow-sm hover:border-slate-900 transition-all hover:shadow-md cursor-default">
+                        <div className="bg-white p-5 border-2 border-slate-900 rounded-2xl shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1.5">Energy / WTI</p>
-                          <div className="flex items-baseline justify-between">
-                            <span className="text-2xl font-black text-slate-900 tracking-tighter">${marketData.macro_drivers?.oil?.wti}</span>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xl font-black text-slate-900">${marketData.macro_drivers?.oil?.wti}</span>
                             <span className={`text-[10px] font-black ${marketData.macro_drivers?.oil?.change_pct > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                               {marketData.macro_drivers?.oil?.change_pct}%
                             </span>
                           </div>
                         </div>
                         {/* BREADTH */}
-                        <div className="bg-white p-5 border-2 border-slate-200 rounded-2xl shadow-sm hover:border-slate-900 transition-all hover:shadow-md cursor-default">
+                        <div className="bg-white p-5 border-2 border-slate-900 rounded-2xl shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1.5">Market Breadth</p>
-                          <div className="flex items-baseline justify-between">
-                            <span className="text-2xl font-black text-slate-900 tracking-tighter">{marketData.macro_drivers?.breadth?.ratio}x</span>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xl font-black text-slate-900">{marketData.macro_drivers?.breadth?.ratio}x</span>
                             <span className="text-[9px] font-black text-slate-400 uppercase">A/D Ratio</span>
                           </div>
                         </div>
                       </div>
                     </div>
-
                   </div>
                 </CardContent>
               </Card>
 
-              <div className="grid md:grid-cols-2 gap-10 mb-10">
+             <div className="flex flex-col xl:flex-row gap-10 mb-10">
                 {/* INDUSTRIAL SECTOR SENTIMENT CARD */}
-                <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden bg-white">
+                <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden bg-white flex-1">
                   <CardHeader className="bg-slate-900 text-white py-4 border-b-4 border-slate-900">
                     <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3">
                       <BarChart3 className="w-5 h-5 text-indigo-400" />
                       Sector Risk Distribution
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-8">
-                    <div className="h-64 mb-10">
+                  <CardContent className="p-6 md:p-8">
+                    {/* Responsive Chart Height */}
+                    <div className="h-64 md:h-72 mb-10">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={marketData.sector_sentiment} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -408,19 +409,20 @@ export default function MarketInsights() {
                       </ResponsiveContainer>
                     </div>
                     
+                    {/* High-Density Mobile-Friendly List */}
                     <div className="space-y-4">
                       {marketData.sector_sentiment.map((sector, idx) => (
-                        <div key={idx} className="flex gap-4 p-4 border-2 border-slate-100 rounded-2xl hover:border-slate-900 transition-all group bg-slate-50/50">
+                        <div key={idx} className="flex gap-4 p-4 border-2 border-slate-900 rounded-2xl hover:bg-slate-50 transition-all shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] bg-white">
                           <div className="flex flex-col items-center justify-center min-w-[50px] border-r-2 border-slate-200 pr-4">
                             <span className="text-xl font-black text-slate-900">{sector.score}</span>
                             <span className="text-[8px] font-black text-slate-400 uppercase">Score</span>
                           </div>
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
-                              <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest">{sector.sector}</h4>
+                              <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest truncate">{sector.sector}</h4>
                               <div className={`h-2 w-2 rounded-full ${sector.score > 60 ? 'bg-emerald-500' : sector.score < 45 ? 'bg-rose-500' : 'bg-amber-500'}`} />
                             </div>
-                            <p className="text-[10px] text-slate-600 font-bold leading-relaxed">{sector.reasoning}</p>
+                            <p className="text-[10px] text-slate-600 font-bold leading-relaxed line-clamp-2">{sector.reasoning}</p>
                           </div>
                         </div>
                       ))}
@@ -429,15 +431,16 @@ export default function MarketInsights() {
                 </Card>
 
                 {/* INDUSTRIAL ASSET CLASS SENTIMENT CARD */}
-                <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23_42,1)] rounded-[2.5rem] overflow-hidden bg-white">
+                <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden bg-white flex-1">
                   <CardHeader className="bg-slate-900 text-white py-4 border-b-4 border-slate-900">
                     <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3">
                       <Target className="w-5 h-5 text-emerald-400" />
                       Asset Allocation Regime
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-8">
-                    <div className="h-64 mb-10">
+                  <CardContent className="p-6 md:p-8">
+                    {/* Centered Responsive Radar */}
+                    <div className="h-64 md:h-72 mb-10">
                       <ResponsiveContainer width="100%" height="100%">
                         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={marketData.asset_sentiment}>
                           <PolarGrid stroke="#e2e8f0" strokeWidth={2} />
@@ -460,29 +463,29 @@ export default function MarketInsights() {
 
                     <div className="space-y-3">
                       {marketData.asset_sentiment.map((asset, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 border-2 border-transparent hover:border-slate-900 rounded-2xl transition-all group">
-                          <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-xl border-2 flex items-center justify-center font-black text-sm shadow-sm ${
-                              asset.outlook.toLowerCase() === 'bullish' ? 'bg-emerald-500 border-emerald-600 text-white' : 
-                              asset.outlook.toLowerCase() === 'bearish' ? 'bg-rose-500 border-rose-600 text-white' : 
-                              'bg-white border-slate-200 text-slate-900'
+                        <div key={idx} className="flex items-center justify-between p-4 bg-white border-2 border-slate-900 rounded-2xl shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:translate-y-[-2px] transition-all">
+                          <div className="flex items-center gap-4 min-w-0">
+                            <div className={`w-10 h-10 rounded-xl border-2 border-slate-900 flex-shrink-0 flex items-center justify-center font-black text-sm shadow-sm ${
+                              asset.outlook.toLowerCase() === 'bullish' ? 'bg-emerald-500 text-white' : 
+                              asset.outlook.toLowerCase() === 'bearish' ? 'bg-rose-500 text-white' : 
+                              'bg-white text-slate-900'
                             }`}>
                               {asset.asset[0]}
                             </div>
-                            <div className="flex-1">
+                            <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="text-xs font-black text-slate-900 uppercase tracking-widest">{asset.asset}</span>
-                                <Badge variant="outline" className={`text-[8px] font-black uppercase px-2 py-0 border-current ${
-                                  asset.outlook.toLowerCase() === 'bullish' ? 'text-emerald-600' : 
-                                  asset.outlook.toLowerCase() === 'bearish' ? 'text-rose-600' : 'text-slate-500'
+                                <span className="text-xs font-black text-slate-900 uppercase tracking-widest truncate">{asset.asset}</span>
+                                <Badge variant="outline" className={`text-[8px] font-black uppercase px-2 py-0 border-2 rounded-full border-slate-900 ${
+                                  asset.outlook.toLowerCase() === 'bullish' ? 'bg-emerald-50 text-emerald-700' : 
+                                  asset.outlook.toLowerCase() === 'bearish' ? 'bg-rose-50 text-rose-700' : 'bg-slate-50 text-slate-500'
                                 }`}>
                                   {asset.outlook}
                                 </Badge>
                               </div>
-                              <p className="text-[10px] text-slate-500 font-bold mt-1 leading-tight">{asset.reasoning}</p>
+                              <p className="text-[10px] text-slate-500 font-bold mt-1 leading-tight truncate">{asset.reasoning}</p>
                             </div>
                           </div>
-                          <div className="text-right ml-4">
+                          <div className="text-right ml-4 flex-shrink-0">
                             <p className="text-xl font-black text-slate-900 font-mono leading-none">{asset.score}</p>
                             <p className="text-[8px] font-black text-slate-400 uppercase mt-1">Regime</p>
                           </div>
@@ -562,86 +565,97 @@ export default function MarketInsights() {
                   </div>
                 </CardContent>
               </Card>
-             <Tabs defaultValue="news" className="mb-8">
-                <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-slate-900 rounded-[2rem] border-4 border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]">
-                  <TabsTrigger 
-                    value="news" 
-                    className="py-3 font-black uppercase text-[10px] md:text-xs tracking-widest text-slate-400 data-[state=active]:bg-white data-[state=active]:text-slate-950 rounded-[1.5rem] transition-all"
-                  >
-                    News Wire
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="events" 
-                    className="py-3 font-black uppercase text-[10px] md:text-xs tracking-widest text-slate-400 data-[state=active]:bg-white data-[state=active]:text-slate-950 rounded-[1.5rem] transition-all"
-                  >
-                    Macro Events
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="indicators" 
-                    className="py-3 font-black uppercase text-[10px] md:text-xs tracking-widest text-slate-400 data-[state=active]:bg-white data-[state=active]:text-slate-950 rounded-[1.5rem] transition-all"
-                  >
-                    Indicators
-                  </TabsTrigger>
-                </TabsList>
+            <Tabs defaultValue="news" className="mb-8">
+  {/* INDUSTRIAL TABS LIST: Optimized for High-Density Mobile Scaling */}
+  <TabsList className="flex flex-wrap md:grid w-full md:grid-cols-3 h-auto p-1.5 bg-slate-900 rounded-[2rem] border-4 border-slate-900 shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]">
+    <TabsTrigger 
+      value="news" 
+      className="flex-1 py-2.5 md:py-3 font-black uppercase text-[9px] xs:text-[10px] md:text-xs tracking-widest text-slate-400 data-[state=active]:bg-white data-[state=active]:text-slate-950 rounded-[1.5rem] transition-all"
+    >
+      News Wire
+    </TabsTrigger>
+    <TabsTrigger 
+      value="events" 
+      className="flex-1 py-2.5 md:py-3 font-black uppercase text-[9px] xs:text-[10px] md:text-xs tracking-widest text-slate-400 data-[state=active]:bg-white data-[state=active]:text-slate-950 rounded-[1.5rem] transition-all"
+    >
+      Macro Events
+    </TabsTrigger>
+    <TabsTrigger 
+      value="indicators" 
+      className="flex-1 py-2.5 md:py-3 font-black uppercase text-[9px] xs:text-[10px] md:text-xs tracking-widest text-slate-400 data-[state=active]:bg-white data-[state=active]:text-slate-950 rounded-[1.5rem] transition-all"
+    >
+      Indicators
+    </TabsTrigger>
+  </TabsList>
 
-                <TabsContent value="news" className="mt-6">
-                  <div className="space-y-4">
-                    {marketData.news_stories?.map((story, idx) => {
-                      const CategoryIcon = getCategoryIcon(story.category);
-                      return (
-                        <motion.div
-                          key={idx}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.05 }}
-                        >
-                          <div className="group border-4 border-slate-900 bg-white rounded-[2rem] overflow-hidden hover:shadow-[6px_6px_0px_0px_rgba(15,23,42,1)] transition-all cursor-default flex flex-col md:flex-row">
-                            <div className="md:w-20 bg-slate-50 border-b-4 md:border-b-0 md:border-r-4 border-slate-900 flex items-center justify-center p-4">
-                              <CategoryIcon className="w-8 h-8 text-slate-900" />
-                            </div>
-                            <div className="flex-1 p-6">
-                              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                                <div className="flex items-center gap-3">
-                                  <Badge className="rounded-full bg-slate-900 text-white font-mono text-[9px] px-3 py-0.5 uppercase border-0">
-                                    {story.source}
-                                  </Badge>
-                                  <span className="font-mono text-[10px] text-slate-400 font-bold uppercase">
-                                    {story.time}
-                                  </span>
-                                </div>
-                                <Badge variant="outline" className={`font-black uppercase text-[9px] border-2 rounded-full px-3 ${getImpactColor(story.sentiment_impact)}`}>
-                                  {story.sentiment_impact} Impact
-                                </Badge>
-                              </div>
-                              <h3 className="font-black text-slate-900 text-base md:text-xl leading-tight mb-2 uppercase tracking-tight">
-                                {story.headline}
-                              </h3>
-                              <p className="text-xs md:text-sm text-slate-600 font-bold leading-relaxed mb-4">
-                                {story.summary}
-                              </p>
-                              <div className="flex items-center justify-between gap-3">
-                                <Badge className="bg-slate-100 text-slate-500 border-0 text-[9px] font-black uppercase rounded-lg">
-                                  {story.category}
-                                </Badge>
-                                {story.url && (
-                                  <a
-                                    href={story.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-slate-900 hover:text-purple-600 font-black text-xs flex items-center gap-1 transition-colors uppercase tracking-tighter"
-                                  >
-                                    Terminal View
-                                    <ChevronRight className="w-4 h-4" />
-                                  </a>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                </TabsContent>
+                <TabsContent value="news" className="mt-6 outline-none">
+  <div className="space-y-6">
+    {marketData.news_stories?.map((story, idx) => {
+      const CategoryIcon = getCategoryIcon(story.category);
+      return (
+        <motion.div
+          key={idx}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: idx * 0.05 }}
+        >
+          {/* INDUSTRIAL CARD: High-visibility solid background and heavy borders */}
+          <div className="group border-4 border-slate-900 bg-white rounded-[2rem] overflow-hidden hover:shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] transition-all flex flex-col md:flex-row">
+            
+            {/* CATEGORY STRIPE: Solid slate-50 background prevents the "dimmed" look */}
+            <div className="md:w-20 bg-slate-50 border-b-4 md:border-b-0 md:border-r-4 border-slate-900 flex items-center justify-center p-5">
+              <CategoryIcon className="w-8 h-8 text-slate-900" />
+            </div>
+
+            <div className="flex-1 p-6 md:p-8">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-3">
+                  <Badge className="bg-slate-900 text-white font-mono text-[10px] px-3 py-1 uppercase border-0 rounded-md">
+                    {story.source}
+                  </Badge>
+                  <span className="font-mono text-[10px] text-slate-500 font-bold uppercase tracking-tight">
+                    {story.time.includes('T') ? story.time.split('T')[1].substring(0, 5) : story.time} GMT
+                  </span>
+                </div>
+                <Badge variant="outline" className={`font-black uppercase text-[10px] border-2 rounded-full px-4 py-1 ${getImpactColor(story.sentiment_impact)}`}>
+                  {story.sentiment_impact} IMPACT
+                </Badge>
+              </div>
+
+              <h3 className="font-black text-slate-900 text-lg md:text-2xl leading-tight mb-3 uppercase tracking-tight">
+                {story.headline}
+              </h3>
+
+              {/* INDUSTRIAL SUMMARY BLOCK: High contrast for mobile legibility */}
+              <div className="bg-slate-50 border-l-4 border-slate-900 p-4 mb-5 rounded-r-xl">
+                <p className="text-xs md:text-sm text-slate-700 font-bold leading-relaxed">
+                  {story.summary}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t-2 border-slate-100">
+                <Badge className="bg-slate-200 text-slate-700 border-0 text-[10px] font-black uppercase rounded-md px-3">
+                  {story.category}
+                </Badge>
+                {story.url && (
+                  <a
+                    href={story.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="h-10 px-5 bg-slate-900 text-white rounded-xl flex items-center gap-2 text-xs font-black uppercase tracking-widest hover:bg-purple-600 transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] active:translate-y-1 active:shadow-none"
+                  >
+                    ACCESS TERMINAL
+                    <ChevronRight className="w-4 h-4" />
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      );
+    })}
+  </div>
+</TabsContent>
 
                <TabsContent value="events" className="mt-6">
                   {!marketData.major_events || marketData.major_events.length === 0 ? (
@@ -715,61 +729,35 @@ export default function MarketInsights() {
                <TabsContent value="indicators" className="mt-8 outline-none">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {marketData.economic_indicators && Object.entries(marketData.economic_indicators).map(([key, data], idx) => {
-                      // RESTORED: Full metadata mapping for specific indicators
                       const indicatorInfo = {
-                        fed_funds_rate: { 
-                          title: "Fed Funds Rate", 
-                          unit: "Midpoint Target", 
-                          description: "The benchmark interest rate for the US economy." 
-                        },
-                        inflation_rate: { 
-                          title: "Inflation (CPI)", 
-                          unit: "Year-over-Year", 
-                          description: "Consumer Price Index; the primary measure of price stability." 
-                        },
-                        unemployment_rate: { 
-                          title: "Unemployment", 
-                          unit: "U-3 Rate", 
-                          description: "Percentage of the labor force actively seeking work." 
-                        },
-                        gdp_growth: { 
-                          title: "GDP Growth", 
-                          unit: "Annualized Rate", 
-                          description: "Total value of goods and services produced in the US." 
-                        },
-                        vix_index: { 
-                          title: "VIX Index", 
-                          unit: "Volatility Level", 
-                          description: "The 'Fear Gauge' measuring S&P 500 implied volatility." 
-                        },
-                        yield_curve_slope: { 
-                          title: "Yield Curve", 
-                          unit: "10Y-2Y Spread", 
-                          description: "Difference between long and short term debt yields." 
-                        }
+                        fed_funds_rate: { title: "Fed Funds Rate", unit: "Midpoint Target" },
+                        inflation_rate: { title: "Inflation (CPI)", unit: "Year-over-Year" },
+                        unemployment_rate: { title: "Unemployment", unit: "U-3 Rate" },
+                        gdp_growth: { title: "GDP Growth", unit: "Annualized Rate" },
+                        vix_index: { title: "VIX Index", unit: "Volatility Level" },
+                        yield_curve_slope: { title: "Yield Curve", unit: "10Y-2Y Spread" }
                       };
 
-                      const info = indicatorInfo[key] || { title: key.replace(/_/g, ' '), unit: "Latest Metric", description: "" };
+                      const info = indicatorInfo[key] || { title: key.replace(/_/g, ' '), unit: "Latest Metric" };
                       
-                      // FIXED: High-Contrast Trend Logic (VIX/Unemployment Up = Bad)
-                      const getTrendColor = (trend, metric) => {
-                        if (metric === "unemployment_rate" || metric === "vix_index") {
-                          if (trend === "up") return "bg-rose-100 text-rose-950 border-rose-600";
-                          if (trend === "down") return "bg-emerald-100 text-emerald-950 border-emerald-600";
+                      // INDUSTRIAL HIGH-CONTRAST TREND LOGIC
+                      const getTrendColor = (trend, metric, val) => {
+                        // Bad if Up: VIX, Unemployment, Inflation
+                        if (["unemployment_rate", "vix_index", "inflation_rate"].includes(metric)) {
+                          if (trend === "up") return "bg-rose-600 text-white border-rose-700 shadow-sm";
+                          if (trend === "down") return "bg-emerald-600 text-white border-emerald-700 shadow-sm";
                         }
+                        // Yield Curve: Bad if Negative (Inverted)
                         if (metric === "yield_curve_slope") {
-                          return data.value < 0 ? "bg-rose-100 text-rose-950 border-rose-600" : "bg-emerald-100 text-emerald-950 border-emerald-600";
+                          return val < 0 ? "bg-rose-600 text-white border-rose-700" : "bg-emerald-600 text-white border-emerald-700";
                         }
-                        if (trend === "up") return "bg-emerald-100 text-emerald-950 border-emerald-600";
-                        if (trend === "down") return "bg-rose-100 text-rose-950 border-rose-600";
-                        return "bg-slate-200 text-slate-900 border-slate-400";
+                        // Standard: Up is Good
+                        return trend === "up" ? "bg-emerald-600 text-white border-emerald-700" : "bg-rose-600 text-white border-rose-700";
                       };
 
                       return (
                         <div key={idx} className={`group border-4 border-slate-900 rounded-[2.5rem] p-8 bg-white transition-all hover:translate-y-[-4px] ${
-                          data.is_notable 
-                            ? 'shadow-[8px_8px_0px_0px_rgba(245,158,11,1)] border-amber-500' 
-                            : 'shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]'
+                          data.is_notable ? 'shadow-[8px_8px_0px_0px_rgba(245,158,11,1)] border-amber-500' : 'shadow-[8px_8px_0px_0px_rgba(15,23,42,1)]'
                         }`}>
                           <div className="flex justify-between items-start mb-6">
                             <div>
@@ -777,16 +765,15 @@ export default function MarketInsights() {
                               <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">{info.unit}</p>
                             </div>
                             {data.is_notable && (
-                              <Badge className="bg-amber-600 text-white text-[9px] uppercase font-black px-2 py-0.5 animate-pulse rounded-full">Notable</Badge>
+                              <Badge className="bg-amber-600 text-white text-[9px] uppercase font-black px-2 py-0.5 animate-pulse rounded-full border-2 border-slate-900">Notable</Badge>
                             )}
                           </div>
 
-                          <div className="flex items-baseline gap-3 mb-6">
+                          <div className="flex items-baseline gap-3 mb-6 flex-wrap">
                             <span className="text-4xl md:text-5xl font-black text-slate-950 tracking-tighter">
                               {key === 'vix_index' || key === 'yield_curve_slope' ? data.value : `${data.value}%`}
                             </span>
-                            {/* HIGH CONTRAST TREND BADGE */}
-                            <Badge className={`border-2 font-black uppercase text-[10px] px-3 py-0.5 rounded-full shadow-sm ${getTrendColor(data.trend, key)}`}>
+                            <Badge className={`border-2 font-black uppercase text-[10px] px-3 py-1 rounded-full ${getTrendColor(data.trend, key, data.value)}`}>
                               {data.trend === "up" ? "▲" : data.trend === "down" ? "↓" : "■"} {data.trend}
                             </Badge>
                           </div>
@@ -798,13 +785,13 @@ export default function MarketInsights() {
                           </div>
 
                           <div className="grid grid-cols-2 gap-4 pt-6 border-t-2 border-slate-900">
-                            <div>
-                              <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Data Source</p>
-                              <p className="text-[10px] text-slate-950 font-black truncate">{data.source || "Institutional Data"}</p>
+                            <div className="min-w-0">
+                              <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">Source</p>
+                              <p className="text-[10px] text-slate-950 font-black truncate">{data.source || "Institutional"}</p>
                             </div>
                             <div className="text-right">
                               <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">As Of</p>
-                              <p className="text-[10px] text-slate-950 font-black">{data.as_of || "Latest"}</p>
+                              <p className="text-[10px] text-slate-950 font-black">{data.as_of || "Real-time"}</p>
                             </div>
                           </div>
                         </div>
