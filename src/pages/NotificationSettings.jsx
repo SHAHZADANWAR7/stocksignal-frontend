@@ -345,7 +345,9 @@ export default function NotificationSettings() {
         </Card>
 
         {/* App Notifications Header */}
-        <h2 className="text-2xl font-bold text-slate-900 mb-4">App Notifications</h2>
+        <h2 className="text-2xl font-black text-slate-900 mb-6 uppercase tracking-tighter italic">
+          System Triggers
+        </h2>
 
         {/* Weekly Summary */}
         <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden mb-8 bg-white">
@@ -360,20 +362,25 @@ export default function NotificationSettings() {
               <Button
                 size="sm"
                 onClick={() => handleManualTrigger("weekly")}
-                className="bg-white/10 hover:bg-white/20 border border-white/20 text-[10px] font-black uppercase rounded-lg h-8"
+                disabled={isTriggering === "weekly"}
+                className="bg-white/10 hover:bg-white/20 border border-white/20 text-[10px] font-black uppercase rounded-lg h-8 transition-all active:scale-95 shadow-sm"
               >
-                {isTriggering === "weekly" ? <Loader2 className="w-3 h-3 animate-spin inline-block" /> : "Test Dispatch"}
+                {isTriggering === "weekly" ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  "Test Dispatch"
+                )}
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-6 flex items-center justify-between">
-            <p className="text-xs font-bold text-slate-500 max-w-md uppercase tracking-tight leading-relaxed">
-              Every Monday: Portfolio Health, IQ score trends, and risk correlation updates.
+          <CardContent className="p-6 flex items-center justify-between gap-6">
+            <p className="text-[11px] font-bold text-slate-500 max-w-md uppercase tracking-tight leading-tight">
+              Protocol: Portfolio Health, IQ score trends, and risk correlation updates every Monday morning.
             </p>
             <Switch
               checked={!!settings.weekly_summary}
               onCheckedChange={() => toggleSetting("weekly_summary")}
-              className="data-[state=checked]:bg-indigo-500"
+              className="border-2 border-slate-900 data-[state=checked]:bg-indigo-500 data-[state=unchecked]:bg-slate-200 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all"
             />
           </CardContent>
         </Card>
@@ -391,20 +398,25 @@ export default function NotificationSettings() {
               <Button
                 size="sm"
                 onClick={() => handleManualTrigger("monthly")}
-                className="bg-white/10 hover:bg-white/20 border border-white/20 text-[10px] font-black uppercase rounded-lg h-8"
+                disabled={isTriggering === "monthly"}
+                className="bg-white/10 hover:bg-white/20 border border-white/20 text-[10px] font-black uppercase rounded-lg h-8 transition-all active:scale-95 shadow-sm"
               >
-                {isTriggering === "monthly" ? <Loader2 className="w-3 h-3 animate-spin inline-block" /> : "Test Dispatch"}
+                {isTriggering === "monthly" ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  "Test Dispatch"
+                )}
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-6 flex items-center justify-between">
-            <p className="text-xs font-bold text-slate-500 max-w-md uppercase tracking-tight leading-relaxed">
-              First of Month: Progress vs goals, drawdown summary, and achievement badges.
+          <CardContent className="p-6 flex items-center justify-between gap-6">
+            <p className="text-[11px] font-bold text-slate-500 max-w-md uppercase tracking-tight leading-tight">
+              Audit: Comprehensive progress vs goals, drawdown summary, and achievement badges on the 1st.
             </p>
             <Switch
               checked={!!settings.monthly_report}
               onCheckedChange={() => toggleSetting("monthly_report")}
-              className="data-[state=checked]:bg-purple-500"
+              className="border-2 border-slate-900 data-[state=checked]:bg-purple-500 data-[state=unchecked]:bg-slate-200 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all"
             />
           </CardContent>
         </Card>
@@ -422,20 +434,25 @@ export default function NotificationSettings() {
               <Button
                 size="sm"
                 onClick={() => handleManualTrigger("daily")}
-                className="bg-white/10 hover:bg-white/20 border border-white/20 text-[10px] font-black uppercase rounded-lg h-8"
+                disabled={isTriggering === "daily"}
+                className="bg-white/10 hover:bg-white/20 border border-white/20 text-[10px] font-black uppercase rounded-lg h-8 transition-all active:scale-95 shadow-sm"
               >
-                {isTriggering === "daily" ? <Loader2 className="w-3 h-3 animate-spin inline-block" /> : "Test Dispatch"}
+                {isTriggering === "daily" ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  "Test Dispatch"
+                )}
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-6 flex items-center justify-between">
-            <p className="text-xs font-bold text-slate-500 max-w-md uppercase tracking-tight leading-relaxed">
-              On Demand: Only when significant risk increases or goal drift is detected.
+          <CardContent className="p-6 flex items-center justify-between gap-6">
+            <p className="text-[11px] font-bold text-slate-500 max-w-md uppercase tracking-tight leading-tight">
+              On Demand: High-priority alerts triggered by significant risk increases or goal drift detected.
             </p>
             <Switch
               checked={!!settings.daily_alerts}
               onCheckedChange={() => toggleSetting("daily_alerts")}
-              className="data-[state=checked]:bg-amber-500"
+              className="border-2 border-slate-900 data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-200 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all"
             />
           </CardContent>
         </Card>
