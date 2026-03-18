@@ -359,17 +359,18 @@ export default function MarketInsights() {
                 </CardContent>
               </Card>
 
-             <div className="flex flex-col xl:flex-row gap-10 mb-10">
-                {/* INDUSTRIAL SECTOR SENTIMENT CARD */}
-                <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden bg-white flex-1">
+             {/* SYMMETRICAL INDUSTRIAL DASHBOARD GRID */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
+                
+                {/* 1. SECTOR RISK DISTRIBUTION */}
+                <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden bg-white flex flex-col">
                   <CardHeader className="bg-slate-900 text-white py-4 border-b-4 border-slate-900">
                     <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3">
                       <BarChart3 className="w-5 h-5 text-indigo-400" />
                       Sector Risk Distribution
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-6 md:p-8">
-                    {/* Responsive Chart Height */}
+                  <CardContent className="p-6 md:p-8 flex-1 flex flex-col">
                     <div className="h-64 md:h-72 mb-10">
                       <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={marketData.sector_sentiment} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -380,26 +381,7 @@ export default function MarketInsights() {
                             tickLine={false} 
                             tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 900 }} 
                           />
-                          <YAxis 
-                            axisLine={false} 
-                            tickLine={false} 
-                            tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 900 }} 
-                            domain={[0, 100]}
-                          />
-                          <RechartsTooltip 
-                            cursor={{ fill: '#f8fafc' }}
-                            content={({ active, payload }) => {
-                              if (active && payload && payload.length) {
-                                return (
-                                  <div className="bg-slate-900 border-2 border-slate-800 p-3 shadow-xl rounded-xl">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{payload[0].payload.sector}</p>
-                                    <p className="text-xl font-black text-white">{payload[0].value}<span className="text-xs ml-1 text-slate-500">PTS</span></p>
-                                  </div>
-                                );
-                              }
-                              return null;
-                            }}
-                          />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 900 }} domain={[0, 100]} />
                           <Bar dataKey="score" radius={[6, 6, 0, 0]} barSize={32}>
                             {marketData.sector_sentiment.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={entry.score > 60 ? '#4f46e5' : entry.score > 40 ? '#818cf8' : '#312e81'} />
@@ -409,20 +391,20 @@ export default function MarketInsights() {
                       </ResponsiveContainer>
                     </div>
                     
-                    {/* High-Density Mobile-Friendly List */}
+                    {/* Standardized reasoning list */}
                     <div className="space-y-4">
                       {marketData.sector_sentiment.map((sector, idx) => (
-                        <div key={idx} className="flex gap-4 p-4 border-2 border-slate-900 rounded-2xl hover:bg-slate-50 transition-all shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] bg-white">
+                        <div key={idx} className="flex gap-4 p-4 border-2 border-slate-900 rounded-2xl bg-white shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] min-h-[110px] lg:h-[110px] overflow-y-auto">
                           <div className="flex flex-col items-center justify-center min-w-[50px] border-r-2 border-slate-200 pr-4">
                             <span className="text-xl font-black text-slate-900">{sector.score}</span>
                             <span className="text-[8px] font-black text-slate-400 uppercase">Score</span>
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
-                              <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest truncate">{sector.sector}</h4>
-                              <div className={`h-2 w-2 rounded-full ${sector.score > 60 ? 'bg-emerald-500' : sector.score < 45 ? 'bg-rose-500' : 'bg-amber-500'}`} />
+                                <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest truncate">{sector.sector}</h4>
+                                <div className={`h-2 w-2 rounded-full flex-shrink-0 ${sector.score > 60 ? 'bg-emerald-500' : sector.score < 45 ? 'bg-rose-500' : 'bg-amber-500'}`} />
                             </div>
-                            <p className="text-[10px] text-slate-600 font-bold leading-relaxed line-clamp-2">{sector.reasoning}</p>
+                            <p className="text-[10px] text-slate-600 font-bold leading-relaxed line-clamp-3">{sector.reasoning}</p>
                           </div>
                         </div>
                       ))}
@@ -430,64 +412,48 @@ export default function MarketInsights() {
                   </CardContent>
                 </Card>
 
-                {/* INDUSTRIAL ASSET CLASS SENTIMENT CARD */}
-                <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden bg-white flex-1">
+                {/* 2. ASSET ALLOCATION REGIME */}
+                <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden bg-white flex flex-col">
                   <CardHeader className="bg-slate-900 text-white py-4 border-b-4 border-slate-900">
                     <CardTitle className="text-sm font-black uppercase tracking-[0.2em] flex items-center gap-3">
                       <Target className="w-5 h-5 text-emerald-400" />
                       Asset Allocation Regime
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-6 md:p-8">
-                    {/* Centered Responsive Radar */}
+                  <CardContent className="p-6 md:p-8 flex-1 flex flex-col">
                     <div className="h-64 md:h-72 mb-10">
                       <ResponsiveContainer width="100%" height="100%">
                         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={marketData.asset_sentiment}>
                           <PolarGrid stroke="#e2e8f0" strokeWidth={2} />
-                          <PolarAngleAxis 
-                            dataKey="asset" 
-                            tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900 }}
-                          />
-                          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                          <Radar
-                            name="Sentiment"
-                            dataKey="score"
-                            stroke="#1e293b"
-                            strokeWidth={4}
-                            fill="#10b981"
-                            fillOpacity={0.5}
-                          />
+                          <PolarAngleAxis dataKey="asset" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900 }} />
+                          <Radar name="Sentiment" dataKey="score" stroke="#1e293b" strokeWidth={4} fill="#10b981" fillOpacity={0.5} />
                         </RadarChart>
                       </ResponsiveContainer>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {marketData.asset_sentiment.map((asset, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-4 bg-white border-2 border-slate-900 rounded-2xl shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] hover:translate-y-[-2px] transition-all">
-                          <div className="flex items-center gap-4 min-w-0">
-                            <div className={`w-10 h-10 rounded-xl border-2 border-slate-900 flex-shrink-0 flex items-center justify-center font-black text-sm shadow-sm ${
+                        <div key={idx} className="flex gap-4 p-4 border-2 border-slate-900 rounded-2xl bg-white shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] min-h-[110px] lg:h-[110px] overflow-y-auto">
+                          <div className="flex items-center gap-4 min-w-0 w-full">
+                            <div className={`w-10 h-10 rounded-xl border-2 border-slate-900 flex-shrink-0 flex items-center justify-center font-black text-sm ${
                               asset.outlook.toLowerCase() === 'bullish' ? 'bg-emerald-500 text-white' : 
-                              asset.outlook.toLowerCase() === 'bearish' ? 'bg-rose-500 text-white' : 
-                              'bg-white text-slate-900'
+                              asset.outlook.toLowerCase() === 'bearish' ? 'bg-rose-500 text-white' : 'bg-white text-slate-900'
                             }`}>
                               {asset.asset[0]}
                             </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2 mb-1">
                                 <span className="text-xs font-black text-slate-900 uppercase tracking-widest truncate">{asset.asset}</span>
-                                <Badge variant="outline" className={`text-[8px] font-black uppercase px-2 py-0 border-2 rounded-full border-slate-900 ${
-                                  asset.outlook.toLowerCase() === 'bullish' ? 'bg-emerald-50 text-emerald-700' : 
-                                  asset.outlook.toLowerCase() === 'bearish' ? 'bg-rose-50 text-rose-700' : 'bg-slate-50 text-slate-500'
-                                }`}>
+                                <Badge variant="outline" className="text-[8px] font-black uppercase px-2 py-0 border-2 rounded-full border-slate-900 bg-slate-50 text-slate-500 flex-shrink-0">
                                   {asset.outlook}
                                 </Badge>
                               </div>
-                              <p className="text-[10px] text-slate-500 font-bold mt-1 leading-tight truncate">{asset.reasoning}</p>
+                              <p className="text-[10px] text-slate-500 font-bold leading-tight line-clamp-3">{asset.reasoning}</p>
                             </div>
-                          </div>
-                          <div className="text-right ml-4 flex-shrink-0">
-                            <p className="text-xl font-black text-slate-900 font-mono leading-none">{asset.score}</p>
-                            <p className="text-[8px] font-black text-slate-400 uppercase mt-1">Regime</p>
+                            <div className="text-right flex-shrink-0 ml-2">
+                                <p className="text-xl font-black text-slate-900 font-mono leading-none">{asset.score}</p>
+                                <p className="text-[8px] font-black text-slate-400 uppercase mt-1">Regime</p>
+                            </div>
                           </div>
                         </div>
                       ))}
