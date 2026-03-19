@@ -47,44 +47,36 @@ export default function NotificationSettings() {
     }
   };
 
-  const loadSettings = async () => {
+ 
+ const loadSettings = async () => {
     try {
-      console.log("📡 [System] Initializing User Configuration via DynamoDB...");
-      
-      /**
-       * We skip getCurrentUser() here because it's failing with 401.
-       * awsApi.getUser() is mapped to 'cognito_sub' in your awsClient,
-       * which means it will automatically grab your session ID and 
-       * fetch your profile correctly.
-       */
+      console.log("📡 [System] Initializing User Configuration...");
       const currentUser = await awsApi.getUser();
 
       if (!currentUser) {
-        console.warn("⚠️ User profile not found in database.");
+        console.warn("⚠️ User not found in database.");
         return;
       }
 
-      setUser(currentUser);
+      // Safeguard: Extract email and ID from whatever field the DB uses
+      const userEmail = currentUser.email || currentUser.userEmail || "";
+      const userId = currentUser.cognito_sub || currentUser.userId || currentUser.sub;
+      
+      setUser({ ...currentUser, email: userEmail, userId: userId });
 
-      // Map preferences to local state if they exist
       if (currentUser.newsletter_preferences) {
         setSettings(currentUser.newsletter_preferences);
-        setNewsletterData((prev) => ({
-          ...prev,
-          email: currentUser.email || "",
+        setNewsletterData({
+          email: userEmail,
           interests: currentUser.newsletter_preferences.interests || [],
           frequency: currentUser.newsletter_preferences.frequency || 'weekly'
-        }));
+        });
       } else {
-        setNewsletterData((prev) => ({
-          ...prev,
-          email: currentUser.email || "",
-        }));
+        setNewsletterData((prev) => ({ ...prev, email: userEmail }));
       }
       
-      console.log("✅ [System] Configuration loaded for:", currentUser.email);
+      console.log("✅ [System] Configuration loaded for:", userEmail);
     } catch (error) {
-      // This will catch the 401 or 404 and log it without crashing the UI
       console.error("❌ Error loading settings:", error);
     }
   };
@@ -130,23 +122,33 @@ export default function NotificationSettings() {
     }));
   };
 
-  // Handles real lambda triggers for newsletter and notification manual dispatch/testing
+ // Handles real lambda triggers for newsletter and notification manual dispatch/testing
   const handleManualTrigger = async (type) => {
+    // Basic validation before network call
+    if (type === "newsletter" && newsletterData.interests.length === 0) {
+      alert("Terminal Alert: Select at least one focus area before dispatch.");
+      return;
+    }
+
     setIsTriggering(type);
     try {
-      console.log(`📡 [System] Initiating manual protocol: ${type.toUpperCase()}`);
+      console.log(`📡 [System] Manual Override initiated: ${type.toUpperCase()}`);
 
       /**
-       * We no longer call getCurrentUser() here to avoid the 401 error.
-       * Your awsClient.js is mapped to inject userId/userEmail automatically
-       * based on the functionName provided in the switch below.
+       * INDUSTRIAL PAYLOAD CONSTRUCTION
+       * We explicitly map userId and email to ensure the Lambda validator 
+       * doesn't return a 400.
        */
       const payload = { 
+        userId: user?.userId || user?.cognito_sub, 
+        email: newsletterData.email,
         interests: newsletterData.interests,
         frequency: newsletterData.frequency 
       };
 
-      // Dispatch to the correct Lambda via the Proxy
+      console.log(`🛠️ [System] Payload Integrity Check:`, payload);
+
+      // Execute via Proxy
       switch (type) {
         case "daily":
           await awsApi.sendDailyAlert(payload);
@@ -164,15 +166,15 @@ export default function NotificationSettings() {
           break;
       }
       
-      // Trigger UI Success State (The "Sync" toast)
+      // Trigger UI Success Feedback
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);
-      console.log(`✅ [System] ${type.toUpperCase()} execution confirmed.`);
+      console.log(`✅ [System] ${type.toUpperCase()} execution confirmed by cloud.`);
       
     } catch (error) {
       console.error(`❌ System Error [${type}]:`, error.message);
-      // Fallback for user feedback
-      alert(`SYSTEM FAILURE: ${error.message}`);
+      // Secondary user feedback
+      alert(`Manual Dispatch Failed: ${error.message}`);
     } finally {
       setIsTriggering("");
     }
