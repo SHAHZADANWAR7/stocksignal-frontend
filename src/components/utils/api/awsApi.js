@@ -104,10 +104,11 @@ export const awsApi = {
   createPortalSession: (customerId) => awsClient.createPortalSession(customerId),
 
   // Email/Notifications
-  sendWeeklySummary: () => awsClient.sendWeeklySummary(),
-  sendDailyAlert: () => awsClient.sendDailyAlert(),
-  sendMonthlyReport: () => awsClient.sendMonthlyReport(),
-  sendNewsletter: () => awsClient.sendNewsletter(),
+  // Email/Notifications
+  sendWeeklySummary: (payload) => awsClient.sendWeeklySummary(payload),
+  sendDailyAlert: (payload) => awsClient.sendDailyAlert(payload),
+  sendMonthlyReport: (payload) => awsClient.sendMonthlyReport(payload),
+  sendNewsletter: (payload) => awsClient.sendNewsletter(payload),
   sendSupportEmail: (data) => awsClient.sendSupportEmail(data),
   sendEmail: (data) => awsClient.sendEmail(data),
 
