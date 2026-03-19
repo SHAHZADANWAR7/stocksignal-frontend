@@ -50,34 +50,44 @@ export default function NotificationSettings() {
  
  const loadSettings = async () => {
     try {
-      console.log("📡 [System] Initializing User Configuration...");
+      console.log("📡 [System] Initializing User Configuration via DynamoDB...");
+      
+      // Fetch the full profile. awsClient handles the ID injection automatically.
       const currentUser = await awsApi.getUser();
 
       if (!currentUser) {
-        console.warn("⚠️ User not found in database.");
+        console.warn("⚠️ [System] Protocol Failure: User record not found in database.");
         return;
       }
 
-      // Safeguard: Extract email and ID from whatever field the DB uses
+      // Industrial Extraction: Identify the email and ID regardless of the DB field name
       const userEmail = currentUser.email || currentUser.userEmail || "";
       const userId = currentUser.cognito_sub || currentUser.userId || currentUser.sub;
       
+      // Update the main user state
       setUser({ ...currentUser, email: userEmail, userId: userId });
 
+      // Synchronize Newsletter Data and Global Settings
       if (currentUser.newsletter_preferences) {
-        setSettings(currentUser.newsletter_preferences);
+        setSettings({
+          daily_alerts: currentUser.newsletter_preferences.daily_alerts ?? false,
+          weekly_summary: currentUser.newsletter_preferences.weekly_summary ?? true,
+          monthly_report: currentUser.newsletter_preferences.monthly_report ?? true,
+        });
+
         setNewsletterData({
           email: userEmail,
           interests: currentUser.newsletter_preferences.interests || [],
           frequency: currentUser.newsletter_preferences.frequency || 'weekly'
         });
       } else {
+        // Fallback for first-time setup
         setNewsletterData((prev) => ({ ...prev, email: userEmail }));
       }
       
-      console.log("✅ [System] Configuration loaded for:", userEmail);
+      console.log(`✅ [System] Configuration loaded for: ${userEmail || 'Authenticated Session'}`);
     } catch (error) {
-      console.error("❌ Error loading settings:", error);
+      console.error("❌ [System] Critical Error loading configuration:", error);
     }
   };
   const handleSave = async () => {
