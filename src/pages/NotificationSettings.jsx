@@ -115,30 +115,39 @@ export default function NotificationSettings() {
   };
 
   // Handles real lambda triggers for newsletter and notification manual dispatch/testing
+ // Handles real lambda triggers for newsletter and notification manual dispatch/testing
   const handleManualTrigger = async (type) => {
     setIsTriggering(type);
     try {
-      let result;
       const userId = localStorage.getItem("user_id");
+      
+      // Industrial logic: Ensure we have the user ID before calling the cloud
+      if (!userId) throw new Error("Terminal Session Expired: Please re-login.");
+
       switch (type) {
         case "daily":
-          result = await awsApi.sendDailyAlert({ userId });
+          await awsApi.sendDailyAlert({ userId });
           break;
         case "weekly":
-          result = await awsApi.sendWeeklySummary({ userId });
+          await awsApi.sendWeeklySummary({ userId });
           break;
         case "monthly":
-          result = await awsApi.sendMonthlyReport({ userId });
+          await awsApi.sendMonthlyReport({ userId });
           break;
         case "newsletter":
-          result = await awsApi.sendNewsletter({ userId, interests: newsletterData.interests });
+          await awsApi.sendNewsletter({ userId, interests: newsletterData.interests });
           break;
         default:
           break;
       }
-      alert(`✅ ${type.toUpperCase()} Dispatch Successful!`);
+      
+      // Success State Trigger
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 4000);
     } catch (error) {
-      alert(`❌ ${type.toUpperCase()} Failed: ` + error.message);
+      console.error(`❌ System Error [${type}]:`, error.message);
+      // We keep a single alert only for critical failures
+      alert(`SYSTEM FAILURE: ${error.message}`);
     } finally {
       setIsTriggering("");
     }
@@ -237,14 +246,15 @@ export default function NotificationSettings() {
               <Bell className="w-7 h-7" />
               Newsletter Subscription
             </CardTitle>
-            <p className="text-white/95 text-sm mt-2">
+            <p className="text-white/95 text-sm mt-2 font-medium">
               Personalize your investment newsletter preferences
             </p>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
+            {/* Email Input */}
             <div>
-              <Label htmlFor="email" className="text-base font-semibold flex items-center gap-2">
-                <Mail className="w-4 h-4" />
+              <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2 mb-2">
+                <Mail className="w-3 h-3" />
                 Email Address
               </Label>
               <Input
@@ -258,13 +268,14 @@ export default function NotificationSettings() {
                   }))
                 }
                 placeholder="your@email.com"
-                className="mt-2 h-12 text-base border-2 border-slate-200 focus:border-slate-900 rounded-xl"
+                className="h-12 text-base border-2 border-slate-200 focus:border-slate-900 rounded-xl font-bold"
               />
             </div>
 
+            {/* Frequency Selection */}
             <div>
-              <Label className="text-base font-semibold flex items-center gap-2 mb-3">
-                <Calendar className="w-4 h-4" />
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 flex items-center gap-2 mb-2">
+                <Calendar className="w-3 h-3" />
                 Delivery Frequency
               </Label>
               <Select
@@ -277,8 +288,7 @@ export default function NotificationSettings() {
                 }
               >
                 <SelectTrigger className="h-12 border-2 border-slate-900 bg-white text-slate-900 font-bold rounded-xl px-4 flex justify-between items-center shadow-sm">
-                  {/* Robust Manual Render to prevent invisible selection */}
-                  <span className="uppercase text-sm tracking-widest">
+                  <span className="uppercase text-xs tracking-widest font-black">
                     {newsletterData.frequency === "daily" ? "Daily Updates" : 
                      newsletterData.frequency === "weekly" ? "Weekly Digest" : 
                      newsletterData.frequency === "monthly" ? "Monthly Summary" : "Select Frequency"}
@@ -292,58 +302,66 @@ export default function NotificationSettings() {
               </Select>
             </div>
 
-            {/* INDUSTRIAL TOPIC GRID */}
+            {/* Intelligence Focus Grid */}
             <div>
               <Label className="font-black uppercase text-[10px] text-slate-400 mb-4 block tracking-[0.2em]">
                 Intelligence Focus Areas
               </Label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                 {["stocks", "crypto", "economy", "analysis", "news"].map((topic) => (
                   <div
                     key={topic}
                     onClick={() => handleInterestToggle(topic)}
-                    className={`cursor-pointer p-4 border-2 rounded-2xl flex items-center gap-3 transition-all ${
+                    className={`cursor-pointer p-3 border-2 rounded-xl flex flex-col items-center justify-center gap-2 transition-all ${
                       newsletterData.interests.includes(topic)
                         ? "border-slate-900 bg-slate-900 text-white shadow-[4px_4px_0px_0px_rgba(168,85,247,1)]"
                         : "border-slate-200 bg-white text-slate-400 hover:border-slate-900"
                     }`}
                   >
-                    <Checkbox
-                      checked={newsletterData.interests.includes(topic)}
-                      className="border-slate-400 data-[state=checked]:bg-purple-500 data-[state=checked]:border-purple-500"
-                    />
-                    <span className="font-black uppercase text-[10px] tracking-widest">{topic}</span>
+                    <span className="font-black uppercase text-[9px] tracking-widest">{topic}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Newsletter Card Footer */}
+            {/* Action Buttons */}
             <div className="pt-6 border-t-2 border-slate-100 flex flex-col md:flex-row gap-4">
               <Button
                 onClick={() => handleManualTrigger("newsletter")}
                 disabled={isTriggering === "newsletter"}
                 variant="outline"
-                className="border-2 border-slate-900 font-black uppercase text-xs rounded-2xl h-12 flex-1 hover:bg-slate-50 transition-all"
+                className="border-2 border-slate-900 font-black uppercase text-[10px] tracking-widest rounded-2xl h-12 flex-1 hover:bg-slate-50 transition-all active:scale-95"
               >
                 {isTriggering === "newsletter" ? (
-                  <Loader2 className="animate-spin" />
+                  <Loader2 className="animate-spin w-4 h-4" />
+                ) : saveSuccess ? (
+                  <div className="flex items-center gap-2 text-emerald-600">
+                    <CheckCircle className="w-4 h-4" /> DISPATCHED
+                  </div>
                 ) : (
-                  <Send className="mr-2 w-4 h-4" />
+                  <>
+                    <Send className="mr-2 w-4 h-4" />
+                    Dispatch Newsletter Now
+                  </>
                 )}
-                Dispatch Newsletter Now
               </Button>
+              
               <Button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="bg-slate-900 text-white font-black uppercase text-xs rounded-2xl h-12 flex-1 shadow-[4px_4px_0px_0px_rgba(168,85,247,1)] hover:translate-y-[-2px] active:translate-y-[0px] transition-all"
+                className="bg-slate-900 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl h-12 flex-1 shadow-[4px_4px_0px_0px_rgba(168,85,247,1)] hover:translate-y-[-2px] active:translate-y-[0px] transition-all"
               >
-                {saveSuccess ? "System Updated!" : "Save Configuration"}
+                {isSaving ? (
+                  <Loader2 className="animate-spin w-4 h-4" />
+                ) : saveSuccess ? (
+                  "Configuration Synced"
+                ) : (
+                  "Save Configuration"
+                )}
               </Button>
             </div>
           </CardContent>
         </Card>
-
         {/* App Notifications Header */}
         <h2 className="text-2xl font-black text-slate-900 mb-6 uppercase tracking-tighter italic">
           System Triggers
@@ -377,11 +395,15 @@ export default function NotificationSettings() {
             <p className="text-[11px] font-bold text-slate-500 max-w-md uppercase tracking-tight leading-tight">
               Protocol: Portfolio Health, IQ score trends, and risk correlation updates every Monday morning.
             </p>
-            <Switch
-              checked={!!settings.weekly_summary}
-              onCheckedChange={() => toggleSetting("weekly_summary")}
-              className="border-2 border-slate-900 data-[state=checked]:bg-indigo-500 data-[state=unchecked]:bg-slate-200 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all"
-            />
+            <div className="flex items-center gap-3">
+              <span className={`text-[10px] font-black uppercase tracking-widest ${!settings.weekly_summary ? 'text-slate-900' : 'text-slate-300'}`}>OFF</span>
+              <Switch
+                checked={!!settings.weekly_summary}
+                onCheckedChange={() => toggleSetting("weekly_summary")}
+                className="border-2 border-slate-900 data-[state=checked]:bg-indigo-500 data-[state=unchecked]:bg-slate-200 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all"
+              />
+              <span className={`text-[10px] font-black uppercase tracking-widest ${settings.weekly_summary ? 'text-indigo-600' : 'text-slate-300'}`}>ON</span>
+            </div>
           </CardContent>
         </Card>
 
@@ -413,11 +435,15 @@ export default function NotificationSettings() {
             <p className="text-[11px] font-bold text-slate-500 max-w-md uppercase tracking-tight leading-tight">
               Audit: Comprehensive progress vs goals, drawdown summary, and achievement badges on the 1st.
             </p>
-            <Switch
-              checked={!!settings.monthly_report}
-              onCheckedChange={() => toggleSetting("monthly_report")}
-              className="border-2 border-slate-900 data-[state=checked]:bg-purple-500 data-[state=unchecked]:bg-slate-200 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all"
-            />
+            <div className="flex items-center gap-3">
+              <span className={`text-[10px] font-black uppercase tracking-widest ${!settings.monthly_report ? 'text-slate-900' : 'text-slate-300'}`}>OFF</span>
+              <Switch
+                checked={!!settings.monthly_report}
+                onCheckedChange={() => toggleSetting("monthly_report")}
+                className="border-2 border-slate-900 data-[state=checked]:bg-purple-500 data-[state=unchecked]:bg-slate-200 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all"
+              />
+              <span className={`text-[10px] font-black uppercase tracking-widest ${settings.monthly_report ? 'text-purple-600' : 'text-slate-300'}`}>ON</span>
+            </div>
           </CardContent>
         </Card>
 
@@ -449,11 +475,15 @@ export default function NotificationSettings() {
             <p className="text-[11px] font-bold text-slate-500 max-w-md uppercase tracking-tight leading-tight">
               On Demand: High-priority alerts triggered by significant risk increases or goal drift detected.
             </p>
-            <Switch
-              checked={!!settings.daily_alerts}
-              onCheckedChange={() => toggleSetting("daily_alerts")}
-              className="border-2 border-slate-900 data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-200 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all"
-            />
+            <div className="flex items-center gap-3">
+              <span className={`text-[10px] font-black uppercase tracking-widest ${!settings.daily_alerts ? 'text-slate-900' : 'text-slate-300'}`}>OFF</span>
+              <Switch
+                checked={!!settings.daily_alerts}
+                onCheckedChange={() => toggleSetting("daily_alerts")}
+                className="border-2 border-slate-900 data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-200 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all"
+              />
+              <span className={`text-[10px] font-black uppercase tracking-widest ${settings.daily_alerts ? 'text-amber-600' : 'text-slate-300'}`}>ON</span>
+            </div>
           </CardContent>
         </Card>
 
