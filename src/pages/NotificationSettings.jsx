@@ -124,31 +124,31 @@ export default function NotificationSettings() {
 
  // Handles real lambda triggers for newsletter and notification manual dispatch/testing
   const handleManualTrigger = async (type) => {
-    // Basic validation before network call
-    if (type === "newsletter" && newsletterData.interests.length === 0) {
-      alert("Terminal Alert: Select at least one focus area before dispatch.");
+    // Industrial validation: Check interests before dispatching newsletter
+    if (type === "newsletter" && (!newsletterData.interests || newsletterData.interests.length === 0)) {
+      alert("TERMINAL ERROR: No Intelligence Focus Areas selected for Newsletter dispatch.");
       return;
     }
 
     setIsTriggering(type);
     try {
-      console.log(`📡 [System] Manual Override initiated: ${type.toUpperCase()}`);
+      console.log(`📡 [System] Manual Protocol Override: ${type.toUpperCase()}`);
 
       /**
-       * INDUSTRIAL PAYLOAD CONSTRUCTION
-       * We explicitly map userId and email to ensure the Lambda validator 
-       * doesn't return a 400.
+       * PAYLOAD SANITIZATION
+       * We pull the IDs from the 'user' state loaded via DynamoDB.
+       * Your awsClient.js will wrap this entire object into a 'payload' key.
        */
       const payload = { 
-        userId: user?.userId || user?.cognito_sub, 
-        email: newsletterData.email,
+        userId: user?.cognito_sub || user?.userId, // Map both naming possibilities
+        userEmail: newsletterData.email,           // Explicitly pass email for Lambda validation
         interests: newsletterData.interests,
         frequency: newsletterData.frequency 
       };
 
-      console.log(`🛠️ [System] Payload Integrity Check:`, payload);
+      console.log(`🛠️ [System] Dispatch Payload Check:`, payload);
 
-      // Execute via Proxy
+      // Execute via the authenticated awsApi Wrapper
       switch (type) {
         case "daily":
           await awsApi.sendDailyAlert(payload);
@@ -166,20 +166,19 @@ export default function NotificationSettings() {
           break;
       }
       
-      // Trigger UI Success Feedback
+      // SUCCESS: Trigger the "Sync" confirmation toast
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);
-      console.log(`✅ [System] ${type.toUpperCase()} execution confirmed by cloud.`);
+      console.log(`✅ [System] ${type.toUpperCase()} execution successful.`);
       
     } catch (error) {
-      console.error(`❌ System Error [${type}]:`, error.message);
-      // Secondary user feedback
-      alert(`Manual Dispatch Failed: ${error.message}`);
+      console.error(`❌ [System] Protocol Failure [${type}]:`, error.message);
+      // Secondary alert for industrial transparency
+      alert(`SYSTEM FAILURE: ${error.message}`);
     } finally {
       setIsTriggering("");
     }
   };
-
   // You may keep this legacy test preview for LLM/test email, or remove if not wanted anymore
   const handleSendTestEmail = async () => {
     if (newsletterData.interests.length === 0) {
