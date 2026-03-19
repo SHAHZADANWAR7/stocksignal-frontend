@@ -9,9 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Bell, Mail, TrendingUp, Calendar, CheckCircle, AlertCircle, Send, Loader2, Sparkles, Star, RefreshCw, ShieldCheck, Database } from "lucide-react";
+import { Bell, Mail, TrendingUp, Calendar, CheckCircle, AlertCircle, Send, Loader2, Sparkles, Star, RefreshCw, ShieldCheck, Database, Zap } from "lucide-react";
 import { motion } from "framer-motion";
-
 export default function NotificationSettings() {
   const [user, setUser] = useState(null);
   const [settings, setSettings] = useState({
