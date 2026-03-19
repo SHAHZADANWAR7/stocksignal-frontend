@@ -28,7 +28,11 @@ const LAMBDA_KEY_MAPPING = {
     "executePaperTrade",
     "executeTrade",
     "getPortfolio",
-    "createBlackSwanSimulation"
+    "createBlackSwanSimulation",
+    "sendWeeklySummary",
+    "sendDailyAlert",
+    "sendMonthlyReport",
+    "sendNewsletter"
   ],
   user_email: [
     "checkSubscription",
@@ -45,10 +49,7 @@ const LAMBDA_KEY_MAPPING = {
     "deleteHolding",
     "getInvestmentJournals",
     "createInvestmentJournal",
-    "sendWeeklySummary",
-    "sendDailyAlert",
-    "sendMonthlyReport",
-    "sendNewsletter",
+    
     "getUserDashboardData",
     "getPortfolioGoal",
     "createPortfolioGoal",
@@ -217,10 +218,11 @@ export const awsApi = {
   executePaperTrade: (tradeData) => invokeProxy("executePaperTrade", tradeData),
   syncPortfolio: (portfolioData) => invokeProxy("syncPortfolio", portfolioData),
   calculateRealBeta: (symbol) => invokeProxy("calculateRealBeta", { symbol }),
-  sendWeeklySummary: () => invokeProxy("sendWeeklySummary", {}),
-  sendDailyAlert: () => invokeProxy("sendDailyAlert", {}),
-  sendMonthlyReport: () => invokeProxy("sendMonthlyReport", {}),
-  sendNewsletter: () => invokeProxy("sendNewsletter", {}),
+  // NEW (Correct - passing the payload):
+sendWeeklySummary: (payload) => invokeProxy("sendWeeklySummary", payload),
+sendDailyAlert: (payload) => invokeProxy("sendDailyAlert", payload),
+sendMonthlyReport: (payload) => invokeProxy("sendMonthlyReport", payload),
+sendNewsletter: (payload) => invokeProxy("sendNewsletter", payload),
   sendSupportEmail: (data) => invokeProxy("sendSupportEmail", data),
   getShadowPortfolios: (email) => invokeProxy("getShadowPortfolios", { email }),
   createShadowPortfolio: (data) => invokeProxy("createShadowPortfolio", data),
