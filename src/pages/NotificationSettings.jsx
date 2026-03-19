@@ -50,48 +50,59 @@ export default function NotificationSettings() {
 
   const loadSettings = async () => {
     try {
-      const userId = localStorage.getItem("user_id");
-      const userEmail = localStorage.getItem("user_email");
-      if (!userId) return;
+      console.log("📡 [System] Initializing User Configuration...");
+      
+      // Get the authenticated user data directly from the session
+      const authData = await awsApi.getCurrentUser();
+      if (!authData || !authData.userId) {
+        console.warn("⚠️ No active session found during loadSettings");
+        return;
+      }
 
-      const currentUser = await awsApi.getUser(userId);
+      // Fetch the full user profile from DynamoDB
+      const currentUser = await awsApi.getUser();
       setUser(currentUser);
 
       if (currentUser.newsletter_preferences) {
         setSettings(currentUser.newsletter_preferences);
         setNewsletterData((prev) => ({
           ...prev,
-          email: userEmail || "",
+          email: currentUser.email || authData.userEmail || "",
           interests: currentUser.newsletter_preferences.interests || [],
+          frequency: currentUser.newsletter_preferences.frequency || 'weekly'
         }));
       } else {
         setNewsletterData((prev) => ({
           ...prev,
-          email: userEmail || "",
+          email: currentUser.email || authData.userEmail || "",
         }));
       }
+      console.log("✅ [System] Configuration loaded for:", currentUser.email);
     } catch (error) {
-      console.error("Error loading settings:", error);
+      console.error("❌ Error loading settings:", error);
     }
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const userId = localStorage.getItem("user_id");
-
+      // Prepare the payload using current state
       const updatedPrefs = {
         ...settings,
         interests: newsletterData.interests,
+        frequency: newsletterData.frequency
       };
 
-      await awsApi.updateUser(userId, {
+      // awsClient.js handles the ID injection, so we just send the data
+      await awsApi.updateUser({
         newsletter_preferences: updatedPrefs,
       });
 
+      console.log("💾 [System] Remote configuration synchronized.");
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
+      console.error("❌ Save Failed:", error.message);
       alert("Error saving settings: " + error.message);
     } finally {
       setIsSaving(false);
@@ -115,38 +126,51 @@ export default function NotificationSettings() {
   };
 
   // Handles real lambda triggers for newsletter and notification manual dispatch/testing
- // Handles real lambda triggers for newsletter and notification manual dispatch/testing
   const handleManualTrigger = async (type) => {
     setIsTriggering(type);
     try {
-      const userId = localStorage.getItem("user_id");
+      // 1. Get the authenticated session directly from Amplify/awsClient
+      const authData = await awsApi.getCurrentUser();
       
-      // Industrial logic: Ensure we have the user ID before calling the cloud
-      if (!userId) throw new Error("Terminal Session Expired: Please re-login.");
+      // Industrial logic: Verify session integrity before cloud invocation
+      if (!authData || !authData.userId) {
+        throw new Error("Terminal Session Expired: Please re-login.");
+      }
 
+      console.log(`📡 [System] Initiating manual protocol: ${type.toUpperCase()}`);
+
+      // 2. Prepare payload - awsClient will automatically add the userId to these
+      const payload = { 
+        interests: newsletterData.interests,
+        frequency: newsletterData.frequency 
+      };
+
+      // 3. Dispatch to the correct Lambda via the Proxy
       switch (type) {
         case "daily":
-          await awsApi.sendDailyAlert({ userId });
+          await awsApi.sendDailyAlert(payload);
           break;
         case "weekly":
-          await awsApi.sendWeeklySummary({ userId });
+          await awsApi.sendWeeklySummary(payload);
           break;
         case "monthly":
-          await awsApi.sendMonthlyReport({ userId });
+          await awsApi.sendMonthlyReport(payload);
           break;
         case "newsletter":
-          await awsApi.sendNewsletter({ userId, interests: newsletterData.interests });
+          await awsApi.sendNewsletter(payload);
           break;
         default:
           break;
       }
       
-      // Success State Trigger
+      // 4. Trigger UI Success State (The "Sync" toast)
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);
+      console.log(`✅ [System] ${type.toUpperCase()} execution confirmed.`);
+      
     } catch (error) {
       console.error(`❌ System Error [${type}]:`, error.message);
-      // We keep a single alert only for critical failures
+      // Critical failure backup
       alert(`SYSTEM FAILURE: ${error.message}`);
     } finally {
       setIsTriggering("");
@@ -363,17 +387,18 @@ export default function NotificationSettings() {
           </CardContent>
         </Card>
         {/* App Notifications Header */}
-        <h2 className="text-2xl font-black text-slate-900 mb-6 uppercase tracking-tighter italic">
+        <h2 className="text-xl font-black text-slate-900 mb-6 uppercase tracking-[0.2em] italic flex items-center gap-3">
+          <Zap className="w-5 h-5 text-amber-500" />
           System Triggers
         </h2>
 
         {/* Weekly Summary */}
-        <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden mb-8 bg-white">
-          <CardHeader className="bg-slate-900 text-white py-4">
+        <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2rem] overflow-hidden mb-6 bg-white transition-all hover:translate-y-[-2px]">
+          <CardHeader className="bg-slate-900 text-white py-3 px-6 border-b-4 border-slate-900">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <TrendingUp className="w-5 h-5 text-indigo-400" />
-                <CardTitle className="text-sm font-black uppercase tracking-widest">
+                <TrendingUp className="w-4 h-4 text-indigo-400" />
+                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em]">
                   Weekly Investor Summary
                 </CardTitle>
               </div>
@@ -381,39 +406,42 @@ export default function NotificationSettings() {
                 size="sm"
                 onClick={() => handleManualTrigger("weekly")}
                 disabled={isTriggering === "weekly"}
-                className="bg-white/10 hover:bg-white/20 border border-white/20 text-[10px] font-black uppercase rounded-lg h-8 transition-all active:scale-95 shadow-sm"
+                className="bg-indigo-500/20 hover:bg-indigo-500 hover:text-white border-2 border-indigo-500/50 text-[9px] font-black uppercase rounded-full h-7 px-4 transition-all active:scale-95"
               >
                 {isTriggering === "weekly" ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
                 ) : (
-                  "Test Dispatch"
+                  "Manual Dispatch"
                 )}
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-6 flex items-center justify-between gap-6">
-            <p className="text-[11px] font-bold text-slate-500 max-w-md uppercase tracking-tight leading-tight">
-              Protocol: Portfolio Health, IQ score trends, and risk correlation updates every Monday morning.
-            </p>
-            <div className="flex items-center gap-3">
-              <span className={`text-[10px] font-black uppercase tracking-widest ${!settings.weekly_summary ? 'text-slate-900' : 'text-slate-300'}`}>OFF</span>
+          <CardContent className="p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-slate-50/30">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Protocol Intelligence</p>
+              <p className="text-[11px] font-bold text-slate-700 max-w-md leading-relaxed">
+                Portfolio Health, IQ score trends, and risk correlation updates every Monday morning.
+              </p>
+            </div>
+            <div className="flex items-center gap-4 bg-white p-3 border-2 border-slate-900 rounded-2xl shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+              <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${!settings.weekly_summary ? 'text-rose-500' : 'text-slate-300'}`}>Offline</span>
               <Switch
                 checked={!!settings.weekly_summary}
                 onCheckedChange={() => toggleSetting("weekly_summary")}
-                className="border-2 border-slate-900 data-[state=checked]:bg-indigo-500 data-[state=unchecked]:bg-slate-200 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all"
+                className="w-12 h-6 border-2 border-slate-900 data-[state=checked]:bg-indigo-500 data-[state=unchecked]:bg-slate-200"
               />
-              <span className={`text-[10px] font-black uppercase tracking-widest ${settings.weekly_summary ? 'text-indigo-600' : 'text-slate-300'}`}>ON</span>
+              <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${settings.weekly_summary ? 'text-emerald-500' : 'text-slate-300'}`}>Active</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Monthly Report */}
-        <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden mb-8 bg-white">
-          <CardHeader className="bg-slate-900 text-white py-4">
+        <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2rem] overflow-hidden mb-6 bg-white transition-all hover:translate-y-[-2px]">
+          <CardHeader className="bg-slate-900 text-white py-3 px-6 border-b-4 border-slate-900">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Calendar className="w-5 h-5 text-purple-400" />
-                <CardTitle className="text-sm font-black uppercase tracking-widest">
+                <Calendar className="w-4 h-4 text-purple-400" />
+                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em]">
                   Monthly Portfolio Report
                 </CardTitle>
               </div>
@@ -421,39 +449,42 @@ export default function NotificationSettings() {
                 size="sm"
                 onClick={() => handleManualTrigger("monthly")}
                 disabled={isTriggering === "monthly"}
-                className="bg-white/10 hover:bg-white/20 border border-white/20 text-[10px] font-black uppercase rounded-lg h-8 transition-all active:scale-95 shadow-sm"
+                className="bg-purple-500/20 hover:bg-purple-500 hover:text-white border-2 border-purple-500/50 text-[9px] font-black uppercase rounded-full h-7 px-4 transition-all active:scale-95"
               >
                 {isTriggering === "monthly" ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
                 ) : (
-                  "Test Dispatch"
+                  "Manual Dispatch"
                 )}
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-6 flex items-center justify-between gap-6">
-            <p className="text-[11px] font-bold text-slate-500 max-w-md uppercase tracking-tight leading-tight">
-              Audit: Comprehensive progress vs goals, drawdown summary, and achievement badges on the 1st.
-            </p>
-            <div className="flex items-center gap-3">
-              <span className={`text-[10px] font-black uppercase tracking-widest ${!settings.monthly_report ? 'text-slate-900' : 'text-slate-300'}`}>OFF</span>
+          <CardContent className="p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-slate-50/30">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Audit Schedule</p>
+              <p className="text-[11px] font-bold text-slate-700 max-w-md leading-relaxed">
+                Comprehensive progress vs goals, drawdown summary, and achievement badges on the 1st.
+              </p>
+            </div>
+            <div className="flex items-center gap-4 bg-white p-3 border-2 border-slate-900 rounded-2xl shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+              <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${!settings.monthly_report ? 'text-rose-500' : 'text-slate-300'}`}>Offline</span>
               <Switch
                 checked={!!settings.monthly_report}
                 onCheckedChange={() => toggleSetting("monthly_report")}
-                className="border-2 border-slate-900 data-[state=checked]:bg-purple-500 data-[state=unchecked]:bg-slate-200 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all"
+                className="w-12 h-6 border-2 border-slate-900 data-[state=checked]:bg-purple-500 data-[state=unchecked]:bg-slate-200"
               />
-              <span className={`text-[10px] font-black uppercase tracking-widest ${settings.monthly_report ? 'text-purple-600' : 'text-slate-300'}`}>ON</span>
+              <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${settings.monthly_report ? 'text-emerald-500' : 'text-slate-300'}`}>Active</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Daily Alerts */}
-        <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2.5rem] overflow-hidden mb-8 bg-white">
-          <CardHeader className="bg-slate-900 text-white py-4">
+        <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] rounded-[2rem] overflow-hidden mb-10 bg-white transition-all hover:translate-y-[-2px]">
+          <CardHeader className="bg-slate-900 text-white py-3 px-6 border-b-4 border-slate-900">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-400" />
-                <CardTitle className="text-sm font-black uppercase tracking-widest">
+                <AlertCircle className="w-4 h-4 text-amber-400" />
+                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em]">
                   Daily Critical Alerts
                 </CardTitle>
               </div>
@@ -461,35 +492,38 @@ export default function NotificationSettings() {
                 size="sm"
                 onClick={() => handleManualTrigger("daily")}
                 disabled={isTriggering === "daily"}
-                className="bg-white/10 hover:bg-white/20 border border-white/20 text-[10px] font-black uppercase rounded-lg h-8 transition-all active:scale-95 shadow-sm"
+                className="bg-amber-500/20 hover:bg-amber-500 hover:text-white border-2 border-amber-500/50 text-[9px] font-black uppercase rounded-full h-7 px-4 transition-all active:scale-95"
               >
                 {isTriggering === "daily" ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
                 ) : (
-                  "Test Dispatch"
+                  "Manual Dispatch"
                 )}
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-6 flex items-center justify-between gap-6">
-            <p className="text-[11px] font-bold text-slate-500 max-w-md uppercase tracking-tight leading-tight">
-              On Demand: High-priority alerts triggered by significant risk increases or goal drift detected.
-            </p>
-            <div className="flex items-center gap-3">
-              <span className={`text-[10px] font-black uppercase tracking-widest ${!settings.daily_alerts ? 'text-slate-900' : 'text-slate-300'}`}>OFF</span>
+          <CardContent className="p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 bg-slate-50/30">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">On-Demand Monitoring</p>
+              <p className="text-[11px] font-bold text-slate-700 max-w-md leading-relaxed">
+                High-priority alerts triggered by significant risk increases or goal drift detected.
+              </p>
+            </div>
+            <div className="flex items-center gap-4 bg-white p-3 border-2 border-slate-900 rounded-2xl shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+              <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${!settings.daily_alerts ? 'text-rose-500' : 'text-slate-300'}`}>Offline</span>
               <Switch
                 checked={!!settings.daily_alerts}
                 onCheckedChange={() => toggleSetting("daily_alerts")}
-                className="border-2 border-slate-900 data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-200 shadow-[2px_2px_0px_0px_rgba(15,23,42,1)] transition-all"
+                className="w-12 h-6 border-2 border-slate-900 data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-200"
               />
-              <span className={`text-[10px] font-black uppercase tracking-widest ${settings.daily_alerts ? 'text-amber-600' : 'text-slate-300'}`}>ON</span>
+              <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${settings.daily_alerts ? 'text-emerald-500' : 'text-slate-300'}`}>Active</span>
             </div>
           </CardContent>
         </Card>
 
         {/* End of System Configuration */}
         <div className="mt-8 flex items-center justify-center p-6 border-t-4 border-slate-900/10">
-          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">
+          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.4em]">
             End of System Configuration — Terminal v5.4
           </p>
         </div>
