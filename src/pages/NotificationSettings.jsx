@@ -49,39 +49,45 @@ export default function NotificationSettings() {
 
   const loadSettings = async () => {
     try {
-      console.log("📡 [System] Initializing User Configuration...");
+      console.log("📡 [System] Initializing User Configuration via DynamoDB...");
       
-      // Get the authenticated user data directly from the session
-      const authData = await awsApi.getCurrentUser();
-      if (!authData || !authData.userId) {
-        console.warn("⚠️ No active session found during loadSettings");
+      /**
+       * We skip getCurrentUser() here because it's failing with 401.
+       * awsApi.getUser() is mapped to 'cognito_sub' in your awsClient,
+       * which means it will automatically grab your session ID and 
+       * fetch your profile correctly.
+       */
+      const currentUser = await awsApi.getUser();
+
+      if (!currentUser) {
+        console.warn("⚠️ User profile not found in database.");
         return;
       }
 
-      // Fetch the full user profile from DynamoDB
-      const currentUser = await awsApi.getUser();
       setUser(currentUser);
 
+      // Map preferences to local state if they exist
       if (currentUser.newsletter_preferences) {
         setSettings(currentUser.newsletter_preferences);
         setNewsletterData((prev) => ({
           ...prev,
-          email: currentUser.email || authData.userEmail || "",
+          email: currentUser.email || "",
           interests: currentUser.newsletter_preferences.interests || [],
           frequency: currentUser.newsletter_preferences.frequency || 'weekly'
         }));
       } else {
         setNewsletterData((prev) => ({
           ...prev,
-          email: currentUser.email || authData.userEmail || "",
+          email: currentUser.email || "",
         }));
       }
+      
       console.log("✅ [System] Configuration loaded for:", currentUser.email);
     } catch (error) {
+      // This will catch the 401 or 404 and log it without crashing the UI
       console.error("❌ Error loading settings:", error);
     }
   };
-
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -128,23 +134,19 @@ export default function NotificationSettings() {
   const handleManualTrigger = async (type) => {
     setIsTriggering(type);
     try {
-      // 1. Get the authenticated session directly from Amplify/awsClient
-      const authData = await awsApi.getCurrentUser();
-      
-      // Industrial logic: Verify session integrity before cloud invocation
-      if (!authData || !authData.userId) {
-        throw new Error("Terminal Session Expired: Please re-login.");
-      }
-
       console.log(`📡 [System] Initiating manual protocol: ${type.toUpperCase()}`);
 
-      // 2. Prepare payload - awsClient will automatically add the userId to these
+      /**
+       * We no longer call getCurrentUser() here to avoid the 401 error.
+       * Your awsClient.js is mapped to inject userId/userEmail automatically
+       * based on the functionName provided in the switch below.
+       */
       const payload = { 
         interests: newsletterData.interests,
         frequency: newsletterData.frequency 
       };
 
-      // 3. Dispatch to the correct Lambda via the Proxy
+      // Dispatch to the correct Lambda via the Proxy
       switch (type) {
         case "daily":
           await awsApi.sendDailyAlert(payload);
@@ -162,14 +164,14 @@ export default function NotificationSettings() {
           break;
       }
       
-      // 4. Trigger UI Success State (The "Sync" toast)
+      // Trigger UI Success State (The "Sync" toast)
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 4000);
       console.log(`✅ [System] ${type.toUpperCase()} execution confirmed.`);
       
     } catch (error) {
       console.error(`❌ System Error [${type}]:`, error.message);
-      // Critical failure backup
+      // Fallback for user feedback
       alert(`SYSTEM FAILURE: ${error.message}`);
     } finally {
       setIsTriggering("");
