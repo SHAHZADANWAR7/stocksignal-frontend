@@ -359,7 +359,7 @@ export default function MarketInsights() {
                 </CardContent>
               </Card>
 
-             {/* SYMMETRICAL INDUSTRIAL DASHBOARD GRID */}
+            {/* SYMMETRICAL INDUSTRIAL DASHBOARD GRID */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
                 
                 {/* 1. SECTOR RISK DISTRIBUTION */}
@@ -371,6 +371,7 @@ export default function MarketInsights() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6 md:p-8 flex-1 flex flex-col">
+                    {/* FIXED: Added explicit height and minHeight to prevent collapse */}
                     <div className="h-64 md:h-72 mb-10">
                       <ResponsiveContainer width="100%" height="100%" minHeight={250}>
                         <BarChart data={marketData.sector_sentiment} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -421,7 +422,8 @@ export default function MarketInsights() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6 md:p-8 flex-1 flex flex-col">
-                    <div className="h-64 md:h-72 mb-10">
+                    {/* FIXED: Replaced height with aspect={1} to force perfect square and prevent merging */}
+                    <div className="h-auto mb-10">
                       <ResponsiveContainer width="100%" aspect={1}>
                         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={marketData.asset_sentiment}>
                           <PolarGrid stroke="#e2e8f0" strokeWidth={2} />
@@ -462,7 +464,6 @@ export default function MarketInsights() {
                   </CardContent>
                 </Card>
               </div>
-
             {/* INDUSTRIAL AI PREDICTIVE SIGNAL INTELLIGENCE - OPTIMIZED DENSITY */}
               <Card className="border-4 border-slate-900 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] mb-10 rounded-[2.5rem] overflow-hidden bg-white">
                 <CardHeader className="bg-slate-900 text-white py-4 border-b-4 border-slate-900">
