@@ -26,9 +26,6 @@ export default function Companies() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const hasAutoAnalyzed = React.useRef(false);
 
-  // Pagination State
-  const [visibleCount, setVisibleCount] = useState(24);
-
   // Transform Lambda response from snake_case to camelCase
   const transformStockData = (data) => {
     return {
@@ -70,11 +67,10 @@ export default function Companies() {
     filterCompanies();
   }, [searchQuery, sectorFilter, companies]);
 
-  // Fix 1: Fetch with limit=500
   const loadCompanies = async () => {
     setIsLoading(true);
     try {
-      const result = await callAwsFunction('getCompanies', { limit: 500 });
+      const result = await callAwsFunction('getCompanies', {});
       const companiesData = result.items || [];
       setCompanies(companiesData);
       setFilteredCompanies(companiesData);
@@ -219,7 +215,7 @@ export default function Companies() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
@@ -228,14 +224,14 @@ export default function Companies() {
         >
           <div className="flex flex-col gap-4">
             <div className="flex items-start gap-3 md:gap-4">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-slate-900 rounded-[2.5rem] border-b-4 border-indigo-600 shadow-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
                 <Building2 className="w-6 h-6 md:w-7 md:h-7 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-3">
+                <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold text-slate-900 mb-2 leading-tight">
                   Browse Investments
                 </h1>
-                <p className="text-lg text-slate-600 font-normal normal-case tracking-normal">
+                <p className="text-sm md:text-base lg:text-lg text-slate-600 leading-relaxed">
                   Select stocks and index funds to get AI-powered investment recommendations
                 </p>
               </div>
@@ -243,30 +239,31 @@ export default function Companies() {
           </div>
         </motion.div>
 
-        <Card className="border-4 border-slate-900 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] mb-8 bg-white rounded-[2.5rem]">
+        <Card className="border-2 border-emerald-300 shadow-lg mb-8 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
           <CardContent className="p-10 min-h-[180px] flex flex-col justify-center">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-slate-900 rounded-none border-b-4 border-indigo-600 flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center">
                 <Sparkles className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Quick Stock Analysis</h2>
-                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.3em]">Get AI-powered analysis and discover better alternatives</p>
+                <h2 className="text-2xl font-bold text-slate-900">Quick Stock Analysis</h2>
+                <p className="text-sm text-slate-600">Get AI-powered analysis and discover better alternatives</p>
               </div>
             </div>
+            
             <div className="flex gap-3 mb-2">
               <Input
                 placeholder="Enter stock symbol (e.g., AAPL, TSLA, MSFT)..."
                 value={quickAnalysisSymbol}
                 onChange={(e) => setQuickAnalysisSymbol(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && analyzeStock()}
-                className="flex-1 h-14 text-lg border-slate-300 border-2 rounded-md bg-white text-slate-900"
+                className="flex-1 h-14 text-lg border-emerald-300 focus:border-emerald-500"
                 disabled={isAnalyzing}
               />
               <Button
                 onClick={analyzeStock}
                 disabled={isAnalyzing || !quickAnalysisSymbol.trim()}
-                className="rounded-xl bg-indigo-600 hover:bg-indigo-500 font-black uppercase text-[10px] tracking-widest border-b-4 border-indigo-900 h-14 px-8"
+                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 h-14 px-8 text-base"
                 data-analyze-btn
               >
                 {isAnalyzing ? (
@@ -285,54 +282,59 @@ export default function Companies() {
 
             {analysisResult && (
               <div className="space-y-6">
-                <div className="bg-slate-50 border-2 border-slate-900 rounded-3xl p-6 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+                <div className="bg-white rounded-xl p-6 border-2 border-emerald-200">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       {analysisResult.stock.logoUrl && (
                         <img src={analysisResult.stock.logoUrl} alt={`${analysisResult.stock.name} logo`} className="w-10 h-10 rounded-full" />
                       )}
                       <div>
-                        <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">{analysisResult.stock.symbol}</h3>
-                        <p className="font-black uppercase text-[8px] text-slate-400">{analysisResult.stock.name}</p>
+                        <h3 className="text-2xl font-bold text-slate-900">{analysisResult.stock.symbol}</h3>
+                        <p className="text-slate-600">{analysisResult.stock.name}</p>
                       </div>
                     </div>
                   </div>
+                  
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     {analysisResult.stock.valuation && (
                       <div>
-                        <p className="font-black uppercase text-[8px] text-slate-400">Valuation</p>
+                        <p className="text-sm text-slate-500">Valuation</p>
                         <p className={`text-xl font-bold ${analysisResult.stock.valuation === 'overvalued' ? 'text-red-500' : analysisResult.stock.valuation === 'undervalued' ? 'text-green-500' : 'text-blue-600'}`}>
                           {analysisResult.stock.valuation.charAt(0).toUpperCase() + analysisResult.stock.valuation.slice(1)}
                         </p>
                       </div>
                     )}
+                    
                     {analysisResult.stock.price != null && (
                       <div>
-                        <p className="font-black uppercase text-[8px] text-slate-400">Price</p>
+                        <p className="text-sm text-slate-500">Price</p>
                         <p className="text-xl font-bold text-slate-900">
                           ${analysisResult.stock.price.toFixed(2)}
                         </p>
                       </div>
                     )}
+
                     {analysisResult.stock.marketCap && (
                       <div>
-                        <p className="font-black uppercase text-[8px] text-slate-400">Market Cap</p>
+                        <p className="text-sm text-slate-500">Market Cap</p>
                         <p className="text-xl font-bold text-slate-900">
                           {analysisResult.stock.marketCap}
                         </p>
                       </div>
                     )}
+
                     {(analysisResult.stock.peRatioFormatted || analysisResult.stock.peRatio != null) && (
                       <div>
-                        <p className="font-black uppercase text-[8px] text-slate-400">P/E Ratio</p>
+                        <p className="text-sm text-slate-500">P/E Ratio</p>
                         <p className="text-xl font-bold text-blue-600">
                           {analysisResult.stock.peRatioFormatted || analysisResult.stock.peRatio.toFixed(2)}
                         </p>
                       </div>
                     )}
+
                     {analysisResult.stock.beta != null && (
                       <div>
-                        <p className="font-black uppercase text-[8px] text-slate-400">Beta</p>
+                        <p className="text-sm text-slate-500">Beta</p>
                         <p className="text-xl font-bold text-slate-900">
                           {analysisResult.stock.beta.toFixed(2)}
                         </p>
@@ -341,49 +343,54 @@ export default function Companies() {
                         )}
                       </div>
                     )}
+
                     {analysisResult.stock.expectedReturn != null && (
                       <div>
-                        <p className="font-black uppercase text-[8px] text-slate-400">Expected Return</p>
+                        <p className="text-sm text-slate-500">Expected Return</p>
                         <p className="text-xl font-bold text-blue-600">
                           {analysisResult.stock.expectedReturn.toFixed(1)}%
                         </p>
                       </div>
                     )}
+
                     {analysisResult.stock.risk != null && (
                       <div>
-                        <p className="font-black uppercase text-[8px] text-slate-400">Risk</p>
+                        <p className="text-sm text-slate-500">Risk</p>
                         <p className="text-xl font-bold text-orange-600">
                           {analysisResult.stock.risk.toFixed(1)}%
                         </p>
                       </div>
                     )}
                   </div>
+
                   {analysisResult.stock.valuationReasoning && (
-                    <div className="bg-slate-900 text-white p-6 rounded-2xl border-l-4 border-indigo-500 mb-4">
-                      <p className="font-bold uppercase text-[10px] tracking-[0.3em] text-slate-400 mb-2">AI Analysis</p>
-                      <p className="text-sm text-white leading-relaxed">
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200 mb-4">
+                      <p className="text-sm font-semibold text-slate-900 mb-2">AI Analysis</p>
+                      <p className="text-sm text-slate-700 leading-relaxed">
                         {analysisResult.stock.valuationReasoning}
                       </p>
                     </div>
                   )}
+
                   <Button
                     onClick={() => addStockFromAnalysis(analysisResult.stock.symbol)}
-                    className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 font-black uppercase text-[10px] tracking-widest border-b-4 border-indigo-900"
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add to Selection
                   </Button>
                 </div>
+
                 {analysisResult.recommendations && analysisResult.recommendations.length > 0 && (
                   <div className="space-y-4">
-                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">AI Recommended Alternatives</h3>
+                    <h3 className="text-xl font-bold text-slate-900">AI Recommended Alternatives</h3>
                     {analysisResult.recommendations.map((rec) => (
-                      <Card key={rec.symbol} className="bg-white border-2 border-slate-900 rounded-3xl shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
-                        <CardContent className="p-4">
+                      <Card key={rec.symbol} className="bg-white rounded-xl p-4 border-2 border-blue-100">
+                        <CardContent className="p-0">
                           <div className="flex items-center gap-3 mb-2">
                             <div>
                               <p className="text-lg font-bold text-slate-900">{rec.symbol}</p>
-                              <p className="font-black uppercase text-[8px] text-slate-400">{rec.name}</p>
+                              <p className="text-sm text-slate-600">{rec.name}</p>
                               {rec.beta != null && (
                                 <p className="text-xs text-slate-500">Beta: {rec.beta.toFixed(2)}</p>
                               )}
@@ -393,7 +400,7 @@ export default function Companies() {
                           <Button
                             onClick={() => addStockFromAnalysis(rec.symbol)}
                             variant="outline"
-                            className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 font-black uppercase text-[10px] tracking-widest border-b-4 border-indigo-900 text-white"
+                            className="w-full border-blue-300 text-blue-600 hover:bg-blue-50"
                           >
                             <Plus className="w-4 h-4 mr-2" />
                             Add to Selection
@@ -408,9 +415,9 @@ export default function Companies() {
           </CardContent>
         </Card>
 
-        <div className="bg-white border-2 border-slate-200 shadow-lg rounded-xl p-6 mb-8">
-          <Card className="border-0 bg-transparent mb-4 rounded-xl shadow-none">
-            <CardContent className="p-0 py-0 flex flex-col justify-center min-h-[0]">
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200 p-8 md:p-10 mb-8">
+          <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 mb-4 rounded-xl">
+            <CardContent className="p-8 py-6 flex flex-col justify-center min-h-[120px]">
               <div className="flex flex-col md:flex-row gap-3 items-center">
                 <div className="flex-1">
                   <Input
@@ -418,14 +425,14 @@ export default function Companies() {
                     value={symbolSearchQuery}
                     onChange={(e) => setSymbolSearchQuery(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && searchAndAddSymbol()}
-                    className="h-12 text-base font-mono rounded-xl border-2 border-slate-200 bg-white text-slate-900 placeholder:text-slate-500"
+                    className="h-12 text-base border-blue-300 focus:border-blue-500"
                     disabled={isSearchingSymbol}
                   />
                 </div>
                 <Button
                   onClick={searchAndAddSymbol}
                   disabled={isSearchingSymbol || !symbolSearchQuery.trim()}
-                  className="rounded-xl bg-indigo-600 hover:bg-indigo-500 font-black uppercase text-[10px] tracking-widest border-b-4 border-indigo-900 h-12 px-6"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 h-12 px-6"
                 >
                   {isSearchingSymbol ? (
                     <>
@@ -445,6 +452,7 @@ export default function Companies() {
               </p>
             </CardContent>
           </Card>
+
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -452,18 +460,15 @@ export default function Companies() {
                 placeholder="Search companies by name, symbol, or sector..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-12 font-mono rounded-xl border-2 border-slate-200 bg-white text-slate-900 placeholder:text-slate-500"
+                className="pl-12 h-12 text-base border-slate-300 focus:border-blue-500"
               />
             </div>
             <div className="flex gap-3">
               <div className="flex items-center gap-2">
                 <Filter className="w-5 h-5 text-slate-500" />
                 <Select value={sectorFilter} onValueChange={setSectorFilter}>
-                  {/* Industrial SelectTrigger: rounded-none, border-2 slate-900 */}
-                  <SelectTrigger className="w-48 h-12 rounded-none font-bold text-slate-900 text-sm border-2 border-slate-900 bg-white capitalize">
-                    <SelectValue>
-                      {sectorFilter === 'all' ? 'All Sectors' : sectorFilter.charAt(0).toUpperCase() + sectorFilter.slice(1)}
-                    </SelectValue>
+                  <SelectTrigger className="w-40 h-12">
+                    <SelectValue placeholder="All Sectors" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sectors</SelectItem>
@@ -477,48 +482,54 @@ export default function Companies() {
           </div>
         </div>
 
-        {/* Industrial Compare Card - fixed at bottom, not sticky */}
         {selectedCompanies.length > 0 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-7xl px-4 md:px-8"
-          >
-            <Card className="bg-slate-900 border-x border-b border-t-4 border-t-indigo-600 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-none overflow-hidden">
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                  <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 bg-indigo-600 flex items-center justify-center shadow-lg border-b-4 border-indigo-900">
-                      <TrendingUp className="w-8 h-8 text-white" />
+          <div className="fixed bottom-8 left-0 right-0 z-40 pointer-events-none">
+            <div className="max-w-7xl mx-auto md:ml-[272px] lg:ml-[288px] md:mr-8 px-4 md:px-0 pointer-events-auto">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-2xl blur-xl opacity-40"></div>
+                <Card className="relative border-2 border-white/50 shadow-2xl bg-gradient-to-br from-white via-blue-50/30 to-indigo-50/30 backdrop-blur-2xl rounded-2xl overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-indigo-500/5"></div>
+                  <CardContent className="relative p-5 md:p-6">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 md:gap-6">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl blur opacity-50"></div>
+                          <div className="relative w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
+                            <TrendingUp className="w-6 h-6 md:w-7 md:h-7 text-white" />
+                          </div>
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-3 flex-wrap mb-1">
+                            <span className="text-lg md:text-xl font-bold text-slate-900">
+                              {selectedCompanies.length} Selected
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedCompanies([])}
+                              className="text-slate-500 hover:text-slate-700 hover:bg-slate-100/50 text-xs md:text-sm h-7 px-3 rounded-lg font-medium"
+                            >
+                              Clear all
+                            </Button>
+                          </div>
+                          <p className="text-xs md:text-sm text-slate-600 font-medium">
+                            Ready for AI-powered risk analysis
+                          </p>
+                        </div>
+                      </div>
+                      <Link to={createPageUrl("Analysis") + `?companies=${selectedCompanies.join(',')}`} className="w-full sm:w-auto flex-shrink-0">
+                        <Button className="group relative w-full h-13 md:h-14 text-base md:text-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white shadow-2xl shadow-blue-500/50 hover:shadow-blue-600/60 font-bold px-8 md:px-10 rounded-xl transition-all duration-300 hover:scale-105">
+                          <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
+                          <TrendingUp className="relative w-5 h-5 md:w-6 md:h-6 mr-3 flex-shrink-0" />
+                          <span className="relative whitespace-nowrap">Compare Risk Outcomes</span>
+                        </Button>
+                      </Link>
                     </div>
-                    <div>
-                      <h3 className="text-2xl font-black text-white uppercase tracking-tighter">
-                        {selectedCompanies.length} Assets Staged
-                      </h3>
-                      <p className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-[0.3em]">
-                        System Ready for Risk Attribution Matrix
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 w-full md:w-auto">
-                    <Button
-                      variant="ghost"
-                      onClick={() => setSelectedCompanies([])}
-                      className="text-slate-400 hover:text-white font-bold uppercase text-xs tracking-widest"
-                    >
-                      Reset Selection
-                    </Button>
-                    <Link to={createPageUrl("Analysis") + `?companies=${selectedCompanies.join(',')}`} className="flex-1 md:flex-none">
-                      <Button className="w-full md:w-auto h-14 px-10 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-[0.2em] rounded-none border-b-4 border-indigo-900 shadow-xl transition-transform hover:scale-105 active:scale-95">
-                        Compare Risk Outcomes
-                        <ArrowRight className="ml-2 w-5 h-5" />
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -526,13 +537,18 @@ export default function Companies() {
             Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
           ) : (
             <AnimatePresence>
-              {filteredCompanies.slice(0, visibleCount).map((company) => {
+              {filteredCompanies.map((company) => {
                 const isSelected = selectedCompanies.includes(company.symbol);
+
+                // Description truncation + Beta / Market Cap normalization
                 const rawDescription = company.description || "";
                 const truncatedDescription = rawDescription.length > 150 ? rawDescription.substring(0, 150) + "..." : rawDescription || "No description available";
+
                 const betaNum = Number(company.beta);
                 const betaDisplay = Number.isFinite(betaNum) ? betaNum.toFixed(2) : "Not Available";
+
                 const marketCapRaw = company.market_cap;
+                // Accept numbers or formatted strings like "123.45B", "1,234M", "500K"
                 const marketCapIsValid =
                   typeof marketCapRaw === "number" ||
                   (typeof marketCapRaw === "string" && /^[\d,\.]+\s*[BMK]?$/i.test(marketCapRaw.trim()));
@@ -548,10 +564,10 @@ export default function Companies() {
                     transition={{ duration: 0.2 }}
                   >
                     <Card 
-                      className={`group transition-all duration-300 border-2 rounded-[2rem] h-full cursor-pointer shadow-none hover:shadow-[8px_8px_0px_0px_rgba(79,70,229,1)] ${
+                      className={`group transition-all duration-300 border-2 rounded-xl h-full cursor-pointer ${
                         isSelected 
-                          ? 'border-indigo-600 shadow-[4px_4px_0px_0px_rgba(79,70,229,1)] bg-white'
-                          : 'border-slate-900 bg-slate-50/50'
+                          ? 'border-blue-500 shadow-lg shadow-blue-500/20 bg-gradient-to-br from-blue-50 to-indigo-50' 
+                          : 'hover:shadow-lg border-slate-200 hover:border-blue-300 bg-white'
                       }`}
                       onClick={() => toggleCompany(company.symbol)}
                     >
@@ -559,13 +575,13 @@ export default function Companies() {
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
                             {company.logo_url && (
-                              <img src={company.logo_url} alt={`${company.name} logo`} className="w-10 h-10 rounded-full border-2 border-slate-900" />
+                              <img src={company.logo_url} alt={`${company.name} logo`} className="w-10 h-10 rounded-full" />
                             )}
                             <div>
-                              <h3 className="font-bold text-lg text-slate-900 mb-2">{company.name}</h3>
+                              <h3 className="font-bold text-slate-900 text-lg">{company.symbol}</h3>
                               <Badge 
                                 variant="secondary"
-                                className="rounded-lg border border-slate-900 font-black uppercase text-[9px] py-1 px-2"
+                                className={`${sectorColors[company.sector] || 'bg-gray-100 text-gray-700'} border text-xs`}
                               >
                                 {company.sector}
                               </Badge>
@@ -574,13 +590,18 @@ export default function Companies() {
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={() => toggleCompany(company.symbol)}
-                            className="w-6 h-6 mt-1 rounded-lg border-2 border-slate-900 data-[state=checked]:bg-indigo-600"
+                            className="w-5 h-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                           />
                         </div>
-                        <p className="text-sm text-slate-600 mb-3 leading-relaxed">{truncatedDescription}</p>
-                        <div className="flex gap-2 mt-4">
-                          <span className="bg-slate-900 text-white font-mono text-[9px] px-2 py-1 uppercase">Beta: {betaDisplay}</span>
-                          <span className="bg-slate-200 text-slate-700 font-mono text-[9px] px-2 py-1 uppercase">Cap: {marketCapDisplay}</span>
+                        
+                        <h4 className="font-semibold text-slate-900 mb-2">{company.name}</h4>
+                        {/* Truncate description to 150 characters with ellipsis */}
+                        <p className="text-sm text-slate-600 mb-3">{truncatedDescription}</p>
+                        <div className="flex justify-between items-center text-xs text-slate-500 mt-2">
+                          {/* Display Beta, or 'Not Available' if not a number */}
+                          <span>Beta: {betaDisplay}</span>
+                          {/* Display Market Cap, or 'Not Available' if not a valid number/formatted string */}
+                          <span>Market Cap: {marketCapDisplay}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -590,27 +611,6 @@ export default function Companies() {
             </AnimatePresence>
           )}
         </div>
-        
-        {/* Industrial Load More UI */}
-        {filteredCompanies.length > visibleCount && (
-          <div className="mt-12 mb-32 flex flex-col items-center gap-4">
-            <div className="w-64 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-indigo-600 transition-all duration-500" 
-                style={{ width: `${(visibleCount / filteredCompanies.length) * 100}%` }}
-              />
-            </div>
-            <p className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-[0.2em]">
-              Displaying {visibleCount} of {filteredCompanies.length} Institutional Assets
-            </p>
-            <Button
-              onClick={() => setVisibleCount(prev => prev + 24)}
-              className="bg-white border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white rounded-none font-black uppercase text-xs tracking-widest px-12 h-14 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all"
-            >
-              Fetch Additional Data
-            </Button>
-          </div>
-        )}
 
         {filteredCompanies.length === 0 && !isLoading && (
           <div className="text-center py-16">
@@ -623,3 +623,4 @@ export default function Companies() {
     </div>
   );
 }
+
