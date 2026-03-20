@@ -372,7 +372,7 @@ export default function MarketInsights() {
                   </CardHeader>
                   <CardContent className="p-6 md:p-8 flex-1 flex flex-col">
                     <div className="h-64 md:h-72 mb-10">
-                      <ResponsiveContainer width="100%" height="100%">
+                      <ResponsiveContainer width="100%" height="100%" minHeight={250}>
                         <BarChart data={marketData.sector_sentiment} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                           <XAxis 
@@ -422,10 +422,11 @@ export default function MarketInsights() {
                   </CardHeader>
                   <CardContent className="p-6 md:p-8 flex-1 flex flex-col">
                     <div className="h-64 md:h-72 mb-10">
-                      <ResponsiveContainer width="100%" height="100%">
+                      <ResponsiveContainer width="100%" aspect={1}>
                         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={marketData.asset_sentiment}>
                           <PolarGrid stroke="#e2e8f0" strokeWidth={2} />
                           <PolarAngleAxis dataKey="asset" tick={{ fill: '#64748b', fontSize: 10, fontWeight: 900 }} />
+                          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                           <Radar name="Sentiment" dataKey="score" stroke="#1e293b" strokeWidth={4} fill="#10b981" fillOpacity={0.5} />
                         </RadarChart>
                       </ResponsiveContainer>
