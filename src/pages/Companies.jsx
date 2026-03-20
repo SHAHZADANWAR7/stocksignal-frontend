@@ -67,10 +67,11 @@ export default function Companies() {
     filterCompanies();
   }, [searchQuery, sectorFilter, companies]);
 
+  // Fix 1: Fetch with limit=500
   const loadCompanies = async () => {
     setIsLoading(true);
     try {
-      const result = await callAwsFunction('getCompanies', {});
+      const result = await callAwsFunction('getCompanies', { limit: 500 });
       const companiesData = result.items || [];
       setCompanies(companiesData);
       setFilteredCompanies(companiesData);
@@ -250,7 +251,6 @@ export default function Companies() {
                 <p className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.3em]">Get AI-powered analysis and discover better alternatives</p>
               </div>
             </div>
-            
             <div className="flex gap-3 mb-2">
               <Input
                 placeholder="Enter stock symbol (e.g., AAPL, TSLA, MSFT)..."
@@ -294,7 +294,6 @@ export default function Companies() {
                       </div>
                     </div>
                   </div>
-                  
                   <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     {analysisResult.stock.valuation && (
                       <div>
@@ -304,7 +303,6 @@ export default function Companies() {
                         </p>
                       </div>
                     )}
-                    
                     {analysisResult.stock.price != null && (
                       <div>
                         <p className="font-black uppercase text-[8px] text-slate-400">Price</p>
@@ -313,7 +311,6 @@ export default function Companies() {
                         </p>
                       </div>
                     )}
-
                     {analysisResult.stock.marketCap && (
                       <div>
                         <p className="font-black uppercase text-[8px] text-slate-400">Market Cap</p>
@@ -322,7 +319,6 @@ export default function Companies() {
                         </p>
                       </div>
                     )}
-
                     {(analysisResult.stock.peRatioFormatted || analysisResult.stock.peRatio != null) && (
                       <div>
                         <p className="font-black uppercase text-[8px] text-slate-400">P/E Ratio</p>
@@ -331,7 +327,6 @@ export default function Companies() {
                         </p>
                       </div>
                     )}
-
                     {analysisResult.stock.beta != null && (
                       <div>
                         <p className="font-black uppercase text-[8px] text-slate-400">Beta</p>
@@ -343,7 +338,6 @@ export default function Companies() {
                         )}
                       </div>
                     )}
-
                     {analysisResult.stock.expectedReturn != null && (
                       <div>
                         <p className="font-black uppercase text-[8px] text-slate-400">Expected Return</p>
@@ -352,7 +346,6 @@ export default function Companies() {
                         </p>
                       </div>
                     )}
-
                     {analysisResult.stock.risk != null && (
                       <div>
                         <p className="font-black uppercase text-[8px] text-slate-400">Risk</p>
@@ -362,7 +355,6 @@ export default function Companies() {
                       </div>
                     )}
                   </div>
-
                   {analysisResult.stock.valuationReasoning && (
                     <div className="bg-slate-900 text-white p-6 rounded-2xl border-l-4 border-indigo-500 mb-4">
                       <p className="font-bold uppercase text-[10px] tracking-[0.3em] text-slate-400 mb-2">AI Analysis</p>
@@ -371,7 +363,6 @@ export default function Companies() {
                       </p>
                     </div>
                   )}
-
                   <Button
                     onClick={() => addStockFromAnalysis(analysisResult.stock.symbol)}
                     className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 font-black uppercase text-[10px] tracking-widest border-b-4 border-indigo-900"
@@ -380,7 +371,6 @@ export default function Companies() {
                     Add to Selection
                   </Button>
                 </div>
-
                 {analysisResult.recommendations && analysisResult.recommendations.length > 0 && (
                   <div className="space-y-4">
                     <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">AI Recommended Alternatives</h3>
@@ -452,7 +442,6 @@ export default function Companies() {
               </p>
             </CardContent>
           </Card>
-
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -467,8 +456,11 @@ export default function Companies() {
               <div className="flex items-center gap-2">
                 <Filter className="w-5 h-5 text-slate-500" />
                 <Select value={sectorFilter} onValueChange={setSectorFilter}>
-                  <SelectTrigger className="w-40 h-12 rounded-xl font-bold text-slate-900 text-xs border-b-2 border-slate-200 bg-white">
-                    <SelectValue placeholder="All Sectors" />
+                  {/* Fix 2: Custom Sector dropdown display w/ capitalize */}
+                  <SelectTrigger className="w-48 h-12 rounded-xl font-bold text-slate-900 text-sm border-2 border-slate-200 bg-white capitalize">
+                    <SelectValue>
+                      {sectorFilter === 'all' ? 'All Sectors' : sectorFilter.charAt(0).toUpperCase() + sectorFilter.slice(1)}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Sectors</SelectItem>
@@ -482,48 +474,48 @@ export default function Companies() {
           </div>
         </div>
 
+        {/* Fix 4: Improved Industrial Compare Card */}
         {selectedCompanies.length > 0 && (
-          <div className="fixed bottom-8 left-0 right-0 z-40 pointer-events-none">
-            <div className="max-w-7xl mx-auto md:ml-[272px] lg:ml-[288px] md:mr-8 px-4 md:px-0 pointer-events-auto">
-              <div className="relative">
-                <Card className="relative bg-slate-900 border-4 border-white shadow-[0px_0px_30px_rgba(0,0,0,0.5)] rounded-full p-4 overflow-visible">
-                  <CardContent className="relative p-0">
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 md:gap-6">
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className="relative w-12 h-12 md:w-14 md:h-14 bg-slate-900 rounded-full border-b-4 border-indigo-600 shadow-lg flex items-center justify-center flex-shrink-0">
-                          <TrendingUp className="w-6 h-6 md:w-7 md:h-7 text-white" />
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-3 flex-wrap mb-1">
-                            <span className="text-lg md:text-xl font-black text-white uppercase tracking-tighter">
-                              {selectedCompanies.length} Selected
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSelectedCompanies([])}
-                              className="text-slate-400 hover:text-slate-200 bg-transparent border-0 h-7 px-3 rounded-lg font-black uppercase text-[10px] tracking-widest"
-                            >
-                              Clear all
-                            </Button>
-                          </div>
-                          <p className="font-black uppercase text-[8px] text-slate-400">
-                            Ready for AI-powered risk analysis
-                          </p>
-                        </div>
-                      </div>
-                      <Link to={createPageUrl("Analysis") + `?companies=${selectedCompanies.join(',')}`} className="w-full sm:w-auto flex-shrink-0">
-                        <Button className="group relative w-full h-14 text-base md:text-lg rounded-full bg-indigo-600 font-black uppercase tracking-widest text-white shadow-xl">
-                          <TrendingUp className="relative w-5 h-5 md:w-6 md:h-6 mr-3 flex-shrink-0" />
-                          <span className="relative whitespace-nowrap">Compare Risk Outcomes</span>
-                        </Button>
-                      </Link>
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="sticky bottom-8 z-50 mb-8"
+          >
+            <Card className="bg-slate-900 border-x border-b border-t-4 border-t-indigo-600 shadow-[0_20px_50px_rgba(0,0,0,0.4)] rounded-none overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 bg-indigo-600 flex items-center justify-center shadow-lg border-b-4 border-indigo-900">
+                      <TrendingUp className="w-8 h-8 text-white" />
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-white uppercase tracking-tighter">
+                        {selectedCompanies.length} Assets Staged
+                      </h3>
+                      <p className="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-[0.3em]">
+                        System Ready for Risk Attribution Matrix
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4 w-full md:w-auto">
+                    <Button
+                      variant="ghost"
+                      onClick={() => setSelectedCompanies([])}
+                      className="text-slate-400 hover:text-white font-bold uppercase text-xs tracking-widest"
+                    >
+                      Reset Selection
+                    </Button>
+                    <Link to={createPageUrl("Analysis") + `?companies=${selectedCompanies.join(',')}`} className="flex-1 md:flex-none">
+                      <Button className="w-full md:w-auto h-14 px-10 bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-[0.2em] rounded-none border-b-4 border-indigo-900 shadow-xl transition-transform hover:scale-105 active:scale-95">
+                        Compare Risk Outcomes
+                        <ArrowRight className="ml-2 w-5 h-5" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -537,10 +529,8 @@ export default function Companies() {
                 // Description truncation + Beta / Market Cap normalization
                 const rawDescription = company.description || "";
                 const truncatedDescription = rawDescription.length > 150 ? rawDescription.substring(0, 150) + "..." : rawDescription || "No description available";
-
                 const betaNum = Number(company.beta);
                 const betaDisplay = Number.isFinite(betaNum) ? betaNum.toFixed(2) : "Not Available";
-
                 const marketCapRaw = company.market_cap;
                 const marketCapIsValid =
                   typeof marketCapRaw === "number" ||
@@ -560,7 +550,7 @@ export default function Companies() {
                       className={`group transition-all duration-300 border-2 rounded-[2rem] h-full cursor-pointer shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] ${
                         isSelected 
                           ? 'border-indigo-600 shadow-[4px_4px_0px_0px_rgba(79,70,229,1)] bg-white'
-                          : 'border-slate-900 bg-white'
+                          : 'border-slate-900 bg-slate-50/50'
                       }`}
                       onClick={() => toggleCompany(company.symbol)}
                     >
@@ -580,17 +570,18 @@ export default function Companies() {
                               </Badge>
                             </div>
                           </div>
+                          {/* Fix 3: Checkbox top margin and size */}
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={() => toggleCompany(company.symbol)}
-                            className="w-5 h-5 rounded-lg border-2 border-slate-900 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                            className="w-6 h-6 mt-1 rounded-lg border-2 border-slate-900 data-[state=checked]:bg-indigo-600"
                           />
                         </div>
-                        
                         <p className="text-sm text-slate-600 mb-3 leading-relaxed">{truncatedDescription}</p>
-                        <div className="flex justify-between items-center font-medium text-xs text-slate-500 mt-2">
-                          <span>Beta: {betaDisplay}</span>
-                          <span>Market Cap: {marketCapDisplay}</span>
+                        {/* Fix 5: Industrial metadata tags */}
+                        <div className="flex gap-2 mt-4">
+                          <span className="bg-slate-900 text-white font-mono text-[9px] px-2 py-1 uppercase">Beta: {betaDisplay}</span>
+                          <span className="bg-slate-200 text-slate-700 font-mono text-[9px] px-2 py-1 uppercase">Cap: {marketCapDisplay}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -600,7 +591,6 @@ export default function Companies() {
             </AnimatePresence>
           )}
         </div>
-
         {filteredCompanies.length === 0 && !isLoading && (
           <div className="text-center py-16">
             <Building2 className="w-16 h-16 mx-auto mb-4 text-slate-300" />
