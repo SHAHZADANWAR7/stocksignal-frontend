@@ -26,6 +26,9 @@ export default function Companies() {
   const [analysisResult, setAnalysisResult] = useState(null);
   const hasAutoAnalyzed = React.useRef(false);
 
+  // Pagination State
+  const [visibleCount, setVisibleCount] = useState(24);
+
   // Transform Lambda response from snake_case to camelCase
   const transformStockData = (data) => {
     return {
@@ -456,8 +459,8 @@ export default function Companies() {
               <div className="flex items-center gap-2">
                 <Filter className="w-5 h-5 text-slate-500" />
                 <Select value={sectorFilter} onValueChange={setSectorFilter}>
-                  {/* Fix 2: Custom Sector dropdown display w/ capitalize */}
-                  <SelectTrigger className="w-48 h-12 rounded-xl font-bold text-slate-900 text-sm border-2 border-slate-200 bg-white capitalize">
+                  {/* Industrial SelectTrigger: rounded-none, border-2 slate-900 */}
+                  <SelectTrigger className="w-48 h-12 rounded-none font-bold text-slate-900 text-sm border-2 border-slate-900 bg-white capitalize">
                     <SelectValue>
                       {sectorFilter === 'all' ? 'All Sectors' : sectorFilter.charAt(0).toUpperCase() + sectorFilter.slice(1)}
                     </SelectValue>
@@ -474,14 +477,14 @@ export default function Companies() {
           </div>
         </div>
 
-        {/* Fix 4: Improved Industrial Compare Card */}
+        {/* Industrial Compare Card - fixed at bottom, not sticky */}
         {selectedCompanies.length > 0 && (
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            className="sticky bottom-8 z-50 mb-8"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-7xl px-4 md:px-8"
           >
-            <Card className="bg-slate-900 border-x border-b border-t-4 border-t-indigo-600 shadow-[0_20px_50px_rgba(0,0,0,0.4)] rounded-none overflow-hidden">
+            <Card className="bg-slate-900 border-x border-b border-t-4 border-t-indigo-600 shadow-[0_20px_50px_rgba(0,0,0,0.5)] rounded-none overflow-hidden">
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="flex items-center gap-6">
@@ -523,10 +526,8 @@ export default function Companies() {
             Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)
           ) : (
             <AnimatePresence>
-              {filteredCompanies.map((company) => {
+              {filteredCompanies.slice(0, visibleCount).map((company) => {
                 const isSelected = selectedCompanies.includes(company.symbol);
-
-                // Description truncation + Beta / Market Cap normalization
                 const rawDescription = company.description || "";
                 const truncatedDescription = rawDescription.length > 150 ? rawDescription.substring(0, 150) + "..." : rawDescription || "No description available";
                 const betaNum = Number(company.beta);
@@ -547,7 +548,7 @@ export default function Companies() {
                     transition={{ duration: 0.2 }}
                   >
                     <Card 
-                      className={`group transition-all duration-300 border-2 rounded-[2rem] h-full cursor-pointer shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] ${
+                      className={`group transition-all duration-300 border-2 rounded-[2rem] h-full cursor-pointer shadow-none hover:shadow-[8px_8px_0px_0px_rgba(79,70,229,1)] ${
                         isSelected 
                           ? 'border-indigo-600 shadow-[4px_4px_0px_0px_rgba(79,70,229,1)] bg-white'
                           : 'border-slate-900 bg-slate-50/50'
@@ -570,7 +571,6 @@ export default function Companies() {
                               </Badge>
                             </div>
                           </div>
-                          {/* Fix 3: Checkbox top margin and size */}
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={() => toggleCompany(company.symbol)}
@@ -578,7 +578,6 @@ export default function Companies() {
                           />
                         </div>
                         <p className="text-sm text-slate-600 mb-3 leading-relaxed">{truncatedDescription}</p>
-                        {/* Fix 5: Industrial metadata tags */}
                         <div className="flex gap-2 mt-4">
                           <span className="bg-slate-900 text-white font-mono text-[9px] px-2 py-1 uppercase">Beta: {betaDisplay}</span>
                           <span className="bg-slate-200 text-slate-700 font-mono text-[9px] px-2 py-1 uppercase">Cap: {marketCapDisplay}</span>
@@ -591,6 +590,28 @@ export default function Companies() {
             </AnimatePresence>
           )}
         </div>
+        
+        {/* Industrial Load More UI */}
+        {filteredCompanies.length > visibleCount && (
+          <div className="mt-12 mb-32 flex flex-col items-center gap-4">
+            <div className="w-64 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-indigo-600 transition-all duration-500" 
+                style={{ width: `${(visibleCount / filteredCompanies.length) * 100}%` }}
+              />
+            </div>
+            <p className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-[0.2em]">
+              Displaying {visibleCount} of {filteredCompanies.length} Institutional Assets
+            </p>
+            <Button
+              onClick={() => setVisibleCount(prev => prev + 24)}
+              className="bg-white border-2 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white rounded-none font-black uppercase text-xs tracking-widest px-12 h-14 shadow-[8px_8px_0px_0px_rgba(15,23,42,1)] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all"
+            >
+              Fetch Additional Data
+            </Button>
+          </div>
+        )}
+
         {filteredCompanies.length === 0 && !isLoading && (
           <div className="text-center py-16">
             <Building2 className="w-16 h-16 mx-auto mb-4 text-slate-300" />
