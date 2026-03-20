@@ -228,10 +228,10 @@ export default function Companies() {
                 <Building2 className="w-6 h-6 md:w-7 md:h-7 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <h1 className="text-2xl md:text-4xl lg:text-5xl font-black text-slate-900 tracking-tighter uppercase mb-2 leading-tight">
+                <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-3">
                   Browse Investments
                 </h1>
-                <p className="font-bold uppercase text-[10px] tracking-[0.3em] text-slate-400">
+                <p className="text-lg text-slate-600 font-normal normal-case tracking-normal">
                   Select stocks and index funds to get AI-powered investment recommendations
                 </p>
               </div>
@@ -242,12 +242,12 @@ export default function Companies() {
         <Card className="border-4 border-slate-900 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] mb-8 bg-white rounded-[2.5rem]">
           <CardContent className="p-10 min-h-[180px] flex flex-col justify-center">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-slate-900 rounded-[2.5rem] border-b-4 border-indigo-600 flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-slate-900 rounded-none border-b-4 border-indigo-600 flex items-center justify-center shadow-lg">
                 <Sparkles className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tighter">Quick Stock Analysis</h2>
-                <p className="font-bold uppercase text-[10px] tracking-[0.3em] text-slate-400">Get AI-powered analysis and discover better alternatives</p>
+                <h2 className="text-xl font-bold text-slate-900">Quick Stock Analysis</h2>
+                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.3em]">Get AI-powered analysis and discover better alternatives</p>
               </div>
             </div>
             
@@ -257,7 +257,7 @@ export default function Companies() {
                 value={quickAnalysisSymbol}
                 onChange={(e) => setQuickAnalysisSymbol(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && analyzeStock()}
-                className="flex-1 h-14 text-lg border-slate-900 border-2 rounded-xl bg-slate-50"
+                className="flex-1 h-14 text-lg border-slate-300 border-2 rounded-md bg-white text-slate-900"
                 disabled={isAnalyzing}
               />
               <Button
@@ -415,8 +415,8 @@ export default function Companies() {
           </CardContent>
         </Card>
 
-        <div className="bg-slate-900 border-x border-b border-t-4 border-t-indigo-600 p-8 shadow-2xl rounded-[2.5rem] mb-8">
-          <Card className="border-0 bg-transparent mb-4 rounded-[2.5rem] shadow-none">
+        <div className="bg-white border-2 border-slate-200 shadow-lg rounded-xl p-6 mb-8">
+          <Card className="border-0 bg-transparent mb-4 rounded-xl shadow-none">
             <CardContent className="p-0 py-0 flex flex-col justify-center min-h-[0]">
               <div className="flex flex-col md:flex-row gap-3 items-center">
                 <div className="flex-1">
@@ -425,7 +425,7 @@ export default function Companies() {
                     value={symbolSearchQuery}
                     onChange={(e) => setSymbolSearchQuery(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && searchAndAddSymbol()}
-                    className="h-12 text-base font-mono rounded-xl border-2 border-slate-700 bg-slate-800 text-white placeholder:text-slate-500 uppercase text-xs"
+                    className="h-12 text-base font-mono rounded-xl border-2 border-slate-200 bg-white text-slate-900 placeholder:text-slate-500"
                     disabled={isSearchingSymbol}
                   />
                 </div>
@@ -447,7 +447,7 @@ export default function Companies() {
                   )}
                 </Button>
               </div>
-              <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-400 mt-2">
+              <p className="text-xs text-slate-600 mt-2">
                 Search any publicly traded company by its ticker symbol - we'll fetch the data automatically
               </p>
             </CardContent>
@@ -460,14 +460,14 @@ export default function Companies() {
                 placeholder="Search companies by name, symbol, or sector..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-12 font-mono uppercase text-xs rounded-xl border-2 border-slate-700 bg-slate-800 text-white placeholder:text-slate-500"
+                className="pl-12 h-12 font-mono rounded-xl border-2 border-slate-200 bg-white text-slate-900 placeholder:text-slate-500"
               />
             </div>
             <div className="flex gap-3">
               <div className="flex items-center gap-2">
                 <Filter className="w-5 h-5 text-slate-500" />
                 <Select value={sectorFilter} onValueChange={setSectorFilter}>
-                  <SelectTrigger className="w-40 h-12 rounded-xl font-black uppercase text-[10px] tracking-widest border-b-2 border-slate-700 bg-slate-800 text-white">
+                  <SelectTrigger className="w-40 h-12 rounded-xl font-bold text-slate-900 text-xs border-b-2 border-slate-200 bg-white">
                     <SelectValue placeholder="All Sectors" />
                   </SelectTrigger>
                   <SelectContent>
@@ -571,7 +571,7 @@ export default function Companies() {
                               <img src={company.logo_url} alt={`${company.name} logo`} className="w-10 h-10 rounded-full border-2 border-slate-900" />
                             )}
                             <div>
-                              <h3 className="font-black text-slate-900 text-lg uppercase tracking-tighter">{company.symbol}</h3>
+                              <h3 className="font-bold text-lg text-slate-900 mb-2">{company.name}</h3>
                               <Badge 
                                 variant="secondary"
                                 className="rounded-lg border border-slate-900 font-black uppercase text-[9px] py-1 px-2"
@@ -587,9 +587,8 @@ export default function Companies() {
                           />
                         </div>
                         
-                        <h4 className="font-black text-slate-900 mb-2 uppercase tracking-tighter">{company.name}</h4>
-                        <p className="text-sm text-slate-600 mb-3">{truncatedDescription}</p>
-                        <div className="flex justify-between items-center font-black uppercase text-[8px] text-slate-400 mt-2">
+                        <p className="text-sm text-slate-600 mb-3 leading-relaxed">{truncatedDescription}</p>
+                        <div className="flex justify-between items-center font-medium text-xs text-slate-500 mt-2">
                           <span>Beta: {betaDisplay}</span>
                           <span>Market Cap: {marketCapDisplay}</span>
                         </div>
