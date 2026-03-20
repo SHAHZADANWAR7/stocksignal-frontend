@@ -239,145 +239,187 @@ export default function Companies() {
           </div>
         </motion.div>
 
-        {/* INDUSTRIAL GRADE QUICK STOCK ANALYSIS ENGINE */}
-        <Card className="relative border-4 border-slate-900 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] mb-12 rounded-[2.5rem] overflow-hidden bg-white">
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500"></div>
-          <CardContent className="p-8 md:p-12">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-10">
-              <div className="flex items-center gap-6">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-emerald-500/20 blur-xl rounded-full"></div>
-                  <div className="relative w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center shadow-xl border-2 border-slate-800">
-                    <Sparkles className="w-8 h-8 text-emerald-400" />
-                  </div>
-                </div>
-                <div>
-                  <div className="flex items-center gap-3 mb-1">
-                    <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none font-black text-[10px] uppercase tracking-wider px-3 py-0.5 rounded-full">
-                      AI Powered
-                    </Badge>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Institutional Terminal</span>
-                  </div>
-                  <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight uppercase">Quick Stock Analysis</h2>
-                  <p className="text-slate-500 font-medium max-w-md mt-1">
-                    Execute deep-tier AI auditing on any ticker to reveal valuation gaps and systemic alternatives.
-                  </p>
-                </div>
+        <Card className="border-2 border-emerald-300 shadow-lg mb-8 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl">
+          <CardContent className="p-10 min-h-[180px] flex flex-col justify-center">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl flex items-center justify-center">
+                <Sparkles className="w-7 h-7 text-white" />
               </div>
-
-              <div className="flex-1 max-w-2xl w-full">
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input
-                      placeholder="ENTER TICKER (E.G. NVDA, AAPL)..."
-                      value={quickAnalysisSymbol}
-                      onChange={(e) => setQuickAnalysisSymbol(e.target.value.toUpperCase())}
-                      onKeyPress={(e) => e.key === 'Enter' && analyzeStock()}
-                      className="w-full h-16 pl-12 text-lg font-bold tracking-widest border-4 border-slate-900 rounded-2xl focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-emerald-500 transition-all placeholder:text-slate-300 placeholder:font-normal uppercase"
-                      disabled={isAnalyzing}
-                    />
-                  </div>
-                  <Button
-                    onClick={analyzeStock}
-                    disabled={isAnalyzing || !quickAnalysisSymbol.trim()}
-                    className="h-16 px-10 bg-slate-900 text-white hover:bg-slate-800 rounded-2xl border-b-4 border-slate-700 active:border-b-0 active:translate-y-1 transition-all group"
-                    data-analyze-btn
-                  >
-                    {isAnalyzing ? (
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span className="font-black uppercase tracking-widest">Execute</span>
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                      </div>
-                    )}
-                  </Button>
-                </div>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900">Quick Stock Analysis</h2>
+                <p className="text-sm text-slate-600">Get AI-powered analysis and discover better alternatives</p>
               </div>
             </div>
+            
+            <div className="flex gap-3 mb-2">
+              <Input
+                placeholder="Enter stock symbol (e.g., AAPL, TSLA, MSFT)..."
+                value={quickAnalysisSymbol}
+                onChange={(e) => setQuickAnalysisSymbol(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && analyzeStock()}
+                className="flex-1 h-14 text-lg border-emerald-300 focus:border-emerald-500"
+                disabled={isAnalyzing}
+              />
+              <Button
+                onClick={analyzeStock}
+                disabled={isAnalyzing || !quickAnalysisSymbol.trim()}
+                className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 h-14 px-8 text-base"
+                data-analyze-btn
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Target className="w-5 h-5 mr-2" />
+                    Analyze
+                  </>
+                )}
+              </Button>
+            </div>
 
-            <AnimatePresence>
-              {analysisResult && (
-                <motion.div 
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-8"
-                >
-                  <div className="border-4 border-slate-900 rounded-3xl p-8 bg-slate-50 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]">
-                    <div className="flex flex-wrap items-center justify-between gap-6 mb-8 border-b-2 border-slate-200 pb-6">
-                      <div className="flex items-center gap-5">
-                        <div className="w-16 h-16 bg-white border-2 border-slate-900 rounded-2xl flex items-center justify-center text-2xl font-black text-slate-900 shadow-md">
-                          {analysisResult.stock.symbol[0]}
-                        </div>
-                        <div>
-                          <h3 className="text-3xl font-black text-slate-900 leading-none">{analysisResult.stock.symbol}</h3>
-                          <p className="text-slate-500 font-bold uppercase text-xs tracking-widest mt-2">{analysisResult.stock.name}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex gap-4">
-                        <div className="px-6 py-3 bg-white border-2 border-slate-900 rounded-2xl text-center shadow-sm">
-                          <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Current Price</p>
-                          <p className="text-xl font-black text-slate-900">${analysisResult.stock.price?.toFixed(2)}</p>
-                        </div>
-                        <div className={`px-6 py-3 border-2 border-slate-900 rounded-2xl text-center shadow-sm ${
-                          analysisResult.stock.valuation === 'undervalued' ? 'bg-emerald-500 text-white' : 
-                          analysisResult.stock.valuation === 'overvalued' ? 'bg-rose-500 text-white' : 'bg-blue-500 text-white'
-                        }`}>
-                          <p className="text-[10px] font-black uppercase opacity-80 mb-1">AI Rating</p>
-                          <p className="text-xl font-black uppercase">{analysisResult.stock.valuation}</p>
-                        </div>
+            {analysisResult && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-xl p-6 border-2 border-emerald-200">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      {analysisResult.stock.logoUrl && (
+                        <img src={analysisResult.stock.logoUrl} alt={`${analysisResult.stock.name} logo`} className="w-10 h-10 rounded-full" />
+                      )}
+                      <div>
+                        <h3 className="text-2xl font-bold text-slate-900">{analysisResult.stock.symbol}</h3>
+                        <p className="text-slate-600">{analysisResult.stock.name}</p>
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                      {[
-                        { label: 'Expected Return', value: `${analysisResult.stock.expected_return}%`, color: 'text-emerald-600' },
-                        { label: 'Risk Factor', value: `${analysisResult.stock.risk}%`, color: 'text-rose-600' },
-                        { label: 'P/E Ratio', value: analysisResult.stock.peRatio?.toFixed(1) || 'N/A', color: 'text-slate-900' },
-                        { label: 'Market Beta', value: analysisResult.stock.beta?.toFixed(2) || 'N/A', color: 'text-slate-900' }
-                      ].map((stat, i) => (
-                        <div key={i} className="bg-white/50 p-4 rounded-xl border-2 border-slate-100">
-                          <p className="text-[9px] font-black uppercase text-slate-400 mb-1">{stat.label}</p>
-                          <p className={`text-xl font-black ${stat.color}`}>{stat.value}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="bg-slate-900 text-white p-6 rounded-2xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <Brain className="w-20 h-20" />
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    {analysisResult.stock.valuation && (
+                      <div>
+                        <p className="text-sm text-slate-500">Valuation</p>
+                        <p className={`text-xl font-bold ${analysisResult.stock.valuation === 'overvalued' ? 'text-red-500' : analysisResult.stock.valuation === 'undervalued' ? 'text-green-500' : 'text-blue-600'}`}>
+                          {analysisResult.stock.valuation.charAt(0).toUpperCase() + analysisResult.stock.valuation.slice(1)}
+                        </p>
                       </div>
-                      <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] mb-3 text-emerald-400">
-                        <Target className="w-4 h-4" />
-                        Strategic Intelligence Report
-                      </h4>
-                      <p className="text-sm md:text-base leading-relaxed font-medium text-slate-300">
-                        {analysisResult.stock.valuation_reasoning}
+                    )}
+                    
+                    {analysisResult.stock.price != null && (
+                      <div>
+                        <p className="text-sm text-slate-500">Price</p>
+                        <p className="text-xl font-bold text-slate-900">
+                          ${analysisResult.stock.price.toFixed(2)}
+                        </p>
+                      </div>
+                    )}
+
+                    {analysisResult.stock.marketCap && (
+                      <div>
+                        <p className="text-sm text-slate-500">Market Cap</p>
+                        <p className="text-xl font-bold text-slate-900">
+                          {analysisResult.stock.marketCap}
+                        </p>
+                      </div>
+                    )}
+
+                    {(analysisResult.stock.peRatioFormatted || analysisResult.stock.peRatio != null) && (
+                      <div>
+                        <p className="text-sm text-slate-500">P/E Ratio</p>
+                        <p className="text-xl font-bold text-blue-600">
+                          {analysisResult.stock.peRatioFormatted || analysisResult.stock.peRatio.toFixed(2)}
+                        </p>
+                      </div>
+                    )}
+
+                    {analysisResult.stock.beta != null && (
+                      <div>
+                        <p className="text-sm text-slate-500">Beta</p>
+                        <p className="text-xl font-bold text-slate-900">
+                          {analysisResult.stock.beta.toFixed(2)}
+                        </p>
+                        {analysisResult.stock.betaConfidence && (
+                          <span className="text-xs text-slate-500">{analysisResult.stock.betaConfidence} confidence</span>
+                        )}
+                      </div>
+                    )}
+
+                    {analysisResult.stock.expectedReturn != null && (
+                      <div>
+                        <p className="text-sm text-slate-500">Expected Return</p>
+                        <p className="text-xl font-bold text-blue-600">
+                          {analysisResult.stock.expectedReturn.toFixed(1)}%
+                        </p>
+                      </div>
+                    )}
+
+                    {analysisResult.stock.risk != null && (
+                      <div>
+                        <p className="text-sm text-slate-500">Risk</p>
+                        <p className="text-xl font-bold text-orange-600">
+                          {analysisResult.stock.risk.toFixed(1)}%
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {analysisResult.stock.valuationReasoning && (
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200 mb-4">
+                      <p className="text-sm font-semibold text-slate-900 mb-2">AI Analysis</p>
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        {analysisResult.stock.valuationReasoning}
                       </p>
                     </div>
+                  )}
 
-                    <Button
-                      onClick={() => addStockFromAnalysis(analysisResult.stock.symbol)}
-                      className="w-full mt-6 h-14 bg-white border-4 border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white font-black uppercase tracking-widest rounded-xl transition-all shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
-                    >
-                      <Plus className="w-5 h-5 mr-2" />
-                      Add to Selection Matrix
-                    </Button>
+                  <Button
+                    onClick={() => addStockFromAnalysis(analysisResult.stock.symbol)}
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add to Selection
+                  </Button>
+                </div>
+
+                {analysisResult.recommendations && analysisResult.recommendations.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="text-xl font-bold text-slate-900">AI Recommended Alternatives</h3>
+                    {analysisResult.recommendations.map((rec) => (
+                      <Card key={rec.symbol} className="bg-white rounded-xl p-4 border-2 border-blue-100">
+                        <CardContent className="p-0">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div>
+                              <p className="text-lg font-bold text-slate-900">{rec.symbol}</p>
+                              <p className="text-sm text-slate-600">{rec.name}</p>
+                              {rec.beta != null && (
+                                <p className="text-xs text-slate-500">Beta: {rec.beta.toFixed(2)}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-sm text-slate-700 mb-3" dangerouslySetInnerHTML={{ __html: rec.explanation }} />
+                          <Button
+                            onClick={() => addStockFromAnalysis(rec.symbol)}
+                            variant="outline"
+                            className="w-full border-blue-300 text-blue-600 hover:bg-blue-50"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add to Selection
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-lg border border-slate-200 p-8 md:p-10 mb-8">
-          <Card className="border-4 border-slate-900 bg-white mb-4 rounded-xl shadow-[6px_6px_0px_0px_rgba(15,23,42,1)]">
+          <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 mb-4 rounded-xl">
             <CardContent className="p-8 py-6 flex flex-col justify-center min-h-[120px]">
-              <div className="flex flex-col md:flex-row gap-4 items-center">
-                <div className="flex-1 w-full">
+              <div className="flex flex-col md:flex-row gap-3 items-center">
+                <div className="flex-1">
                   <Input
                     placeholder="Search any publicly traded company by its ticker symbol"
                     value={symbolSearchQuery}
