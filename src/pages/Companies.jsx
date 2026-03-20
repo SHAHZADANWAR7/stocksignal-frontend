@@ -224,7 +224,7 @@ export default function Companies() {
         >
           <div className="flex flex-col gap-4">
             <div className="flex items-start gap-3 md:gap-4">
-              <div className="w-12 h-12 md:w-14 md:h-14 bg-slate-900 rounded-none border-b-4 border-indigo-600 shadow-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 md:w-14 md:h-14 bg-slate-900 rounded-[2.5rem] border-b-4 border-indigo-600 shadow-lg flex items-center justify-center flex-shrink-0">
                 <Building2 className="w-6 h-6 md:w-7 md:h-7 text-white" />
               </div>
               <div className="flex-1 min-w-0">
@@ -239,10 +239,10 @@ export default function Companies() {
           </div>
         </motion.div>
 
-        <Card className="border-4 border-slate-900 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] mb-8 bg-white rounded-none">
+        <Card className="border-4 border-slate-900 shadow-[12px_12px_0px_0px_rgba(15,23,42,1)] mb-8 bg-white rounded-[2.5rem]">
           <CardContent className="p-10 min-h-[180px] flex flex-col justify-center">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-slate-900 rounded-none border-b-4 border-indigo-600 flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-slate-900 rounded-[2.5rem] border-b-4 border-indigo-600 flex items-center justify-center shadow-lg">
                 <Sparkles className="w-7 h-7 text-white" />
               </div>
               <div>
@@ -257,13 +257,13 @@ export default function Companies() {
                 value={quickAnalysisSymbol}
                 onChange={(e) => setQuickAnalysisSymbol(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && analyzeStock()}
-                className="flex-1 h-14 text-lg border-slate-900 border-2 rounded-none bg-slate-50"
+                className="flex-1 h-14 text-lg border-slate-900 border-2 rounded-xl bg-slate-50"
                 disabled={isAnalyzing}
               />
               <Button
                 onClick={analyzeStock}
                 disabled={isAnalyzing || !quickAnalysisSymbol.trim()}
-                className="rounded-none bg-indigo-600 hover:bg-indigo-500 font-black uppercase text-[10px] tracking-widest border-b-4 border-indigo-900 h-14 px-8"
+                className="rounded-xl bg-indigo-600 hover:bg-indigo-500 font-black uppercase text-[10px] tracking-widest border-b-4 border-indigo-900 h-14 px-8"
                 data-analyze-btn
               >
                 {isAnalyzing ? (
@@ -282,7 +282,7 @@ export default function Companies() {
 
             {analysisResult && (
               <div className="space-y-6">
-                <div className="bg-slate-50 border-2 border-slate-900 rounded-none p-6 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+                <div className="bg-slate-50 border-2 border-slate-900 rounded-3xl p-6 shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       {analysisResult.stock.logoUrl && (
@@ -364,7 +364,7 @@ export default function Companies() {
                   </div>
 
                   {analysisResult.stock.valuationReasoning && (
-                    <div className="bg-slate-900 text-white p-6 rounded-none border-l-4 border-indigo-500 mb-4">
+                    <div className="bg-slate-900 text-white p-6 rounded-2xl border-l-4 border-indigo-500 mb-4">
                       <p className="font-bold uppercase text-[10px] tracking-[0.3em] text-slate-400 mb-2">AI Analysis</p>
                       <p className="text-sm text-white leading-relaxed">
                         {analysisResult.stock.valuationReasoning}
@@ -374,7 +374,7 @@ export default function Companies() {
 
                   <Button
                     onClick={() => addStockFromAnalysis(analysisResult.stock.symbol)}
-                    className="w-full rounded-none bg-indigo-600 hover:bg-indigo-500 font-black uppercase text-[10px] tracking-widest border-b-4 border-indigo-900"
+                    className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 font-black uppercase text-[10px] tracking-widest border-b-4 border-indigo-900"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add to Selection
@@ -385,7 +385,7 @@ export default function Companies() {
                   <div className="space-y-4">
                     <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter">AI Recommended Alternatives</h3>
                     {analysisResult.recommendations.map((rec) => (
-                      <Card key={rec.symbol} className="bg-white border-2 border-slate-900 rounded-none shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
+                      <Card key={rec.symbol} className="bg-white border-2 border-slate-900 rounded-3xl shadow-[4px_4px_0px_0px_rgba(15,23,42,1)]">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3 mb-2">
                             <div>
@@ -400,7 +400,7 @@ export default function Companies() {
                           <Button
                             onClick={() => addStockFromAnalysis(rec.symbol)}
                             variant="outline"
-                            className="w-full rounded-none bg-indigo-600 hover:bg-indigo-500 font-black uppercase text-[10px] tracking-widest border-b-4 border-indigo-900 text-white"
+                            className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-500 font-black uppercase text-[10px] tracking-widest border-b-4 border-indigo-900 text-white"
                           >
                             <Plus className="w-4 h-4 mr-2" />
                             Add to Selection
@@ -415,8 +415,8 @@ export default function Companies() {
           </CardContent>
         </Card>
 
-        <div className="bg-slate-900 border-x border-b border-t-4 border-t-indigo-600 p-8 shadow-2xl rounded-none mb-8">
-          <Card className="border-0 bg-transparent mb-4 rounded-none shadow-none">
+        <div className="bg-slate-900 border-x border-b border-t-4 border-t-indigo-600 p-8 shadow-2xl rounded-[2.5rem] mb-8">
+          <Card className="border-0 bg-transparent mb-4 rounded-[2.5rem] shadow-none">
             <CardContent className="p-0 py-0 flex flex-col justify-center min-h-[0]">
               <div className="flex flex-col md:flex-row gap-3 items-center">
                 <div className="flex-1">
@@ -425,14 +425,14 @@ export default function Companies() {
                     value={symbolSearchQuery}
                     onChange={(e) => setSymbolSearchQuery(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && searchAndAddSymbol()}
-                    className="h-12 text-base font-mono rounded-none border-2 border-slate-700 bg-slate-800 text-white placeholder:text-slate-500 uppercase text-xs"
+                    className="h-12 text-base font-mono rounded-xl border-2 border-slate-700 bg-slate-800 text-white placeholder:text-slate-500 uppercase text-xs"
                     disabled={isSearchingSymbol}
                   />
                 </div>
                 <Button
                   onClick={searchAndAddSymbol}
                   disabled={isSearchingSymbol || !symbolSearchQuery.trim()}
-                  className="rounded-none bg-indigo-600 hover:bg-indigo-500 font-black uppercase text-[10px] tracking-widest border-b-4 border-indigo-900 h-12 px-6"
+                  className="rounded-xl bg-indigo-600 hover:bg-indigo-500 font-black uppercase text-[10px] tracking-widest border-b-4 border-indigo-900 h-12 px-6"
                 >
                   {isSearchingSymbol ? (
                     <>
@@ -460,14 +460,14 @@ export default function Companies() {
                 placeholder="Search companies by name, symbol, or sector..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-12 font-mono uppercase text-xs rounded-none border-2 border-slate-700 bg-slate-800 text-white placeholder:text-slate-500"
+                className="pl-12 h-12 font-mono uppercase text-xs rounded-xl border-2 border-slate-700 bg-slate-800 text-white placeholder:text-slate-500"
               />
             </div>
             <div className="flex gap-3">
               <div className="flex items-center gap-2">
                 <Filter className="w-5 h-5 text-slate-500" />
                 <Select value={sectorFilter} onValueChange={setSectorFilter}>
-                  <SelectTrigger className="w-40 h-12 rounded-none font-black uppercase text-[10px] tracking-widest border-b-2 border-slate-700 bg-slate-800 text-white">
+                  <SelectTrigger className="w-40 h-12 rounded-xl font-black uppercase text-[10px] tracking-widest border-b-2 border-slate-700 bg-slate-800 text-white">
                     <SelectValue placeholder="All Sectors" />
                   </SelectTrigger>
                   <SelectContent>
@@ -486,11 +486,11 @@ export default function Companies() {
           <div className="fixed bottom-8 left-0 right-0 z-40 pointer-events-none">
             <div className="max-w-7xl mx-auto md:ml-[272px] lg:ml-[288px] md:mr-8 px-4 md:px-0 pointer-events-auto">
               <div className="relative">
-                <Card className="relative bg-slate-900 border-4 border-white shadow-[0px_0px_30px_rgba(0,0,0,0.5)] rounded-none p-4 overflow-visible">
+                <Card className="relative bg-slate-900 border-4 border-white shadow-[0px_0px_30px_rgba(0,0,0,0.5)] rounded-full p-4 overflow-visible">
                   <CardContent className="relative p-0">
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 md:gap-6">
                       <div className="flex items-center gap-4 min-w-0">
-                        <div className="relative w-12 h-12 md:w-14 md:h-14 bg-slate-900 rounded-none border-b-4 border-indigo-600 shadow-lg flex items-center justify-center flex-shrink-0">
+                        <div className="relative w-12 h-12 md:w-14 md:h-14 bg-slate-900 rounded-full border-b-4 border-indigo-600 shadow-lg flex items-center justify-center flex-shrink-0">
                           <TrendingUp className="w-6 h-6 md:w-7 md:h-7 text-white" />
                         </div>
                         <div className="min-w-0">
@@ -502,7 +502,7 @@ export default function Companies() {
                               variant="ghost"
                               size="sm"
                               onClick={() => setSelectedCompanies([])}
-                              className="text-slate-400 hover:text-slate-200 bg-transparent border-0 h-7 px-3 rounded-none font-black uppercase text-[10px] tracking-widest"
+                              className="text-slate-400 hover:text-slate-200 bg-transparent border-0 h-7 px-3 rounded-lg font-black uppercase text-[10px] tracking-widest"
                             >
                               Clear all
                             </Button>
@@ -513,7 +513,7 @@ export default function Companies() {
                         </div>
                       </div>
                       <Link to={createPageUrl("Analysis") + `?companies=${selectedCompanies.join(',')}`} className="w-full sm:w-auto flex-shrink-0">
-                        <Button className="group relative w-full h-14 text-base md:text-lg rounded-none bg-indigo-600 font-black uppercase tracking-widest text-white shadow-xl">
+                        <Button className="group relative w-full h-14 text-base md:text-lg rounded-full bg-indigo-600 font-black uppercase tracking-widest text-white shadow-xl">
                           <TrendingUp className="relative w-5 h-5 md:w-6 md:h-6 mr-3 flex-shrink-0" />
                           <span className="relative whitespace-nowrap">Compare Risk Outcomes</span>
                         </Button>
@@ -557,7 +557,7 @@ export default function Companies() {
                     transition={{ duration: 0.2 }}
                   >
                     <Card 
-                      className={`group transition-all duration-300 border-2 rounded-none h-full cursor-pointer shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] ${
+                      className={`group transition-all duration-300 border-2 rounded-[2rem] h-full cursor-pointer shadow-[4px_4px_0px_0px_rgba(15,23,42,1)] ${
                         isSelected 
                           ? 'border-indigo-600 shadow-[4px_4px_0px_0px_rgba(79,70,229,1)] bg-white'
                           : 'border-slate-900 bg-white'
@@ -568,13 +568,13 @@ export default function Companies() {
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center gap-3">
                             {company.logo_url && (
-                              <img src={company.logo_url} alt={`${company.name} logo`} className="w-10 h-10 rounded-none border-2 border-slate-900" />
+                              <img src={company.logo_url} alt={`${company.name} logo`} className="w-10 h-10 rounded-full border-2 border-slate-900" />
                             )}
                             <div>
                               <h3 className="font-black text-slate-900 text-lg uppercase tracking-tighter">{company.symbol}</h3>
                               <Badge 
                                 variant="secondary"
-                                className="rounded-none border border-slate-900 font-black uppercase text-[9px] py-1 px-2"
+                                className="rounded-lg border border-slate-900 font-black uppercase text-[9px] py-1 px-2"
                               >
                                 {company.sector}
                               </Badge>
@@ -583,7 +583,7 @@ export default function Companies() {
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={() => toggleCompany(company.symbol)}
-                            className="w-5 h-5 rounded-none border-2 border-slate-900 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                            className="w-5 h-5 rounded-lg border-2 border-slate-900 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
                           />
                         </div>
                         
