@@ -100,7 +100,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
     <>
       {scenarioChanges > 3 && <BehavioralNudge trigger="stress_test_overuse" />}
       <Card className="border-2 border-slate-200 shadow-lg bg-white rounded-xl">
-      <CardHeader className={`bg-gradient-to-r ${scenarioColors[selectedScenario]} text-white`}>
+      <CardHeader className={`bg-gradient-to-r ${scenarioColors[selectedScenario]} text-white rounded-t-xl`}>
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="flex items-center gap-3 text-2xl">
