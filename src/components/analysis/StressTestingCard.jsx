@@ -443,9 +443,18 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                   <Badge className="bg-slate-200 text-slate-700 text-[10px] md:text-xs">Theoretical</Badge>
                 </div>
                 <p className="text-xs md:text-sm text-slate-600 mb-1">Educational Only</p>
-                <p className="text-2xl md:text-3xl font-bold text-slate-600 break-words">
-                  {typeof drawdownMetrics.tailRisk === "number" && Number.isFinite(drawdownMetrics.tailRisk) ? Math.min(-15, drawdownMetrics.tailRisk - 10) : "Not Available"}%
-                </p>
+                <div className="flex flex-col">
+  <p className="text-2xl md:text-3xl font-bold text-slate-600 break-words">
+    {typeof drawdownMetrics.tailRisk === "number" && Number.isFinite(drawdownMetrics.tailRisk) 
+      ? Math.max(-100, Math.min(-15, drawdownMetrics.tailRisk - 10)) 
+      : "Not Available"}%
+  </p>
+  {drawdownMetrics.tailRisk - 10 < -100 && (
+    <span className="text-[10px] text-slate-500 italic mt-1 leading-tight">
+      (Theoretical limit reached)
+    </span>
+  )}
+</div>
                 <p className="text-[10px] md:text-xs text-slate-500 mt-1 md:mt-2">
                   <em>Mathematical boundary</em>
                 </p>
