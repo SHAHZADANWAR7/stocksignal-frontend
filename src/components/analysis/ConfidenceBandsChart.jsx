@@ -91,7 +91,7 @@ export default function ConfidenceBandsChart({
   
   return (
     <Card className="border-2 border-purple-200 shadow-xl bg-white">
-      <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+      <CardHeader className="rounded-t-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="flex items-center gap-3 text-2xl">
