@@ -176,8 +176,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                     <div className="flex-1 w-full">
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                         <h4 className="text-xl md:text-2xl font-bold text-rose-900">
-                          {typeof currentResult.portfolioImpact === "number" && Number.isFinite(currentResult.portfolioImpact) ? currentResult.portfolioImpact : "Not Available"}% Portfolio Decline
-                        </h4>
+{typeof currentResult.portfolioImpact === "number" && Number.isFinite(currentResult.portfolioImpact) ? Math.round(currentResult.portfolioImpact) : "Not Available"}% Portfolio Decline                        </h4>
                         <Badge className="bg-purple-200 text-purple-900 text-xs px-2 py-1 w-fit">
                           {currentResult.probability} likelihood
                         </Badge>
@@ -464,8 +463,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
               <div className="mt-4 p-4 bg-white rounded-lg border border-slate-200">
                 <p className="text-sm font-semibold text-slate-900 mb-3">
                   <Clock className="w-4 h-4 inline mr-1" />
-                  Recovery Time Estimates (from {typeof currentResult.portfolioImpact === "number" && Number.isFinite(currentResult.portfolioImpact) ? currentResult.portfolioImpact : "Not Available"}% decline)
-                </p>
+Recovery Time Estimates (from {typeof currentResult.portfolioImpact === "number" && Number.isFinite(currentResult.portfolioImpact) ? Math.round(currentResult.portfolioImpact) : "Not Available"}% decline)                </p>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
                     <p className="text-lg font-bold text-emerald-600">{typeof recoveryEstimate.median === "number" && Number.isFinite(recoveryEstimate.median) ? recoveryEstimate.median : "Not Available"}y</p>
