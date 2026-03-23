@@ -173,7 +173,7 @@ export default function TransactionCostCard({ allocations, companies, investment
   
   return (
     <Card className="border-2 border-slate-200 shadow-lg bg-white rounded-xl">
-      <CardHeader className="bg-gradient-to-r from-slate-700 to-slate-900 text-white">
+      <CardHeader className="rounded-t-xl bg-gradient-to-r from-slate-700 to-slate-900 text-white">
         <CardTitle className="flex items-center gap-3 text-2xl">
           <DollarSign className="w-7 h-7" />
           Execution Costs & Cash Drag
