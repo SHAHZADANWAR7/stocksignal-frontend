@@ -420,7 +420,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               <div className="p-3 md:p-4 bg-white rounded-lg border-2 border-indigo-300">
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-indigo-100 text-indigo-700 text-[10px] md:text-xs">Statistical (95%)</Badge>
+                  <Badge className="**bg-indigo-600 text-white font-bold** text-[10px] md:text-xs">Statistical (95%)</Badge>
                 </div>
                 <p className="text-xs md:text-sm text-slate-600 mb-1">Probability-Based</p>
                 <p className="text-2xl md:text-3xl font-bold text-indigo-600 break-words">{typeof drawdownMetrics.standard === "number" && Number.isFinite(drawdownMetrics.standard) ? drawdownMetrics.standard : "Not Available"}%</p>
@@ -430,7 +430,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
               </div>
               <div className="p-3 md:p-4 bg-white rounded-lg border-2 border-rose-300">
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-rose-100 text-rose-700 text-[10px] md:text-xs">Tail Risk (99%)</Badge>
+                  <Badge className="bg-rose-600 text-white font-bold text-[10px] md:text-xs">Tail Risk (99%)</Badge>
                 </div>
                 <p className="text-xs md:text-sm text-slate-600 mb-1">Fat-Tailed Model</p>
                 <p className="text-2xl md:text-3xl font-bold text-rose-600 break-words">{typeof drawdownMetrics.tailRisk === "number" && Number.isFinite(drawdownMetrics.tailRisk) ? drawdownMetrics.tailRisk : "Not Available"}%</p>
@@ -438,9 +438,9 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                   Cornish-Fisher VaR extreme scenario
                 </p>
               </div>
-              <div className="p-3 md:p-4 bg-white rounded-lg border-2 border-slate-300 opacity-75">
+              <div className="p-3 md:p-4 bg-white rounded-lg border-2 border-slate-300">
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-slate-200 text-slate-700 text-[10px] md:text-xs">Theoretical</Badge>
+                  <Badge className="**bg-slate-700 text-white font-bold** text-[10px] md:text-xs">Theoretical</Badge>
                 </div>
                 <p className="text-xs md:text-sm text-slate-600 mb-1">Educational Only</p>
                 <div className="flex flex-col">
