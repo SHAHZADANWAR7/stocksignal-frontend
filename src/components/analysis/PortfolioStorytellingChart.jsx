@@ -172,7 +172,7 @@ export default function PortfolioStorytellingChart({
   
   return (
     <Card className="border-2 border-slate-200 shadow-xl bg-white">
-      <CardHeader className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+     <CardHeader className="rounded-t-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
         <CardTitle className="flex items-center gap-3 text-2xl">
           <TrendingUp className="w-7 h-7" />
           Portfolio Growth Story: Expected vs Tail Events
