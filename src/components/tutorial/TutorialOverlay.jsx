@@ -52,11 +52,14 @@ export default function TutorialOverlay({ steps, onComplete, onSkip, currentPage
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="fixed z-[100]"
+        // Use Tailwind's 'md' prefix to only apply specific positions on desktop
+        // On mobile (default), we force it to the bottom-center or center
+        className="fixed z-[100] w-[92%] md:w-auto left-1/2 -translate-x-1/2 md:left-auto md:transform-none"
         style={{
-          top: step.position?.top || '50%',
-          left: step.position?.left || '50%',
-          transform: step.position?.transform || 'translate(-50%, -50%)',
+          top: window.innerWidth < 768 ? 'auto' : (step.position?.top || '50%'),
+          bottom: window.innerWidth < 768 ? '20px' : 'auto',
+          left: window.innerWidth < 768 ? '50%' : (step.position?.left || '50%'),
+          transform: window.innerWidth < 768 ? 'translateX(-50%)' : (step.position?.transform || 'translate(-50%, -50%)'),
         }}
         onClick={(e) => e.stopPropagation()}
       >
