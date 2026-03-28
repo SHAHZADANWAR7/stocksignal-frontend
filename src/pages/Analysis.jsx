@@ -1574,12 +1574,12 @@ If analyzing similar companies (same sector), focus on:
   };
 
   const getValuationColor = (valuation) => {
-    switch(valuation) {
-      case "undervalued": return "text-emerald-700 bg-emerald-50 border-emerald-200";
-      case "overvalued": return "text-rose-700 bg-rose-50 border-rose-200";
-      default: return "text-blue-700 bg-blue-50 border-blue-200";
-    }
-  };
+  switch (valuation) {
+    case "overvalued": return "text-white bg-rose-600 border-rose-700 font-black shadow-sm";
+    case "undervalued": return "text-white bg-emerald-600 border-emerald-700 font-black shadow-sm";
+    default: return "text-white bg-blue-600 border-blue-700 font-black shadow-sm";
+  }
+};
 
   const getValuationIcon = (valuation) => {
     return valuation === "undervalued" ? TrendingUp : valuation === "overvalued" ? TrendingDown : Activity;
