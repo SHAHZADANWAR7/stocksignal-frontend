@@ -25,6 +25,7 @@ import TermsOfService from './pages/TermsOfService'
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import Disclaimer from './pages/Disclaimer'
 import PlatformPhilosophy from './pages/PlatformPhilosophy'
+import ChatBot from './components/ChatBot'
 
 function App() {
   return (
@@ -81,6 +82,8 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>
+      {/* Floating AI Assistant - Renders globally */}
+      <ChatBot />
     </Router>
   )
 }
