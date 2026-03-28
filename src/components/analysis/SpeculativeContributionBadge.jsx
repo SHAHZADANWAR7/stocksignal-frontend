@@ -93,12 +93,12 @@ export default function SpeculativeContributionBadge({ company }) {
 
   const getBadgeColor = (tier) => {
     switch (tier) {
-      case "Very High": return "bg-rose-100 text-rose-800 border-rose-300";
-      case "High": return "bg-orange-100 text-orange-800 border-orange-300";
-      case "Moderate": return "bg-amber-100 text-amber-800 border-amber-300";
-      case "Low": return "bg-blue-100 text-blue-800 border-blue-300";
-      case "Very Low": return "bg-emerald-100 text-emerald-800 border-emerald-300";
-      default: return "bg-slate-100 text-slate-800 border-slate-300";
+      case "Very High": return "bg-rose-600 text-white border-rose-700 shadow-sm font-black";
+      case "High": return "bg-orange-600 text-white border-orange-700 shadow-sm font-black";
+      case "Moderate": return "bg-amber-500 text-white border-amber-600 shadow-sm font-black";
+      case "Low": return "bg-blue-600 text-white border-blue-700 shadow-sm font-black";
+      case "Very Low": return "bg-emerald-600 text-white border-emerald-700 shadow-sm font-black";
+      default: return "bg-slate-600 text-white border-slate-700 shadow-sm font-black";
     }
   };
 
@@ -106,7 +106,7 @@ export default function SpeculativeContributionBadge({ company }) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge className={`${getBadgeColor(result.tier)} border text-xs cursor-help`}>
+          <Badge className={`${getBadgeColor(result.tier)} border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider cursor-help transition-all shadow-sm`}>
             {result.tier} Speculative ({result.score}%)
           </Badge>
         </TooltipTrigger>
