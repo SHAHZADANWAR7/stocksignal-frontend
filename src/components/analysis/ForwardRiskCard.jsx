@@ -64,10 +64,10 @@ export default function ForwardRiskCard({ qualityScore,
   };
   
   const regimeBadgeColors = {
-    low: 'bg-emerald-100 text-emerald-800',
-    normal: 'bg-blue-100 text-blue-800',
-    elevated: 'bg-amber-100 text-amber-800',
-    high: 'bg-rose-100 text-rose-800'
+    low: 'bg-emerald-600 text-white border-emerald-700 font-black shadow-sm',
+    normal: 'bg-blue-600 text-white border-blue-700 font-black shadow-sm',
+    elevated: 'bg-amber-500 text-white border-amber-600 font-black shadow-sm',
+    high: 'bg-rose-600 text-white border-rose-700 font-black shadow-sm'
   };
   
   // Build chart data
@@ -144,7 +144,7 @@ export default function ForwardRiskCard({ qualityScore,
                   <h4 className="text-2xl font-bold text-slate-900">
                     Market Regime: {vixData.regime.charAt(0).toUpperCase() + vixData.regime.slice(1)} Volatility
                   </h4>
-                  <Badge className={`text-lg px-3 py-1 ${regimeBadgeColors[vixData.regime]}`}>
+                  <Badge className={`text-lg px-3 py-1 uppercase tracking-tighter ${regimeBadgeColors[vixData.regime]}`}>
                     VIX: {typeof (vixData.current || vixData.currentVIX) === "number" && Number.isFinite(vixData.current || vixData.currentVIX) ? (vixData.current || vixData.currentVIX).toFixed(1) : "Not Available"}
                   </Badge>
                 </div>
@@ -212,11 +212,11 @@ export default function ForwardRiskCard({ qualityScore,
                         </div>
                         <p className="text-[10px] md:text-xs text-slate-500 mt-1">60% historical + 40% (VIX × β)</p>
                         {typeof forwardRiskMetrics.forwardRisk === "number" && Number.isFinite(forwardRiskMetrics.forwardRisk) && typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) && Math.abs(forwardRiskMetrics.forwardRisk - portfolioRisk) > 1 && (
-                          <Badge className={`mt-2 text-[10px] md:text-xs rounded-lg ${
-                            forwardRiskMetrics.forwardRisk > portfolioRisk 
-                              ? 'bg-rose-100 text-rose-800' 
-                              : 'bg-emerald-100 text-emerald-800'
-                          }`}>
+                          <Badge className={`mt-2 text-[10px] md:text-xs rounded-lg font-black uppercase tracking-wider border shadow-sm ${
+  forwardRiskMetrics.forwardRisk > portfolioRisk 
+    ? 'bg-rose-600 text-white border-rose-700' 
+    : 'bg-emerald-600 text-white border-emerald-700'
+}`}>
                             {forwardRiskMetrics.forwardRisk > portfolioRisk ? '+' : ''}
                             {(forwardRiskMetrics.forwardRisk - portfolioRisk).toFixed(1)}% VIX adjustment
                           </Badge>
@@ -258,11 +258,11 @@ export default function ForwardRiskCard({ qualityScore,
                         <div className="flex items-center gap-2">
                           <p className="text-xl md:text-2xl lg:text-3xl font-bold text-teal-600 break-words tabular-nums">{typeof returnAdj.adjusted === "number" && Number.isFinite(returnAdj.adjusted) ? returnAdj.adjusted.toFixed(1) : "Not Available"}%</p>
                           {typeof returnAdj.adjustment === "number" && Number.isFinite(returnAdj.adjustment) && returnAdj.adjustment !== 0 && (
-                            <Badge className={`text-[10px] md:text-xs flex-shrink-0 rounded-lg ${
-                              returnAdj.adjustment > 0 
-                                ? 'bg-emerald-100 text-emerald-800' 
-                                : 'bg-rose-100 text-rose-800'
-                            }`}>
+                            <Badge className={`text-[10px] md:text-xs flex-shrink-0 rounded-lg font-black uppercase tracking-wider border shadow-sm ${
+  returnAdj.adjustment > 0 
+    ? 'bg-emerald-600 text-white border-emerald-700' 
+    : 'bg-rose-600 text-white border-rose-700'
+}`}>
                               {returnAdj.adjustment >= 0 ? '+' : ''}{returnAdj.adjustment}%
                             </Badge>
                           )}
