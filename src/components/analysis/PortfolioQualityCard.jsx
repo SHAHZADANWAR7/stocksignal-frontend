@@ -530,12 +530,12 @@ export default function PortfolioQualityCard({ companies, portfolioQuality, simi
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Badge className={`text-xs cursor-help ${
+                              <Badge className={`text-[10px] font-black uppercase tracking-wider shadow-sm border cursor-help ${
                                 traits.profitability.status === 'profitable' 
-                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                  ? 'bg-emerald-600 text-white border-emerald-700'
                                   : traits.profitability.status === 'loss_making'
-                                  ? 'bg-rose-100 text-rose-800 border border-rose-300'
-                                  : 'bg-amber-100 text-amber-800 border border-amber-300'
+                                  ? 'bg-rose-600 text-white border-rose-700'
+                                  : 'bg-amber-500 text-white border-amber-600'
                               }`}>
                                 {traits.profitability.label}
                               </Badge>
@@ -556,7 +556,7 @@ export default function PortfolioQualityCard({ companies, portfolioQuality, simi
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Badge className={`text-xs cursor-help bg-${traits.valuation.color}-100 text-${traits.valuation.color}-800`}>
+                                <Badge className={`text-[10px] font-black uppercase tracking-wider shadow-sm border cursor-help ${traits.valuation.color === 'amber' ? 'bg-amber-500' : `bg-${traits.valuation.color}-600`} text-white border-${traits.valuation.color}-700`}>
                                   ⚠ {traits.valuation.label}
                                 </Badge>
                               </TooltipTrigger>
@@ -575,7 +575,7 @@ export default function PortfolioQualityCard({ companies, portfolioQuality, simi
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Badge className={`text-xs cursor-help bg-${traits.stability.color}-100 text-${traits.stability.color}-800`}>
+                                <Badge className={`text-[10px] font-black uppercase tracking-wider shadow-sm border cursor-help ${traits.stability.color === 'rose' ? 'bg-rose-600' : `bg-${traits.stability.color}-600`} text-white border-${traits.stability.color}-700`}>
                                   ⚠ {traits.stability.label}
                                 </Badge>
                               </TooltipTrigger>
@@ -597,7 +597,7 @@ export default function PortfolioQualityCard({ companies, portfolioQuality, simi
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Badge className={`text-xs cursor-help bg-${traits.stage.color}-100 text-${traits.stage.color}-800`}>
+                                <Badge className={`text-[10px] font-black uppercase tracking-wider shadow-sm border cursor-help ${traits.stage.color === 'emerald' ? 'bg-emerald-600' : traits.stage.color === 'purple' ? 'bg-purple-600' : `bg-${traits.stage.color}-600`} text-white border-${traits.stage.color}-700`}>
                                   {traits.stage.label}
                                 </Badge>
                               </TooltipTrigger>
@@ -615,7 +615,7 @@ export default function PortfolioQualityCard({ companies, portfolioQuality, simi
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Badge className={`text-xs cursor-help bg-${traits.financial.color}-100 text-${traits.financial.color}-800`}>
+                                <Badge className={`text-[10px] font-black uppercase tracking-wider shadow-sm border cursor-help ${traits.financial.color === 'rose' ? 'bg-rose-600' : `bg-${traits.financial.color}-600`} text-white border-${traits.financial.color}-700`}>
                                   ⚠ {traits.financial.label}
                                 </Badge>
                               </TooltipTrigger>
