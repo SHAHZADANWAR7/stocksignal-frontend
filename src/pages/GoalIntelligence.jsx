@@ -447,8 +447,7 @@ const analyzeScenarios = async () => {
       }
       setShowAddGoal(false);
       setEditingGoalId(null);
-      setNewGoal({ goal_name: "", goal_type: "retirement", target_amount: "", target_date: "", priority: "medium", target_amount: "", target_date: "", current_allocation: "", assigned_holdings: [], priority: "medium" });
-      await loadData();
+setNewGoal({ goal_name: "", goal_type: "retirement", target_amount: "", target_date: "", current_allocation: "", assigned_holdings: [], priority: "medium" });      await loadData();
     } catch (error) {
       console.error("❌ Goal Save Error:", error);
       alert("Critical Error: Could not save goal.");
