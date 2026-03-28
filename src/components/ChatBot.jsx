@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import awsApi from "@/components/utils/api/awsApi";
+import { awsApi } from "@/components/utils/api/awsApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
