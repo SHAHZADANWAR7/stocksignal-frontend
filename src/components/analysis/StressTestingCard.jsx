@@ -420,7 +420,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
               <div className="p-3 md:p-4 bg-white rounded-lg border-2 border-indigo-300">
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge className="**bg-indigo-600 text-white font-bold** text-[10px] md:text-xs">Statistical (95%)</Badge>
+                  <Badge className="bg-indigo-600 text-white font-black uppercase tracking-widest shadow-sm border border-indigo-700 text-[10px]">Statistical (95%)</Badge>
                 </div>
                 <p className="text-xs md:text-sm text-slate-600 mb-1">Probability-Based</p>
                 <p className="text-2xl md:text-3xl font-bold text-indigo-600 break-words">{typeof drawdownMetrics.standard === "number" && Number.isFinite(drawdownMetrics.standard) ? drawdownMetrics.standard : "Not Available"}%</p>
@@ -430,7 +430,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
               </div>
               <div className="p-3 md:p-4 bg-white rounded-lg border-2 border-rose-300">
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-rose-600 text-white font-bold text-[10px] md:text-xs">Tail Risk (99%)</Badge>
+                  <Badge className="bg-rose-600 text-white font-black uppercase tracking-widest shadow-sm border border-rose-700 text-[10px]">Tail Risk (99%)</Badge>
                 </div>
                 <p className="text-xs md:text-sm text-slate-600 mb-1">Fat-Tailed Model</p>
                 <p className="text-2xl md:text-3xl font-bold text-rose-600 break-words">{typeof drawdownMetrics.tailRisk === "number" && Number.isFinite(drawdownMetrics.tailRisk) ? drawdownMetrics.tailRisk : "Not Available"}%</p>
@@ -440,7 +440,7 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
               </div>
               <div className="p-3 md:p-4 bg-white rounded-lg border-2 border-slate-300">
                 <div className="flex items-center gap-2 mb-2">
-                  <Badge className="**bg-slate-700 text-white font-bold** text-[10px] md:text-xs">Theoretical</Badge>
+                  <Badge className="bg-slate-700 text-white font-black uppercase tracking-widest shadow-sm border border-slate-800 text-[10px]">Theoretical</Badge>
                 </div>
                 <p className="text-xs md:text-sm text-slate-600 mb-1">Educational Only</p>
                 <div className="flex flex-col">
@@ -532,7 +532,7 @@ Recovery Time Estimates (from {typeof currentResult.portfolioImpact === "number"
                       <TooltipTrigger asChild>
                         <div className="flex justify-between items-center p-2 bg-white rounded border border-amber-200 cursor-help">
                           <span className="text-sm">-20% Decline (Mild)</span>
-                          <Badge className="bg-amber-100 text-amber-800">
+                          <Badge className="bg-amber-500 text-white font-black uppercase tracking-wider shadow-sm border border-amber-600 text-[10px]">
                             {crashProbs.annualProbabilities.mild}%
                           </Badge>
                         </div>
@@ -547,7 +547,7 @@ Recovery Time Estimates (from {typeof currentResult.portfolioImpact === "number"
                       <TooltipTrigger asChild>
                         <div className="flex justify-between items-center p-2 bg-white rounded border border-orange-200 cursor-help">
                           <span className="text-sm">-35% Decline (Moderate)</span>
-                          <Badge className="bg-orange-100 text-orange-800">
+                          <Badge className="bg-orange-600 text-white font-black uppercase tracking-wider shadow-sm border border-orange-700 text-[10px]">
                             {crashProbs.annualProbabilities.moderate}%
                           </Badge>
                         </div>
@@ -562,7 +562,7 @@ Recovery Time Estimates (from {typeof currentResult.portfolioImpact === "number"
                       <TooltipTrigger asChild>
                         <div className="flex justify-between items-center p-2 bg-white rounded border border-rose-200 cursor-help">
                           <span className="text-sm">-50% Decline (Severe)</span>
-                          <Badge className="bg-rose-100 text-rose-800">
+                          <Badge className="bg-rose-600 text-white font-black uppercase tracking-wider shadow-sm border border-rose-700 text-[10px]">
                             {crashProbs.annualProbabilities.severe}%
                           </Badge>
                         </div>
@@ -580,19 +580,19 @@ Recovery Time Estimates (from {typeof currentResult.portfolioImpact === "number"
                 <div className="space-y-2">
                   <div className="flex justify-between items-center p-2 bg-white rounded border border-amber-200">
                     <span className="text-sm">-20% Decline</span>
-                    <Badge className="bg-amber-100 text-amber-800">
+                    <Badge className="bg-amber-500 text-white font-black uppercase tracking-wider shadow-sm border border-amber-600 text-[10px]">
                       {crashProbs.tenYearProbabilities.mild}%
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-white rounded border border-orange-200">
                     <span className="text-sm">-35% Decline</span>
-                    <Badge className="bg-orange-100 text-orange-800">
+                    <Badge className="bg-orange-600 text-white font-black uppercase tracking-wider shadow-sm border border-orange-700 text-[10px]">
                       {crashProbs.tenYearProbabilities.moderate}%
                     </Badge>
                   </div>
                   <div className="flex justify-between items-center p-2 bg-white rounded border border-rose-200">
                     <span className="text-sm">-50% Decline</span>
-                    <Badge className="bg-rose-100 text-rose-800">
+                    <Badge className="bg-rose-600 text-white font-black uppercase tracking-wider shadow-sm border border-rose-700 text-[10px]">
                       {crashProbs.tenYearProbabilities.severe}%
                     </Badge>
                   </div>
