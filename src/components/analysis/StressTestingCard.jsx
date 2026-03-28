@@ -177,16 +177,16 @@ export default function StressTestingCard({ companies, weights, portfolioRisk, e
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                         <h4 className="text-xl md:text-2xl font-bold text-rose-900">
 {typeof currentResult.portfolioImpact === "number" && Number.isFinite(currentResult.portfolioImpact) ? Math.round(currentResult.portfolioImpact) : "Not Available"}% Portfolio Decline                        </h4>
-                        <Badge className="bg-purple-200 text-purple-900 text-xs px-2 py-1 w-fit">
-                          {currentResult.probability} likelihood
-                        </Badge>
+                        <Badge className="bg-slate-900 text-white border border-slate-700 font-black uppercase tracking-widest text-[10px] px-2 py-1 shadow-md">
+  {currentResult.probability} LIKELIHOOD
+</Badge>
                       </div>
                       <p className="text-sm text-rose-800 mb-3">{currentResult.description}</p>
                       <div className="flex items-center gap-2 text-xs flex-wrap">
-                        <Badge className="bg-rose-200 text-rose-900 text-xs">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {currentResult.duration}mo duration
-                        </Badge>
+                        <Badge className="bg-slate-900 text-white border border-slate-700 font-black uppercase tracking-widest text-[10px] px-2 py-1 shadow-md">
+  <Clock className="w-3 h-3 mr-1 text-rose-400" />
+  {currentResult.duration}MO DURATION
+</Badge>
                         <Badge className="bg-amber-200 text-amber-900 text-xs">
                           <Target className="w-3 h-3 mr-1" />
                           {currentResult.recoveryTime}mo recovery
