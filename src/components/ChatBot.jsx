@@ -354,8 +354,7 @@ export default function ChatBot() {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "👋 **Welcome to StockSignal AI Assistant!**\n\nI'm your personal investment intelligence guide. Ask me anything about your portfolio, metrics, or market insights!\n\n**💡 Popular Questions:**\n\n• \"How is my Investor IQ calculated?\"\n\n• \"What does correlation coefficient mean?\"\n\n• \"Explain the fragility index formula\"\n\n• \"What's a good diversification score?\"\n\n• \"When should I deploy my cash?\"\n\n• \"Should I invest in [stock symbol]?\"\n\n• \"Analyze [company name] for me\"\n\n✨ I know every formula, metric, and calculation behind the scenes - plus I can analyze any stock in real-time!"
-    }
+content: "🛰️ **KRISZTINA: SYSTEM INITIALIZED**\n\nDirect access to quantitative models, factor analysis, and risk metrics. State your query.\n\n**CORE PROTOCOLS:**\n\n• \"Execute Stress Test: -35% Market Shock\"\n\n• \"Verify Investor IQ Calculation Logic\"\n\n• \"Analyze [SYMBOL] Fundamentals\"\n\n• \"Explain Portfolio Fragility Index\"\n\n• \"Calculate Deployment Signal: Idle Cash\"\n\n✨ Quantitative engine active. Real-time market feed synchronized."    }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -442,15 +441,17 @@ export default function ChatBot() {
                 <div className="flex items-start gap-2 mb-1.5">
                   <Sparkles className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0 animate-pulse" />
                   <div>
-                    <p className="text-xs font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 mb-1">
-                      Your AI Investment Advisor
+                    <p className="text-[10px] font-black uppercase tracking-tighter text-slate-900 mb-1">
+                      KRISZTINA: QUANT-CORE v1.0
                     </p>
-                    <p className="text-xs text-slate-700 leading-snug">
-                      Ask me anything about <span className="font-semibold text-blue-600">portfolio analysis</span>, <span className="font-semibold text-indigo-600">investment strategies</span>, or how any feature works. 
+                    <p className="text-[11px] text-slate-700 leading-tight font-medium">
+                      Automated risk-shaping, factor modeling, and real-time deployment intelligence.
                     </p>
-                    <p className="text-xs text-slate-600 mt-1 italic">
-                      "How is my Investor IQ calculated?" • "What's a good Sharpe Ratio?" • "When should I deploy cash?"
-                    </p>
+                    <div className="flex gap-2 mt-2 border-t border-blue-100 pt-1.5">
+                      <span className="text-[9px] font-bold text-blue-700 bg-blue-50 px-1 rounded">IQ_METRICS</span>
+                      <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1 rounded">RISK_MODELS</span>
+                      <span className="text-[9px] font-bold text-slate-700 bg-slate-50 px-1 rounded">LIVE_QUOTES</span>
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -479,8 +480,10 @@ export default function ChatBot() {
               <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5" />
-                    <CardTitle className="text-lg">AI Assistant</CardTitle>
+                    <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                    <CardTitle className="text-sm font-black uppercase tracking-[0.25em]">
+                      KRISZTINA_SYSTEM
+                    </CardTitle>
                   </div>
                   <Button
                     variant="ghost"
