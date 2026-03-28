@@ -382,9 +382,10 @@ content: "🛰️ **KRISZTINA: SYSTEM INITIALIZED**\n\nDirect access to quantita
       const needsMarketData = /stock|ticker|symbol|invest in|buy|sell|recommend|analysis|analyze|market|company|shares|equity|NYSE|NASDAQ/i.test(userMessage);
 
       const result = await awsApi.invokeLLM({
-        prompt: `${APP_CONTEXT}\n\nUser question: ${userMessage}`,
-        add_context_from_internet: needsMarketData
-      });
+  // We inject the identity instruction directly into the prompt string
+  prompt: `${APP_CONTEXT}\n\nIDENTITY: Your name is Krisztina. You are the specialized quantitative engine for StockSignal. Always identify as Krisztina when asked who you are. Keep responses professional, high-authority, and precise.\n\nUser question: ${userMessage}`,
+  add_context_from_internet: needsMarketData
+});
 
       // UNWRAPPER: Lambda returns { response: "text" }, so we extract that string
       const aiContent = result?.response || result?.analysis || (typeof result === 'string' ? result : "No response content received.");
@@ -476,20 +477,28 @@ content: "🛰️ **KRISZTINA: SYSTEM INITIALIZED**\n\nDirect access to quantita
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className="fixed bottom-6 right-6 z-50 w-96 max-w-[calc(100vw-3rem)]"
           >
-            <Card className="border-2 border-blue-200 shadow-2xl rounded-3xl overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4">
+            <Card className="border-2 border-slate-800 shadow-2xl rounded-3xl overflow-hidden bg-slate-50">
+              <CardHeader className="bg-slate-900 text-slate-100 p-4 border-b border-slate-800">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                    <CardTitle className="text-sm font-black uppercase tracking-[0.25em]">
-                      KRISZTINA_SYSTEM
-                    </CardTitle>
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black uppercase tracking-[0.3em] leading-none text-slate-500">
+                        TERMINAL_ID: 0x88
+                      </span>
+                      <CardTitle className="text-sm font-bold tracking-widest mt-1">
+                        KRISZTINA QUANT-CORE
+                      </CardTitle>
+                    </div>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={() => setIsOpen(false)}
-                    className="h-8 w-8 text-white hover:bg-white/20"
+                    className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </Button>
