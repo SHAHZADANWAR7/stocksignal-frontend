@@ -381,11 +381,11 @@ content: "🛰️ **KRISZTINA: SYSTEM INITIALIZED**\n\nDirect access to quantita
       // Detect if market data is needed
       const needsMarketData = /stock|ticker|symbol|invest in|buy|sell|recommend|analysis|analyze|market|company|shares|equity|NYSE|NASDAQ/i.test(userMessage);
 
-      const result = await awsApi.invokeLLM({
-  // We inject the identity instruction directly into the prompt string
-  prompt: `${APP_CONTEXT}\n\nIDENTITY: Your name is Krisztina. You are the specialized quantitative engine for StockSignal. Always identify as Krisztina when asked who you are. Keep responses professional, high-authority, and precise.\n\nUser question: ${userMessage}`,
-  add_context_from_internet: needsMarketData
-});
+   const result = await awsApi.invokeLLM({
+        // We inject the high-authority Quant-Core directive here
+        prompt: `${APP_CONTEXT}\n\n[SYSTEM_DIRECTIVE]: Identity: KRISZTINA. Role: Quant-Core Analytical Engine for StockSignal. Expertise: Quantitative finance, risk modeling, and portfolio stress testing. Response Protocol: Professional, high-authority, precise. Avoid casual filler. Always identify as Krisztina when asked.\n\nUser question: ${userMessage}`,
+        add_context_from_internet: needsMarketData
+      });
 
       // UNWRAPPER: Lambda returns { response: "text" }, so we extract that string
       const aiContent = result?.response || result?.analysis || (typeof result === 'string' ? result : "No response content received.");
