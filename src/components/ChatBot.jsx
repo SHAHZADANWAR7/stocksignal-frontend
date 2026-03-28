@@ -7,40 +7,8 @@ import { MessageCircle, X, Send, Loader2, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 
-export default function ChatBot() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(() => {
-    const dismissed = localStorage.getItem('chatbot-tooltip-dismissed');
-    return dismissed !== 'true';
-  });
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content: "👋 **Welcome to StockSignal AI Assistant!**\n\nI'm your personal investment intelligence guide. Ask me anything about your portfolio, metrics, or market insights!\n\n**💡 Popular Questions:**\n\n• \"How is my Investor IQ calculated?\"\n\n• \"What does correlation coefficient mean?\"\n\n• \"Explain the fragility index formula\"\n\n• \"What's a good diversification score?\"\n\n• \"When should I deploy my cash?\"\n\n• \"Should I invest in [stock symbol]?\"\n\n• \"Analyze [company name] for me\"\n\n✨ I know every formula, metric, and calculation behind the scenes - plus I can analyze any stock in real-time!"
-    }
-  ]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
-
-    const userMessage = input.trim();
-    setInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
-    setIsLoading(true);
-
-    try {
-      const appContext = `
+// --- APP CONTEXT CONSTANT ---
+const APP_CONTEXT = `
 You are a helpful AI assistant for StockSignal, an investment portfolio analysis platform. Help users understand how everything works.
 
 === WHAT EACH PAGE DOES ===
@@ -374,18 +342,57 @@ All calculated using statistical formulas:
 - Calculations: JavaScript (precise formulas)
 - Insights: AI LLM (qualitative analysis only)
 
-Be specific about formulas when asked. Explain what scores mean in practical terms.`;
+Be specific about formulas when asked. Explain what scores mean in practical terms.
+`;
 
-      // Detect if user is asking about stocks, markets, or investment recommendations
+export default function ChatBot() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(() => {
+    const dismissed = localStorage.getItem('chatbot-tooltip-dismissed');
+    return dismissed !== 'true';
+  });
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      content: "👋 **Welcome to StockSignal AI Assistant!**\n\nI'm your personal investment intelligence guide. Ask me anything about your portfolio, metrics, or market insights!\n\n**💡 Popular Questions:**\n\n• \"How is my Investor IQ calculated?\"\n\n• \"What does correlation coefficient mean?\"\n\n• \"Explain the fragility index formula\"\n\n• \"What's a good diversification score?\"\n\n• \"When should I deploy my cash?\"\n\n• \"Should I invest in [stock symbol]?\"\n\n• \"Analyze [company name] for me\"\n\n✨ I know every formula, metric, and calculation behind the scenes - plus I can analyze any stock in real-time!"
+    }
+  ]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // === CLEANED VERSION OF handleSend and handleKeyPress ===
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userMessage = input.trim();
+    setInput("");
+    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+    setIsLoading(true);
+
+    try {
+      // Detect if market data is needed
       const needsMarketData = /stock|ticker|symbol|invest in|buy|sell|recommend|analysis|analyze|market|company|shares|equity|NYSE|NASDAQ/i.test(userMessage);
-      
+
       const result = await awsApi.invokeLLM({
-        prompt: `${appContext}\n\nUser question: ${userMessage}\n\nProvide a helpful, concise answer. ${needsMarketData ? '\n\nCRITICAL FOR STOCK ANALYSIS:\n- You MUST fetch the current, real-time stock price from live market data sources\n- DO NOT estimate, guess, or use outdated prices\n- Include the most recent news, earnings reports, and significant events from the past 30 days\n- Mention the exact date/time of the price data you\'re using\n- If you cannot access real-time data, clearly state this limitation\n- Provide current market analysis, fundamentals, valuation, risks, and clear reasoning\n- Keep it simple and in layman terms - explain like you would to a friend\n- For stock recommendations, always explain WHY and consider risk factors\n- Base your analysis on TODAY\'s market conditions and recent events' : ''}`,
+        prompt: `${APP_CONTEXT}\n\nUser question: ${userMessage}`,
         add_context_from_internet: needsMarketData
       });
 
-      setMessages(prev => [...prev, { role: "assistant", content: result }]);
+      // UNWRAPPER: Lambda returns { response: "text" }, so we extract that string
+      const aiContent = result?.response || result?.analysis || (typeof result === 'string' ? result : "No response content received.");
+
+      setMessages(prev => [...prev, { role: "assistant", content: aiContent }]);
     } catch (error) {
+      console.error("ChatBot Error:", error);
       setMessages(prev => [...prev, { 
         role: "assistant", 
         content: "Sorry, I encountered an error. Please try again." 
@@ -534,7 +541,7 @@ Be specific about formulas when asked. Explain what scores mean in practical ter
                       </div>
                     </div>
                   )}
-                  <div ref__={messagesEndRef} />
+                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Input */}
