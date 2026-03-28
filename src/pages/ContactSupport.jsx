@@ -136,7 +136,7 @@ export default function ContactSupport() {
                             className="bg-slate-50 border-slate-200 focus:bg-white transition-all h-11"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            placeholder="e.g. Kevin Pieterson"
+                            placeholder="e.g. Krisztina Francez"
                           />
                         </div>
                         <div className="space-y-2">
@@ -147,7 +147,7 @@ export default function ContactSupport() {
                             className="bg-slate-50 border-slate-200 focus:bg-white transition-all h-11"
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            placeholder="kevin@yahoo.com"
+                            placeholder="krisztinafrancez@yahoo.com"
                           />
                         </div>
                       </div>
