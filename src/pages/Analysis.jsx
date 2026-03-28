@@ -3368,8 +3368,10 @@ VIX portfolio-level metrics are displayed in Section 5 (ForwardRiskCard) and Sec
                                     <div className="flex justify-between items-center text-sm bg-emerald-50 p-2 rounded">
                                       <span className="text-slate-700">Sharpe Ratio:</span>
                                       <span className="font-bold text-emerald-700 text-base">
-                                        {typeof company.expected_return === "number" && Number.isFinite(company.expected_return) ? company.expected_return.toFixed(2) : "Not Available"}
-                                      </span>
+  {typeof company.expected_return === "number" && typeof company.risk === "number" && company.risk > 0 
+    ? ((company.expected_return - 4.5) / company.risk).toFixed(3) 
+    : "Not Available"}
+</span>
                                     </div>
                                   </div>
                                 </div>
