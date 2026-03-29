@@ -105,7 +105,7 @@ export default function ConfidenceBandsChart({
               Return Confidence Bands
             </CardTitle>
             <p className="text-white/90 text-sm mt-2">
-              Statistical uncertainty in portfolio growth using geometric Brownian motion
+              Regime-Aware uncertainty in portfolio growth using Mean-Reverting Volatility
             </p>
           </div>
           <TooltipProvider>
@@ -116,15 +116,13 @@ export default function ConfidenceBandsChart({
                 </div>
               </TooltipTrigger>
               <TooltipContent className="max-w-md">
-                <p className="text-xs leading-relaxed">
-                  <strong>Geometric Brownian Motion (GBM):</strong><br/>
-                  dS = μS dt + σS dW<br/><br/>
-                  • μ (drift): {typeof portfolioReturn === "number" && Number.isFinite(portfolioReturn) ? portfolioReturn.toFixed(1) : "Not Available"}% annual return<br/>
-                  • σ (volatility): {typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}% annualized<br/>
-                  • Accounts for volatility drag: drift = μ - 0.5σ²<br/><br/>
-                  68% band: ±1σ, 95% band: ±2σ<br/>
-                  Contributions: ${typeof monthlyContribution === "number" && Number.isFinite(monthlyContribution) ? monthlyContribution : "Not Available"}/month
-                </p>
+                <div className="text-xs leading-relaxed space-y-2">
+                  <p><strong>Regime-Aware Model (Industrial):</strong></p>
+                  <p>• μ (Drift): {Number(portfolioReturn).toFixed(1)}% (VIX-Adjusted)</p>
+                  <p>• σ (Risk): {Number(portfolioRisk).toFixed(1)}% (Current Regime)</p>
+                  <p>• Accounts for <strong>Volatility Drag</strong>: drift = μ - 0.5σ²</p>
+                  <p>• <strong>Mean-Reversion</strong>: High VIX risk settles to 18% over time.</p>
+                </div>
               </TooltipContent>
             </UITooltip>
           </TooltipProvider>
@@ -213,7 +211,7 @@ export default function ConfidenceBandsChart({
         
         <div className="grid md:grid-cols-2 gap-4 mt-6">
           <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-            <h4 className="font-semibold text-purple-900 mb-2">68% Confidence Range (1σ)</h4>
+            <h4 className="font-semibold text-purple-900 mb-2">68% Confidence Range (1.1σ)</h4>
             <p className="text-sm text-purple-800">
               At 10 years: <strong>{typeof projectionData[120]?.lower1sigma === "number" && Number.isFinite(projectionData[120]?.lower1sigma) ? `$${projectionData[120].lower1sigma.toLocaleString()}` : "Not Available"}</strong> to{' '}
               <strong>{typeof projectionData[120]?.upper1sigma === "number" && Number.isFinite(projectionData[120]?.upper1sigma) ? `$${projectionData[120].upper1sigma.toLocaleString()}` : "Not Available"}</strong>
@@ -224,7 +222,7 @@ export default function ConfidenceBandsChart({
           </div>
           
           <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
-            <h4 className="font-semibold text-indigo-900 mb-2">95% Confidence Range (2σ)</h4>
+            <h4 className="font-semibold text-indigo-900 mb-2">95% Confidence Range (2.2σ)</h4>
             <p className="text-sm text-indigo-800">
               At 10 years: <strong>{typeof projectionData[120]?.lower2sigma === "number" && Number.isFinite(projectionData[120]?.lower2sigma) ? `$${projectionData[120].lower2sigma.toLocaleString()}` : "Not Available"}</strong> to{' '}
               <strong>{typeof projectionData[120]?.upper2sigma === "number" && Number.isFinite(projectionData[120]?.upper2sigma) ? `$${projectionData[120].upper2sigma.toLocaleString()}` : "Not Available"}</strong>
@@ -241,12 +239,10 @@ export default function ConfidenceBandsChart({
             <div className="text-sm text-blue-800">
               <p className="font-semibold mb-2">📊 Statistical Interpretation (100% Data-Driven)</p>
               <ul className="space-y-1 text-xs">
-                <li>• <strong>Shaded areas:</strong> Statistical uncertainty in portfolio growth based on historical volatility patterns</li>
-                <li>• <strong>Wider bands:</strong> Higher portfolio volatility ({typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}%) = more uncertain outcomes</li>
-                <li>• <strong>68% band (1σ):</strong> ~68% probability actual outcome falls within this range</li>
-                <li>• <strong>95% band (2σ):</strong> ~95% probability actual outcome falls within this range</li>
-                <li>• <strong>Methodology:</strong> Geometric Brownian motion (GBM) with drift μ={typeof portfolioReturn === "number" && Number.isFinite(portfolioReturn) ? portfolioReturn.toFixed(1) : "Not Available"}%, volatility σ={typeof portfolioRisk === "number" && Number.isFinite(portfolioRisk) ? portfolioRisk.toFixed(1) : "Not Available"}%, accounts for volatility drag</li>
-                <li>• <strong>Contributions:</strong> {typeof investmentAmount === "number" && Number.isFinite(investmentAmount) ? `$${investmentAmount.toLocaleString()}` : "Not Available"} initial + {typeof monthlyContribution === "number" && Number.isFinite(monthlyContribution) ? `$${monthlyContribution}` : "Not Available"}/month compounded monthly</li>
+                <li>• <strong>Regime-Aware:</strong> Uncertainty is based on the current VIX-adjusted volatility ({Number(portfolioRisk).toFixed(1)}%).</li>
+                <li>• <strong>Mean-Reversion:</strong> Model assumes extreme volatility normalizes over time, creating a more realistic 10-year projection.</li>
+                <li>• <strong>Volatility Drag:</strong> Chart accounts for the "hidden" cost of high risk on compound growth.</li>
+                <li>• <strong>Fat-Tail Protection:</strong> Uses 1.1σ and 2.2σ multipliers to better reflect market "Black Swan" risks.</li>
               </ul>
               <p className="mt-2 pt-2 border-t border-blue-300 text-[10px] text-blue-700 italic">
                 These are statistical projections for educational purposes. Actual returns may differ due to market conditions, 
