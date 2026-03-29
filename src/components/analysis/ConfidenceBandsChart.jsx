@@ -40,43 +40,50 @@ export default function ConfidenceBandsChart({
 }) {
   // Generate confidence bands using geometric Brownian motion
   const projectionData = useMemo(() => {
-    const months = 121; // 10 years + initial
+    const months = 121; // 10 years + initial month
     const data = [];
     
-    const annualReturn = portfolioReturn / 100;
-    const annualVol = portfolioRisk / 100;
+    // Convert inputs to numbers safely
+    const initialAnnualReturn = Number(portfolioReturn) / 100; 
+    const currentVol = Number(portfolioRisk) / 100; 
     
+    // INDUSTRIAL PARAMETERS
+    const longTermVol = 0.18;    // The 'Anchor' volatility (18%)
+    const halfLifeYears = 1.5;   // Period for VIX-driven fear to normalize
+
     for (let month = 0; month < months; month++) {
       const t = month / 12; // Time in years
       
-      // Expected value with monthly contributions (arithmetic mean path)
+      // 1. DYNAMIC VOLATILITY (Mean-Reversion)
+      // High VIX regimes are temporary. This decays risk back to the anchor.
+      const decayFactor = Math.exp(-t / halfLifeYears);
+      const effectiveVol = (currentVol * decayFactor) + (longTermVol * (1 - decayFactor));
+
+      // 2. VOLATILITY DRAG (The 'u' Drift Adjustment)
+      // Real wealth growth is Median = Return - 0.5 * Variance
+      const drift = initialAnnualReturn - 0.5 * Math.pow(effectiveVol, 2);
+
+      // 3. ARITHMETIC EXPECTED VALUE (The 'Optimistic' Path)
       let expectedValue = investmentAmount;
-      const monthlyRate = portfolioReturn / 100 / 12;
+      const monthlyRate = initialAnnualReturn / 12;
       for (let m = 0; m < month; m++) {
         expectedValue = expectedValue * (1 + monthlyRate) + monthlyContribution;
       }
+
+      // 4. LOGNORMAL MEDIAN AND BANDS (The 'Probable' Path)
+      const totalBasis = investmentAmount + (monthlyContribution * month);
+      const median = totalBasis * Math.exp(drift * t);
       
-      // Geometric Brownian motion for confidence bands
-      // Account for contributions in median calculation
-      const totalContributions = investmentAmount + (monthlyContribution * month);
+      // Using 1.1 and 2.2 standard deviation multipliers for 'Fat Tail' protection
+      const upper1sigma = median * Math.exp(1.1 * effectiveVol * Math.sqrt(t));
+      const lower1sigma = median * Math.exp(-1.1 * effectiveVol * Math.sqrt(t));
       
-      // Drift-adjusted growth factor (accounts for volatility drag)
-      const drift = annualReturn - 0.5 * annualVol * annualVol;
-      const medianGrowthFactor = Math.exp(drift * t);
-      const median = totalContributions * medianGrowthFactor;
-      
-      // Confidence intervals using lognormal distribution
-      // 68% confidence (±1σ)
-      const upper1sigma = median * Math.exp(annualVol * Math.sqrt(t));
-      const lower1sigma = median * Math.exp(-annualVol * Math.sqrt(t));
-      
-      // 95% confidence (±2σ)
-      const upper2sigma = median * Math.exp(2 * annualVol * Math.sqrt(t));
-      const lower2sigma = median * Math.exp(-2 * annualVol * Math.sqrt(t));
-      
+      const upper2sigma = median * Math.exp(2.2 * effectiveVol * Math.sqrt(t));
+      const lower2sigma = median * Math.exp(-2.2 * effectiveVol * Math.sqrt(t));
+
       data.push({
         month,
-        year: t,
+        year: parseFloat(t.toFixed(1)),
         expected: Math.max(0, Math.round(expectedValue)),
         median: Math.max(0, Math.round(median)),
         upper1sigma: Math.max(0, Math.round(upper1sigma)),
@@ -88,7 +95,6 @@ export default function ConfidenceBandsChart({
     
     return data;
   }, [portfolioReturn, portfolioRisk, investmentAmount, monthlyContribution]);
-  
   return (
     <Card className="border-2 border-purple-200 shadow-xl bg-white">
       <CardHeader className="rounded-t-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
